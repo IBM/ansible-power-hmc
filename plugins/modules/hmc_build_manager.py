@@ -158,6 +158,7 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client impor
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_resource import Hmc
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import Error
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
 
 
 import logging
@@ -233,6 +234,19 @@ def command_option_checker(config):
             raise ParameterError("unsupported parameters: %s" % (', '.join(collate)))
 
 
+def remove_image_from_hmc(module, params):
+    hmc_host = params['hmc_host']
+    hmc_user = params['hmc_auth']['username']
+    password = params['hmc_auth']['password']
+    list_on_hmc = 'sshpass -p {0} ssh {1}@{2} ls network_install'.format(password, hmc_user, hmc_host)
+    rc, out, err = module.run_command(list_on_hmc)
+    if rc == 0:
+        rm_install_path = 'sshpass -p {0} ssh {1}@{2} rm -rf network_install'.format(password, hmc_user, hmc_host)
+        rc1, out1, err1 = module.run_command(rm_install_path)
+        if rc1 != 0:
+            logger.debug("Removal of 'network_install' directory failed")
+
+
 def image_copy_from_local_to_hmc(module, params):
     hmc_host = params['hmc_host']
     hmc_user = params['hmc_auth']['username']
@@ -261,6 +275,7 @@ def image_copy_from_local_to_hmc(module, params):
     rc2, out2, err2 = module.run_command(scp_cmd, use_unsafe_shell=True)
     if rc2 == 1:
         logger.debug(err2)
+        remove_image_from_hmc(module, params)
         raise Error("copy of image to hmc failed")
 
     list_on_hmc = 'sshpass -p {0} ssh {1}@{2} ls network_install/'.format(password, hmc_user, hmc_host)
@@ -268,29 +283,18 @@ def image_copy_from_local_to_hmc(module, params):
     if rc3 == 0:
         if params['state'] == 'upgraded':
             if not all([True if each in out3 else False for each in imageFilesUpg]):
+                remove_image_from_hmc(module, params)
                 raise Error("copy of image to hmc is incomplete. Necessary files are missing")
         else:
             iso_file = out3.split()[0]
             if '.iso' in iso_file:
                 return iso_file
             else:
+                remove_image_from_hmc(module, params)
                 raise Error("copy of image to hmc is incomplete. Necessary files are missing")
     else:
         logger.debug(err3)
         module.warn("could not confirm the copy of necessary image files")
-
-
-def remove_image_from_hmc(module, params):
-    hmc_host = params['hmc_host']
-    hmc_user = params['hmc_auth']['username']
-    password = params['hmc_auth']['password']
-    list_on_hmc = 'sshpass -p {0} ssh {1}@{2} ls network_install'.format(password, hmc_user, hmc_host)
-    rc, out, err = module.run_command(list_on_hmc)
-    if rc == 0:
-        rm_install_path = 'sshpass -p {0} ssh {1}@{2} rm -rf network_install'.format(password, hmc_user, hmc_host)
-        rc1, out1, err1 = module.run_command(rm_install_path)
-        if rc1 != 0:
-            logger.debug("Removal of 'network_install' directory failed")
 
 
 def facts(module, params):
@@ -361,17 +365,19 @@ def upgrade_hmc(module, params):
     version_details = {}
     if hmc.checkHmcUpandRunning(timeoutInMin=HMC_REBOOT_TIMEOUT):
         isBootedUp, version_details = Hmc.checkIfHMCFullyBootedUp(module, hmc_host, hmc_user, password)
-        changed = compare_version(initial_version_details, version_details)
         if not isBootedUp:
             version_details = "FAILED: HMC not booted up"
+        else:
+            changed = compare_version(initial_version_details, version_details)
     else:
         version_details = "FAILED: Hmc not responding after reboot"
 
     if not changed and locationType == 'disk':
         remove_image_from_hmc(module, params)
 
-    if not changed:
-        warning_msg = "WARNING: HMC upgrade completed, but the version remains same. Check if any MPTF missing or the HMC was at same level already."
+    if isBootedUp and not changed:
+        warning_msg = "WARNING: HMC upgrade completed, but the version remains same. "\
+                      "Check if any MPTF missing or the HMC was at same level already."
 
     return changed, version_details, warning_msg
 
@@ -434,10 +440,11 @@ def update_hmc(module, params):
     else:
         version_details = "FAILED: Hmc not responding after reboot"
 
-    changed = compare_version(initial_version_details, version_details)
-
-    if not changed:
-        warning_msg = "WARNING: HMC update completed, but the version remains same. Check if any MPTF missing or the HMC was at same level already."
+    if isBootedUp:
+        changed = compare_version(initial_version_details, version_details)
+        if not changed:
+            warning_msg = "WARNING: HMC update completed, but the version "\
+                          "remains same. Check if any MPTF missing or the HMC was at same level already."
 
     return changed, version_details, warning_msg
 
@@ -456,6 +463,10 @@ def perform_task(module):
 
     try:
         return actions[params['state']](module, params)
+    except HmcError as error:
+        if params['state'] != 'facts' and params['build_config']['location_type'] == 'disk':
+            remove_image_from_hmc(module, params)
+        return False, repr(error), None
     except Exception as error:
         return False, repr(error), None
 
