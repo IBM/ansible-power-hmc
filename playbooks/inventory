@@ -1,0 +1,7 @@
+[hmcs]
+9.3.147.120
+9.3.147.159
+vhmcct005.aus.stglabs.ibm.com
+
+[hmcs:vars]
+ansible_user=hscroot
