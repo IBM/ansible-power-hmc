@@ -18,9 +18,11 @@ module: hmc_build_manager
 author:
     - Anil Vijayan (@AnilVijayan)
 short_description: Manages the update and upgrade of HMC
+notes:
+    - Upgrade with I(location_type=disk) will not support for 870 and 910 release of HMC
 description:
     - Updates the HMC by installing a corrective service package located on an FTP/SFTP/NFS server or HMC hard disk.
-    - Or Upgrades the HMC by obtaining  the required  files  from a remote server or from the HMC hard disk. The files are transferred
+    - Upgrades the HMC by obtaining  the required  files  from a remote server or from the HMC hard disk. The files are transferred
       onto a special partition on the HMC hard disk. After the files have been transferred, HMC will boot from this partition
       and perform the upgrade.
 version_added: "2.9"

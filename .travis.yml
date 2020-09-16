@@ -18,6 +18,9 @@ install:
   - pip install pytest      # for pytest
   - pip install pytest-mock # for pytest
   - pip3 install rstcheck
+  - pip3 install ansible-doc-extractor
+  - pip install sphinx
+  - pip install sphinx_rtd_theme
   - ansible --version
 
 env:
@@ -35,9 +38,23 @@ script:
   - flake8 tests/unit/*/* --max-line-length=160 --ignore=E402,W503
   - ansible-galaxy collection build
   - ansible-galaxy collection install ibm-power_hmc*
+  - build_path=`pwd`
   - cd /home/travis/.ansible/collections/ansible_collections/ibm/power_hmc
 
   - pyenv global 3.7 3.6 2.7 
-  - ansible-test sanity --python 3.7
+  - ansible-test sanity --python 3.7 --skip-test shellcheck
   - cd /home/travis/.ansible/collections/
   - python -m pytest
+  - cd $build_path
+  - bash devops/bin/gen_doc.sh
+
+# push the generated documentation using GitHub Pages
+deploy:
+    provider: pages
+    strategy: git
+    skip_cleanup: true
+    token: $GITHUB_API_KEY
+    local_dir: docs/build
+    keep_history: true
+    on:
+        branch: alphaware
