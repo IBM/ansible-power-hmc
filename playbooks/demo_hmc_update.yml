@@ -1,0 +1,34 @@
+---
+- name: Demo HMC update 
+  hosts: hmcs
+  collections:
+      - ibm.power_hmc
+  connection: local
+  gather_facts: no
+
+  vars:
+      hmc_password: 'password'
+      config:
+          location_type: nfs
+          hostname: nfsserver01
+          build_file: /Images/HMC_Update_V9R1M941_x86.iso
+          mount_location: /HMCImages
+
+  tasks:
+  - name: List the HMC current build level
+    hmc_build_manager:
+        hmc_host: '{{ inventory_hostname }}'
+        hmc_auth:
+           username: '{{ ansible_user }}'
+           password: '{{ hmc_password }}'
+        state: facts
+    register: build_info
+
+  - name: Update the HMC to the 941 build level from nfs location
+    hmc_build_manager:
+        hmc_host: '{{ inventory_hostname }}'
+        hmc_auth:
+           username: '{{ ansible_user }}'
+           password: '{{ hmc_password }}'
+        build_config: '{{ config }}'
+        state: updated
