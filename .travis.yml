@@ -25,8 +25,8 @@ install:
 
 env:
   global:
-    secure: AYCiG95CEf4kxDW5P0qRI0tGLoVU79VcVrQLSEGoLrJLVzMt93Ktgm3QYZXoubhidcAYbZLjQW3wHOyV6Oeov3xLCO+TPq+fHALo4Z8Hjj0opn3j4h6Pd1myW5vaETQ0bULi738P3dD71Bl72g4fXoesvz1oYMxkTRyVJM6CjEA8fMdg2k1SYNneLrmEuPypUzleFq8AU3HPhTRyWP804vSWYocBREgMdegywZh+Q0+z3qW6ddidCqiAMcFsdTwl7QHvJfYnJl5pxDJ0E8eNLzlHhQqxOEln0R61eGLUlODg+NLNpewiW8DUAUKmbkj6E17/MTbJbrqD57wklNq1vdRc2P9m3TGj6njT+fz2jBnlI1xTpU/nPbTUEu+5LT9lSEDCgWpFWhTAxHLqDnqtxz9J1YXCPDa7wAyxcp6mLmsEZ6InaUTSZ4ZsHdL4GUCYZpKXuH+Mjxmecfmc2Rbrtt5TgxGxFfdj114n2TEUY0X9Y8c+p9IqflfVQxuONq0HdFuDqNHp2RnXdi1n8cnxdILxqr7rZvFmDx841QYxsHeO9WbKX2MQk2W/7v8vMVqEtwDq/6iulhzizUs+abVjInHcwjit8omaiMAFMLV9yXyOT0CrmOGB50+4GPPsuQBssHqlaBu6OzORgLEtPOCVOelyJUyRdQSFgOWXR8wUklY=
-    
+    secure: XQdEPnrg9WEJarmlkI+i6EKegl+LsoG9iWRtpNL2VPftkTBs8XP3fHYygZ29QdxQaenZaJIq7lhwnK5heaIeJvgLhBN88XIzyyeDeLgSuWKsDvM8UDKwj4hS+ZS9NqoiBwMBL+ya+hOIoHXPeSH1LhdH+yJWYhvXWehmskNaQF/kscPc9G89Y39GtkGolM3FwLQx/P/eS5+Lytnb1d+wCSjtZHCAdfndyufYy6mxX1wxf7NZl6jENBm85JdnlJ1hKq9eYRoEP1Ws/c0bzWVDWVIN+iB7yhAI6wMtyCq/KM5mvxCuRBCrYVy3SEdpswaCyihSi5TIUjVRde28a9XfaKST1m5ahjdQ8I9VHa9wAb34dERCT7KQpBWPEoIwLAaBK/Abwd5Z9asBomKbJsYWB9T8L0RPN99Wzq1UVO5jzshQr9QHX89lo7MqBXbEjRBOyViOYiltKujhVk9K+SCL//e9FuneUWwBrRSofStoolDBDSFjoTlLefdjt/0HAGS2y5G393PEBubYoAXOmI2wo/0YU4fVOp1OkPpUA0C6+TrFeFDbHJZ6+JH+WKwEoGDHT/53YCH6iGFNe1FhBwSx9jIb9zMC02rRoCodKjwq3qr7vCSf5p4RZWyXvRe1XNRtgveLOBYSMFG5mIPjcUUG2WSbuKZXs0D/g+hVY+uzano=
+
 # command to run tests
 script:
 
@@ -41,7 +41,8 @@ script:
   - build_path=`pwd`
   - cd /home/travis/.ansible/collections/ansible_collections/ibm/power_hmc
 
-  - pyenv global 3.7 3.6 2.7 
+  - pyenv global 3.7 2.7 
+  - ansible-test sanity --python 2.7 --skip-test shellcheck
   - ansible-test sanity --python 3.7 --skip-test shellcheck
   - cd /home/travis/.ansible/collections/
   - python -m pytest
