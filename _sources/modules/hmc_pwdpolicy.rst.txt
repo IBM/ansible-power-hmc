@@ -1,0 +1,222 @@
+.. _hmc_pwdpolicy_module:
+
+
+hmc_pwdpolicy -- Manages the list, create, change and remove password policies of HMC
+=====================================================================================
+
+.. contents::
+   :local:
+   :depth: 1
+
+
+Synopsis
+--------
+
+Lists Hardware Management Console password policy information by password policies or password policy status.
+
+Creates a password policy.
+
+Changes password policies on the Hardware Management Console to activate, deactivate or modify password policy.
+
+Removes a password policy from the Hardware Management Console.
+
+
+
+
+
+
+Parameters
+----------
+
+  hmc_host (True, str, None)
+    The ipaddress or hostname of HMC.
+
+
+  hmc_auth (True, dict, None)
+    Username and Password credential of HMC.
+
+
+    username (True, str, None)
+      Username of HMC to login.
+
+
+    password (optional, str, None)
+      Password of HMC.
+
+
+
+  policy_name (optional, str, None)
+    The name of the password policy.
+
+
+  policy_config (optional, dict, None)
+    Configuration parameters required for hmc password policies. This option is valid for state like ``present``, ``modified``.
+
+
+    pwage (optional, str, None)
+      The number of days that can elapse before a password expires and must be changed.  A value of 99999 indicates no password expiration.
+
+
+    description (optional, str, None)
+      Description for the password policy.
+
+
+    min_pwage (optional, str, None)
+      The number of days that must elapse before a password can be changed.
+
+
+    warn_pwage (optional, str, None)
+      The number of days prior to password expiration when a warning message will begin to be displayed.
+
+
+    min_length (optional, str, None)
+      The minimum password length.
+
+
+    hist_size (optional, str, None)
+      The number of times a password must be changed before a password can be reused. This value cannot exceed 50.
+
+
+    min_digits (optional, str, None)
+      The minimum number of digits that a password must contain
+
+
+    min_uppercase_chars (optional, str, None)
+      The minimum number of uppercase characters that a password must contain.
+
+
+    min_lowercase_chars (optional, str, None)
+      The minimum number of lowercase characters that a password must contain.
+
+
+    min_special_chars (optional, str, None)
+      The minimum number of special characters that a password must contain. Special characters include symbols, punctuation, and white space characters.
+
+
+    new_name (optional, str, None)
+      The new name of the password policy. This option valid only when *state=modified*.
+
+
+
+  policy_type (optional, str, None)
+    ``policies`` list all of the password policies on the HMC.
+
+    ``status`` list password policy status information.
+
+
+  state (True, str, None)
+    The desired password policy state of the target HMC.
+
+    ``present`` ensure the target HMC is having the mentioned password policy.
+
+    ``modified`` ensure the policy on target HMC password is modified.
+
+    ``absent`` ensure the policy on the target HMC password is removed.
+
+    ``facts`` does not change anything on the HMC and returns current policy status/settings of HMC.
+
+    ``activated`` ensure the policy on the target HMC password is activated.
+
+    ``deactivated`` ensure the password policy is deactivated on the target HMC.
+
+
+
+
+
+
+
+
+
+Examples
+--------
+
+.. code-block:: yaml+jinja
+
+    
+    - name: List the hmc password policy current status
+      hmc_pwdpolicy:
+        hmc_host: "{{ inventory_hostname }}"
+        hmc_auth:
+             userid: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+        policy_type: status
+        state: facts
+
+    - name: create the password policy
+      hmc_pwdpolicy:
+        hmc_host: "{{ inventory_hostname }}"
+        hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+        name: dummy
+        state: present
+        policy_config:
+
+    - name: update the password policy with new settings
+      hmc_pwdpolicy:
+        hmc_host: "{{ inventory_hostname }}"
+        hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+        name: dummy
+        policy_config:
+           pwage: 80
+           hist_size: 12
+        state: modified
+
+    - name: activate the password policy
+      hmc_pwdpolicy:
+        hmc_host: "{{ inventory_hostname }}"
+        hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+        name: dummy
+        state: activated
+
+    - name: De-activate any active policy on HMC
+      hmc_pwdpolicy:
+        hmc_host: "{{ inventory_hostname }}"
+        hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+        state: deactivated
+
+    - name: remove the password policy
+      hmc_pwdpolicy:
+        hmc_host: "{{ inventory_hostname }}"
+        hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+        name: dummy
+        state: absent
+
+
+
+Return Values
+-------------
+
+policy_info (always, dict, )
+  Respective policy information
+
+
+
+
+
+Status
+------
+
+
+
+
+- This module is not guaranteed to have a backwards compatible interface. *[preview]*
+
+
+- This module is maintained by community.
+
+
+
+Authors
+~~~~~~~
+
+- Anil Vijayan (@AnilVijayan)
+

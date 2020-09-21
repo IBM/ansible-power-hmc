@@ -1,0 +1,175 @@
+.. _hmc_build_manager_module:
+
+
+hmc_build_manager -- Manages the update and upgrade of HMC
+==========================================================
+
+.. contents::
+   :local:
+   :depth: 1
+
+
+Synopsis
+--------
+
+Updates the HMC by installing a corrective service package located on an FTP/SFTP/NFS server or HMC hard disk.
+
+Upgrades the HMC by obtaining  the required  files  from a remote server or from the HMC hard disk. The files are transferred onto a special partition on the HMC hard disk. After the files have been transferred, HMC will boot from this partition and perform the upgrade.
+
+
+
+Requirements
+------------
+The below requirements are needed on the host that executes this module.
+
+- Python >= 3
+
+
+
+Parameters
+----------
+
+  hmc_host (True, str, None)
+    The ipaddress or hostname of HMC.
+
+
+  hmc_auth (True, dict, None)
+    Username and Password credential of HMC.
+
+
+    username (True, str, None)
+      Username of HMC to login.
+
+
+    password (optional, str, None)
+      Password of HMC.
+
+
+
+  build_config (False, dict, None)
+    Configuration parameters required for hmc update/upgrade.
+
+
+    location_type (optional, str, None)
+      The type of location which contains the corrective service ISO image Valid values are ``disk`` for the HMC hard disk, ``ftp`` for an FTP site, ``sftp`` for a secure FTP (SFTP) site, ``nfs`` for an NFS file system.
+
+
+    hostname (optional, str, None)
+      The host name or IP address of the remote server where the corrective service ISO image is located.
+
+
+    userid (optional, str, None)
+      The user ID to use to log in to the remote FTP or SFTP server. This option is required when the ISO image is located on a remote FTP or SFTP server Otherwise, this option is not valid.
+
+
+    passwd (optional, str, None)
+      The password to use to log in to the remote FTP or SFTP server. The *passwd* and *sshkey* options are mutually exclusive in case if *location_type=sftp*. This option is only valid when the ISO image is located on a remote FTP or SFTP server.
+
+
+    sshkey_file (optional, str, None)
+      The name of the file that contains the SSH private key. This option is only valid if *location_type=sftp*.
+
+
+    mount_location (optional, str, None)
+      The mount location defined on the NFS server where the corrective service ISO image is located. This option is valid only if *location_type=nfs*.
+
+
+    build_file (optional, str, None)
+      The name of the corrective service ISO image file. This  option  is required when the ISO image is located on the HMC hard disk, a remote FTP, SFTP, or NFS server. During upgrade of hmc, this option represent the host path where the network install image is kept, not the HMC local path. If *location_type=disk*, this option should be provided with the ansible control node path ISO file or network install image is kept.
+
+
+
+  state (True, str, None)
+    The desired build state of the target hmc.
+
+    ``facts`` does not change anything on the HMC and returns current driver/build level of HMC.
+
+    ``updated`` ensures the target HMC is updated with given corrective service ISO image.
+
+    ``upgraded`` ensures the target HMC is upgraded with given upgrade files.
+
+
+
+
+
+Notes
+-----
+
+.. note::
+   - Upgrade with *location_type=disk* will not support for 870 and 910 release of HMC
+
+
+
+
+Examples
+--------
+
+.. code-block:: yaml+jinja
+
+    
+    - name: List the HMC current build level
+      hmc_build_manager:
+          hmc_host: '{{ inventory_hostname }}'
+          hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+          state: facts
+
+    - name: Update the HMC to the 941 build level from nfs location
+      hmc_build_manager:
+          hmc_host: '{{ inventory_hostname }}'
+          hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+          build_config:
+              location_type: nfs
+              hostname: nfsserver01
+              build_file: /Images/HMC_Update_V9R1M941_x86.iso
+              mount_location: /HMCImages
+          state: updated
+
+    - name: Update the HMC to the 941 build level from sftp location
+      hmc_build_manager:
+          hmc_host: '{{ inventory_hostname }}'
+          hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+          build_config:
+              location_type: sftp
+              hostname: sftpserver01
+              userid: sftp_user
+              passwd: sftp_password
+              build_file: /Images/HMC_Update_V9R1M941_x86.iso
+          state: updated
+
+
+
+
+Return Values
+-------------
+
+build_info (always, dict, )
+  Respective build information
+
+
+
+
+
+Status
+------
+
+
+
+
+- This module is not guaranteed to have a backwards compatible interface. *[preview]*
+
+
+- This module is maintained by community.
+
+
+
+Authors
+~~~~~~~
+
+- Anil Vijayan (@AnilVijayan)
+

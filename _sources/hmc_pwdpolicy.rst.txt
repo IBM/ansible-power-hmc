@@ -1,0 +1,308 @@
+
+:github_url: https://github.com/IBM/ansible-power-hmc/tree/dev-collection/plugins/modules/hmc_pwdpolicy.py
+
+.. _hmc_pwdpolicy_module:
+
+
+hmc_pwdpolicy -- Manages the list, create, change and remove password policies of HMC
+=====================================================================================
+
+
+
+.. contents::
+   :local:
+   :depth: 1
+
+
+
+Synopsis
+--------
+- Lists Hardware Management Console password policy information by password policies or password policy status.
+- Creates a password policy.
+- Changes password policies on the Hardware Management Console to activate, deactivate or modify password policy.
+- Removes a password policy from the Hardware Management Console.
+
+
+
+
+
+Parameters
+----------
+
+
+     
+hmc_auth
+  Username and Password credential of HMC.
+
+
+  | **required**: True
+  | **type**: dict
+
+
+     
+  password
+    Password of HMC.
+
+
+    | **required**: false
+    | **type**: str
+
+
+     
+  username
+    Username of HMC to login.
+
+
+    | **required**: True
+    | **type**: str
+
+
+
+     
+hmc_host
+  The ipaddress or hostname of HMC.
+
+
+  | **required**: True
+  | **type**: str
+
+
+     
+policy_config
+  Configuration parameters required for hmc password policies. This option is valid for state like ``present``, ``modified``.
+
+
+  | **required**: false
+  | **type**: dict
+
+
+     
+  description
+    Description for the password policy.
+
+
+    | **required**: false
+    | **type**: str
+
+
+     
+  hist_size
+    The number of times a password must be changed before a password can be reused. This value cannot exceed 50.
+
+
+    | **required**: false
+    | **type**: str
+
+
+     
+  min_digits
+    The minimum number of digits that a password must contain
+
+
+    | **required**: false
+    | **type**: str
+
+
+     
+  min_length
+    The minimum password length.
+
+
+    | **required**: false
+    | **type**: str
+
+
+     
+  min_lowercase_chars
+    The minimum number of lowercase characters that a password must contain.
+
+
+    | **required**: false
+    | **type**: str
+
+
+     
+  min_pwage
+    The number of days that must elapse before a password can be changed.
+
+
+    | **required**: false
+    | **type**: str
+
+
+     
+  min_special_chars
+    The minimum number of special characters that a password must contain. Special characters include symbols, punctuation, and white space characters.
+
+
+    | **required**: false
+    | **type**: str
+
+
+     
+  min_uppercase_chars
+    The minimum number of uppercase characters that a password must contain.
+
+
+    | **required**: false
+    | **type**: str
+
+
+     
+  new_name
+    The new name of the password policy. This option valid only when *state=modified*.
+
+
+    | **required**: false
+    | **type**: str
+
+
+     
+  pwage
+    The number of days that can elapse before a password expires and must be changed.  A value of 99999 indicates no password expiration.
+
+
+    | **required**: false
+    | **type**: str
+
+
+     
+  warn_pwage
+    The number of days prior to password expiration when a warning message will begin to be displayed.
+
+
+    | **required**: false
+    | **type**: str
+
+
+
+     
+policy_name
+  The name of the password policy.
+
+
+  | **required**: false
+  | **type**: str
+
+
+     
+policy_type
+  ``policies`` list all of the password policies on the HMC.
+
+  ``status`` list password policy status information.
+
+
+  | **required**: false
+  | **type**: str
+  | **choices**: policies, status
+
+
+     
+state
+  The desired password policy state of the target HMC.
+
+  ``present`` ensure the target HMC is having the mentioned password policy.
+
+  ``modified`` ensure the policy on target HMC password is modified.
+
+  ``absent`` ensure the policy on the target HMC password is removed.
+
+  ``facts`` does not change anything on the HMC and returns current policy status/settings of HMC.
+
+  ``activated`` ensure the policy on the target HMC password is activated.
+
+  ``deactivated`` ensure the password policy is deactivated on the target HMC.
+
+
+  | **required**: True
+  | **type**: str
+  | **choices**: present, modified, absent, facts, activated, deactivated
+
+
+
+
+Examples
+--------
+
+.. code-block:: yaml+jinja
+
+   
+   - name: List the hmc password policy current status
+     hmc_pwdpolicy:
+       hmc_host: "{{ inventory_hostname }}"
+       hmc_auth:
+            userid: '{{ ansible_user }}'
+            password: '{{ hmc_password }}'
+       policy_type: status
+       state: facts
+
+   - name: create the password policy
+     hmc_pwdpolicy:
+       hmc_host: "{{ inventory_hostname }}"
+       hmc_auth:
+            username: '{{ ansible_user }}'
+            password: '{{ hmc_password }}'
+       name: dummy
+       state: present
+       policy_config:
+
+   - name: update the password policy with new settings
+     hmc_pwdpolicy:
+       hmc_host: "{{ inventory_hostname }}"
+       hmc_auth:
+            username: '{{ ansible_user }}'
+            password: '{{ hmc_password }}'
+       name: dummy
+       policy_config:
+          pwage: 80
+          hist_size: 12
+       state: modified
+
+   - name: activate the password policy
+     hmc_pwdpolicy:
+       hmc_host: "{{ inventory_hostname }}"
+       hmc_auth:
+            username: '{{ ansible_user }}'
+            password: '{{ hmc_password }}'
+       name: dummy
+       state: activated
+
+   - name: De-activate any active policy on HMC
+     hmc_pwdpolicy:
+       hmc_host: "{{ inventory_hostname }}"
+       hmc_auth:
+            username: '{{ ansible_user }}'
+            password: '{{ hmc_password }}'
+       state: deactivated
+
+   - name: remove the password policy
+     hmc_pwdpolicy:
+       hmc_host: "{{ inventory_hostname }}"
+       hmc_auth:
+            username: '{{ ansible_user }}'
+            password: '{{ hmc_password }}'
+       name: dummy
+       state: absent
+
+
+
+
+
+
+
+
+
+
+Return Values
+-------------
+
+
+   
+                              
+       policy_info
+        | Respective policy information
+      
+        | **returned**: always
+        | **type**: dict
+      
+        

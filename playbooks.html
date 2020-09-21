@@ -1,0 +1,334 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Playbooks &mdash; IBM Power Systems AIX 1.0.0-beta1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Contributing" href="community_guides.html" />
+    <link rel="prev" title="hmc_pwdpolicy – Manages the list, create, change and remove password policies of HMC" href="modules/hmc_pwdpolicy.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> IBM Power Systems AIX
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption"><span class="caption-text">References</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Modules</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Playbooks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#playbook-documentation">Playbook Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sample-configuration-and-setup">Sample Configuration and Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#inventory">Inventory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#run-the-playbooks">Run the playbooks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#hmc-password-settings">HMC Password Settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#verbosity">Verbosity</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Community Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="community_guides.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="community_guides.html#helpful-links">Helpful Links</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Requirements</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="requirements.html">Requirements</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Appendices</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="release_notes.html">Releases</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">IBM Power Systems AIX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Playbooks</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+              <a href="https://github.com/IBM/ansible-power-hmc/blob/dev-collection/docs/source/playbooks.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="playbooks">
+<h1>Playbooks<a class="headerlink" href="#playbooks" title="Permalink to this headline">¶</a></h1>
+<p>The sample playbooks that are <strong>included</strong> in the <strong>IBM Power Systems HMC collection</strong>
+demonstrate how to use the collection content.</p>
+<div class="section" id="playbook-documentation">
+<h2>Playbook Documentation<a class="headerlink" href="#playbook-documentation" title="Permalink to this headline">¶</a></h2>
+<p>An <a class="reference external" href="https://docs.ansible.com/ansible/latest/user_guide/playbooks_intro.html#playbooks-intro">Ansible playbook</a> consists of organized instructions that define work for
+a managed node (host) to be managed with Ansible.</p>
+<p>A <a class="reference external" href="https://github.com/IBM/ansible-power-hmc/tree/dev-collection/playbooks">playbooks directory</a> that contains a sample playbook is included in the
+<strong>IBM Power Systems HMC collection</strong>. The sample playbook can be run with the
+<code class="docutils literal notranslate"><span class="pre">ansible-playbook</span></code> command with some modification to the <strong>inventory</strong>.</p>
+<p>You can find the playbook content that is included with the collection in the
+same location where the collection is installed. For more information, refer to
+the <a class="reference external" href="installation.html">installation documentation</a>. In the following examples, this document will
+refer to the installation path as <code class="docutils literal notranslate"><span class="pre">~/.ansible/collections/ansible_collections/ibm/power_hmc</span></code>.</p>
+</div>
+<div class="section" id="sample-configuration-and-setup">
+<h2>Sample Configuration and Setup<a class="headerlink" href="#sample-configuration-and-setup" title="Permalink to this headline">¶</a></h2>
+<p>Each release of Ansible provides options in addition to the ones identified in
+the sample configurations that are included with this collection. These options
+allow you to customize how Ansible operates in your environment. Ansible
+supports several sources to configure its behavior and all sources follow the
+Ansible <a class="reference external" href="https://docs.ansible.com/ansible/latest/reference_appendices/general_precedence.html#general-precedence-rules">precedence rules</a>.</p>
+<p>The Ansible configuration file <cite>ansible.cfg</cite> can override almost all
+<code class="docutils literal notranslate"><span class="pre">ansible-playbook</span></code> configurations.</p>
+<p>You can specify the SSH port used by Ansible and instruct Ansible where to
+write the temporary files on the target. This can be easily done by adding the
+options to your inventory or <cite>ansible.cfg</cite>.</p>
+<p>For more information about available configurations for <code class="docutils literal notranslate"><span class="pre">ansible.cfg</span></code>, read
+the Ansible documentation on <a class="reference external" href="https://docs.ansible.com/ansible/latest/reference_appendices/config.html#ansible-configuration-settings-locations">Ansible configuration settings</a>.</p>
+</div>
+<div class="section" id="inventory">
+<h2>Inventory<a class="headerlink" href="#inventory" title="Permalink to this headline">¶</a></h2>
+<p>Ansible works with multiple managed nodes (hosts) at the same time, using a
+list or group of lists known as an <a class="reference external" href="https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html">inventory</a>. Once the inventory is defined,
+you can use <a class="reference external" href="https://docs.ansible.com/ansible/latest/user_guide/intro_patterns.html#intro-patterns">patterns</a> to select the hosts or groups that you want Ansible to
+run against.But the HMC collection will take a deviation from this standard
+expectation of Ansible inventory. Since HMC is a closed appliance application,
+its restricted shell wont allow push based mode of Ansible. Hence all the
+communication will be happening from the control machine (node) itself
+to the managed host (HMC).</p>
+<p>To handle above limitation, always use connection plugin inside playbook and
+provide it with the value <strong>local</strong> to execute tasks on the Ansible control node
+instead of on a remote host</p>
+<p>Included in the <a class="reference external" href="https://github.com/IBM/ansible-power-hmc/tree/dev-collection/playbooks">playbooks directory</a> is a <a class="reference external" href="https://github.com/IBM/ansible-power-hmc/tree/dev-collection/playbooks/inventory">sample inventory file</a> that can be
+used to manage your nodes with a little modification. This inventory file
+should be included when running the sample playbook.</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[hmcs]</span>
+<span class="na">hmc01</span>
+<span class="na">hmc02</span>
+
+<span class="k">[hmcs:vars]</span>
+<span class="na">ansible_user</span><span class="o">=</span><span class="s">hscroot</span>
+</pre></div>
+</div>
+<p>Inside the playbook, refer the mentioned  managed nodes (HMCs) from the inventory file
+using the magic variable <strong>inventory_hostname</strong></p>
+</div>
+<div class="section" id="run-the-playbooks">
+<h2>Run the playbooks<a class="headerlink" href="#run-the-playbooks" title="Permalink to this headline">¶</a></h2>
+<p>The sample playbooks must be run from the <a class="reference external" href="https://github.com/IBM/ansible-power-hmc/tree/dev-collection/playbooks">playbooks directory</a> of the installed
+collection: <code class="docutils literal notranslate"><span class="pre">~/.ansible/collections/ansible_collections/ibm/power_hmc/playbooks/</span></code>.</p>
+<p>Access the sample Ansible playbook and ensure that you are within the collection
+playbooks directory where the sample files are included:
+<code class="docutils literal notranslate"><span class="pre">~/.ansible/collections/ansible_collections/ibm/power_hmc/playbooks/</span></code>.</p>
+<p>Use the Ansible command <code class="docutils literal notranslate"><span class="pre">ansible-playbook</span></code> to run the sample playbooks.  The
+command syntax is <code class="docutils literal notranslate"><span class="pre">ansible-playbook</span> <span class="pre">-i</span> <span class="pre">&lt;inventory&gt;</span> <span class="pre">&lt;playbook&gt;</span></code>; for example,
+<code class="docutils literal notranslate"><span class="pre">ansible-playbook</span> <span class="pre">-i</span> <span class="pre">inventory</span> <span class="pre">demo_hmc_update.yml</span></code>.</p>
+<div class="section" id="hmc-password-settings">
+<h3>HMC Password Settings<a class="headerlink" href="#hmc-password-settings" title="Permalink to this headline">¶</a></h3>
+<p>Either mention the password of managed node (HMC) on the playbook as a variable,
+but never store this variable in plain text; always use a vault. Or user can setup
+the password less login to HMC using the <code class="docutils literal notranslate"><span class="pre">mkauthkey</span></code> with the public SSH key of
+control node, for example <code class="docutils literal notranslate"><span class="pre">mkauthkeys</span> <span class="pre">-a</span> <span class="pre">&lt;public_key&gt;</span></code>. Sample playbook is included
+which takes care of passwordless setup on managed HMCs:
+<code class="docutils literal notranslate"><span class="pre">~/.ansible/collections/ansible_collections/ibm/power_hmc/playbooks/demo_passwordless_setup.yml</span></code></p>
+</div>
+<div class="section" id="verbosity">
+<h3>Verbosity<a class="headerlink" href="#verbosity" title="Permalink to this headline">¶</a></h3>
+<p>Optionally, you can configure the console logging verbosity during playbook
+execution. This is helpful in situations where communication is failing and
+you want to obtain more details. To adjust the logging verbosity, append more
+letter <cite>v</cite>’s; for example, <cite>-v</cite>, <cite>-vv</cite>, <cite>-vvv</cite>, or <cite>-vvvv</cite>.</p>
+<p>Each letter <cite>v</cite> increases logging verbosity similar to traditional logging
+levels INFO, WARN, ERROR, DEBUG.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is a good practice to review the playbook samples before executing them.
+It will help you understand what requirements in terms of space, location,
+names, authority, and artifacts will be created and cleaned up. Although
+samples are always written to operate without the need for the user’s
+configuration, flexibility is written into the samples because it is not
+easy to determine if a sample has access to the host’s resources.
+Review the playbook notes sections for additional details and
+configuration.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="community_guides.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="modules/hmc_pwdpolicy.html" class="btn btn-neutral float-left" title="hmc_pwdpolicy – Manages the list, create, change and remove password policies of HMC" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, IBM
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
