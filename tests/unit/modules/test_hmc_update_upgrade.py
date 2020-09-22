@@ -4,7 +4,7 @@ __metaclass__ = type
 import pytest
 import importlib
 
-IMPORT_HMC_BUILD_MANAGER = "ansible_collections.ibm.power_hmc.plugins.modules.hmc_build_manager"
+IMPORT_HMC_UPDATE_UPGRADE = "ansible_collections.ibm.power_hmc.plugins.modules.hmc_update_upgrade"
 
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
 
@@ -154,44 +154,43 @@ facts_test_data = [({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'build_config'
 
 
 def common_mock_setup(mocker):
-    hmc_build_manager = importlib.import_module(IMPORT_HMC_BUILD_MANAGER)
-    mocker.patch.object(hmc_build_manager, 'HmcCliConnection')
-    mocker.patch.object(hmc_build_manager, 'Hmc', autospec=True)
-    return hmc_build_manager
+    hmc_update_upgrade = importlib.import_module(IMPORT_HMC_UPDATE_UPGRADE)
+    mocker.patch.object(hmc_update_upgrade, 'HmcCliConnection')
+    mocker.patch.object(hmc_update_upgrade, 'Hmc', autospec=True)
+    return hmc_update_upgrade
 
 
 @pytest.mark.parametrize("upgrade_teset_input, expectedError", test_data)
 def test_call_inside_upgrade_hmc(mocker, upgrade_teset_input, expectedError):
-    hmc_build_manager = common_mock_setup(mocker)
-    hmc_build_manager.Hmc.checkIfHMCFullyBootedUp.return_value = (True, {})
+    hmc_update_upgrade = common_mock_setup(mocker)
+    hmc_update_upgrade.Hmc.checkIfHMCFullyBootedUp.return_value = (True, {})
     if 'ParameterError' in expectedError:
         with pytest.raises(ParameterError) as e:
-            hmc_build_manager.upgrade_hmc(hmc_build_manager, upgrade_teset_input)
+            hmc_update_upgrade.upgrade_hmc(hmc_update_upgrade, upgrade_teset_input)
         assert expectedError == repr(e.value)
     else:
-        hmc_build_manager.upgrade_hmc(hmc_build_manager, upgrade_teset_input)
+        hmc_update_upgrade.upgrade_hmc(hmc_update_upgrade, upgrade_teset_input)
 
 
 @pytest.mark.parametrize("update_test_input, expectedError", test_data)
 def test_call_inside_update_hmc(mocker, update_test_input, expectedError):
-    hmc_build_manager = common_mock_setup(mocker)
-    hmc_build_manager.Hmc.checkIfHMCFullyBootedUp.return_value = (True, {})
+    hmc_update_upgrade = common_mock_setup(mocker)
+    hmc_update_upgrade.Hmc.checkIfHMCFullyBootedUp.return_value = (True, {})
     if 'ParameterError' in expectedError:
         with pytest.raises(ParameterError) as e:
-            hmc_build_manager.update_hmc(hmc_build_manager, update_test_input)
+            hmc_update_upgrade.update_hmc(hmc_update_upgrade, update_test_input)
         assert expectedError == repr(e.value)
     else:
-        hmc_build_manager.update_hmc(update_test_input)
+        hmc_update_upgrade.update_hmc(update_test_input)
 
 
 @pytest.mark.parametrize("facts_test_data, expectedError", facts_test_data)
 def test_call_inside_facts_hmc(mocker, facts_test_data, expectedError):
-    hmc_build_manager = common_mock_setup(mocker)
-    hmc_build_manager.Hmc.checkIfHMCFullyBootedUp.return_value = (True, {})
+    hmc_update_upgrade = common_mock_setup(mocker)
+    hmc_update_upgrade.Hmc.checkIfHMCFullyBootedUp.return_value = (True, {})
     if expectedError != "":
         with pytest.raises(KeyError) as e:
-            hmc_build_manager.facts(hmc_build_manager, facts_test_data)
+            hmc_update_upgrade.facts(hmc_update_upgrade, facts_test_data)
         assert expectedError == str(e.value)
     else:
-        hmc_build_manager.facts(hmc_build_manager, facts_test_data)
-    #   hmc_build_manager.HmcCliConnection.assert_called_with(params['hmc_host'], params['hmc_auth']['userid'], '123456' )
+        hmc_update_upgrade.facts(hmc_update_upgrade, facts_test_data)
