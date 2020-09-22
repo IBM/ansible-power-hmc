@@ -58,4 +58,4 @@ deploy:
     local_dir: docs/build
     keep_history: true
     on:
-        branch: alphaware
+        branch: betaware
