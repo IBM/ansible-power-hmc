@@ -6,7 +6,7 @@ Installation
 ============
 
 You can install the **IBM Power Systems HMC collection** using one of these options:
-Ansible Galaxy, Automation Hub or a local build.
+Ansible Galaxy or a local build.
 
 For more information on installing collections, see `using collections`_.
 
@@ -99,75 +99,6 @@ see `installing collections`_.
 .. _installing collections:
    https://docs.ansible.com/ansible/latest/user_guide/collections_using.html#installing-collections-with-ansible-galaxy
 
-Automation Hub and Private Galaxy server
-----------------------------------------
-Configuring access to a private Galaxy server follows the same instructions
-that you would use to configure your client to point to Automation Hub. When
-hosting a private Galaxy server or pointing to Hub, available content is not
-always consistent with what is available on the community Galaxy server.
-
-You can use the `ansible-galaxy`_ command with the option ``install`` to
-install a collection on your system (control node) hosted in Automation Hub
-or a private Galaxy server.
-
-By default, the ``ansible-galaxy`` command is configured to access
-``https://galaxy.ansible.com`` as the server when you install a
-collection. The `ansible-galaxy` client can be configured to point to Hub or
-other servers, such as a privately running Galaxy server, by configuring the
-server list in the ``ansible.cfg`` file.
-
-Ansible searches for ``ansible.cfg`` in the following locations in this order:
-
-   * ANSIBLE_CONFIG (environment variable if set)
-   * ansible.cfg (in the current directory)
-   * ~/.ansible.cfg (in the home directory)
-   * /etc/ansible/ansible.cfg
-
-To configure a Galaxy server list in the ansible.cfg file:
-
-  * Add the server_list option under the [galaxy] section to one or more
-    server names.
-  * Create a new section for each server name.
-  * Set the url option for each server name.
-
-For Automation Hub, you additionally need to:
-
-  * Set the auth_url option for each server name.
-  * Set the API token for each server name. For more information on API tokens,
-    see `Get API token from the version dropdown to copy your API token`_.
-
-.. _Get API token from the version dropdown to copy your API token:
-   https://cloud.redhat.com/ansible/automation-hub/token/
-
-The following example shows a configuration for Automation Hub, a private
-running Galaxy server, and Galaxy:
-
-.. code-block:: yaml
-
-   [galaxy]
-   server_list = automation_hub, galaxy, private_galaxy
-
-   [galaxy_server.automation_hub]
-   url=https://cloud.redhat.com/api/automation-hub/
-   auth_url=https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token
-   token=<hub_token>
-
-   [galaxy_server.galaxy]
-   url=https://galaxy.ansible.com/
-
-   [galaxy_server.private_galaxy]
-   url=https://galaxy-dev.ansible.com/
-   token=<private_token>
-
-For more configuration information, see
-`configuring the ansible-galaxy client`_ and `Ansible Configuration Settings`_.
-
-.. _configuring the ansible-galaxy client:
-   https://docs.ansible.com/ansible/latest/user_guide/collections_using.html#configuring-the-ansible-galaxy-client
-
-.. _Ansible configuration Settings:
-   https://docs.ansible.com/ansible/latest/reference_appendices/config.html
-
 
 Local build
 -----------
@@ -175,7 +106,7 @@ Local build
 You can use the ``ansible-galaxy collection install`` command to install a
 collection built from source. Version builds are available in the ``builds``
 directory of the IBM ansible-power-hmc Git repository. The archives can be
-installed locally without having to use Hub or Galaxy.
+installed locally without having to Galaxy.
 
 To install a build from the ansible-power-hmc Git repository:
 

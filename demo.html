@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>IBM Power Systems HMC Collection for Ansible &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
+  <title>Demo &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
   
 
   
@@ -38,7 +38,8 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Installation" href="installation.html" /> 
+    <link rel="next" title="Contributing" href="community_guides.html" />
+    <link rel="prev" title="Playbooks" href="playbooks.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -52,7 +53,7 @@
           
 
           
-            <a href="#" class="icon icon-home" alt="Documentation Home"> IBM Power Systems HMC
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> IBM Power Systems HMC
           
 
           
@@ -89,10 +90,22 @@
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 </ul>
 <p class="caption"><span class="caption-text">References</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="modules.html">Modules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="playbooks.html">Playbooks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="demo.html">Demo</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Demo</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#hmc-build-manager">hmc_build_manager</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#update">Update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#upgrade">Upgrade</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#hmc-pwdpolicy">hmc_pwdpolicy</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#create-and-activate">Create and Activate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#deactivate-modify-and-activate">Deactivate, Modify and Activate</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">Community Guides</span></p>
 <ul>
@@ -121,7 +134,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">IBM Power Systems HMC</a>
+          <a href="index.html">IBM Power Systems HMC</a>
         
       </nav>
 
@@ -150,16 +163,16 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>IBM Power Systems HMC Collection for Ansible</li>
+      <li>Demo</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
             
-              <a href="https://github.com/IBM/ansible-power-hmc/blob/dev-collection/docs/source/index.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/IBM/ansible-power-hmc/blob/dev-collection/docs/source/demo.rst" class="fa fa-github"> Edit on GitHub</a>
             
           
         
@@ -173,50 +186,47 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="ibm-power-systems-hmc-collection-for-ansible">
-<h1>IBM Power Systems HMC Collection for Ansible<a class="headerlink" href="#ibm-power-systems-hmc-collection-for-ansible" title="Permalink to this headline">¶</a></h1>
-<p>The <strong>IBM Power Systems HMC collection</strong> provides modules that can be used to manage configurations
-of Power Hardware Management Console and Power systems managed by the <strong>Hardware Management Console</strong>.
-The collection content helps to include Hardware Management Console as part of enterprise automation
-strategy through the Ansible ecosystem.</p>
+  <div class="section" id="demo">
+<h1>Demo<a class="headerlink" href="#demo" title="Permalink to this headline">¶</a></h1>
+<p>Following set of example scenarios demonstrate how to use the modules of the
+<strong>IBM Power Systems HMC collection</strong> content</p>
+<div class="section" id="hmc-build-manager">
+<h2>hmc_build_manager<a class="headerlink" href="#hmc-build-manager" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="update">
+<h3>Update<a class="headerlink" href="#update" title="Permalink to this headline">¶</a></h3>
+<p>The following gif demonstrates the update of a HMC from 910 to 941 using
+disk source which takes the image from control node.</p>
+<div class="figure align-default">
+<img alt="" src="_images/demo_hmc_build_manager_update.gif" />
 </div>
-<div class="section" id="ansible-content-for-ibm-power-systems">
-<h1>Ansible Content for IBM Power Systems<a class="headerlink" href="#ansible-content-for-ibm-power-systems" title="Permalink to this headline">¶</a></h1>
-<p>IBM Power Systems is a family of enterprise servers that helps transform your organization
-by delivering industry leading resilience, scalability and accelerated performance for the
-most sensitive, mission critical workloads and next-generation AI and edge solutions. The
-Power platform also leverages open source technologies that enable you to run these
-workloads in a hybrid cloud environment with consistent tools, processes and skills.</p>
-<p>IBM Power Systems HMC collection, as part of the broader offering of
-<strong>Ansible Content for IBM Power Systems</strong>, is available from Ansible Galaxy and has
-community support.</p>
 </div>
-<div class="section" id="features">
-<h1>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h1>
-<p>The <strong>IBM Power Systems HMC collection</strong> includes <a class="reference external" href="https://github.com/IBM/ansible-power-hmc/tree/dev-collection/plugins/modules/">modules</a> and <a class="reference external" href="https://github.com/IBM/ansible-power-hmc/tree/dev-collection/playbooks">sample playbooks</a>
-that help to automate tasks on Power AIX systems.</p>
+<div class="section" id="upgrade">
+<h3>Upgrade<a class="headerlink" href="#upgrade" title="Permalink to this headline">¶</a></h3>
+<p>The following gif demonstrates the upgrade of a HMC from 870 to 910
+through NFS server.</p>
+<div class="figure align-default">
+<img alt="" src="_images/demo_hmc_build_manager_update.gif" />
 </div>
-<div class="section" id="copyright">
-<h1>Copyright<a class="headerlink" href="#copyright" title="Permalink to this headline">¶</a></h1>
-<p>© Copyright IBM Corporation 2020</p>
 </div>
-<div class="section" id="license">
-<h1>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h1>
-<p>Licensed under
-<a class="reference external" href="https://opensource.org/licenses/GPL-3.0">GNU General Public License, Version 3.0</a>.</p>
 </div>
-<div class="section" id="author-information">
-<h1>Author Information<a class="headerlink" href="#author-information" title="Permalink to this headline">¶</a></h1>
-<p>This Ansible collection is maintained by the IBM Power HMC development team.</p>
-<div class="toctree-wrapper compound">
+<div class="section" id="hmc-pwdpolicy">
+<h2>hmc_pwdpolicy<a class="headerlink" href="#hmc-pwdpolicy" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="create-and-activate">
+<h3>Create and Activate<a class="headerlink" href="#create-and-activate" title="Permalink to this headline">¶</a></h3>
+<p>The following gif demonstrates the creating of HMC password policy and
+activating it.</p>
+<div class="figure align-default">
+<img alt="" src="_images/demo_password_policy_create.gif" />
 </div>
-<div class="toctree-wrapper compound">
 </div>
-<div class="toctree-wrapper compound">
+<div class="section" id="deactivate-modify-and-activate">
+<h3>Deactivate, Modify and Activate<a class="headerlink" href="#deactivate-modify-and-activate" title="Permalink to this headline">¶</a></h3>
+<p>The following gif demonstrates the deactivating the active HMC password
+policy then modify and activate it.</p>
+<div class="figure align-default">
+<img alt="" src="_images/demo_password_policy_modify.gif" />
 </div>
-<div class="toctree-wrapper compound">
 </div>
-<div class="toctree-wrapper compound">
 </div>
 </div>
 
@@ -228,8 +238,10 @@ that help to automate tasks on Power AIX systems.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="community_guides.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
+      
+        <a href="playbooks.html" class="btn btn-neutral float-left" title="Playbooks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

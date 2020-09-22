@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Installation &mdash; IBM Power Systems AIX 1.0.0-beta1 documentation</title>
+  <title>Installation &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
   
 
   
@@ -53,7 +53,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home" alt="Documentation Home"> IBM Power Systems AIX
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> IBM Power Systems HMC
           
 
           
@@ -88,7 +88,6 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#ansible-galaxy">Ansible Galaxy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#automation-hub-and-private-galaxy-server">Automation Hub and Private Galaxy server</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#local-build">Local build</a></li>
 </ul>
 </li>
@@ -98,6 +97,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">Modules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="playbooks.html">Playbooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo.html">Demo</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Community Guides</span></p>
 <ul>
@@ -126,7 +126,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">IBM Power Systems AIX</a>
+          <a href="index.html">IBM Power Systems HMC</a>
         
       </nav>
 
@@ -181,7 +181,7 @@
   <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <p>You can install the <strong>IBM Power Systems HMC collection</strong> using one of these options:
-Ansible Galaxy, Automation Hub or a local build.</p>
+Ansible Galaxy or a local build.</p>
 <p>For more information on installing collections, see <a class="reference external" href="https://docs.ansible.com/ansible/latest/user_guide/collections_using.html">using collections</a>.</p>
 <div class="section" id="ansible-galaxy">
 <h2>Ansible Galaxy<a class="headerlink" href="#ansible-galaxy" title="Permalink to this headline">¶</a></h2>
@@ -245,73 +245,12 @@ to find collections.</p>
 <p>For more information on installing collections with Ansible Galaxy,
 see <a class="reference external" href="https://docs.ansible.com/ansible/latest/user_guide/collections_using.html#installing-collections-with-ansible-galaxy">installing collections</a>.</p>
 </div>
-<div class="section" id="automation-hub-and-private-galaxy-server">
-<h2>Automation Hub and Private Galaxy server<a class="headerlink" href="#automation-hub-and-private-galaxy-server" title="Permalink to this headline">¶</a></h2>
-<p>Configuring access to a private Galaxy server follows the same instructions
-that you would use to configure your client to point to Automation Hub. When
-hosting a private Galaxy server or pointing to Hub, available content is not
-always consistent with what is available on the community Galaxy server.</p>
-<p>You can use the <a class="reference external" href="https://docs.ansible.com/ansible/latest/cli/ansible-galaxy.html">ansible-galaxy</a> command with the option <code class="docutils literal notranslate"><span class="pre">install</span></code> to
-install a collection on your system (control node) hosted in Automation Hub
-or a private Galaxy server.</p>
-<p>By default, the <code class="docutils literal notranslate"><span class="pre">ansible-galaxy</span></code> command is configured to access
-<code class="docutils literal notranslate"><span class="pre">https://galaxy.ansible.com</span></code> as the server when you install a
-collection. The <cite>ansible-galaxy</cite> client can be configured to point to Hub or
-other servers, such as a privately running Galaxy server, by configuring the
-server list in the <code class="docutils literal notranslate"><span class="pre">ansible.cfg</span></code> file.</p>
-<p>Ansible searches for <code class="docutils literal notranslate"><span class="pre">ansible.cfg</span></code> in the following locations in this order:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>ANSIBLE_CONFIG (environment variable if set)</p></li>
-<li><p>ansible.cfg (in the current directory)</p></li>
-<li><p>~/.ansible.cfg (in the home directory)</p></li>
-<li><p>/etc/ansible/ansible.cfg</p></li>
-</ul>
-</div></blockquote>
-<p>To configure a Galaxy server list in the ansible.cfg file:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>Add the server_list option under the [galaxy] section to one or more
-server names.</p></li>
-<li><p>Create a new section for each server name.</p></li>
-<li><p>Set the url option for each server name.</p></li>
-</ul>
-</div></blockquote>
-<p>For Automation Hub, you additionally need to:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>Set the auth_url option for each server name.</p></li>
-<li><p>Set the API token for each server name. For more information on API tokens,
-see <a class="reference external" href="https://cloud.redhat.com/ansible/automation-hub/token/">Get API token from the version dropdown to copy your API token</a>.</p></li>
-</ul>
-</div></blockquote>
-<p>The following example shows a configuration for Automation Hub, a private
-running Galaxy server, and Galaxy:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">[</span><span class="nv">galaxy</span><span class="p p-Indicator">]</span>
-<span class="l l-Scalar l-Scalar-Plain">server_list = automation_hub, galaxy, private_galaxy</span>
-
-<span class="l l-Scalar l-Scalar-Plain">[galaxy_server.automation_hub]</span>
-<span class="l l-Scalar l-Scalar-Plain">url=https://cloud.redhat.com/api/automation-hub/</span>
-<span class="l l-Scalar l-Scalar-Plain">auth_url=https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token</span>
-<span class="l l-Scalar l-Scalar-Plain">token=&lt;hub_token&gt;</span>
-
-<span class="l l-Scalar l-Scalar-Plain">[galaxy_server.galaxy]</span>
-<span class="l l-Scalar l-Scalar-Plain">url=https://galaxy.ansible.com/</span>
-
-<span class="l l-Scalar l-Scalar-Plain">[galaxy_server.private_galaxy]</span>
-<span class="l l-Scalar l-Scalar-Plain">url=https://galaxy-dev.ansible.com/</span>
-<span class="l l-Scalar l-Scalar-Plain">token=&lt;private_token&gt;</span>
-</pre></div>
-</div>
-<p>For more configuration information, see
-<a class="reference external" href="https://docs.ansible.com/ansible/latest/user_guide/collections_using.html#configuring-the-ansible-galaxy-client">configuring the ansible-galaxy client</a> and <a class="reference external" href="https://docs.ansible.com/ansible/latest/reference_appendices/config.html">Ansible Configuration Settings</a>.</p>
-</div>
 <div class="section" id="local-build">
 <h2>Local build<a class="headerlink" href="#local-build" title="Permalink to this headline">¶</a></h2>
 <p>You can use the <code class="docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">install</span></code> command to install a
 collection built from source. Version builds are available in the <code class="docutils literal notranslate"><span class="pre">builds</span></code>
 directory of the IBM ansible-power-hmc Git repository. The archives can be
-installed locally without having to use Hub or Galaxy.</p>
+installed locally without having to Galaxy.</p>
 <p>To install a build from the ansible-power-hmc Git repository:</p>
 <blockquote>
 <div><ol class="arabic">
