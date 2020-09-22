@@ -14,7 +14,7 @@ ANSIBLE_METADATA = {
 
 DOCUMENTATION = '''
 ---
-module: hmc_build_manager
+module: hmc_update_upgrade
 author:
     - Anil Vijayan (@AnilVijayan)
 short_description: Manages the update and upgrade of HMC
@@ -115,7 +115,7 @@ options:
 
 EXAMPLES = '''
 - name: List the HMC current build level
-  hmc_build_manager:
+  hmc_update_upgrade:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
          username: '{{ ansible_user }}'
@@ -123,7 +123,7 @@ EXAMPLES = '''
       state: facts
 
 - name: Update the HMC to the 941 build level from nfs location
-  hmc_build_manager:
+  hmc_update_upgrade:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
          username: '{{ ansible_user }}'
@@ -136,7 +136,7 @@ EXAMPLES = '''
       state: updated
 
 - name: Update the HMC to the 941 build level from sftp location
-  hmc_build_manager:
+  hmc_update_upgrade:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
          username: '{{ ansible_user }}'

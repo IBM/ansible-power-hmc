@@ -23,7 +23,7 @@
 
   tasks:
   - name: List the HMC current build level
-    hmc_build_manager:
+    hmc_update_upgrade:
         hmc_host: '{{ hmc_ip }}'
         hmc_auth: '{{ curr_hmc_auth }}'
         state: facts
@@ -34,7 +34,7 @@
       msg: '{{ build_info }}'
 
   - name: Update the HMC to the 941 build level using disk
-    hmc_build_manager:
+    hmc_update_upgrade:
         hmc_host: '{{ hmc_ip }}'
         hmc_auth: '{{ curr_hmc_auth }}'
         build_config: '{{ config }}'
