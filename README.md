@@ -7,9 +7,10 @@
 <!-- Not always needed, but a scope helps the user understand in a short sentence like below, why this repo exists -->
 ## Scope
 
-The **IBM Power Systems HMC collection** provides modules that can be used to manage configurations and
-deployment of Power Hardware Management Console. The collection content helps to include workloads on
-Power platforms as part of an enterprise automation strategy through the Ansible ecosystem.
+The **IBM Power Systems HMC collection** provides modules that can be used to manage configurations
+of Power Hardware Management Console and Power systems managed by the **Hardware Management Console**.
+The collection content helps to include Hardware Management Console as part of enterprise automation
+strategy through the Ansible ecosystem.
 
 The **IBM Power Systems HMC collection** is included as an upstream collection under the
 **Ansible Content for IBM Power Systems** umbrella of community content.

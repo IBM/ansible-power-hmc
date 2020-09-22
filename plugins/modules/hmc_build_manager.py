@@ -20,6 +20,9 @@ author:
 short_description: Manages the update and upgrade of HMC
 notes:
     - Upgrade with I(location_type=disk) will not support for 870 and 910 release of HMC
+    - Module will not satisfy the idempotency requirement of Ansible, even though it partially confirms it.
+      For instance if the module is tasked to update/upgrade the HMC to the same level, it will still
+      go ahead with the operation and finally the changed state will be reported as false.
 description:
     - Updates the HMC by installing a corrective service package located on an FTP/SFTP/NFS server or HMC hard disk.
     - Upgrades the HMC by obtaining  the required  files  from a remote server or from the HMC hard disk. The files are transferred

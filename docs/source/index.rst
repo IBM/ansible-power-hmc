@@ -2,8 +2,9 @@ IBM Power Systems HMC Collection for Ansible
 ============================================
 
 The **IBM Power Systems HMC collection** provides modules that can be used to manage configurations
-of Power Hardware Management Console. The collection content helps to include workloads on
-Power platforms as part of an enterprise automation strategy through the Ansible ecosystem.
+of Power Hardware Management Console and Power systems managed by the **Hardware Management Console**.
+The collection content helps to include Hardware Management Console as part of enterprise automation
+strategy through the Ansible ecosystem.
 
 Ansible Content for IBM Power Systems
 =====================================
@@ -17,11 +18,6 @@ workloads in a hybrid cloud environment with consistent tools, processes and ski
 IBM Power Systems HMC collection, as part of the broader offering of
 **Ansible Content for IBM Power Systems**, is available from Ansible Galaxy and has
 community support.
-
-Getting Started Articles
-========================
-Check out the reference materials below if you are new to Ansible for HMC.
-
 
 Features
 ========
@@ -68,7 +64,7 @@ This Ansible collection is maintained by the IBM Power HMC development team.
 
    modules
    playbooks
-   roles
+   demo
 
 .. toctree::
    :maxdepth: 1

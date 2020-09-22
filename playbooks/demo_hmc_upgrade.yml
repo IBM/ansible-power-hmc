@@ -1,13 +1,11 @@
----
-- name: Demo HMC update 
+- name: Demo HMC upgrade
   hosts: hmcs
   collections:
       - ibm.power_hmc
   connection: local
   gather_facts: no
-
   vars:
-     curr_hmc_auth:
+      curr_hmc_auth:
         username: "{{ ansible_user }}"
         password: !vault |
                   $ANSIBLE_VAULT;1.1;AES256
@@ -15,16 +13,17 @@
                   6233643263373837366163336633396338613166633630610a333538393465616235303631383637
                   31376166636238383436393232663066616137373436353631386266333031373332396465376361
                   3133313737353730610a333234613935323432313036363238396530613965383935303936326637
-                  3533
-     hmc_ip: "{{ inventory_hostname }}"
-     config:
-        location_type: disk
-        build_file: /root/HMCImages/941/x86_64
-
+                  3533 
+      config:
+        location_type: nfs
+        hostname: 9.3.147.72
+        mount_location: /HMCImages
+        build_file: /HMC9.1.910.0/1803052221/x86_64/network_install
   tasks:
+
   - name: List the HMC current build level
     hmc_build_manager:
-        hmc_host: '{{ hmc_ip }}'
+        hmc_host: '{{ inventory_hostname }}'
         hmc_auth: '{{ curr_hmc_auth }}'
         state: facts
     register: build_info
@@ -33,14 +32,14 @@
     debug:
       msg: '{{ build_info }}'
 
-  - name: Update the HMC to the 941 build level using disk
+  - name: Upgrade the HMC from 870 to 910 using NFS server
     hmc_build_manager:
-        hmc_host: '{{ hmc_ip }}'
+        hmc_host: '{{ inventory_hostname }}'
         hmc_auth: '{{ curr_hmc_auth }}'
         build_config: '{{ config }}'
-        state: updated
-    register: updated_hmc_build_info
+        state: upgraded
+    register: upgraded_hmc_build_info
 
-  - name: Stdout the Probed HMC build info after update
+  - name: Stdout the upgraded Probed HMC build info
     debug:
-      msg: '{{ updated_hmc_build_info }}'
+      msg: '{{ upgraded_hmc_build_info }}'
