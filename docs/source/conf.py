@@ -15,7 +15,7 @@
 # Project information
 ##############################################################################
 
-project = 'IBM Power Systems AIX'
+project = 'IBM Power Systems HMC'
 copyright = '2020, IBM'
 author = 'IBM'
 

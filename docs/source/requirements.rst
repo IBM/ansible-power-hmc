@@ -29,4 +29,7 @@ Control node
 Managed node
 ------------
 
+* `HMC level`_: V8R8.7.0 or V9R1 or later
 
+.. _HMC level:
+   https://www.ibm.com/support/fixcentral/main/selectFixes?parent=powersysmgmntcouncil&product=ibm~hmc~9100HMC&release=V9R1&platform=All
