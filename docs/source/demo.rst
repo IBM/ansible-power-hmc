@@ -8,8 +8,8 @@ Demo
 Following set of example scenarios demonstrate how to use the modules of the
 **IBM Power Systems HMC collection** content
 
-hmc_build_manager
------------------
+hmc_update_upgrade
+------------------
 
 Update
 """"""

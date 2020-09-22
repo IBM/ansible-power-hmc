@@ -24,7 +24,7 @@ qualified name ``power_hmc``. For example:
 
     tasks:
     - name: Query HMC current build level
-      ibm.power_hmc.hmc_build_manager:
+      ibm.power_hmc.hmc_update_upgrade:
           state: facts
           hmc_host: '{{ inventory_hostname }}'
           hmc_auth:
@@ -43,7 +43,7 @@ to refer to the collection repeatedly. For example, you can use the
 
     tasks:
     - name: Query HMC current build level
-      hmc_build_manager:
+      hmc_update_upgrade:
           state: facts
           hmc_host: '{{ inventory_hostname }}'
           hmc_auth:
@@ -58,13 +58,13 @@ documentation can be accessed from the command line by using the
 ``ansible-doc`` command.
 
 Here's how to use the ``ansible-doc`` command after you install the
-**IBM Power Systems HMC collection**: ``ansible-doc ibm.power_hmc.hmc_build_manager``
+**IBM Power Systems HMC collection**: ``ansible-doc ibm.power_hmc.hmc_update_upgrade``
 
 .. code-block:: sh
 
-     > HMC_BUILD_MANAGER    (ansible_collections/ibm/power_hmc/plugins/modules/hmc_build_manager.py)
+     > HMC_UPDATE_UPGRADE (ansible_collections/ibm/power_hmc/plugins/modules/hmc_update_upgrade.py)
 
-        Updates the HMC by installing a corrective service package located on an FTP/SFTP/NFS server or HMC hard disk Or
+        Updates the HMC by installing a corrective service package located on an FTP/SFTP/NFS server or HMC hard disk
         Upgrades the HMC by obtaining  the required  files  from a remote server or from the HMC hard disk. The files are
         transferred onto a special partition on the HMC hard disk. After the files have been transferred, HMC will boot from
         this partition and perform the upgrade
