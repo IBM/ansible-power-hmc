@@ -17,7 +17,7 @@ DOC_SRC_DIR="$DIR/docs/source"
 DOC_BLD_DIR="$DIR/docs/build"
 DOC_TEMPLATE="$DIR/docs/templates/module.rst.j2"
 
-ansible-doc-extractor --template $DOC_TEMPLATE $DOC_SRC_DIR $MODULE_DIR/*.py
+#ansible-doc-extractor --template $DOC_TEMPLATE $DOC_SRC_DIR $MODULE_DIR/*.py
 [[ ! -d $DOC_SRC_DIR/modules ]] && mkdir -p $DOC_SRC_DIR/modules
 [[ ! -d $DOC_BLD_DIR ]] && mkdir -p $DOC_BLD_DIR
 ansible-doc-extractor $DOC_SRC_DIR/modules $MODULE_DIR/*.py
