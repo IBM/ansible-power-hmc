@@ -1,8 +1,8 @@
-.. _hmc_build_manager_module:
+.. _hmc_update_upgrade_module:
 
 
-hmc_build_manager -- Manages the update and upgrade of HMC
-==========================================================
+hmc_update_upgrade -- Manages the update and upgrade of HMC
+===========================================================
 
 .. contents::
    :local:
@@ -50,7 +50,7 @@ Parameters
     Configuration parameters required for hmc update/upgrade.
 
 
-    location_type (optional, str, None)
+    location_type (True, str, None)
       The type of location which contains the corrective service ISO image Valid values are ``disk`` for the HMC hard disk, ``ftp`` for an FTP site, ``sftp`` for a secure FTP (SFTP) site, ``nfs`` for an NFS file system.
 
 
@@ -109,7 +109,7 @@ Examples
 
     
     - name: List the HMC current build level
-      hmc_build_manager:
+      hmc_update_upgrade:
           hmc_host: '{{ inventory_hostname }}'
           hmc_auth:
              username: '{{ ansible_user }}'
@@ -117,7 +117,7 @@ Examples
           state: facts
 
     - name: Update the HMC to the 941 build level from nfs location
-      hmc_build_manager:
+      hmc_update_upgrade:
           hmc_host: '{{ inventory_hostname }}'
           hmc_auth:
              username: '{{ ansible_user }}'
@@ -130,7 +130,7 @@ Examples
           state: updated
 
     - name: Update the HMC to the 941 build level from sftp location
-      hmc_build_manager:
+      hmc_update_upgrade:
           hmc_host: '{{ inventory_hostname }}'
           hmc_auth:
              username: '{{ ansible_user }}'

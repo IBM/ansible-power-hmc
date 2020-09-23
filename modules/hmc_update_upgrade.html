@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>hmc_build_manager – Manages the update and upgrade of HMC &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
+  <title>hmc_update_upgrade – Manages the update and upgrade of HMC &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
   
 
   
@@ -38,8 +38,8 @@
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="hmc_pwdpolicy – Manages the list, create, change and remove password policies of HMC" href="hmc_pwdpolicy.html" />
-    <link rel="prev" title="Modules" href="../modules.html" /> 
+    <link rel="next" title="Playbooks" href="../playbooks.html" />
+    <link rel="prev" title="hmc_pwdpolicy – Manages the list, create, change and remove password policies of HMC" href="hmc_pwdpolicy.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -93,7 +93,8 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../modules.html">Modules</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../modules.html#module-reference">Module reference</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">hmc_build_manager – Manages the update and upgrade of HMC</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hmc_pwdpolicy.html">hmc_pwdpolicy – Manages the list, create, change and remove password policies of HMC</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">hmc_update_upgrade – Manages the update and upgrade of HMC</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#synopsis">Synopsis</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#requirements">Requirements</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#parameters">Parameters</a></li>
@@ -103,7 +104,6 @@
 <li class="toctree-l4"><a class="reference internal" href="#status">Status</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="hmc_pwdpolicy.html">hmc_pwdpolicy – Manages the list, create, change and remove password policies of HMC</a></li>
 </ul>
 </li>
 </ul>
@@ -171,14 +171,14 @@
         
           <li><a href="../modules.html">Modules</a> &raquo;</li>
         
-      <li>hmc_build_manager – Manages the update and upgrade of HMC</li>
+      <li>hmc_update_upgrade – Manages the update and upgrade of HMC</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
             
-              <a href="https://github.com/IBM/ansible-power-hmc/blob/dev-collection/docs/source/modules/hmc_build_manager.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/IBM/ansible-power-hmc/blob/dev-collection/docs/source/modules/hmc_update_upgrade.rst" class="fa fa-github"> Edit on GitHub</a>
             
           
         
@@ -192,8 +192,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="hmc-build-manager-manages-the-update-and-upgrade-of-hmc">
-<span id="hmc-build-manager-module"></span><h1>hmc_build_manager – Manages the update and upgrade of HMC<a class="headerlink" href="#hmc-build-manager-manages-the-update-and-upgrade-of-hmc" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="hmc-update-upgrade-manages-the-update-and-upgrade-of-hmc">
+<span id="hmc-update-upgrade-module"></span><h1>hmc_update_upgrade – Manages the update and upgrade of HMC<a class="headerlink" href="#hmc-update-upgrade-manages-the-update-and-upgrade-of-hmc" title="Permalink to this headline">¶</a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
 <li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
@@ -233,7 +233,7 @@
 </dd>
 <dt>build_config (False, dict, None)</dt><dd><p>Configuration parameters required for hmc update/upgrade.</p>
 <dl class="simple">
-<dt>location_type (optional, str, None)</dt><dd><p>The type of location which contains the corrective service ISO image Valid values are <code class="docutils literal notranslate"><span class="pre">disk</span></code> for the HMC hard disk, <code class="docutils literal notranslate"><span class="pre">ftp</span></code> for an FTP site, <code class="docutils literal notranslate"><span class="pre">sftp</span></code> for a secure FTP (SFTP) site, <code class="docutils literal notranslate"><span class="pre">nfs</span></code> for an NFS file system.</p>
+<dt>location_type (True, str, None)</dt><dd><p>The type of location which contains the corrective service ISO image Valid values are <code class="docutils literal notranslate"><span class="pre">disk</span></code> for the HMC hard disk, <code class="docutils literal notranslate"><span class="pre">ftp</span></code> for an FTP site, <code class="docutils literal notranslate"><span class="pre">sftp</span></code> for a secure FTP (SFTP) site, <code class="docutils literal notranslate"><span class="pre">nfs</span></code> for an NFS file system.</p>
 </dd>
 <dt>hostname (optional, str, None)</dt><dd><p>The host name or IP address of the remote server where the corrective service ISO image is located.</p>
 </dd>
@@ -270,7 +270,7 @@
 <div class="section" id="examples">
 <h2><a class="toc-backref" href="#id5">Examples</a><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">List the HMC current build level</span>
-  <span class="nt">hmc_build_manager</span><span class="p">:</span>
+  <span class="nt">hmc_update_upgrade</span><span class="p">:</span>
       <span class="nt">hmc_host</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&#39;</span>
       <span class="nt">hmc_auth</span><span class="p">:</span>
          <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
@@ -278,7 +278,7 @@
       <span class="nt">state</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">facts</span>
 
 <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Update the HMC to the 941 build level from nfs location</span>
-  <span class="nt">hmc_build_manager</span><span class="p">:</span>
+  <span class="nt">hmc_update_upgrade</span><span class="p">:</span>
       <span class="nt">hmc_host</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&#39;</span>
       <span class="nt">hmc_auth</span><span class="p">:</span>
          <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
@@ -291,7 +291,7 @@
       <span class="nt">state</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">updated</span>
 
 <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Update the HMC to the 941 build level from sftp location</span>
-  <span class="nt">hmc_build_manager</span><span class="p">:</span>
+  <span class="nt">hmc_update_upgrade</span><span class="p">:</span>
       <span class="nt">hmc_host</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&#39;</span>
       <span class="nt">hmc_auth</span><span class="p">:</span>
          <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
@@ -336,10 +336,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="hmc_pwdpolicy.html" class="btn btn-neutral float-right" title="hmc_pwdpolicy – Manages the list, create, change and remove password policies of HMC" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../playbooks.html" class="btn btn-neutral float-right" title="Playbooks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../modules.html" class="btn btn-neutral float-left" title="Modules" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="hmc_pwdpolicy.html" class="btn btn-neutral float-left" title="hmc_pwdpolicy – Manages the list, create, change and remove password policies of HMC" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

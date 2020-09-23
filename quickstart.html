@@ -191,7 +191,7 @@ qualified name <code class="docutils literal notranslate"><span class="pre">powe
 
 <span class="nt">tasks</span><span class="p">:</span>
 <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Query HMC current build level</span>
-  <span class="nt">ibm.power_hmc.hmc_build_manager</span><span class="p">:</span>
+  <span class="nt">ibm.power_hmc.hmc_update_upgrade</span><span class="p">:</span>
       <span class="nt">state</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">facts</span>
       <span class="nt">hmc_host</span><span class="p">:</span> <span class="s">&#39;{{</span><span class="nv"> </span><span class="s">inventory_hostname</span><span class="nv"> </span><span class="s">}}&#39;</span>
       <span class="nt">hmc_auth</span><span class="p">:</span>
@@ -207,7 +207,7 @@ to refer to the collection repeatedly. For example, you can use the
 
 <span class="nt">tasks</span><span class="p">:</span>
 <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Query HMC current build level</span>
-  <span class="nt">hmc_build_manager</span><span class="p">:</span>
+  <span class="nt">hmc_update_upgrade</span><span class="p">:</span>
       <span class="nt">state</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">facts</span>
       <span class="nt">hmc_host</span><span class="p">:</span> <span class="s">&#39;{{</span><span class="nv"> </span><span class="s">inventory_hostname</span><span class="nv"> </span><span class="s">}}&#39;</span>
       <span class="nt">hmc_auth</span><span class="p">:</span>
@@ -222,10 +222,10 @@ similar to a UNIX-like operating system man page (manual page). This
 documentation can be accessed from the command line by using the
 <code class="docutils literal notranslate"><span class="pre">ansible-doc</span></code> command.</p>
 <p>Here’s how to use the <code class="docutils literal notranslate"><span class="pre">ansible-doc</span></code> command after you install the
-<strong>IBM Power Systems HMC collection</strong>: <code class="docutils literal notranslate"><span class="pre">ansible-doc</span> <span class="pre">ibm.power_hmc.hmc_build_manager</span></code></p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>&gt; HMC_BUILD_MANAGER    <span class="o">(</span>ansible_collections/ibm/power_hmc/plugins/modules/hmc_build_manager.py<span class="o">)</span>
+<strong>IBM Power Systems HMC collection</strong>: <code class="docutils literal notranslate"><span class="pre">ansible-doc</span> <span class="pre">ibm.power_hmc.hmc_update_upgrade</span></code></p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>&gt; HMC_UPDATE_UPGRADE <span class="o">(</span>ansible_collections/ibm/power_hmc/plugins/modules/hmc_update_upgrade.py<span class="o">)</span>
 
-   Updates the HMC by installing a corrective service package located on an FTP/SFTP/NFS server or HMC hard disk Or
+   Updates the HMC by installing a corrective service package located on an FTP/SFTP/NFS server or HMC hard disk
    Upgrades the HMC by obtaining  the required  files  from a remote server or from the HMC hard disk. The files are
    transferred onto a special partition on the HMC hard disk. After the files have been transferred, HMC will boot from
    this partition and perform the upgrade
