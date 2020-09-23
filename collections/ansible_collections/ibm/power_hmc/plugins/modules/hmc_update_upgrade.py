@@ -64,7 +64,6 @@ options:
                       Valid values are C(disk) for the HMC hard disk, C(ftp) for an FTP site,
                       C(sftp) for a secure FTP (SFTP) site, C(nfs) for an NFS file system.
                 type: str
-                required: true
                 choices: ['disk', 'ftp', 'sftp', 'nfs']
             hostname:
                 description:
