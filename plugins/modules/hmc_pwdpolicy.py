@@ -22,7 +22,7 @@ description:
     - Creates a password policy.
     - Changes password policies on the Hardware Management Console to activate, deactivate or modify password policy.
     - Removes a password policy from the Hardware Management Console.
-version_added: "2.9"
+version_added: 1.0.0
 options:
     hmc_host:
         description:

@@ -28,7 +28,7 @@ description:
     - Upgrades the HMC by obtaining  the required  files  from a remote server or from the HMC hard disk. The files are transferred
       onto a special partition on the HMC hard disk. After the files have been transferred, HMC will boot from this partition
       and perform the upgrade.
-version_added: "2.9"
+version_added: 1.0.0
 requirements:
 - Python >= 3
 options:
