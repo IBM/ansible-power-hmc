@@ -326,6 +326,7 @@ def upgrade_hmc(module, params):
     changed = False
     hmc_conn = None
     warning_msg = None
+    isBootedUp = False
 
     if not params['build_config']:
         raise ParameterError("missing options on build_config")
@@ -393,6 +394,7 @@ def update_hmc(module, params):
     password = params['hmc_auth']['password']
     changed = False
     warning_msg = None
+    isBootedUp = False
 
     if not params['build_config']:
         raise ParameterError("missing options on build_config")
