@@ -123,7 +123,7 @@ EXAMPLES = '''
          password: '{{ hmc_password }}'
       state: facts
 
-- name: Update the HMC to the 941 build level from nfs location
+- name: Update the HMC to the V9R1M941 build level from nfs location
   hmc_update_upgrade:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -136,7 +136,7 @@ EXAMPLES = '''
           mount_location: /HMCImages
       state: updated
 
-- name: Update the HMC to the 941 build level from sftp location
+- name: Update the HMC to the V9R1M941 build level from sftp location
   hmc_update_upgrade:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:

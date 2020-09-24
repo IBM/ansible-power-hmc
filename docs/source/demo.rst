@@ -13,8 +13,8 @@ hmc_update_upgrade
 
 Update
 """"""
-The following gif demonstrates the update of a HMC from 910 to 941 using
-disk source which takes the image from control node.
+The following gif demonstrates the update of a HMC from V9 R1 M910 to V9 R1 M941
+using disk source which takes the image from control node.
 
 .. figure:: ../images/demo_hmc_update.gif
    :alt: 
@@ -22,7 +22,7 @@ disk source which takes the image from control node.
 Upgrade
 """""""
 
-The following gif demonstrates the upgrade of a HMC from 870 to 910
+The following gif demonstrates the upgrade of a HMC from V8 R870 to V9 R1 M910 
 through NFS server.
 
 .. figure:: ../images/demo_hmc_upgrade.gif
