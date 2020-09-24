@@ -21,31 +21,31 @@ authors:
 ### OPTIONAL but strongly recommended
 
 # A short summary description of the collection
-description: Ansible collection of modules and roles used to manage HMC
+description: Ansible Content for IBM Power HMCs - to manage configurations of Power HMC and Power systems managed by the HMC.
 
-# Either a single license or a list of licenses for content inside of a collection. Ansible Galaxy currently only
-# accepts L(SPDX,https://spdx.org/licenses/) licenses. This key is mutually exclusive with 'license_file'
+# Collection License
 license:
 - GPL-3.0-only
 
-# A list of tags you want to associate with the collection for indexing/searching. A tag name has the same character
-# requirements as 'namespace' and 'name'
-tags: [infrastructure]
+# Collection Tags
+tags: [infrastructure, ibm, power, hmc]
 
-# Collections that this collection requires to be installed for it to be usable. The key of the dict is the
-# collection label 'namespace.name'. The value is a version range
-# L(specifiers,https://python-semanticversion.readthedocs.io/en/latest/#requirement-specification). Multiple version
-# range specifiers can be set and are separated by ','
 dependencies: {}
 
 # The URL of the originating SCM repository
 repository: https://github.com/IBM/ansible-power-hmc
 
 # The URL to any online docs
-documentation: http://docs.example.com
+documentation: https://ibm.github.io/ansible-power-hmc/index.html
 
 # The URL to the homepage of the collection/project
-homepage: https://github.ibm.com
+homepage: https://github.com/IBM
 
 # The URL to the collection issue tracker
-issues: https://github.com/IBM/ansible-power-hmc/issues 
+issues: https://github.com/IBM/ansible-power-hmc/issues
+
+# Files to ignore when building power_hmc collection
+build_ignore:
+- builds
+- devops
+- '*.tar.gz'
