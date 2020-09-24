@@ -270,7 +270,7 @@
   <span class="nt">hmc_pwdpolicy</span><span class="p">:</span>
     <span class="nt">hmc_host</span><span class="p">:</span> <span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span>
     <span class="nt">hmc_auth</span><span class="p">:</span>
-         <span class="nt">userid</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
+         <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
          <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
     <span class="nt">policy_type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">status</span>
     <span class="nt">state</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">facts</span>
@@ -281,7 +281,7 @@
     <span class="nt">hmc_auth</span><span class="p">:</span>
          <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
          <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
-    <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">dummy</span>
+    <span class="nt">policy_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">dummy</span>
     <span class="nt">state</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">present</span>
     <span class="nt">policy_config</span><span class="p">:</span>
 
@@ -291,7 +291,7 @@
     <span class="nt">hmc_auth</span><span class="p">:</span>
          <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
          <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
-    <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">dummy</span>
+    <span class="nt">policy_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">dummy</span>
     <span class="nt">policy_config</span><span class="p">:</span>
        <span class="nt">pwage</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
        <span class="nt">hist_size</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">12</span>
@@ -303,7 +303,7 @@
     <span class="nt">hmc_auth</span><span class="p">:</span>
          <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
          <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
-    <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">dummy</span>
+    <span class="nt">policy_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">dummy</span>
     <span class="nt">state</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">activated</span>
 
 <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">De-activate any active policy on HMC</span>
@@ -320,7 +320,7 @@
     <span class="nt">hmc_auth</span><span class="p">:</span>
          <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
          <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
-    <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">dummy</span>
+    <span class="nt">policy_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">dummy</span>
     <span class="nt">state</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">absent</span>
 </pre></div>
 </div>
