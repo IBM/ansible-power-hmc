@@ -467,7 +467,7 @@ def perform_task(module):
     }
 
     if not params['hmc_auth']:
-        return False, "missing credential info"
+        return False, "missing credential info", None
 
     try:
         return actions[params['state']](module, params)
