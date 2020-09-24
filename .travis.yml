@@ -1,0 +1,61 @@
+sudo: required
+dist: bionic
+language: python
+python:
+  - "3.7"
+
+# command to install dependencies
+install:
+  - pip install ansible==2.9
+  - pip install flake8
+  - pip install wheel       # for ansible-test
+  - pip install Jinja2      # for ansible-test
+  - pip3 install pyyaml     # for ansible-test
+  - pip3 install voluptuous # for ansible-test
+  - pip install pyyaml      # for compile test with Python2
+  - pip3 install pylint     # for ansible-test
+  - pip install yamllint    # for ansible-test
+  - pip install pytest      # for pytest
+  - pip install pytest-mock # for pytest
+  - pip3 install rstcheck
+  - pip3 install ansible-doc-extractor
+  - pip install sphinx
+  - pip install sphinx_rtd_theme
+  - ansible --version
+
+env:
+  global:
+    secure: XQdEPnrg9WEJarmlkI+i6EKegl+LsoG9iWRtpNL2VPftkTBs8XP3fHYygZ29QdxQaenZaJIq7lhwnK5heaIeJvgLhBN88XIzyyeDeLgSuWKsDvM8UDKwj4hS+ZS9NqoiBwMBL+ya+hOIoHXPeSH1LhdH+yJWYhvXWehmskNaQF/kscPc9G89Y39GtkGolM3FwLQx/P/eS5+Lytnb1d+wCSjtZHCAdfndyufYy6mxX1wxf7NZl6jENBm85JdnlJ1hKq9eYRoEP1Ws/c0bzWVDWVIN+iB7yhAI6wMtyCq/KM5mvxCuRBCrYVy3SEdpswaCyihSi5TIUjVRde28a9XfaKST1m5ahjdQ8I9VHa9wAb34dERCT7KQpBWPEoIwLAaBK/Abwd5Z9asBomKbJsYWB9T8L0RPN99Wzq1UVO5jzshQr9QHX89lo7MqBXbEjRBOyViOYiltKujhVk9K+SCL//e9FuneUWwBrRSofStoolDBDSFjoTlLefdjt/0HAGS2y5G393PEBubYoAXOmI2wo/0YU4fVOp1OkPpUA0C6+TrFeFDbHJZ6+JH+WKwEoGDHT/53YCH6iGFNe1FhBwSx9jIb9zMC02rRoCodKjwq3qr7vCSf5p4RZWyXvRe1XNRtgveLOBYSMFG5mIPjcUUG2WSbuKZXs0D/g+hVY+uzano=
+
+# command to run tests
+script:
+
+  # With flake ignore
+  #  E402: <module> level import not at top of file (as per Ansible module developement)
+  #  W503: line break before binary operator (PEP8 advices to put logical operator ahead)
+  - flake8 plugins/modules/* --max-line-length=160 --ignore=E402,W503
+  - flake8 plugins/module_utils/* --max-line-length=160 --ignore=E402,W503
+  - flake8 tests/unit/*/* --max-line-length=160 --ignore=E402,W503
+  - ansible-galaxy collection build
+  - ansible-galaxy collection install ibm-power_hmc*
+  - build_path=`pwd`
+  - cd /home/travis/.ansible/collections/ansible_collections/ibm/power_hmc
+
+  - pyenv global 3.7 2.7 
+  - ansible-test sanity --python 2.7 --skip-test shellcheck
+  - ansible-test sanity --python 3.7 --skip-test shellcheck
+  - cd /home/travis/.ansible/collections/
+  - python -m pytest
+  - cd $build_path
+  - bash devops/bin/gen_doc.sh
+
+# push the generated documentation using GitHub Pages
+deploy:
+    provider: pages
+    strategy: git
+    skip_cleanup: true
+    token: $GITHUB_API_KEY
+    local_dir: docs/build
+    keep_history: true
+    on:
+        branch: dev-collection
