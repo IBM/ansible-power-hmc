@@ -19,7 +19,7 @@ author:
     - Anil Vijayan (@AnilVijayan)
 short_description: Manages the update and upgrade of HMC
 notes:
-    - Upgrade with I(location_type=disk) will not support for 870 and 910 release of HMC
+    - Upgrade with I(location_type=disk) will not support for V8 R870 and V9 R1 M910 release of HMC
     - Module will not satisfy the idempotency requirement of Ansible, even though it partially confirms it.
       For instance if the module is tasked to update/upgrade the HMC to the same level, it will still
       go ahead with the operation and finally the changed state will be reported as false.
