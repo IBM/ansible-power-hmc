@@ -9,7 +9,7 @@ from lxml import etree, objectify
 import xml.etree.ElementTree as ET
 
 import logging
-LOG_FILENAME = "/tmp/hmc_ansible.log"
+LOG_FILENAME = "/tmp/ansible_power_hmc.log"
 logger = logging.getLogger(__name__)
 
 
@@ -29,6 +29,12 @@ def xml_strip_namespace(xml_str):
 
     objectify.deannotate(root, cleanup_namespaces=True)
     return root
+
+
+def parse_error_response(xml_str):
+    dom = xml_strip_namespace(xml_str)
+    logger.debug(dom.xpath("//Message")[0].text)
+    return dom.xpath("//Message")[0].text
 
 
 def logonPayload(user, password):
