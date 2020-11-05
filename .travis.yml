@@ -21,6 +21,7 @@ install:
   - pip3 install ansible-doc-extractor
   - pip install sphinx
   - pip install sphinx_rtd_theme
+  - pip install lxml
   - ansible --version
 
 env:
