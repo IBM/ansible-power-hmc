@@ -22,8 +22,9 @@ install:
   - pip install sphinx
   - pip install sphinx_rtd_theme
   - pip install lxml
+  - pip3 install lxml
   - ansible --version
-  - python -c "import lxml"
+  - python3.7 -c "import lxml"
 
 env:
   global:

@@ -15,17 +15,17 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 module: powervm_lpar_instance
-
+author:
+    - Anil Vijayan (@AnilVijayan)
 short_description: Create/Delete an AIX or Linux partition
-
 description:
     - "Updates the HMC by installing a corrective service package located on an FTP/SFTP/NFS server or HMC hard disk"
     - "Or Upgrades the HMC by obtaining  the required  files  from a remote server or from the HMC hard disk. The files are transferred
        onto a special partition on the HMC hard disk. After the files have been transferred, HMC will boot from this partition
        and perform the upgrade"
-
-version_added: "2.10"
-
+version_added: "1.1.0"
+requirements:
+- Python >= 3
 options:
     hmc_host:
         description:
@@ -84,27 +84,21 @@ options:
         required: true
         type: str
         choices: ['present', 'absent']
-
-author:
-    - Anil Vijayan (@yourhandle)
 '''
 
 EXAMPLES = '''
-# Pass in a message
-- name: Test with a message
-  my_new_test_module:
-    name: hello world
-
-# pass in a message and have changed true
-- name: Test with a message and changed output
-  my_new_test_module:
-    name: hello world
-    new: true
-
-# fail the module
-- name: Test failure of the module
-  my_new_test_module:
-    name: fail me
+- name: Create an IBMi logical partition instance
+  powervm_lpar_instance:
+      hmc_host: '{{ inventory_hostname }}'
+      hmc_auth:
+         username: '{{ ansible_user }}'
+         password: '{{ hmc_password }}'
+      system_name: <system_name>
+      vm_name: <vm_name>
+      proc: 4
+      mem: 20480
+      os_type: ibmi
+      state: present
 '''
 
 RETURN = '''
