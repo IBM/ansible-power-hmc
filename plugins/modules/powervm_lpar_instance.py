@@ -14,18 +14,18 @@ ANSIBLE_METADATA = {
 
 DOCUMENTATION = '''
 ---
-module: hmc_powervm
-
+module: powervm_lpar_instance
+author:
+    - Anil Vijayan (@AnilVijayan)
 short_description: Create/Delete an AIX or Linux partition
-
 description:
     - "Updates the HMC by installing a corrective service package located on an FTP/SFTP/NFS server or HMC hard disk"
     - "Or Upgrades the HMC by obtaining  the required  files  from a remote server or from the HMC hard disk. The files are transferred
        onto a special partition on the HMC hard disk. After the files have been transferred, HMC will boot from this partition
        and perform the upgrade"
-
-version_added: "2.9"
-
+version_added: "1.1.0"
+requirements:
+- Python >= 3
 options:
     hmc_host:
         description:
@@ -84,27 +84,21 @@ options:
         required: true
         type: str
         choices: ['present', 'absent']
-
-author:
-    - Anil Vijayan (@yourhandle)
 '''
 
 EXAMPLES = '''
-# Pass in a message
-- name: Test with a message
-  my_new_test_module:
-    name: hello world
-
-# pass in a message and have changed true
-- name: Test with a message and changed output
-  my_new_test_module:
-    name: hello world
-    new: true
-
-# fail the module
-- name: Test failure of the module
-  my_new_test_module:
-    name: fail me
+- name: Create an IBMi logical partition instance
+  powervm_lpar_instance:
+      hmc_host: '{{ inventory_hostname }}'
+      hmc_auth:
+         username: '{{ ansible_user }}'
+         password: '{{ hmc_password }}'
+      system_name: <system_name>
+      vm_name: <vm_name>
+      proc: 4
+      mem: 20480
+      os_type: ibmi
+      state: present
 '''
 
 RETURN = '''
@@ -125,20 +119,14 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_resource import 
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import Error
-from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import logon
-from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import getPartitionTemplate
-from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import getManagedSystem
-from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import copyPartitionTemplate
-from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import updatePartitionTemplate
-from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import deployPartitionTemplate
-from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import transformPartitionTemplate
-from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import checkPartitionTemplate
-from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import deletePartitionTemplate
-from lxml import etree
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import parse_error_response
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import HmcRestClient
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import add_taggedIO_details
+import ansible.module_utils.six.moves.urllib.error as urllib_error
 
 # Generic setting for log initializing and log rotation
 import logging
-LOG_FILENAME = "/tmp/hmc_ansible.log"
+LOG_FILENAME = "/tmp/ansible_power_hmc.log"
 logger = logging.getLogger(__name__)
 
 HMC_REBOOT_TIMEOUT = 60
@@ -151,14 +139,14 @@ def init_logger():
         level=logging.DEBUG)
 
 
-def validate_proc_mem(system_doc, proc, mem):
+def validate_proc_mem(system_dom, proc, mem):
 
-    curr_avail_proc_units = system_doc.xpath('//CurrentAvailableSystemProcessorUnits')[0].text
+    curr_avail_proc_units = system_dom.xpath('//CurrentAvailableSystemProcessorUnits')[0].text
     int_avail_proc = int(float(curr_avail_proc_units))
 
-    curr_avail_mem = system_doc.xpath('//CurrentAvailableSystemMemory')[0].text
+    curr_avail_mem = system_dom.xpath('//CurrentAvailableSystemMemory')[0].text
     int_avail_mem = int(curr_avail_mem)
-    curr_avail_lmb = system_doc.xpath('//CurrentLogicalMemoryBlockSize')[0].text
+    curr_avail_lmb = system_dom.xpath('//CurrentLogicalMemoryBlockSize')[0].text
     lmb = int(curr_avail_lmb)
 
     if proc > int_avail_proc:
@@ -171,28 +159,13 @@ def validate_proc_mem(system_doc, proc, mem):
         raise HmcError("Available system memory is not enough. Provide value on or below {0}".format(curr_avail_mem))
 
 
-def addTaggedIOdetails(lpar_template_doc):
-    taggedIO_payload = '''<iBMiPartitionTaggedIO kxe="false" kb="CUD" schemaVersion="V1_0">
-                <Metadata>
-                    <Atom/>
-                </Metadata>
-                <console kxe="false" kb="CUD">HMC</console>
-                <operationsConsole kxe="false" kb="CUD">NONE</operationsConsole>
-                <loadSource kb="CUD" kxe="false">NONE</loadSource>
-                <alternateLoadSource kxe="false" kb="CUD">NONE</alternateLoadSource>
-                <alternateConsole kxe="false" kb="CUD">NONE</alternateConsole>
-            </iBMiPartitionTaggedIO>'''
-
-    ioConfigurationTag = lpar_template_doc.xpath("//ioConfiguration/isUseCapturedPhysicalIOInformationEnabled")[0]
-    ioConfigurationTag.addnext(etree.XML(taggedIO_payload))
-
-
 def create_partition(module, params):
     changed = False
-    hmc_conn = None
+    cli_conn = None
+    rest_conn = None
     session = None
     system_uuid = None
-    server_doc = None
+    server_dom = None
     hmc_host = params['hmc_host']
     hmc_user = params['hmc_auth']['userid']
     password = params['hmc_auth']['password']
@@ -202,56 +175,65 @@ def create_partition(module, params):
     mem = params['mem']
     os_type = params['os_type']
 
-    hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
-    hmc = Hmc(hmc_conn)
+    cli_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
+    hmc = Hmc(cli_conn)
 
     try:
-        session = logon(hmc_host, hmc_user, password)
+        rest_conn = HmcRestClient(hmc_host, hmc_user, password)
     except Exception as error:
         logger.debug(repr(error))
         module.fail_json(msg="Logon to HMC failed")
 
     try:
-        system_uuid, server_doc = getManagedSystem(hmc_host, session, system_name)
+        system_uuid, server_dom = rest_conn.getManagedSystem(system_name)
     except Exception as error:
         logger.debug(repr(error))
         module.fail_json(msg="Fetch of managed system info failed")
     if not system_uuid:
         module.fail_json(msg="Given system is not present")
 
-    validate_proc_mem(server_doc, int(proc), int(mem))
+    validate_proc_mem(server_dom, int(proc), int(mem))
 
     try:
         if os_type == 'aix_linux':
             reference_template = "QuickStart_lpar_rpa_3"
         else:
             reference_template = "QuickStart_lpar_IBMi_3"
-        copyPartitionTemplate(hmc_host, session, reference_template, "draft_ansible_powervm_create")
-        max_lpars = server_doc.xpath("//MaximumPartitions")[0].text
+        rest_conn.copyPartitionTemplate(reference_template, "draft_ansible_powervm_create")
+        max_lpars = server_dom.xpath("//MaximumPartitions")[0].text
         next_lpar_id = hmc.getNextPartitionID(system_name, max_lpars)
         logger.debug("Next Partiion ID: %s", str(next_lpar_id))
         logger.debug("CEC uuid: %s", system_uuid)
 
-        resp = checkPartitionTemplate(hmc_host, session, "draft_ansible_powervm_create", system_uuid)
+        resp = rest_conn.checkPartitionTemplate("draft_ansible_powervm_create", system_uuid)
         draft_uuid = resp.xpath("//ParameterName[text()='TEMPLATE_UUID']/following-sibling::ParameterValue")[0].text
         logger.debug(draft_uuid)
-        draft_template_xml = getPartitionTemplate(hmc_host, session, uuid=draft_uuid)
+        draft_template_xml = rest_conn.getPartitionTemplate(uuid=draft_uuid)
 
         config_dict = {'lpar_id': str(next_lpar_id)}
         config_dict['vm_name'] = vm_name
         config_dict['proc'] = proc
         config_dict['mem'] = mem
         if os_type == 'ibmi':
-            addTaggedIOdetails(draft_template_xml)
-        updatePartitionTemplate(hmc_host, session, draft_uuid, draft_template_xml, config_dict)
-        transformPartitionTemplate(hmc_host, session, draft_uuid, system_uuid)
-        deployPartitionTemplate(hmc_host, session, draft_uuid, system_uuid)
+            add_taggedIO_details(draft_template_xml)
+        rest_conn.updatePartitionTemplate(draft_uuid, draft_template_xml, config_dict)
+        rest_conn.transformPartitionTemplate(draft_uuid, system_uuid)
+        rest_conn.deployPartitionTemplate(draft_uuid, system_uuid)
     except Exception as error:
+        logger.debug(type(error))
+        if isinstance(error, urllib_error.HTTPError):
+            rest_response = parse_error_response(error.read().decode())
+            logger.debug(rest_response)
+            if "Failed to unmarshal input payload" in rest_response:
+                error = "Current HMC version might not support some of input settings"
+            else:
+                error = rest_response
         logger.debug("Line number: %d exception: %s", sys.exc_info()[2].tb_lineno, repr(error))
         module.fail_json(msg=repr(error))
     finally:
         try:
-            deletePartitionTemplate(hmc_host, session, "draft_ansible_powervm_create")
+            rest_conn.deletePartitionTemplate("draft_ansible_powervm_create")
+            rest_conn.logoff()
         except Exception as del_error:
             module.fail_json(msg=repr(del_error))
 

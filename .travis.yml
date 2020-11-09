@@ -6,7 +6,7 @@ python:
 
 # command to install dependencies
 install:
-  - pip install ansible==2.9
+  - pip install ansible
   - pip install flake8
   - pip install wheel       # for ansible-test
   - pip install Jinja2      # for ansible-test
@@ -22,7 +22,9 @@ install:
   - pip install sphinx
   - pip install sphinx_rtd_theme
   - pip install lxml
+  - pip3 install lxml
   - ansible --version
+  - python3.7 -c "import lxml"
 
 env:
   global:
@@ -44,6 +46,7 @@ script:
 
   - pyenv global 3.7 2.7 
   - ansible-test sanity --python 2.7 --skip-test shellcheck
+  - python3.7 -c "import lxml"
   - ansible-test sanity --python 3.7 --skip-test shellcheck
   - cd /home/travis/.ansible/collections/
   - python -m pytest
