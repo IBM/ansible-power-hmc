@@ -129,8 +129,6 @@ import logging
 LOG_FILENAME = "/tmp/ansible_power_hmc.log"
 logger = logging.getLogger(__name__)
 
-HMC_REBOOT_TIMEOUT = 60
-
 
 def init_logger():
     logging.basicConfig(
@@ -163,7 +161,6 @@ def create_partition(module, params):
     changed = False
     cli_conn = None
     rest_conn = None
-    session = None
     system_uuid = None
     server_dom = None
     hmc_host = params['hmc_host']
@@ -192,13 +189,22 @@ def create_partition(module, params):
     if not system_uuid:
         module.fail_json(msg="Given system is not present")
 
+    try:
+        partition_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, vm_name)
+    except Exception as error:
+        logger.debug("FAILED: Get of Logical partition. {0}".format(repr(error)))
+        module.fail_json(msg="Not able to fetch partition info")
+
+    if partition_dom:
+        return False, None
+
     validate_proc_mem(server_dom, int(proc), int(mem))
 
     try:
         if os_type == 'aix_linux':
-            reference_template = "QuickStart_lpar_rpa_3"
+            reference_template = "QuickStart_lpar_rpa_2"
         else:
-            reference_template = "QuickStart_lpar_IBMi_3"
+            reference_template = "QuickStart_lpar_IBMi_2"
         rest_conn.copyPartitionTemplate(reference_template, "draft_ansible_powervm_create")
         max_lpars = server_dom.xpath("//MaximumPartitions")[0].text
         next_lpar_id = hmc.getNextPartitionID(system_name, max_lpars)
@@ -219,8 +225,8 @@ def create_partition(module, params):
         rest_conn.updatePartitionTemplate(draft_uuid, draft_template_xml, config_dict)
         rest_conn.transformPartitionTemplate(draft_uuid, system_uuid)
         rest_conn.deployPartitionTemplate(draft_uuid, system_uuid)
+        changed = True
     except Exception as error:
-        logger.debug(type(error))
         if isinstance(error, urllib_error.HTTPError):
             rest_response = parse_error_response(error.read().decode())
             logger.debug(rest_response)
@@ -240,12 +246,62 @@ def create_partition(module, params):
     return changed, None
 
 
+def remove_partition(module, params):
+    changed = False
+    rest_conn = None
+    system_uuid = None
+    hmc_host = params['hmc_host']
+    hmc_user = params['hmc_auth']['userid']
+    password = params['hmc_auth']['password']
+    system_name = params['system_name']
+    vm_name = params['vm_name']
+
+    try:
+        rest_conn = HmcRestClient(hmc_host, hmc_user, password)
+    except Exception as error:
+        logger.debug(repr(error))
+        module.fail_json(msg="Logon to HMC failed")
+
+    try:
+        system_uuid, server_dom = rest_conn.getManagedSystem(system_name)
+    except Exception as error:
+        logger.debug(repr(error))
+        module.fail_json(msg="Fetch of managed system info failed")
+    if not system_uuid:
+        module.fail_json(msg="Given system is not present")
+
+    try:
+        partition_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, vm_name)
+        if not partition_dom:
+            logger.debug("Given partition already absent on the managed system")
+            return False, None
+
+        if partition_dom.xpath("//PartitionState")[0].text != 'not activated':
+            module.fail_json(msg="Given logical partition:{0} is not in shutdown state".format(vm_name))
+
+        rest_conn.deleteLogicalPartition(partition_uuid)
+        changed = True
+    except Exception as error:
+        logger.debug(type(error))
+        if isinstance(error, urllib_error.HTTPError):
+            rest_response = parse_error_response(error.read().decode())
+            logger.debug(rest_response)
+            error = rest_response
+        logger.debug("Line number: %d exception: %s", sys.exc_info()[2].tb_lineno, repr(error))
+        module.fail_json(msg=repr(error))
+    finally:
+        rest_conn.logoff()
+
+    return changed, None
+
 def perform_task(module):
 
     params = module.params
     actions = {
         "present": create_partition,
+        "absent": remove_partition
     }
+
     try:
         return actions[params['state']](module, params)
     except (ParameterError, HmcError, Error) as error:
@@ -265,17 +321,21 @@ def run_module():
                           password=dict(type='str'),
                       )
                       ),
-        system_name=dict(type='str', required=True),
-        vm_name=dict(type='str', required=True),
-        proc=dict(type='str', required=True),
-        mem=dict(type='str', required=True),
-        os_type=dict(type='str', required=True, choices=['aix_linux', 'ibmi']),
+        system_name=dict(type='str'),
+        vm_name=dict(type='str'),
+        proc=dict(type='str'),
+        mem=dict(type='str'),
+        os_type=dict(type='str', choices=['aix_linux', 'ibmi']),
         state=dict(required=True, type='str',
                    choices=['present', 'absent'])
     )
 
     module = AnsibleModule(
         argument_spec=module_args,
+        required_if=[['state', 'absent', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
+                     ['state', 'present', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'proc', 'mem', 'os_type']]
+                     ]
+
     )
 
     if module._verbosity >= 1:

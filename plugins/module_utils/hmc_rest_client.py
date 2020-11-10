@@ -204,7 +204,7 @@ class HmcRestClient:
                             force_basic_auth=True).read()
             doc = xml_strip_namespace(resp)
 
-            logger.debug("fetchJobStatus: %s", resp.decode("utf-8"))
+            #logger.debug("fetchJobStatus: %s", resp.decode("utf-8"))
 
             jobStatus = doc.xpath('//Status')[0].text
 
@@ -217,13 +217,25 @@ class HmcRestClient:
 
             if jobStatus != 'RUNNING':
                 logger.debug("jobStatus: %s", jobStatus)
-                err_msg = doc.xpath("//ResponseException//Message")[0].text
+                err_msg_l = doc.xpath("//ResponseException//Message")
+                if not err_msg_l:
+                    err_msg_l = doc.xpath("//ParameterName[text()='ExceptionText']/following-sibling::ParameterValue")
+                    if not err_msg_l:
+                        logger.debug(resp.decode("utf-8"))
+                        err_msg = 'Job failed.'
+                    else:
+                        err_msg = err_msg_l[0].text
                 raise HmcError(err_msg)
 
         return result
 
-    def getManagedSystems(self):
+    def _handle_response(self, response):
+        if response.code == 200:
+            return response.read()
+        else:
+            raise HmcError(response.read())
 
+    def getManagedSystems(self):
         url = "https://{0}/rest/api/uom/ManagedSystem".format(self.hmc_ip)
         header = {'X-API-Session': self.session,
                   'Accept': 'application/vnd.ibm.powervm.uom+xml; type=ManagedSystem'}
@@ -243,21 +255,65 @@ class HmcRestClient:
         header = {'X-API-Session': self.session,
                   'Accept': 'application/vnd.ibm.powervm.uom+xml; type=ManagedSystem'}
 
-        logger.debug(self.session)
-        logger.debug(url)
+        response = open_url(url,
+                            headers=header,
+                            method='GET',
+                            validate_certs=False,
+                            force_basic_auth=True)
+
+        if response.code == 204:
+            return None, None
+
+        managedsystem_root = xml_strip_namespace(response.read())
+        uuid = managedsystem_root.xpath("//AtomID")[0].text
+        return uuid, managedsystem_root.xpath("//ManagedSystem")[0]
+
+    def getLogicalPartition(self, system_uuid, partition_name):
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/LogicalPartition".format(self.hmc_ip, system_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': 'application/vnd.ibm.powervm.uom+xml; type=LogicalPartition'}
+
         response = open_url(url,
                             headers=header,
                             method='GET',
                             validate_certs=False,
                             force_basic_auth=True).read()
 
-        managedsystem_root = xml_strip_namespace(response)
-        uuid = managedsystem_root.xpath("//AtomID")[0].text
-        logger.debug(etree.tostring(managedsystem_root.xpath("//ManagedSystem")[0]).decode("utf-8"))
-        return uuid, managedsystem_root.xpath("//ManagedSystem")[0]
+        lpar_root = xml_strip_namespace(response)
+        if lpar_root:
+            partitions_dom = lpar_root.xpath("//PartitionName[text()='{0}']/..".format(partition_name))
+            #partitions_dom = lpar_root.xpath("//PartitionName[text()='{0}']".format(partition_name))[0].getparent()
+            logger.debug(type(partitions_dom))
+            logger.debug(type(lpar_root))
+            for each in partitions_dom:
+                logger.debug(etree.tostring(each).decode("utf-8"))
+            if partitions_dom:
+                logger.debug("number of partitions:")
+                logger.debug(len(partitions_dom))
+                partition_dom = partitions_dom[0]
+                logger.debug(type(partition_dom))
+                uuid = partition_dom.xpath("//PartitionUUID")[0].text
+                xml_str = etree.tostring(partition_dom)
+                partition_dom = etree.fromstring(xml_str)
+                uuid = partition_dom.xpath("//PartitionUUID")[0].text
+                logger.debug("uuid: "+uuid)
+                return uuid, partition_dom
+
+        return None, None
+
+    def deleteLogicalPartition(self, partition_uuid):
+        url = "https://{0}/rest/api/uom/LogicalPartition/{1}".format(self.hmc_ip, partition_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': 'application/vnd.ibm.powervm.uom+xml; type=LogicalPartition'}
+
+        open_url(url,
+                 headers=header,
+                 method='DELETE',
+                 validate_certs=False,
+                 force_basic_auth=True)
+
 
     def updatePartitionTemplate(self, uuid, template_xml, config_dict):
-
         template_xml.xpath("//partitionId")[0].text = config_dict['lpar_id']
         template_xml.xpath("//partitionName")[0].text = config_dict['vm_name']
 
