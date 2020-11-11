@@ -60,19 +60,16 @@ options:
     proc:
         description:
             - The number of dedicated processors to create partition
-        required: true
         type: str
     mem:
         description:
             - The value of dedicated memory value in megabytes to create partition
-        required: true
         type: str
     os_type:
         description:
             - "Type of logical partition to be created"
             - "aix_linux: for AIX or Linux type of OS"
             - "ibmi: for IBM i operating system"
-        required: true
         type: str
         choices: ['aix_linux', 'ibmi']
     state:
@@ -192,7 +189,7 @@ def create_partition(module, params):
     try:
         partition_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, vm_name)
     except Exception as error:
-        logger.debug("FAILED: Get of Logical partition. {0}".format(repr(error)))
+        logger.debug("FAILED: Get of Logical partition. %s", repr(error))
         module.fail_json(msg="Not able to fetch partition info")
 
     if partition_dom:
@@ -215,6 +212,8 @@ def create_partition(module, params):
         draft_uuid = resp.xpath("//ParameterName[text()='TEMPLATE_UUID']/following-sibling::ParameterValue")[0].text
         logger.debug(draft_uuid)
         draft_template_xml = rest_conn.getPartitionTemplate(uuid=draft_uuid)
+        if not draft_template_xml:
+            module.fail_json(msg="Not able to fetch template for partition deploy")
 
         config_dict = {'lpar_id': str(next_lpar_id)}
         config_dict['vm_name'] = vm_name
@@ -227,21 +226,16 @@ def create_partition(module, params):
         rest_conn.deployPartitionTemplate(draft_uuid, system_uuid)
         changed = True
     except Exception as error:
-        if isinstance(error, urllib_error.HTTPError):
-            rest_response = parse_error_response(error.read().decode())
-            logger.debug(rest_response)
-            if "Failed to unmarshal input payload" in rest_response:
-                error = "Current HMC version might not support some of input settings"
-            else:
-                error = rest_response
+        error_msg = parse_error_response(error)
         logger.debug("Line number: %d exception: %s", sys.exc_info()[2].tb_lineno, repr(error))
-        module.fail_json(msg=repr(error))
+        module.fail_json(msg=error_msg)
     finally:
         try:
             rest_conn.deletePartitionTemplate("draft_ansible_powervm_create")
             rest_conn.logoff()
         except Exception as del_error:
-            module.fail_json(msg=repr(del_error))
+            error_msg = parse_error_response(del_error)
+            logger.debug(error_msg)
 
     return changed, None
 
@@ -282,20 +276,16 @@ def remove_partition(module, params):
         rest_conn.deleteLogicalPartition(partition_uuid)
         changed = True
     except Exception as error:
-        logger.debug(type(error))
-        if isinstance(error, urllib_error.HTTPError):
-            rest_response = parse_error_response(error.read().decode())
-            logger.debug(rest_response)
-            error = rest_response
+        error_msg = parse_error_response(error)
         logger.debug("Line number: %d exception: %s", sys.exc_info()[2].tb_lineno, repr(error))
-        module.fail_json(msg=repr(error))
+        module.fail_json(msg=error_msg)
     finally:
         rest_conn.logoff()
 
     return changed, None
 
-def perform_task(module):
 
+def perform_task(module):
     params = module.params
     actions = {
         "present": create_partition,
@@ -321,8 +311,8 @@ def run_module():
                           password=dict(type='str'),
                       )
                       ),
-        system_name=dict(type='str'),
-        vm_name=dict(type='str'),
+        system_name=dict(type='str', required=True),
+        vm_name=dict(type='str', required=True),
         proc=dict(type='str'),
         mem=dict(type='str'),
         os_type=dict(type='str', choices=['aix_linux', 'ibmi']),

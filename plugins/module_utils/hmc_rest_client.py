@@ -1,8 +1,8 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
-from ansible.module_utils.urls import open_url
 import time
-import xml.etree.ElementTree as ET
+from ansible.module_utils.urls import open_url
+import ansible.module_utils.six.moves.urllib.error as urllib_error
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
 from ansible.module_utils.six.moves import cStringIO
 from lxml import etree, objectify
@@ -31,10 +31,21 @@ def xml_strip_namespace(xml_str):
     return root
 
 
-def parse_error_response(xml_str):
-    dom = xml_strip_namespace(xml_str)
-    logger.debug(dom.xpath("//Message")[0].text)
-    return dom.xpath("//Message")[0].text
+def parse_error_response(error):
+    if isinstance(error, urllib_error.HTTPError):
+        xml_str = error.read().decode()
+        dom = xml_strip_namespace(xml_str)
+        error_msg_l = dom.xpath("//Message")
+        if error_msg_l:
+            error_msg = error_msg_l[0].text
+            if "Failed to unmarshal input payload" in error_msg:
+                error_msg = "Current HMC version might not support some of input settings"
+        else:
+            error_msg = "Unknown http error"
+    else:
+        error_msg = repr(error)
+    logger.debug(error_msg)
+    return error_msg
 
 
 def _logonPayload(user, password):
@@ -204,8 +215,6 @@ class HmcRestClient:
                             force_basic_auth=True).read()
             doc = xml_strip_namespace(resp)
 
-            #logger.debug("fetchJobStatus: %s", resp.decode("utf-8"))
-
             jobStatus = doc.xpath('//Status')[0].text
 
             if jobStatus == 'COMPLETED_OK' or jobStatus == 'COMPLETED_WITH_ERROR':
@@ -218,13 +227,11 @@ class HmcRestClient:
             if jobStatus != 'RUNNING':
                 logger.debug("jobStatus: %s", jobStatus)
                 err_msg_l = doc.xpath("//ResponseException//Message")
+                err_msg_l = doc.xpath("//ParameterName[text()='ExceptionText']/following-sibling::ParameterValue") if not err_msg_l else err_msg_l
                 if not err_msg_l:
-                    err_msg_l = doc.xpath("//ParameterName[text()='ExceptionText']/following-sibling::ParameterValue")
-                    if not err_msg_l:
-                        logger.debug(resp.decode("utf-8"))
-                        err_msg = 'Job failed.'
-                    else:
-                        err_msg = err_msg_l[0].text
+                    err_msg = 'Job failed.'
+                else:
+                    err_msg = err_msg_l[0].text
                 raise HmcError(err_msg)
 
         return result
@@ -282,21 +289,14 @@ class HmcRestClient:
         lpar_root = xml_strip_namespace(response)
         if lpar_root:
             partitions_dom = lpar_root.xpath("//PartitionName[text()='{0}']/..".format(partition_name))
-            #partitions_dom = lpar_root.xpath("//PartitionName[text()='{0}']".format(partition_name))[0].getparent()
-            logger.debug(type(partitions_dom))
-            logger.debug(type(lpar_root))
             for each in partitions_dom:
                 logger.debug(etree.tostring(each).decode("utf-8"))
             if partitions_dom:
-                logger.debug("number of partitions:")
-                logger.debug(len(partitions_dom))
                 partition_dom = partitions_dom[0]
-                logger.debug(type(partition_dom))
-                uuid = partition_dom.xpath("//PartitionUUID")[0].text
                 xml_str = etree.tostring(partition_dom)
                 partition_dom = etree.fromstring(xml_str)
                 uuid = partition_dom.xpath("//PartitionUUID")[0].text
-                logger.debug("uuid: "+uuid)
+                logger.debug("PartitionUUID: %s", uuid)
                 return uuid, partition_dom
 
         return None, None
@@ -312,7 +312,6 @@ class HmcRestClient:
                  validate_certs=False,
                  force_basic_auth=True)
 
-
     def updatePartitionTemplate(self, uuid, template_xml, config_dict):
         template_xml.xpath("//partitionId")[0].text = config_dict['lpar_id']
         template_xml.xpath("//partitionName")[0].text = config_dict['vm_name']
@@ -321,7 +320,7 @@ class HmcRestClient:
         template_xml.xpath("//desiredProcessors")[0].text = config_dict['proc']
         template_xml.xpath("//maxProcessors")[0].text = config_dict['proc']
 
-        template_xml.xpath("//currMinMemory")[0].text = '1024'
+        template_xml.xpath("//currMinMemory")[0].text = config_dict['mem']
         template_xml.xpath("//currMemory")[0].text = config_dict['mem']
         template_xml.xpath("//currMaxMemory")[0].text = config_dict['mem']
 
@@ -345,15 +344,19 @@ class HmcRestClient:
         header = {'X-API-Session': self.session}
         url = "https://{0}/rest/api/templates/PartitionTemplate?draft=false&detail=table".format(self.hmc_ip)
 
-        response = open_url(url,
-                            headers=header,
-                            method='GET',
-                            validate_certs=False,
-                            force_basic_auth=True).read()
+        resp = open_url(url,
+                        headers=header,
+                        method='GET',
+                        validate_certs=False,
+                        force_basic_auth=True)
+        if resp.code == 200:
+            response = resp.read()
+        else:
+            return None
 
         root = xml_strip_namespace(response)
         element = root.xpath("//partitionTemplateName[text()='{0}']/preceding-sibling::Metadata//AtomID".format(name))
-        uuid = element[0].text
+        uuid = element[0].text if element else None
         return uuid
 
     def getPartitionTemplate(self, uuid=None, name=None):
@@ -363,6 +366,9 @@ class HmcRestClient:
         if name:
             uuid = self.getPartitionTemplateUUID(name)
 
+        if not uuid:
+            return None
+
         templateUrl = "https://{0}/rest/api/templates/PartitionTemplate/{1}".format(self.hmc_ip, uuid)
         logger.debug(templateUrl)
         resp = open_url(templateUrl,
@@ -370,7 +376,10 @@ class HmcRestClient:
                         method='GET',
                         validate_certs=False,
                         force_basic_auth=True)
-        response = resp.read()
+        if resp.code == 200:
+            response = resp.read()
+        else:
+            return None
 
         partiton_template_root = xml_strip_namespace(response)
         return partiton_template_root.xpath("//PartitionTemplate")[0]
@@ -380,15 +389,15 @@ class HmcRestClient:
                   'Content-Type': 'application/vnd.ibm.powervm.templates+xml;type=PartitionTemplate'}
 
         partiton_template_doc = self.getPartitionTemplate(name=from_name)
+        if not partiton_template_doc:
+            raise HmcError("Not able to fetch the template")
         partiton_template_doc.xpath("//partitionTemplateName")[0].text = to_name
         templateNamespace = 'PartitionTemplate xmlns="http://www.ibm.com/xmlns/systems/power/firmware/templates/mc/2012_10/" \
                              xmlns:ns2="http://www.w3.org/XML/1998/namespace/k2"'
         partiton_template_xmlstr = etree.tostring(partiton_template_doc)
         partiton_template_xmlstr = partiton_template_xmlstr.decode("utf-8").replace("PartitionTemplate", templateNamespace, 1)
-        logger.debug(partiton_template_xmlstr)
 
         templateUrl = "https://{0}/rest/api/templates/PartitionTemplate".format(self.hmc_ip)
-
         resp = open_url(templateUrl,
                         headers=header,
                         data=partiton_template_xmlstr,
@@ -402,6 +411,8 @@ class HmcRestClient:
                   'Accept': 'application/vnd.ibm.powervm.web+xml'}
 
         partiton_template_doc = self.getPartitionTemplate(name=template_name)
+        if not partiton_template_doc:
+            raise HmcError("Not able to fetch the template")
         template_uuid = partiton_template_doc.xpath("//AtomID")[0].text
 
         templateUrl = "https://{0}/rest/api/templates/PartitionTemplate/{1}".format(self.hmc_ip, template_uuid)
@@ -416,6 +427,8 @@ class HmcRestClient:
         header = _jobHeader(self.session)
 
         partiton_template_doc = self.getPartitionTemplate(name=template_name)
+        if not partiton_template_doc:
+            raise HmcError("Not able to fetch the template")
         template_uuid = partiton_template_doc.xpath("//AtomID")[0].text
         check_url = "https://{0}/rest/api/templates/PartitionTemplate/{1}/do/check".format(self.hmc_ip, template_uuid)
 
