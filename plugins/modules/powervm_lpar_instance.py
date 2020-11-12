@@ -60,11 +60,11 @@ options:
     proc:
         description:
             - The number of dedicated processors to create partition
-        type: str
+        type: int
     mem:
         description:
             - The value of dedicated memory value in megabytes to create partition
-        type: str
+        type: int
     os_type:
         description:
             - "Type of logical partition to be created"
@@ -165,8 +165,8 @@ def create_partition(module, params):
     password = params['hmc_auth']['password']
     system_name = params['system_name']
     vm_name = params['vm_name']
-    proc = params['proc']
-    mem = params['mem']
+    proc = str(params['proc'])
+    mem = str(params['mem'])
     os_type = params['os_type']
 
     cli_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
@@ -175,22 +175,22 @@ def create_partition(module, params):
     try:
         rest_conn = HmcRestClient(hmc_host, hmc_user, password)
     except Exception as error:
-        logger.debug(repr(error))
-        module.fail_json(msg="Logon to HMC failed")
+        error_msg = parse_error_response(error)
+        module.fail_json(msg=error_msg)
 
     try:
         system_uuid, server_dom = rest_conn.getManagedSystem(system_name)
     except Exception as error:
-        logger.debug(repr(error))
-        module.fail_json(msg="Fetch of managed system info failed")
+        error_msg = parse_error_response(error)
+        module.fail_json(msg=error_msg)
     if not system_uuid:
         module.fail_json(msg="Given system is not present")
 
     try:
         partition_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, vm_name)
     except Exception as error:
-        logger.debug("FAILED: Get of Logical partition. %s", repr(error))
-        module.fail_json(msg="Not able to fetch partition info")
+        error_msg = parse_error_response(error)
+        module.fail_json(msg=error_msg)
 
     if partition_dom:
         return False, None
@@ -210,7 +210,6 @@ def create_partition(module, params):
 
         resp = rest_conn.checkPartitionTemplate("draft_ansible_powervm_create", system_uuid)
         draft_uuid = resp.xpath("//ParameterName[text()='TEMPLATE_UUID']/following-sibling::ParameterValue")[0].text
-        logger.debug(draft_uuid)
         draft_template_xml = rest_conn.getPartitionTemplate(uuid=draft_uuid)
         if not draft_template_xml:
             module.fail_json(msg="Not able to fetch template for partition deploy")
@@ -313,8 +312,8 @@ def run_module():
                       ),
         system_name=dict(type='str', required=True),
         vm_name=dict(type='str', required=True),
-        proc=dict(type='str'),
-        mem=dict(type='str'),
+        proc=dict(type='int'),
+        mem=dict(type='int'),
         os_type=dict(type='str', choices=['aix_linux', 'ibmi']),
         state=dict(required=True, type='str',
                    choices=['present', 'absent'])

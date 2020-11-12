@@ -4,9 +4,14 @@ import time
 from ansible.module_utils.urls import open_url
 import ansible.module_utils.six.moves.urllib.error as urllib_error
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import Error
 from ansible.module_utils.six.moves import cStringIO
-from lxml import etree, objectify
 import xml.etree.ElementTree as ET
+NEED_LXML = False
+try:
+    from lxml import etree, objectify
+except Exception:
+    NEED_LXML = True
 
 import logging
 LOG_FILENAME = "/tmp/ansible_power_hmc.log"
@@ -34,14 +39,18 @@ def xml_strip_namespace(xml_str):
 def parse_error_response(error):
     if isinstance(error, urllib_error.HTTPError):
         xml_str = error.read().decode()
-        dom = xml_strip_namespace(xml_str)
-        error_msg_l = dom.xpath("//Message")
-        if error_msg_l:
-            error_msg = error_msg_l[0].text
-            if "Failed to unmarshal input payload" in error_msg:
-                error_msg = "Current HMC version might not support some of input settings"
+        if not xml_str:
+            logger.debug(error.url)
+            error_msg = "HTTP Error {0}: {1}".format(error.code, error.reason)
         else:
-            error_msg = "Unknown http error"
+            dom = xml_strip_namespace(xml_str)
+            error_msg_l = dom.xpath("//Message")
+            if error_msg_l:
+                error_msg = error_msg_l[0].text
+                if "Failed to unmarshal input payload" in error_msg:
+                    error_msg = "Current HMC version might not support some of input settings"
+            else:
+                error_msg = "Unknown http error"
     else:
         error_msg = repr(error)
     logger.debug(error_msg)
@@ -160,6 +169,8 @@ def add_taggedIO_details(lpar_template_dom):
 class HmcRestClient:
 
     def __init__(self, hmc_ip, username, password):
+        if NEED_LXML:
+            raise Error("Missing prerequisite lxml package. Hint pip install lxml")
         self.hmc_ip = hmc_ip
         self.username = username
         self.password = password
@@ -177,9 +188,11 @@ class HmcRestClient:
                         method='PUT',
                         data=_logonPayload(self.username, self.password),
                         validate_certs=False,
-                        force_basic_auth=True).read()
+                        force_basic_auth=True)
+        logger.debug(resp.code)
 
-        doc = xml_strip_namespace(resp)
+        response = resp.read()
+        doc = xml_strip_namespace(response)
         session = doc.xpath('X-API-Session')[0].text
         return session
 
@@ -236,27 +249,6 @@ class HmcRestClient:
 
         return result
 
-    def _handle_response(self, response):
-        if response.code == 200:
-            return response.read()
-        else:
-            raise HmcError(response.read())
-
-    def getManagedSystems(self):
-        url = "https://{0}/rest/api/uom/ManagedSystem".format(self.hmc_ip)
-        header = {'X-API-Session': self.session,
-                  'Accept': 'application/vnd.ibm.powervm.uom+xml; type=ManagedSystem'}
-        response = open_url(url,
-                            headers=header,
-                            method='GET',
-                            validate_certs=False,
-                            force_basic_auth=True).read()
-
-        logger.debug("GET MANAGEDSYSTEMS")
-        logger.debug(response.decode("utf-8"))
-        managedsystem_root = xml_strip_namespace(response)
-        return managedsystem_root.xpath("//ManagedSystem")
-
     def getManagedSystem(self, system_name):
         url = "https://{0}/rest/api/uom/ManagedSystem/search/(SystemName=={1})".format(self.hmc_ip, system_name)
         header = {'X-API-Session': self.session,
@@ -280,17 +272,20 @@ class HmcRestClient:
         header = {'X-API-Session': self.session,
                   'Accept': 'application/vnd.ibm.powervm.uom+xml; type=LogicalPartition'}
 
-        response = open_url(url,
-                            headers=header,
-                            method='GET',
-                            validate_certs=False,
-                            force_basic_auth=True).read()
+        resp = open_url(url,
+                        headers=header,
+                        method='GET',
+                        validate_certs=False,
+                        force_basic_auth=True)
+        if resp.code != 200:
+            logger.debug("Get of Logical Partition failed. Respsonse code: %d", resp.code)
+            return None, None
+        logger.debug(resp.code)
+        response = resp.read()
 
         lpar_root = xml_strip_namespace(response)
         if lpar_root:
             partitions_dom = lpar_root.xpath("//PartitionName[text()='{0}']/..".format(partition_name))
-            for each in partitions_dom:
-                logger.debug(etree.tostring(each).decode("utf-8"))
             if partitions_dom:
                 partition_dom = partitions_dom[0]
                 xml_str = etree.tostring(partition_dom)
@@ -330,7 +325,7 @@ class HmcRestClient:
 
         partiton_template_xmlstr = etree.tostring(template_xml)
         partiton_template_xmlstr = partiton_template_xmlstr.decode("utf-8").replace("PartitionTemplate", LPAR_TEMPLATE_NS, 1)
-        logger.debug(partiton_template_xmlstr)
+        #logger.debug(partiton_template_xmlstr)
 
         resp = open_url(templateUrl,
                         headers=header,
@@ -338,7 +333,7 @@ class HmcRestClient:
                         method='POST',
                         validate_certs=False,
                         force_basic_auth=True).read()
-        logger.debug(resp.decode("utf-8"))
+        #logger.debug(resp.decode("utf-8"))
 
     def getPartitionTemplateUUID(self, name):
         header = {'X-API-Session': self.session}
@@ -398,12 +393,12 @@ class HmcRestClient:
         partiton_template_xmlstr = partiton_template_xmlstr.decode("utf-8").replace("PartitionTemplate", templateNamespace, 1)
 
         templateUrl = "https://{0}/rest/api/templates/PartitionTemplate".format(self.hmc_ip)
-        resp = open_url(templateUrl,
-                        headers=header,
-                        data=partiton_template_xmlstr,
-                        method='PUT',
-                        validate_certs=False,
-                        force_basic_auth=True)
+        open_url(templateUrl,
+                 headers=header,
+                 data=partiton_template_xmlstr,
+                 method='PUT',
+                 validate_certs=False,
+                 force_basic_auth=True)
 
     def deletePartitionTemplate(self, template_name):
         logger.debug("Delete partition template...")
@@ -412,23 +407,22 @@ class HmcRestClient:
 
         partiton_template_doc = self.getPartitionTemplate(name=template_name)
         if not partiton_template_doc:
-            raise HmcError("Not able to fetch the template")
+            raise HmcError("Not able to fetch the partition template")
         template_uuid = partiton_template_doc.xpath("//AtomID")[0].text
 
         templateUrl = "https://{0}/rest/api/templates/PartitionTemplate/{1}".format(self.hmc_ip, template_uuid)
-        logger.debug(templateUrl)
-        resp = open_url(templateUrl,
-                        headers=header,
-                        method='DELETE',
-                        validate_certs=False,
-                        force_basic_auth=True)
+        open_url(templateUrl,
+                 headers=header,
+                 method='DELETE',
+                 validate_certs=False,
+                 force_basic_auth=True)
 
     def checkPartitionTemplate(self, template_name, cec_uuid):
         header = _jobHeader(self.session)
 
         partiton_template_doc = self.getPartitionTemplate(name=template_name)
         if not partiton_template_doc:
-            raise HmcError("Not able to fetch the template")
+            raise HmcError("Not able to fetch the partition template")
         template_uuid = partiton_template_doc.xpath("//AtomID")[0].text
         check_url = "https://{0}/rest/api/templates/PartitionTemplate/{1}/do/check".format(self.hmc_ip, template_uuid)
 
