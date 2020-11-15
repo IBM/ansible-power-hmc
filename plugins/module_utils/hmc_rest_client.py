@@ -280,7 +280,6 @@ class HmcRestClient:
         if resp.code != 200:
             logger.debug("Get of Logical Partition failed. Respsonse code: %d", resp.code)
             return None, None
-        logger.debug(resp.code)
         response = resp.read()
 
         lpar_root = xml_strip_namespace(response)
@@ -325,7 +324,7 @@ class HmcRestClient:
 
         partiton_template_xmlstr = etree.tostring(template_xml)
         partiton_template_xmlstr = partiton_template_xmlstr.decode("utf-8").replace("PartitionTemplate", LPAR_TEMPLATE_NS, 1)
-        #logger.debug(partiton_template_xmlstr)
+        logger.debug(partiton_template_xmlstr)
 
         resp = open_url(templateUrl,
                         headers=header,
@@ -333,7 +332,7 @@ class HmcRestClient:
                         method='POST',
                         validate_certs=False,
                         force_basic_auth=True).read()
-        #logger.debug(resp.decode("utf-8"))
+        logger.debug(resp.decode("utf-8"))
 
     def getPartitionTemplateUUID(self, name):
         header = {'X-API-Session': self.session}
@@ -393,12 +392,19 @@ class HmcRestClient:
         partiton_template_xmlstr = partiton_template_xmlstr.decode("utf-8").replace("PartitionTemplate", templateNamespace, 1)
 
         templateUrl = "https://{0}/rest/api/templates/PartitionTemplate".format(self.hmc_ip)
-        open_url(templateUrl,
-                 headers=header,
-                 data=partiton_template_xmlstr,
-                 method='PUT',
-                 validate_certs=False,
-                 force_basic_auth=True)
+        resp = open_url(templateUrl,
+                        headers=header,
+                        data=partiton_template_xmlstr,
+                        method='PUT',
+                        validate_certs=False,
+                        force_basic_auth=True)
+        # This is to handle the case of unauthorized access, instead of getting error http code seems to be 200
+        response = resp.read()
+        response_dom = xml_strip_namespace(response)
+        error_msg_l = response_dom.xpath("//Message")
+        if error_msg_l:
+            error_msg = error_msg_l[0].text
+            raise HmcError(error_msg)
 
     def deletePartitionTemplate(self, template_name):
         logger.debug("Delete partition template...")
@@ -411,11 +417,12 @@ class HmcRestClient:
         template_uuid = partiton_template_doc.xpath("//AtomID")[0].text
 
         templateUrl = "https://{0}/rest/api/templates/PartitionTemplate/{1}".format(self.hmc_ip, template_uuid)
-        open_url(templateUrl,
-                 headers=header,
-                 method='DELETE',
-                 validate_certs=False,
-                 force_basic_auth=True)
+        logger.debug(templateUrl)
+        resp = open_url(templateUrl,
+                        headers=header,
+                        method='DELETE',
+                        validate_certs=False,
+                        force_basic_auth=True)
 
     def checkPartitionTemplate(self, template_name, cec_uuid):
         header = _jobHeader(self.session)

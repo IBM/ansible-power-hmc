@@ -6,19 +6,17 @@
   connection: local
   vars:
     curr_hmc_auth:
-      userid: hscroot
+      userid: hscroot 
       password: abc123
 
-
   tasks:
-
   - name: Create logical partition
     powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth: "{{ curr_hmc_auth }}"
-      system_name: alpfp019
+      system_name: alpfp019 
       vm_name: test-ansible
-      proc: 4
+      proc: 1
       mem: 2048
       os_type: ibmi 
       state: present
