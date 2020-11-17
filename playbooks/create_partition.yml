@@ -28,5 +28,3 @@
       system_name: alpfp019 
       vm_name: test-ansible 
       state: absent
-
-
