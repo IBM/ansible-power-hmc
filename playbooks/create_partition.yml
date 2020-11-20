@@ -1,0 +1,30 @@
+---
+- name: HMC build management
+  hosts: hmcs
+  collections:
+      - ibm.power_hmc
+  connection: local
+  vars:
+    curr_hmc_auth:
+      userid: hscroot 
+      password: abc123
+
+  tasks:
+  - name: Create logical partition
+    powervm_lpar_instance:
+      hmc_host: '{{ inventory_hostname }}'
+      hmc_auth: "{{ curr_hmc_auth }}"
+      system_name: alpfp019 
+      vm_name: test-ansible
+      proc: 1
+      mem: 2048
+      os_type: ibmi 
+      state: present
+
+  - name: Delete logical partition
+    powervm_lpar_instance:
+      hmc_host: '{{ inventory_hostname }}'
+      hmc_auth: "{{ curr_hmc_auth }}"
+      system_name: alpfp019 
+      vm_name: test-ansible 
+      state: absent
