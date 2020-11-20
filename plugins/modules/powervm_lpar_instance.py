@@ -17,12 +17,11 @@ DOCUMENTATION = '''
 module: powervm_lpar_instance
 author:
     - Anil Vijayan (@AnilVijayan)
-short_description: Create/Delete an AIX or Linux partition
+short_description: Create/Delete an AIX/Linux or IBMi partition
 description:
-    - "Updates the HMC by installing a corrective service package located on an FTP/SFTP/NFS server or HMC hard disk"
-    - "Or Upgrades the HMC by obtaining  the required  files  from a remote server or from the HMC hard disk. The files are transferred
-       onto a special partition on the HMC hard disk. After the files have been transferred, HMC will boot from this partition
-       and perform the upgrade"
+    - "Creates AIX/Linux or IBMi partition with specified vmname, proc and memory details on specified system_name"
+    - "Or Deletes specified AIX/Linux or IBMi partition on specified System_name"
+
 version_added: "1.1.0"
 requirements:
 - Python >= 3
@@ -38,7 +37,7 @@ options:
         required: true
         type: dict
         suboptions:
-            userid:
+            username:
                 description:
                     - HMC user name
                 required: true
@@ -71,13 +70,11 @@ options:
             - "aix_linux: for AIX or Linux type of OS"
             - "ibmi: for IBM i operating system"
         type: str
-        choices: ['aix_linux', 'ibmi']
+        choices: ['aix','linux','aix_linux','ibmi']
     state:
         description:
-            - "The desired build state of the target hmc"
-            - "facts: Does not change anything on the HMC and returns current driver/build level of HMC"
-            - "update: Ensures the target HMC is updated with given corrective service ISO image"
-            - "upgrade: Ensures the target HMC is upgraded with given upgrade files"
+            - "present: creates a partition of specifed os_type, vm_name, proc and memory on specified system_name"
+            - "absent: deletes a partition of specified vm_name on specified system_name"
         required: true
         type: str
         choices: ['present', 'absent']
@@ -154,19 +151,52 @@ def validate_proc_mem(system_dom, proc, mem):
         raise HmcError("Available system memory is not enough. Provide value on or below {0}".format(curr_avail_mem))
 
 
+def validate_parameters(params):
+    #Check that the input parameters satisfy the mutual exclusiveness of HMC
+    if params['state'] == 'present':
+        mandatoryList = ['system_name', 'vm_name', 'proc', 'mem','os_type']
+        unsupportedList = []
+    else:
+        mandatoryList = ['system_name', 'vm_name']
+        unsupportedList = ['proc','mem','os_type']
+
+
+    collate = []
+    for eachMandatory in mandatoryList:
+        if not params[eachMandatory]:
+            collate.append(eachMandatory)
+    if collate:
+        if len(collate) == 1:
+            raise ParameterError("mandatory parameter '%s' is missing" % (collate[0]))
+        else:
+            raise ParameterError("mandatory parameters '%s' are missing" % (','.join(collate)))
+
+    collate = []
+    for eachUnsupported in unsupportedList:
+        if params[eachUnsupported]:
+            collate.append(eachUnsupported)
+
+    if collate:
+        if len(collate) == 1:
+            raise ParameterError("unsupported parameter: %s" % (collate[0]))
+        else:
+            raise ParameterError("unsupported parameters: %s" % (', '.join(collate)))
+
+
 def create_partition(module, params):
     changed = False
     cli_conn = None
     rest_conn = None
     system_uuid = None
     server_dom = None
+    validate_parameters(params)
     hmc_host = params['hmc_host']
-    hmc_user = params['hmc_auth']['userid']
+    hmc_user = params['hmc_auth']['username']
     password = params['hmc_auth']['password']
     system_name = params['system_name']
     vm_name = params['vm_name']
-    proc = str(params['proc'])
-    mem = str(params['mem'])
+    proc = str(params['proc'] or 2)
+    mem = str(params['mem'] or 1024)
     os_type = params['os_type']
 
     cli_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
@@ -198,7 +228,7 @@ def create_partition(module, params):
     validate_proc_mem(server_dom, int(proc), int(mem))
 
     try:
-        if os_type == 'aix_linux':
+        if os_type in ['aix','linux','aix_linux']:
             reference_template = "QuickStart_lpar_rpa_2"
         else:
             reference_template = "QuickStart_lpar_IBMi_2"
@@ -243,8 +273,9 @@ def remove_partition(module, params):
     changed = False
     rest_conn = None
     system_uuid = None
+    validate_parameters(params)
     hmc_host = params['hmc_host']
-    hmc_user = params['hmc_auth']['userid']
+    hmc_user = params['hmc_auth']['username']
     password = params['hmc_auth']['password']
     system_name = params['system_name']
     vm_name = params['vm_name']
@@ -306,15 +337,15 @@ def run_module():
                       required=True,
                       no_log=True,
                       options=dict(
-                          userid=dict(required=True, type='str'),
-                          password=dict(type='str'),
+                          username=dict(required=True, type='str'),
+                          password=dict(required=True, type='str'),
                       )
                       ),
         system_name=dict(type='str', required=True),
         vm_name=dict(type='str', required=True),
         proc=dict(type='int'),
         mem=dict(type='int'),
-        os_type=dict(type='str', choices=['aix_linux', 'ibmi']),
+        os_type=dict(type='str', choices=['aix', 'linux', 'aix_linux', 'ibmi']),
         state=dict(required=True, type='str',
                    choices=['present', 'absent'])
     )
@@ -322,7 +353,7 @@ def run_module():
     module = AnsibleModule(
         argument_spec=module_args,
         required_if=[['state', 'absent', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
-                     ['state', 'present', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'proc', 'mem', 'os_type']]
+                     ['state', 'present', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']]
                      ]
 
     )
