@@ -19,7 +19,7 @@ author:
     - Anil Vijayan (@AnilVijayan)
 short_description: Create/Delete an AIX/Linux or IBMi partition
 description:
-    - "Creates AIX/Linux or IBMi partition with specified vmname, proc and memory details on specified system_name"
+    - "Creates AIX/Linux or IBMi partition with specified configuration details on specified system_name"
     - "Or Deletes specified AIX/Linux or IBMi partition on specified System_name"
 
 version_added: "1.1.0"
@@ -116,7 +116,6 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions impor
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import parse_error_response
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import HmcRestClient
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import add_taggedIO_details
-import ansible.module_utils.six.moves.urllib.error as urllib_error
 
 # Generic setting for log initializing and log rotation
 import logging
@@ -152,14 +151,13 @@ def validate_proc_mem(system_dom, proc, mem):
 
 
 def validate_parameters(params):
-    #Check that the input parameters satisfy the mutual exclusiveness of HMC
+    '''Check that the input parameters satisfy the mutual exclusiveness of HMC'''
     if params['state'] == 'present':
-        mandatoryList = ['system_name', 'vm_name', 'proc', 'mem','os_type']
+        mandatoryList = ['system_name', 'vm_name', 'os_type']
         unsupportedList = []
     else:
         mandatoryList = ['system_name', 'vm_name']
-        unsupportedList = ['proc','mem','os_type']
-
+        unsupportedList = ['proc','mem', 'os_type']
 
     collate = []
     for eachMandatory in mandatoryList:
@@ -228,7 +226,7 @@ def create_partition(module, params):
     validate_proc_mem(server_dom, int(proc), int(mem))
 
     try:
-        if os_type in ['aix','linux','aix_linux']:
+        if os_type in ['aix', 'linux', 'aix_linux']:
             reference_template = "QuickStart_lpar_rpa_2"
         else:
             reference_template = "QuickStart_lpar_IBMi_2"
@@ -353,7 +351,7 @@ def run_module():
     module = AnsibleModule(
         argument_spec=module_args,
         required_if=[['state', 'absent', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
-                     ['state', 'present', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']]
+                     ['state', 'present', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'proc', 'mem', 'os_type']]
                      ]
 
     )
