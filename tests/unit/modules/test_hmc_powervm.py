@@ -35,7 +35,8 @@ test_data = [
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'present',
         'system_name': None, 'vm_name': None, 'proc': '4', 'mem': '2048',
         'os_type': 'ibmi'}, "ParameterError: mandatory parameters\
-        'system_name,vm_name' are missing")] test_data1 = [
+        'system_name,vm_name' are missing")] 
+test_data1 = [
     # ALL Delete partition testdata
     # system name is missing
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'absent',
