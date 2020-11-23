@@ -14,41 +14,41 @@ test_data = [
     # system name is missing
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'present',
         'system_name': None, 'vm_name': "vmname", 'proc': '4', 'mem': '2048',
-        'os_type': 'aix_linux'}, "ParameterError: mandatory parameter
+        'os_type': 'aix_linux'}, "ParameterError: mandatory parameter\
         'system_name' is missing"),
     # vmname is missing
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'present',
         'system_name': "systemname", 'vm_name': None, 'proc': '4', 'mem':
-        '2048', 'os_type': 'aix_linux'}, "ParameterError: mandatory parameter
+        '2048', 'os_type': 'aix_linux'}, "ParameterError: mandatory parameter\
         'vm_name' is missing"),
     # os type is missing
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'present',
         'system_name': "systemname", 'vm_name': "vmname", 'proc': '4', 'mem':
-        '2048', 'os_type': None}, "ParameterError: mandatory parameter 'os_type'
+        '2048', 'os_type': None}, "ParameterError: mandatory parameter 'os_type'\
         is missing"),
     # vmname, proc and mem are missing
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'present',
         'system_name': "systemname", 'vm_name': None, 'proc': None, 'mem': None,
-        'os_type': 'aix'}, "ParameterError: mandatory parameter 'vm_name' is
+        'os_type': 'aix'}, "ParameterError: mandatory parameter 'vm_name' is\
         missing"),
     # sys_name and vmname are missing
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'present',
         'system_name': None, 'vm_name': None, 'proc': '4', 'mem': '2048',
-        'os_type': 'ibmi'}, "ParameterError: mandatory parameters
+        'os_type': 'ibmi'}, "ParameterError: mandatory parameters\
         'system_name,vm_name' are missing")] test_data1 = [
     # ALL Delete partition testdata
     # system name is missing
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'absent',
-        'system_name': None, 'vm_name': "vmname"}, "ParameterError: mandatory
+        'system_name': None, 'vm_name': "vmname"}, "ParameterError: mandatory\
         parameter 'system_name' is missing"),
     # vmname is missing
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'absent',
-        'system_name': "systemname", 'vm_name': None}, "ParameterError:
+        'system_name': "systemname", 'vm_name': None}, "ParameterError:\
         mandatory parameter 'vm_name' is missing"),
     # unsupported parameter os_type,proc,mem
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'absent',
         'system_name': "systemname", 'vm_name': 'vmname', 'proc': '4', 'mem':
-        '1024', 'os_type': 'aix_linux'}, "ParameterError: unsupported
+        '1024', 'os_type': 'aix_linux'}, "ParameterError: unsupported\
         parameters: proc, mem, os_type")]
 
 
