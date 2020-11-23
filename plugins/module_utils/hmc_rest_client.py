@@ -417,10 +417,10 @@ class HmcRestClient:
         templateUrl = "https://{0}/rest/api/templates/PartitionTemplate/{1}".format(self.hmc_ip, template_uuid)
         logger.debug(templateUrl)
         open_url(templateUrl,
-                        headers=header,
-                        method='DELETE',
-                        validate_certs=False,
-                        force_basic_auth=True)
+                 headers=header,
+                 method='DELETE',
+                 validate_certs=False,
+                 force_basic_auth=True)
 
     def checkPartitionTemplate(self, template_name, cec_uuid):
         header = _jobHeader(self.session)

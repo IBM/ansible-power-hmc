@@ -45,6 +45,7 @@ options:
             password:
                 description:
                     - HMC password
+                required: true 
                 type: str
     system_name:
         description:
@@ -157,7 +158,7 @@ def validate_parameters(params):
         unsupportedList = []
     else:
         mandatoryList = ['system_name', 'vm_name']
-        unsupportedList = ['proc','mem', 'os_type']
+        unsupportedList = ['proc', 'mem', 'os_type']
 
     collate = []
     for eachMandatory in mandatoryList:
