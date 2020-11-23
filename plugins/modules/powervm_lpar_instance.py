@@ -45,7 +45,7 @@ options:
             password:
                 description:
                     - HMC password
-                required: true 
+                required: true
                 type: str
     system_name:
         description:
