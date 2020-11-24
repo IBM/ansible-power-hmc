@@ -14,7 +14,7 @@ test_data = [
     # system name is missing
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'present',
       'system_name': None, 'vm_name': "vmname", 'proc': '4', 'mem': '2048',
-      'os_type': 'aix_linux'}, "ParameterError: mandatory parameter'system_name' is missing"),
+      'os_type': 'aix_linux'}, "ParameterError: mandatory parameter 'system_name' is missing"),
     # vmname is missing
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'present',
       'system_name': "systemname", 'vm_name': None, 'proc': '4', 'mem':
@@ -22,7 +22,7 @@ test_data = [
     # os type is missing
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'present',
       'system_name': "systemname", 'vm_name': "vmname", 'proc': '4', 'mem':
-      '2048', 'os_type': None}, "ParameterError: mandatory parameter 'os_type'is missing"),
+      '2048', 'os_type': None}, "ParameterError: mandatory parameter 'os_type' is missing"),
     # vmname, proc and mem are missing
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'present',
       'system_name': "systemname", 'vm_name': None, 'proc': None, 'mem': None,
