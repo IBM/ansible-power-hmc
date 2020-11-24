@@ -186,7 +186,8 @@ class HmcRestClient:
                         method='PUT',
                         data=_logonPayload(self.username, self.password),
                         validate_certs=False,
-                        force_basic_auth=True)
+                        force_basic_auth=True,
+                        timeout=30)
         logger.debug(resp.code)
 
         response = resp.read()
@@ -204,7 +205,8 @@ class HmcRestClient:
                  headers=header,
                  method='DELETE',
                  validate_certs=False,
-                 force_basic_auth=True)
+                 force_basic_auth=True,
+                 timeout=30)
 
     def fetchJobStatus(self, jobId, template=False, ignoreSearch=False):
 
@@ -223,7 +225,8 @@ class HmcRestClient:
                             headers=header,
                             method='GET',
                             validate_certs=False,
-                            force_basic_auth=True).read()
+                            force_basic_auth=True,
+                            timeout=30).read()
             doc = xml_strip_namespace(resp)
 
             jobStatus = doc.xpath('//Status')[0].text
@@ -256,7 +259,8 @@ class HmcRestClient:
                             headers=header,
                             method='GET',
                             validate_certs=False,
-                            force_basic_auth=True)
+                            force_basic_auth=True,
+                            timeout=30)
 
         if response.code == 204:
             return None, None
@@ -274,7 +278,8 @@ class HmcRestClient:
                         headers=header,
                         method='GET',
                         validate_certs=False,
-                        force_basic_auth=True)
+                        force_basic_auth=True,
+                        timeout=30)
         if resp.code != 200:
             logger.debug("Get of Logical Partition failed. Respsonse code: %d", resp.code)
             return None, None
@@ -302,7 +307,8 @@ class HmcRestClient:
                  headers=header,
                  method='DELETE',
                  validate_certs=False,
-                 force_basic_auth=True)
+                 force_basic_auth=True,
+                 timeout=30)
 
     def updatePartitionTemplate(self, uuid, template_xml, config_dict):
         template_xml.xpath("//partitionId")[0].text = config_dict['lpar_id']
@@ -329,7 +335,8 @@ class HmcRestClient:
                         data=partiton_template_xmlstr,
                         method='POST',
                         validate_certs=False,
-                        force_basic_auth=True).read()
+                        force_basic_auth=True,
+                        timeout=30).read()
         logger.debug(resp.decode("utf-8"))
 
     def getPartitionTemplateUUID(self, name):
@@ -340,7 +347,8 @@ class HmcRestClient:
                         headers=header,
                         method='GET',
                         validate_certs=False,
-                        force_basic_auth=True)
+                        force_basic_auth=True,
+                        timeout=30)
         if resp.code == 200:
             response = resp.read()
         else:
@@ -367,7 +375,8 @@ class HmcRestClient:
                         headers=header,
                         method='GET',
                         validate_certs=False,
-                        force_basic_auth=True)
+                        force_basic_auth=True,
+                        timeout=30)
         if resp.code == 200:
             response = resp.read()
         else:
@@ -395,7 +404,8 @@ class HmcRestClient:
                         data=partiton_template_xmlstr,
                         method='PUT',
                         validate_certs=False,
-                        force_basic_auth=True)
+                        force_basic_auth=True,
+                        timeout=30)
         # This is to handle the case of unauthorized access, instead of getting error http code seems to be 200
         response = resp.read()
         response_dom = xml_strip_namespace(response)
@@ -420,7 +430,8 @@ class HmcRestClient:
                  headers=header,
                  method='DELETE',
                  validate_certs=False,
-                 force_basic_auth=True)
+                 force_basic_auth=True,
+                 timeout=30)
 
     def checkPartitionTemplate(self, template_name, cec_uuid):
         header = _jobHeader(self.session)
@@ -444,7 +455,8 @@ class HmcRestClient:
                         data=payload,
                         method='PUT',
                         validate_certs=False,
-                        force_basic_auth=True).read()
+                        force_basic_auth=True,
+                        timeout=30).read()
 
         checkjob_resp = xml_strip_namespace(resp)
 
@@ -471,7 +483,8 @@ class HmcRestClient:
                         data=payload,
                         method='PUT',
                         validate_certs=False,
-                        force_basic_auth=True).read()
+                        force_basic_auth=True,
+                        timeout=30).read()
 
         deploy_resp = xml_strip_namespace(resp)
         jobID = deploy_resp.xpath('//JobID')[0].text
@@ -496,7 +509,8 @@ class HmcRestClient:
                         data=payload,
                         method='PUT',
                         validate_certs=False,
-                        force_basic_auth=True).read()
+                        force_basic_auth=True,
+                        timeout=30).read()
 
         transform_resp = xml_strip_namespace(resp)
         jobID = transform_resp.xpath('//JobID')[0].text
