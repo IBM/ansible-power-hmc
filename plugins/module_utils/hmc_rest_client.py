@@ -5,7 +5,6 @@ from ansible.module_utils.urls import open_url
 import ansible.module_utils.six.moves.urllib.error as urllib_error
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import Error
-from ansible.module_utils.six.moves import cStringIO
 import xml.etree.ElementTree as ET
 NEED_LXML = False
 try:
@@ -62,7 +61,6 @@ def _logonPayload(user, password):
     root.attrib = {"schemaVersion": "V1_0",
                    "xmlns": "http://www.ibm.com/xmlns/systems/power/firmware/web/mc/2012_10/",
                    "xmlns:mc": "http://www.ibm.com/xmlns/systems/power/firmware/web/mc/2012_10/"}
-    tree = ET.ElementTree(root)
 
     ET.SubElement(root, "UserID").text = user
     ET.SubElement(root, "Password").text = password
@@ -418,11 +416,11 @@ class HmcRestClient:
 
         templateUrl = "https://{0}/rest/api/templates/PartitionTemplate/{1}".format(self.hmc_ip, template_uuid)
         logger.debug(templateUrl)
-        resp = open_url(templateUrl,
-                        headers=header,
-                        method='DELETE',
-                        validate_certs=False,
-                        force_basic_auth=True)
+        open_url(templateUrl,
+                 headers=header,
+                 method='DELETE',
+                 validate_certs=False,
+                 force_basic_auth=True)
 
     def checkPartitionTemplate(self, template_name, cec_uuid):
         header = _jobHeader(self.session)
