@@ -117,6 +117,7 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions impor
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import parse_error_response
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import HmcRestClient
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import add_taggedIO_details
+from random import randint
 
 # Generic setting for log initializing and log rotation
 import logging
@@ -197,6 +198,7 @@ def create_partition(module, params):
     proc = str(params['proc'] or 2)
     mem = str(params['mem'] or 1024)
     os_type = params['os_type']
+    temp_template = "draft_ansible_powervm_create_{0}".format(str(randint(1000, 9999)))
 
     cli_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(cli_conn)
@@ -231,13 +233,13 @@ def create_partition(module, params):
             reference_template = "QuickStart_lpar_rpa_2"
         else:
             reference_template = "QuickStart_lpar_IBMi_2"
-        rest_conn.copyPartitionTemplate(reference_template, "draft_ansible_powervm_create")
+        rest_conn.copyPartitionTemplate(reference_template, temp_template)
         max_lpars = server_dom.xpath("//MaximumPartitions")[0].text
         next_lpar_id = hmc.getNextPartitionID(system_name, max_lpars)
         logger.debug("Next Partiion ID: %s", str(next_lpar_id))
         logger.debug("CEC uuid: %s", system_uuid)
 
-        resp = rest_conn.checkPartitionTemplate("draft_ansible_powervm_create", system_uuid)
+        resp = rest_conn.checkPartitionTemplate(temp_template, system_uuid)
         draft_uuid = resp.xpath("//ParameterName[text()='TEMPLATE_UUID']/following-sibling::ParameterValue")[0].text
         draft_template_xml = rest_conn.getPartitionTemplate(uuid=draft_uuid)
         if not draft_template_xml:
@@ -259,7 +261,7 @@ def create_partition(module, params):
         module.fail_json(msg=error_msg)
     finally:
         try:
-            rest_conn.deletePartitionTemplate("draft_ansible_powervm_create")
+            rest_conn.deletePartitionTemplate(temp_template)
             rest_conn.logoff()
         except Exception as del_error:
             error_msg = parse_error_response(del_error)
@@ -365,7 +367,7 @@ def run_module():
     if isinstance(result, str):
         module.fail_json(msg=result)
 
-    module.exit_json(changed=changed, build_info=result)
+    module.exit_json(changed=changed)
 
 
 def main():
