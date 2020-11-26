@@ -335,7 +335,6 @@ class HmcRestClient:
 
     def quickGetPartition(self, lpar_uuid):
         header = {'X-API-Session': self.session}
-        lpar_uuid = "1234"
         url = "https://{0}/rest/api/uom/LogicalPartition/{1}/quick".format(self.hmc_ip, lpar_uuid)
         resp = open_url(url,
                         headers=header,
