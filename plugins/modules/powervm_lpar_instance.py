@@ -97,14 +97,17 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-original_message:
-    description: The original name param that was passed in
-    type: str
-    returned: always
-message:
-    description: The output message that the sample module generates
-    type: str
-    returned: always
+partition_info:
+    description: The configuration of the partition after creation
+    type: dict
+    sample: {"AllocatedVirtualProcessors": null, "AssociatedManagedSystem": "<system-name>", "CurrentMemory": 1024, \
+            "CurrentProcessingUnits": null, "CurrentProcessors": 1, "Description": null, "HasDedicatedProcessors": "true", \
+            "HasPhysicalIO": "true", "IsVirtualServiceAttentionLEDOn": "false", "LastActivatedProfile": "default_profile", \
+            "MemoryMode": "Dedicated", "MigrationState": "Not_Migrating", "OperatingSystemVersion": "Unknown", \
+            "PartitionID": 11, "PartitionName": "<partition-name>", "PartitionState": "not activated", \
+            "PartitionType": "AIX/Linux", "PowerManagementMode": null, "ProgressState": null, "RMCState": "inactive", \
+            "ReferenceCode": "", "RemoteRestartState": "Invalid", "ResourceMonitoringIPAddress": null, "SharingMode": "sre idle proces"}
+    returned: on success for state 'present'
 '''
 
 import sys
@@ -224,7 +227,13 @@ def create_partition(module, params):
         module.fail_json(msg=error_msg)
 
     if partition_dom:
-        return False, None
+        try:
+            partition_prop = rest_conn.quickGetPartition(partition_uuid)
+            partition_prop['AssociatedManagedSystem'] = system_name
+        except Exception as error:
+            error_msg = parse_error_response(error)
+            module.fail_json(msg=error_msg)
+        return False, partition_prop
 
     validate_proc_mem(server_dom, int(proc), int(mem))
 
@@ -253,7 +262,10 @@ def create_partition(module, params):
             add_taggedIO_details(draft_template_xml)
         rest_conn.updatePartitionTemplate(draft_uuid, draft_template_xml, config_dict)
         rest_conn.transformPartitionTemplate(draft_uuid, system_uuid)
-        rest_conn.deployPartitionTemplate(draft_uuid, system_uuid)
+        resp_dom = rest_conn.deployPartitionTemplate(draft_uuid, system_uuid)
+        partition_uuid = resp_dom.xpath("//ParameterName[text()='PartitionUuid']/following-sibling::ParameterValue")[0].text
+        partition_prop = rest_conn.quickGetPartition(partition_uuid)
+        partition_prop['AssociatedManagedSystem'] = system_name
         changed = True
     except Exception as error:
         error_msg = parse_error_response(error)
@@ -267,7 +279,7 @@ def create_partition(module, params):
             error_msg = parse_error_response(del_error)
             logger.debug(error_msg)
 
-    return changed, None
+    return changed, partition_prop
 
 
 def remove_partition(module, params):
@@ -367,7 +379,10 @@ def run_module():
     if isinstance(result, str):
         module.fail_json(msg=result)
 
-    module.exit_json(changed=changed)
+    if result:
+        module.exit_json(changed=changed, partition_info=result)
+    else:
+        module.exit_json(changed=changed)
 
 
 def main():

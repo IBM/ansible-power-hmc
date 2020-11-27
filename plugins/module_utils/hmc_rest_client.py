@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 import time
+import json
 from ansible.module_utils.urls import open_url
 import ansible.module_utils.six.moves.urllib.error as urllib_error
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
@@ -338,6 +339,19 @@ class HmcRestClient:
                         force_basic_auth=True,
                         timeout=30).read()
         logger.debug(resp.decode("utf-8"))
+
+    def quickGetPartition(self, lpar_uuid):
+        header = {'X-API-Session': self.session}
+        url = "https://{0}/rest/api/uom/LogicalPartition/{1}/quick".format(self.hmc_ip, lpar_uuid)
+        resp = open_url(url,
+                        headers=header,
+                        method='GET',
+                        validate_certs=False,
+                        force_basic_auth=True)
+
+        lpar_quick_dom = resp.read()
+        lpar_dict = json.loads(lpar_quick_dom)
+        return lpar_dict
 
     def getPartitionTemplateUUID(self, name):
         header = {'X-API-Session': self.session}
