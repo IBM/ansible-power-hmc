@@ -261,7 +261,7 @@ class HmcRestClient:
                             method='GET',
                             validate_certs=False,
                             force_basic_auth=True,
-                            timeout=30)
+                            timeout=60)
 
         if response.code == 204:
             return None, None
@@ -270,8 +270,35 @@ class HmcRestClient:
         uuid = managedsystem_root.xpath("//AtomID")[0].text
         return uuid, managedsystem_root.xpath("//ManagedSystem")[0]
 
+    def getLogicalPartitionsQuick(self, system_uuid):
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/LogicalPartition/quick/All".format(self.hmc_ip, system_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': '*/*'}
+        resp = open_url(url,
+                        headers=header,
+                        method='GET',
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=3000)
+        if resp.code != 200:
+            logger.debug("Get of Logical Partitions failed. Respsonse code: %d", resp.code)
+            return None
+        response = resp.read()
+        return response
+
     def getLogicalPartition(self, system_uuid, partition_name):
-        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/LogicalPartition".format(self.hmc_ip, system_uuid)
+        lpar_uuid = None
+        lpar_quick_list = json.loads(self.getLogicalPartitionsQuick(system_uuid))
+        if lpar_quick_list:
+            for eachLpar in lpar_quick_list:
+                if eachLpar['PartitionName'] == partition_name:
+                    lpar_uuid = eachLpar['UUID']
+                    break
+
+        if not lpar_uuid:
+            return None, None
+
+        url = "https://{0}/rest/api/uom/LogicalPartition/{1}".format(self.hmc_ip, lpar_uuid)
         header = {'X-API-Session': self.session,
                   'Accept': 'application/vnd.ibm.powervm.uom+xml; type=LogicalPartition'}
 
@@ -280,22 +307,15 @@ class HmcRestClient:
                         method='GET',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=30)
+                        timeout=60)
         if resp.code != 200:
             logger.debug("Get of Logical Partition failed. Respsonse code: %d", resp.code)
             return None, None
-        response = resp.read()
 
-        lpar_root = xml_strip_namespace(response)
-        if lpar_root:
-            partitions_dom = lpar_root.xpath("//PartitionName[text()='{0}']/..".format(partition_name))
-            if partitions_dom:
-                partition_dom = partitions_dom[0]
-                xml_str = etree.tostring(partition_dom)
-                partition_dom = etree.fromstring(xml_str)
-                uuid = partition_dom.xpath("//PartitionUUID")[0].text
-                logger.debug("PartitionUUID: %s", uuid)
-                return uuid, partition_dom
+        response = resp.read()
+        partition_dom = xml_strip_namespace(response)
+        if partition_dom:
+            return lpar_uuid, partition_dom
 
         return None, None
 
@@ -309,7 +329,7 @@ class HmcRestClient:
                  method='DELETE',
                  validate_certs=False,
                  force_basic_auth=True,
-                 timeout=30)
+                 timeout=60)
 
     def updatePartitionTemplate(self, uuid, template_xml, config_dict):
         template_xml.xpath("//partitionId")[0].text = config_dict['lpar_id']
@@ -347,7 +367,8 @@ class HmcRestClient:
                         headers=header,
                         method='GET',
                         validate_certs=False,
-                        force_basic_auth=True)
+                        force_basic_auth=True,
+                        timeout=60)
 
         lpar_quick_dom = resp.read()
         lpar_dict = json.loads(lpar_quick_dom)
@@ -362,7 +383,7 @@ class HmcRestClient:
                         method='GET',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=30)
+                        timeout=60)
         if resp.code == 200:
             response = resp.read()
         else:

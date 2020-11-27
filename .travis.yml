@@ -61,4 +61,4 @@ deploy:
     local_dir: docs/build
     keep_history: true
     on:
-        branch: dev-collection
+        branch: alpha-v1.1.0
