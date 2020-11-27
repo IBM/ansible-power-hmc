@@ -24,11 +24,11 @@ install:
   - pip install lxml
   - pip3 install lxml
   - ansible --version
-  - python3.7 -c "import lxml"
-
+  
 env:
   global:
-    secure: XQdEPnrg9WEJarmlkI+i6EKegl+LsoG9iWRtpNL2VPftkTBs8XP3fHYygZ29QdxQaenZaJIq7lhwnK5heaIeJvgLhBN88XIzyyeDeLgSuWKsDvM8UDKwj4hS+ZS9NqoiBwMBL+ya+hOIoHXPeSH1LhdH+yJWYhvXWehmskNaQF/kscPc9G89Y39GtkGolM3FwLQx/P/eS5+Lytnb1d+wCSjtZHCAdfndyufYy6mxX1wxf7NZl6jENBm85JdnlJ1hKq9eYRoEP1Ws/c0bzWVDWVIN+iB7yhAI6wMtyCq/KM5mvxCuRBCrYVy3SEdpswaCyihSi5TIUjVRde28a9XfaKST1m5ahjdQ8I9VHa9wAb34dERCT7KQpBWPEoIwLAaBK/Abwd5Z9asBomKbJsYWB9T8L0RPN99Wzq1UVO5jzshQr9QHX89lo7MqBXbEjRBOyViOYiltKujhVk9K+SCL//e9FuneUWwBrRSofStoolDBDSFjoTlLefdjt/0HAGS2y5G393PEBubYoAXOmI2wo/0YU4fVOp1OkPpUA0C6+TrFeFDbHJZ6+JH+WKwEoGDHT/53YCH6iGFNe1FhBwSx9jIb9zMC02rRoCodKjwq3qr7vCSf5p4RZWyXvRe1XNRtgveLOBYSMFG5mIPjcUUG2WSbuKZXs0D/g+hVY+uzano=
+    secure: om4VYPvIWsja3xNlTsrh9oerMeYtG3ohrB++kyi7ouY75d3hzjHs5ZA4gKnIBYhELWJJ8EGQGRMpEE/66pRLQfJc3QOCLCeF3gV/Ce6ZlYTcIh4SNndp4FLqtMUP5p6RRk4I66K60K/LLTXkK+Sf/7EDc6fj/tUlpzDZgc6qeGOI4c1HYGa7t2N98amEcdSZxzNyUw0Z/++fuciMmviC1Z8w49aEyLDySdH8lXhzMX56KKo+YurcqAiFBUREj7ax23irFYgvu1AKgUFBzf7DQdmIKVCP19djCxScIeymYFPkpHNYTrC2hhuRvA8IX0IqPUCrEHT58VzO9OJRi3mLOGjL+lpwh81n4+yx354xv89rt5QHYCqVlg9RKcDhvQvGuvJVEHtYWews1rbmwaUdrX0nGXhX91f2+/dw/q4yBWVbjpJcYITV5JU7vdL7lBXN0ZVZqnrc2JdIQ7Lj7Ks+HgMbm7t5vIef97K1UsrbvoRkf9hWNc8WXR+I+mudb28Vy53dsp13XvaEEzYrCZicX9Q4inscyhCs22JerqHosUGAMNDdlBESG/0MJnfR/JA5646Y9YcHufuDEUfhECVPjnskqnXMCcjjWEun3WpwReYmyfj2Imtjb1BZrm9Ti8hiH7/W1FpRb8OB5NprwBGineUG5/sHwKngsyGzEOpGijc=
+
 
 # command to run tests
 script:
@@ -46,7 +46,6 @@ script:
 
   - pyenv global 3.7 2.7 
   - ansible-test sanity --python 2.7 --skip-test shellcheck
-  - python3.7 -c "import lxml"
   - ansible-test sanity --python 3.7 --skip-test shellcheck
   - cd /home/travis/.ansible/collections/
   - python -m pytest
