@@ -288,7 +288,12 @@ class HmcRestClient:
 
     def getLogicalPartition(self, system_uuid, partition_name):
         lpar_uuid = None
-        lpar_quick_list = json.loads(self.getLogicalPartitionsQuick(system_uuid))
+        lpar_quick_list = []
+
+        lpar_response = self.getLogicalPartitionsQuick(system_uuid)
+        if lpar_response:
+            lpar_quick_list = json.loads(self.getLogicalPartitionsQuick(system_uuid))
+
         if lpar_quick_list:
             for eachLpar in lpar_quick_list:
                 if eachLpar['PartitionName'] == partition_name:
