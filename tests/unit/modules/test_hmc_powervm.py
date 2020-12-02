@@ -23,6 +23,14 @@ test_data = [
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'present',
       'system_name': "systemname", 'vm_name': "vmname", 'proc': '4', 'mem':
       '2048', 'os_type': None}, "ParameterError: mandatory parameter 'os_type' is missing"),
+    # hmc_host is missing
+    ({'hmc_host': None, 'hmc_auth': hmc_auth, 'state': 'present',
+      'system_name': "systemname", 'vm_name': "vmname", 'proc': '4', 'mem':
+      '2048', 'os_type': 'aix'}, "ParameterError: mandatory parameter 'hmc_host' is missing"),
+    # hmc_auth is missing
+    ({'hmc_host': "0.0.0.0", 'hmc_auth': None, 'state': 'present',
+      'system_name': "systemname", 'vm_name': "vmname", 'proc': '4', 'mem':
+      '2048', 'os_type': 'aix'}, "ParameterError: mandatory parameter 'hmc_auth' is missing"),
     # vmname, proc and mem are missing
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'present',
       'system_name': "systemname", 'vm_name': None, 'proc': None, 'mem': None,
@@ -39,6 +47,12 @@ test_data1 = [
     # vmname is missing
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'absent',
       'system_name': "systemname", 'vm_name': None}, "ParameterError: mandatory parameter 'vm_name' is missing"),
+    # hmc_host is missing
+    ({'hmc_host': None, 'hmc_auth': hmc_auth, 'state': 'absent',
+      'system_name': "systemname", 'vm_name': "vm_name"}, "ParameterError: mandatory parameter 'hmc_host' is missing"),
+    #hmc_auth is missing
+    ({'hmc_host': "0.0.0.0", 'hmc_auth': None, 'state': 'absent',
+      'system_name': "systemname", 'vm_name': "vmname"}, "ParameterError: mandatory parameter 'hmc_auth' is missing"),
     # unsupported parameter os_type,proc,mem
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'absent',
       'system_name': "systemname", 'vm_name': 'vmname', 'proc': '4', 'mem':
