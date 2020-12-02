@@ -158,10 +158,10 @@ def validate_proc_mem(system_dom, proc, mem):
 def validate_parameters(params):
     '''Check that the input parameters satisfy the mutual exclusiveness of HMC'''
     if params['state'] == 'present':
-        mandatoryList = ['system_name', 'vm_name', 'os_type']
+        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']
         unsupportedList = []
     else:
-        mandatoryList = ['system_name', 'vm_name']
+        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type']
 
     collate = []
