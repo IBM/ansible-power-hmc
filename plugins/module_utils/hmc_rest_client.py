@@ -220,8 +220,10 @@ class HmcRestClient:
         result = None
 
         jobStatus = ''
+        timeout_counter = 0
         while True:
-            time.sleep(20)
+            time.sleep(30)
+            timeout_counter += 1
             resp = open_url(url,
                             headers=header,
                             method='GET',
@@ -248,6 +250,11 @@ class HmcRestClient:
                 else:
                     err_msg = err_msg_l[0].text
                 raise HmcError(err_msg)
+
+            if timeout_counter == 60:
+                job_name = doc.xpath("//OperationName")[0].text.strip()
+                logger.debug("%s job stuck in %s state. Timed out!!", job_name, jobStatus)
+                raise HmcError("Job: {0} timed out!!".format(job_name))
 
         return result
 

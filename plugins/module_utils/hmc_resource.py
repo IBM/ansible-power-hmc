@@ -223,7 +223,6 @@ class Hmc():
             self.OPT['LSSYSCFG']['-F'] + 'lpar_id'
 
         result = self.hmcconn.execute(lssyscfgCmd).strip()
-        logger.debug(result)
         if 'No results were found' in result:
             return 1
         existing_lpar_list = list(map(int, result.split('\n')))
