@@ -223,6 +223,8 @@ class Hmc():
             self.OPT['LSSYSCFG']['-F'] + 'lpar_id'
 
         result = self.hmcconn.execute(lssyscfgCmd).strip()
+        if 'No results were found' in result:
+            return 1
         existing_lpar_list = list(map(int, result.split('\n')))
         supp_id_list = list(range(1, int(max_supp_lpars)))
         avail_list = list(set(supp_id_list) - set(existing_lpar_list))
