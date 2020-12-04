@@ -18,9 +18,11 @@ module: powervm_lpar_instance
 author:
     - Anil Vijayan (@AnilVijayan)
 short_description: Create/Delete an AIX/Linux or IBMi partition
+notes:
+    - Currently supports creation of partition (powervm instance) with only processor and memory settings
 description:
-    - "Creates AIX/Linux or IBMi partition with specified configuration details on specified system_name"
-    - "Or Deletes specified AIX/Linux or IBMi partition on specified System_name"
+    - "Creates AIX/Linux or IBMi partition with specified configuration details on mentioned system"
+    - "Or Deletes specified AIX/Linux or IBMi partition on specified system"
 
 version_added: "1.1.0"
 requirements:
@@ -61,21 +63,25 @@ options:
         description:
             - The number of dedicated processors to create partition
         type: int
+        default: 2    
     mem:
         description:
             - The value of dedicated memory value in megabytes to create partition
         type: int
+        default: 1024
     os_type:
         description:
-            - "Type of logical partition to be created"
-            - "aix_linux: for AIX or Linux type of OS"
-            - "ibmi: for IBM i operating system"
+            - Type of logical partition to be created
+            - C(aix_linux) for AIX or Linux operating system
+            - C(linux) for Linux operating system
+            - C(aix) for AIX operating system
+            - C(ibmi) for IBM i operating system
         type: str
         choices: ['aix','linux','aix_linux','ibmi']
     state:
         description:
-            - "present: creates a partition of specifed os_type, vm_name, proc and memory on specified system_name"
-            - "absent: deletes a partition of specified vm_name on specified system_name"
+            - C(present) creates a partition of specifed os_type, vm_name, proc and memory on specified system_name
+            - C(absent) deletes a partition of specified vm_name on specified system_name
         required: true
         type: str
         choices: ['present', 'absent']
@@ -107,7 +113,7 @@ partition_info:
             "PartitionID": 11, "PartitionName": "<partition-name>", "PartitionState": "not activated", \
             "PartitionType": "AIX/Linux", "PowerManagementMode": null, "ProgressState": null, "RMCState": "inactive", \
             "ReferenceCode": "", "RemoteRestartState": "Invalid", "ResourceMonitoringIPAddress": null, "SharingMode": "sre idle proces"}
-    returned: on success for state 'present'
+    returned: on success for state C(present)
 '''
 
 import sys
