@@ -18,9 +18,11 @@ module: powervm_lpar_instance
 author:
     - Anil Vijayan (@AnilVijayan)
 short_description: Create/Delete an AIX/Linux or IBMi partition
+notes:
+    - Currently supports creation of partition (powervm instance) with only processor and memory settings
 description:
-    - "Creates AIX/Linux or IBMi partition with specified configuration details on specified system_name"
-    - "Or Deletes specified AIX/Linux or IBMi partition on specified System_name"
+    - "Creates AIX/Linux or IBMi partition with specified configuration details on mentioned system"
+    - "Or Deletes specified AIX/Linux or IBMi partition on specified system"
 
 version_added: "1.1.0"
 requirements:
@@ -60,22 +62,26 @@ options:
     proc:
         description:
             - The number of dedicated processors to create partition
+              Default value is 2
         type: int
     mem:
         description:
             - The value of dedicated memory value in megabytes to create partition
+              Default value is 1024
         type: int
     os_type:
         description:
-            - "Type of logical partition to be created"
-            - "aix_linux: for AIX or Linux type of OS"
-            - "ibmi: for IBM i operating system"
+            - Type of logical partition to be created
+            - C(aix_linux) for AIX or Linux operating system
+            - C(linux) for Linux operating system
+            - C(aix) for AIX operating system
+            - C(ibmi) for IBM i operating system
         type: str
         choices: ['aix','linux','aix_linux','ibmi']
     state:
         description:
-            - "present: creates a partition of specifed os_type, vm_name, proc and memory on specified system_name"
-            - "absent: deletes a partition of specified vm_name on specified system_name"
+            - C(present) creates a partition of specifed os_type, vm_name, proc and memory on specified system_name
+            - C(absent) deletes a partition of specified vm_name on specified system_name
         required: true
         type: str
         choices: ['present', 'absent']
@@ -107,7 +113,7 @@ partition_info:
             "PartitionID": 11, "PartitionName": "<partition-name>", "PartitionState": "not activated", \
             "PartitionType": "AIX/Linux", "PowerManagementMode": null, "ProgressState": null, "RMCState": "inactive", \
             "ReferenceCode": "", "RemoteRestartState": "Invalid", "ResourceMonitoringIPAddress": null, "SharingMode": "sre idle proces"}
-    returned: on success for state 'present'
+    returned: on success for state C(present)
 '''
 
 import sys
@@ -202,6 +208,7 @@ def create_partition(module, params):
     mem = str(params['mem'] or 1024)
     os_type = params['os_type']
     temp_template = "draft_ansible_powervm_create_{0}".format(str(randint(1000, 9999)))
+    temp_copied = False
 
     cli_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(cli_conn)
@@ -215,6 +222,10 @@ def create_partition(module, params):
     try:
         system_uuid, server_dom = rest_conn.getManagedSystem(system_name)
     except Exception as error:
+        try:
+            rest_conn.logoff()
+        except Exception:
+            logger.debug("Logoff error")
         error_msg = parse_error_response(error)
         module.fail_json(msg=error_msg)
     if not system_uuid:
@@ -223,6 +234,10 @@ def create_partition(module, params):
     try:
         partition_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, vm_name)
     except Exception as error:
+        try:
+            rest_conn.logoff()
+        except Exception:
+            logger.debug("Logoff error")
         error_msg = parse_error_response(error)
         module.fail_json(msg=error_msg)
 
@@ -231,6 +246,10 @@ def create_partition(module, params):
             partition_prop = rest_conn.quickGetPartition(partition_uuid)
             partition_prop['AssociatedManagedSystem'] = system_name
         except Exception as error:
+            try:
+                rest_conn.logoff()
+            except Exception:
+                logger.debug("Logoff error")
             error_msg = parse_error_response(error)
             module.fail_json(msg=error_msg)
         return False, partition_prop
@@ -243,6 +262,7 @@ def create_partition(module, params):
         else:
             reference_template = "QuickStart_lpar_IBMi_2"
         rest_conn.copyPartitionTemplate(reference_template, temp_template)
+        temp_copied = True
         max_lpars = server_dom.xpath("//MaximumPartitions")[0].text
         next_lpar_id = hmc.getNextPartitionID(system_name, max_lpars)
         logger.debug("Next Partiion ID: %s", str(next_lpar_id))
@@ -272,11 +292,17 @@ def create_partition(module, params):
         logger.debug("Line number: %d exception: %s", sys.exc_info()[2].tb_lineno, repr(error))
         module.fail_json(msg=error_msg)
     finally:
+        if temp_copied:
+            try:
+                rest_conn.deletePartitionTemplate(temp_template)
+            except Exception as del_error:
+                error_msg = parse_error_response(del_error)
+                logger.debug(error_msg)
+
         try:
-            rest_conn.deletePartitionTemplate(temp_template)
             rest_conn.logoff()
-        except Exception as del_error:
-            error_msg = parse_error_response(del_error)
+        except Exception as logoff_error:
+            error_msg = parse_error_response(logoff_error)
             logger.debug(error_msg)
 
     return changed, partition_prop
@@ -302,8 +328,12 @@ def remove_partition(module, params):
     try:
         system_uuid, server_dom = rest_conn.getManagedSystem(system_name)
     except Exception as error:
-        logger.debug(repr(error))
-        module.fail_json(msg="Fetch of managed system info failed")
+        try:
+            rest_conn.logoff()
+        except Exception:
+            logger.debug("Logoff error")
+        error_msg = parse_error_response(error)
+        module.fail_json(msg=error_msg)
     if not system_uuid:
         module.fail_json(msg="Given system is not present")
 
@@ -323,7 +353,11 @@ def remove_partition(module, params):
         logger.debug("Line number: %d exception: %s", sys.exc_info()[2].tb_lineno, repr(error))
         module.fail_json(msg=error_msg)
     finally:
-        rest_conn.logoff()
+        try:
+            rest_conn.logoff()
+        except Exception as logoff_error:
+            error_msg = parse_error_response(logoff_error)
+            module.warn(error_msg)
 
     return changed, None
 
