@@ -6,7 +6,7 @@ python:
 
 # command to install dependencies
 install:
-  - pip install ansible==2.9
+  - pip install ansible
   - pip install flake8
   - pip install wheel       # for ansible-test
   - pip install Jinja2      # for ansible-test
@@ -21,11 +21,13 @@ install:
   - pip3 install ansible-doc-extractor
   - pip install sphinx
   - pip install sphinx_rtd_theme
+  - pip install lxml
+  - pip3 install lxml
   - ansible --version
-
+  
 env:
   global:
-    secure: XQdEPnrg9WEJarmlkI+i6EKegl+LsoG9iWRtpNL2VPftkTBs8XP3fHYygZ29QdxQaenZaJIq7lhwnK5heaIeJvgLhBN88XIzyyeDeLgSuWKsDvM8UDKwj4hS+ZS9NqoiBwMBL+ya+hOIoHXPeSH1LhdH+yJWYhvXWehmskNaQF/kscPc9G89Y39GtkGolM3FwLQx/P/eS5+Lytnb1d+wCSjtZHCAdfndyufYy6mxX1wxf7NZl6jENBm85JdnlJ1hKq9eYRoEP1Ws/c0bzWVDWVIN+iB7yhAI6wMtyCq/KM5mvxCuRBCrYVy3SEdpswaCyihSi5TIUjVRde28a9XfaKST1m5ahjdQ8I9VHa9wAb34dERCT7KQpBWPEoIwLAaBK/Abwd5Z9asBomKbJsYWB9T8L0RPN99Wzq1UVO5jzshQr9QHX89lo7MqBXbEjRBOyViOYiltKujhVk9K+SCL//e9FuneUWwBrRSofStoolDBDSFjoTlLefdjt/0HAGS2y5G393PEBubYoAXOmI2wo/0YU4fVOp1OkPpUA0C6+TrFeFDbHJZ6+JH+WKwEoGDHT/53YCH6iGFNe1FhBwSx9jIb9zMC02rRoCodKjwq3qr7vCSf5p4RZWyXvRe1XNRtgveLOBYSMFG5mIPjcUUG2WSbuKZXs0D/g+hVY+uzano=
+    secure:  Rg6rERczObW20sL4pZRqZBHUAQb4whSakQBSLMVh1fnxvQ9s5UVr3lDOoIPQ22TAeqQmr1kz1N21ithwt2lCwT3Slm0IfAdACfVcn3VmgvSwXgJVNQVjqjXVn/qhf+AV8+bQu4J/O3g1o7ZaKSWsY01aTx0HWwl3GCb8PBo2MhEiQfN+v/PQP5xaLLH5UcM35iBTwuk+NW9tUrtZcC3zgbm2VBwpm8AFJkF6wmQc2jZURMBRBxa6SV7epI1RI3oKsMx/9dnsD8FaZnhB2GRdmQrdphBZwpQxPegWwEk8g7FQz2OGkHuW2XgmVXDPNM5Sz9foX6fWfICBnHvMKiqaHC1KdQDcNTkB2m1d0/3RZNWPyE78PZ0gk7lMXaK918SQLZW7muKAP+wq1ID2Rsy3STI0WZd/LJJZcuNwUb3A6hDt5AzmyfBXPiyin9/mQSckCY4EXmFiUlFxUZAH8lj9zE65xMF6ZMRFeEDMmGkUkFyb0YR2IXH/hiQ8TV+ru4xmUF3JZm9BTmE5OCsLtJH5Q48EOXrTrGwqCFe0MA1JnsFAVvnGnPVUxikaOI44P3vDyLMt03+T0sQ1YTS7Js0VbnfcM3kOV4Kq0KY02vo7ZAz4YNcsBh2PL4hs5RjjCKSFVsjfB+I+k519CGKVNETf28vhOjn2I8LTHYLrZxavRGg=
 
 # command to run tests
 script:
@@ -58,4 +60,4 @@ deploy:
     local_dir: docs/build
     keep_history: true
     on:
-        branch: dev-collection
+        branch: alpha-v1.1.0

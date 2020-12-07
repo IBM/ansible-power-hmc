@@ -215,3 +215,18 @@ class Hmc():
         rmPwdPolicy = self.CMD['RMPWDPOLICY']
         rmPwdPolicy += self.OPT['RMPWDPOLICY']['-N'] + name
         self.hmcconn.execute(rmPwdPolicy)
+
+    def getNextPartitionID(self, cecName, max_supp_lpars):
+        lssyscfgCmd = self.CMD['LSSYSCFG'] + \
+            self.OPT['LSSYSCFG']['-R']['LPAR'] + \
+            self.OPT['LSSYSCFG']['-M'] + cecName + \
+            self.OPT['LSSYSCFG']['-F'] + 'lpar_id'
+
+        result = self.hmcconn.execute(lssyscfgCmd).strip()
+        if 'No results were found' in result:
+            return 1
+        existing_lpar_list = list(map(int, result.split('\n')))
+        supp_id_list = list(range(1, int(max_supp_lpars)))
+        avail_list = list(set(supp_id_list) - set(existing_lpar_list))
+        result_list = sorted(avail_list)
+        return result_list[0]

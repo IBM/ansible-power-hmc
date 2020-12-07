@@ -23,7 +23,8 @@ class HmcCommandStack():
                'LSPWDPOLICY': 'lspwdpolicy',
                'CHPWDPOLICY': 'chpwdpolicy',
                'RMPWDPOLICY': 'rmpwdpolicy',
-               'MKPWDPOLICY': 'mkpwdpolicy'}
+               'MKPWDPOLICY': 'mkpwdpolicy',
+               'LSSYSCFG': 'lssyscfg'}
 
     HMC_CMD_OPT = {'LSHMC': {'-N': ' -n ',
                              '-v': ' -v ',
@@ -141,6 +142,9 @@ class HmcCommandStack():
                                           'MIN_SPECIAL_CHARS': 'min_special_chars', 'NEW_NAME': 'new_name'}
                                    },
                    'RMPWDPOLICY': {'-N': ' -n '},
+                   'LSSYSCFG': {'-R': {'LPAR': ' -r lpar', 'SYS': ' -r sys', 'PROF': ' -r prof', 'SYSPROF': ' -r sysprof'},
+                                '-M': ' -m ',
+                                '-F': ' -F '}
                    }
 
     def filterBuilder(self, cmdKey, configOptionsDict):
