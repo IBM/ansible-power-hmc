@@ -127,12 +127,10 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client impo
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import HmcRestClient
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import add_taggedIO_details
 from random import randint
-NEED_LXML = False
 try:
     from lxml import etree
 except Exception:
-    NEED_LXML = True
-
+    pass  # Handled by hmc rest client module
 
 # Generic setting for log initializing and log rotation
 import logging
@@ -391,9 +389,6 @@ def perform_task(module):
 
 
 def run_module():
-
-    if NEED_LXML:
-        raise Error("Missing prerequisite lxml package. Hint pip install lxml")
 
     # define available arguments/parameters a user can pass to the module
     module_args = dict(
