@@ -6,7 +6,7 @@
   connection: local
   vars:
     curr_hmc_auth:
-      userid: hscroot 
+      username: hscroot 
       password: abc123
 
   tasks:

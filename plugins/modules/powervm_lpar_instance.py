@@ -127,6 +127,12 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client impo
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import HmcRestClient
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import add_taggedIO_details
 from random import randint
+NEED_LXML = False
+try:
+    from lxml import etree
+except Exception:
+    NEED_LXML = True
+
 
 # Generic setting for log initializing and log rotation
 import logging
@@ -207,7 +213,7 @@ def create_partition(module, params):
     proc = str(params['proc'] or 2)
     mem = str(params['mem'] or 1024)
     os_type = params['os_type']
-    temp_template = "draft_ansible_powervm_create_{0}".format(str(randint(1000, 9999)))
+    temp_template_name = "draft_ansible_powervm_create_{0}".format(str(randint(1000, 9999)))
     temp_copied = False
 
     cli_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
@@ -261,14 +267,23 @@ def create_partition(module, params):
             reference_template = "QuickStart_lpar_rpa_2"
         else:
             reference_template = "QuickStart_lpar_IBMi_2"
-        rest_conn.copyPartitionTemplate(reference_template, temp_template)
+        rest_conn.copyPartitionTemplate(reference_template, temp_template_name)
         temp_copied = True
         max_lpars = server_dom.xpath("//MaximumPartitions")[0].text
         next_lpar_id = hmc.getNextPartitionID(system_name, max_lpars)
         logger.debug("Next Partiion ID: %s", str(next_lpar_id))
         logger.debug("CEC uuid: %s", system_uuid)
 
-        resp = rest_conn.checkPartitionTemplate(temp_template, system_uuid)
+        # On servers that do not support the IBM i partitions with native I/O capability
+        if os_type == 'ibmi' and server_dom.xpath("//IBMiNativeIOCapable")[0].text == 'false':
+            temporary_temp_dom = rest_conn.getPartitionTemplate(name=temp_template_name)
+            temp_uuid = temporary_temp_dom.xpath("//AtomID")[0].text
+            srrTag = temporary_temp_dom.xpath("//SimplifiedRemoteRestartEnable")[0]
+            srrTag.addnext(etree.XML('<isRestrictedIOPartition kb="CUD" kxe="false">true</isRestrictedIOPartition>'))
+            temporary_temp_dom.xpath.get("//logicalPartitionConfig/child::*")
+            rest_conn.updatePartitionTemplate(temp_uuid, temporary_temp_dom)
+
+        resp = rest_conn.checkPartitionTemplate(temp_template_name, system_uuid)
         draft_uuid = resp.xpath("//ParameterName[text()='TEMPLATE_UUID']/following-sibling::ParameterValue")[0].text
         draft_template_xml = rest_conn.getPartitionTemplate(uuid=draft_uuid)
         if not draft_template_xml:
@@ -280,6 +295,7 @@ def create_partition(module, params):
         config_dict['mem'] = mem
         if os_type == 'ibmi':
             add_taggedIO_details(draft_template_xml)
+
         rest_conn.updatePartitionTemplate(draft_uuid, draft_template_xml, config_dict)
         rest_conn.transformPartitionTemplate(draft_uuid, system_uuid)
         resp_dom = rest_conn.deployPartitionTemplate(draft_uuid, system_uuid)
@@ -294,7 +310,7 @@ def create_partition(module, params):
     finally:
         if temp_copied:
             try:
-                rest_conn.deletePartitionTemplate(temp_template)
+                rest_conn.deletePartitionTemplate(temp_template_name)
             except Exception as del_error:
                 error_msg = parse_error_response(del_error)
                 logger.debug(error_msg)
@@ -376,6 +392,9 @@ def perform_task(module):
 
 
 def run_module():
+
+    if NEED_LXML:
+        raise Error("Missing prerequisite lxml package. Hint pip install lxml")
 
     # define available arguments/parameters a user can pass to the module
     module_args = dict(
