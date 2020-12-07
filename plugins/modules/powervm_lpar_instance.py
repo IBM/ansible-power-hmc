@@ -280,7 +280,6 @@ def create_partition(module, params):
             temp_uuid = temporary_temp_dom.xpath("//AtomID")[0].text
             srrTag = temporary_temp_dom.xpath("//SimplifiedRemoteRestartEnable")[0]
             srrTag.addnext(etree.XML('<isRestrictedIOPartition kb="CUD" kxe="false">true</isRestrictedIOPartition>'))
-            temporary_temp_dom.xpath.get("//logicalPartitionConfig/child::*")
             rest_conn.updatePartitionTemplate(temp_uuid, temporary_temp_dom)
 
         resp = rest_conn.checkPartitionTemplate(temp_template_name, system_uuid)
