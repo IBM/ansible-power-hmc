@@ -343,17 +343,18 @@ class HmcRestClient:
                  force_basic_auth=True,
                  timeout=60)
 
-    def updatePartitionTemplate(self, uuid, template_xml, config_dict):
-        template_xml.xpath("//partitionId")[0].text = config_dict['lpar_id']
-        template_xml.xpath("//partitionName")[0].text = config_dict['vm_name']
+    def updatePartitionTemplate(self, uuid, template_xml, config_dict=None):
+        if config_dict:
+            template_xml.xpath("//partitionId")[0].text = config_dict['lpar_id']
+            template_xml.xpath("//partitionName")[0].text = config_dict['vm_name']
 
-        template_xml.xpath("//minProcessors")[0].text = '1'
-        template_xml.xpath("//desiredProcessors")[0].text = config_dict['proc']
-        template_xml.xpath("//maxProcessors")[0].text = config_dict['proc']
+            template_xml.xpath("//minProcessors")[0].text = '1'
+            template_xml.xpath("//desiredProcessors")[0].text = config_dict['proc']
+            template_xml.xpath("//maxProcessors")[0].text = config_dict['proc']
 
-        template_xml.xpath("//currMinMemory")[0].text = config_dict['mem']
-        template_xml.xpath("//currMemory")[0].text = config_dict['mem']
-        template_xml.xpath("//currMaxMemory")[0].text = config_dict['mem']
+            template_xml.xpath("//currMinMemory")[0].text = config_dict['mem']
+            template_xml.xpath("//currMemory")[0].text = config_dict['mem']
+            template_xml.xpath("//currMaxMemory")[0].text = config_dict['mem']
 
         templateUrl = "https://{0}/rest/api/templates/PartitionTemplate/{1}".format(self.hmc_ip, uuid)
         header = {'X-API-Session': self.session,
