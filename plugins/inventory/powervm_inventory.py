@@ -4,6 +4,7 @@
 from __future__ import (absolute_import, division, print_function)
 import xml.etree.ElementTree as ET
 import json
+import sys
 from ansible.plugins.inventory import BaseInventoryPlugin, Constructable, Cacheable, to_safe_group_name
 from ansible.module_utils.six import string_types, viewitems, reraise
 from ansible.module_utils._text import to_native
@@ -343,7 +344,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                 except Exception as del_error:
                     error_msg = parse_error_response(del_error)
                     logger.debug(error_msg)
-                    raise HmcError("Error logging off HMC REST Service: %s" % error_msg) from del_error
+                    traceback = sys.exc_info()[2]
+                    reraise(HmcError, "Error logging off HMC REST Service: %s" % error_msg, traceback)
             except Exception as error:
                 error_msg = parse_error_response(error)
                 msg = ("Unable to connect to HMC host %s: %s" % (hmc_host, error_msg))
@@ -401,13 +403,10 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                             type_checked_arg, arg, str(args[arg]["choices"])))
                 setattr(self, arg, type_checked_arg)
             elif args[arg]["type"] == 'bool':
-                try:
                     if isinstance(args[arg].get("value"), bool):
                         setattr(self, arg, args[arg].get("value"))
                     else:
                         raise AnsibleParserError("%s must be a boolean value. Current value is: %s" % (arg, args[arg].get("value")))
-                except TypeError as e:
-                    raise AnsibleParserError(to_native(e)) from e
             elif args[arg]["type"] == 'list':
                 if not isinstance(args[arg].get("value"), list):
                     raise AnsibleParserError("%s is currently %s and needs to be defined as a %s." % (arg, args[arg].get("value"), 'list'))
