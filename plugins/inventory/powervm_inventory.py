@@ -14,11 +14,8 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client impo
 from ansible.config.manager import ensure_type
 from ansible.module_utils.parsing.convert_bool import boolean
 
-try:
-    from __main__ import display
-except ImportError:
-    from ansible.utils.display import Display
-    display = Display()
+from ansible.utils.display import Display
+display = Display()
 
 # Generic setting for log initializing and log rotation
 import logging
@@ -106,16 +103,16 @@ EXAMPLES = '''
 # The most minimal example, targetting only a single HMC
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_api1:12443":
+  "hmc_url1":
     user: user
     password: password
 # Target multiple HMC hosts and only add running partitions to the inventory
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_api1:12443":
+  "hmc_url1":
     user: user
     password: password
-  "hmc_api2:12443":
+  "hmc_url2":
     user: user
     password: password
 filters:
@@ -124,10 +121,10 @@ filters:
 # Generate an inventory including all running partitions and also create a group allowing us to target AIX 7.2 specifically
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_api1:12443":
+  "hmc_url1":
     user: user
     password: password
-  "hmc_api2:12443":
+  "hmc_url2":
     user: user
     password: password
 filters:
@@ -140,10 +137,10 @@ groups:
 # Additionally, include the following variables as host_vars for a given target host: CurrentMemory, OperatingSystemVersion, PartitionName
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_api1:12443":
+  "hmc_url1":
     user: user
     password: password
-  "hmc_api2:12443":
+  "hmc_url2":
     user: user
     password: password
 filters:
@@ -159,7 +156,7 @@ compose:
 ## Generate an inventory that excludes partitions by ip, name, or the name of managed system on which they run
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_api1:12443":
+  "hmc_url1":
     user: user
     password: password
 exclude_ip:

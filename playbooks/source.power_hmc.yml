@@ -1,9 +1,9 @@
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_api1:12443":
+  "hmc_url1":
     user: user
     password: password
-  "hmc_api2:12443":
+  "hmc_url2":
     user: user
     password: password
 filters:
