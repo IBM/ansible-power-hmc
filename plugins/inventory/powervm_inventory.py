@@ -403,10 +403,10 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                             type_checked_arg, arg, str(args[arg]["choices"])))
                 setattr(self, arg, type_checked_arg)
             elif args[arg]["type"] == 'bool':
-                    if isinstance(args[arg].get("value"), bool):
-                        setattr(self, arg, args[arg].get("value"))
-                    else:
-                        raise AnsibleParserError("%s must be a boolean value. Current value is: %s" % (arg, args[arg].get("value")))
+                if isinstance(args[arg].get("value"), bool):
+                    setattr(self, arg, args[arg].get("value"))
+                else:
+                    raise AnsibleParserError("%s must be a boolean value. Current value is: %s" % (arg, args[arg].get("value")))
             elif args[arg]["type"] == 'list':
                 if not isinstance(args[arg].get("value"), list):
                     raise AnsibleParserError("%s is currently %s and needs to be defined as a %s." % (arg, args[arg].get("value"), 'list'))
