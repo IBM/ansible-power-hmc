@@ -22,6 +22,7 @@ import logging
 LOG_FILENAME = "/tmp/ansible_power_hmc.log"
 logger = logging.getLogger(__name__)
 
+
 def init_logger():
     logging.basicConfig(
         filename=LOG_FILENAME,
@@ -34,8 +35,8 @@ __metaclass__ = type
 DOCUMENTATION = '''
     name: powervm_inventory
     author:
-        - Torin Reilly
-        - Michael Cohoon
+        - Torin Reilly (@torinreilly)
+        - Michael Cohoon (@mtcohoon)
         - Ozzie Rodriguez
     plugin_type: inventory
     version_added: "1.1.0"
@@ -43,21 +44,38 @@ DOCUMENTATION = '''
         - Python >= 3
     short_description: HMC-based inventory source for Power Systems
     description:
-        - Using HMC APIs to build a dynamic inventory of defined partitions (LPAR, VIOS)
-        - Power HMC inventory sources must be structured as name.power_hmc.yml or name.power_hmc.yaml
-        - To create a usable Ansible host for a given LPAR, the ip or hostname of the LPAR must be exposed through the HMC in some way. Currently there are only 2 such sources supported by this tool, an RMC ip address or the name of the LPAR must be a valid hostname.
-        - Like with other dynamic inventories Ansible grouping methods and composite variables can be used. Possible values for these activities can be found in "Table 1. Quick properties" U(https://www.ibm.com/support/knowledgecenter/TI0003M/p8ehl/apis/LogicalPartition.htm#LogicalPartition__table_eqt_m2f_hq)
+        - This plugin makes use of HMC APIs to build a dynamic inventory 
+          of defined partitions (LPAR, VIOS).
+        - Power HMC inventory sources must be structured as name.power_hmc.yml
+          or name.power_hmc.yaml.
+        - To create a usable Ansible host for a given LPAR, the ip or hostname
+          of the LPAR must be exposed through the HMC in some way. 
+          Currently there are only 2 such sources supported by this tool, 
+          an RMC ip address or the name of the LPAR must be a valid hostname.
+        - Like with other dynamic inventories Ansible grouping methods
+          and composite variables can be used. 
+        - Possible values can be found in the HMC REST API
+          documentation in Knowledge Center under the sections "Logical Partition"
+          and "Virtual IO Server". By default properties listed as "Quick Properties"
+          can be used, but if advanced fields are enabled you may use properties from
+          the extended "Advanced" group for LPARs and VIOS.
     options:
         hmc_hosts:
           description: A dictionary of hosts and their associated usernames and passwords.
           required: true
         filters:
             description:
-                - A key value pair for filtering by various LPAR attributes. Only results matching the filter will be included in the inventory.
-                - Possible filtering values can be found in "Table 1. Quick properties" U(https://www.ibm.com/support/knowledgecenter/TI0003M/p8ehl/apis/LogicalPartition.htm#LogicalPartition__table_eqt_m2f_hq)
+                - A key value pair for filtering by various LPAR attributes. 
+                  Only results matching the filter will be included in the inventory.
+                - Possible filtering values can be found in the HMC REST API
+                  documentation in Knowledge Center under the sections "Logical Partition"
+                  and "Virtual IO Server". By default properties listed as "Quick Properties"
+                  can be used, but if advanced fields are enabled you may use properties from
+                  the extended "Advanced" group for LPARs and VIOS.
             default: {}
         exclude_ip:
-            description: A list of IP addresses to exclude from the inventory. This will be compared to the RMC ip address specified in the HMC.
+            description: A list of IP addresses to exclude from the inventory. 
+              This will be compared to the RMC ip address specified in the HMC.
             type: list
             default: []
         exclude_lpar:
@@ -65,23 +83,30 @@ DOCUMENTATION = '''
             type: list
             default: []
         exclude_system:
-            description: A list of HMC managed systems whose partitions (LPAR, VIOS) will be excluded from the dynamic inventory.
+            description: A list of HMC managed systems whose partitions (LPAR, VIOS)
+              will be excluded from the dynamic inventory.
             type: list
             default: []
         ansible_display_name:
-            description: By default, partitions names will be used as the name displayed by Ansible in output. If you wish this to display the ip address instead you may set this to "ip"
+            description: By default, partitions names will be used as the name displayed by 
+              Ansible in output. If you wish this to display the ip address instead you may 
+              set this to "ip"
             default: "lpar_name"
             choices: [lpar_name, ip]
             type: str
         ansible_host_type:
-            description: Determines if the ip address or the LPAR name will be used as the "ansible_host" variable in playbooks.
+            description: Determines if the ip address or the LPAR name will be used as 
+              the "ansible_host" variable in playbooks.
             default: "ip"
             choices: [lpar_name, ip]
             type: str
         advanced_fields:
             description:
-                - Allows for additional LPAR/VIOS properties to be used for the purposes of grouping and filtering.
-                - Retrieving these properties requires a significantly slower REST call to HMC APIs. Depending on the size of your environment, it could increase dynamic inventory generation time by a factor of ten.
+                - Allows for additional LPAR/VIOS properties to be used for 
+                  the purposes of grouping and filtering.
+                - Retrieving these properties requires a significantly slower 
+                  REST call to HMC APIs. Depending on the size of your environment, 
+                  it could increase dynamic inventory generation time by a factor of ten.
             default: false
             type: bool
         group_by_managed_system:
@@ -90,11 +115,22 @@ DOCUMENTATION = '''
             type: bool
         identify_unknown_by:
             description:
-                - Allows you to include partitions unable to be automatically detected as a valid Ansible target.
-                - By default, partitions without ip's are ommited from the inventory. This may not be the case in the event you have lpar_name set for ansible_host_type.
-                - If not omitted partitions will be added to a group called "unknown" and will can be identified by any LPAR property of your choosing (PartitionName or UUID are common identifiers).
-                - If you do not omit unknown partitions, you may run into issues targetting groups that include them. To avoid this you can specify a host pattern in a playbooks such as "targetgroup:!unknown". This will your playbook to run against all known hosts in your target group.
-                - Possible LPAR property values can be found in "Table 1. Quick properties" U(https://www.ibm.com/support/knowledgecenter/TI0003M/p8ehl/apis/LogicalPartition.htm#LogicalPartition__table_eqt_m2f_hq)
+                - Allows you to include partitions unable to be automatically detected 
+                  as a valid Ansible target.
+                - By default, partitions without ip's are ommited from the inventory. 
+                  This may not be the case in the event you have lpar_name set for ansible_host_type.
+                - If not omitted partitions will be added to a group called "unknown" 
+                  and will can be identified by any LPAR property of your choosing 
+                  (PartitionName or UUID are common identifiers).
+                - If you do not omit unknown partitions, you may run into issues 
+                  targetting groups that include them. To avoid this you can specify a host pattern
+                  in a playbooks such as "targetgroup:!unknown". 
+                  This will your playbook to run against all known hosts in your target group.
+                - Possible LPAR property values can be found in the HMC REST API
+                  documentation in Knowledge Center under the sections "Logical Partition"
+                  and "Virtual IO Server". By default properties listed as "Quick Properties"
+                  can be used, but if advanced fields are enabled you may use properties from
+                  the extended "Advanced" group for LPARs and VIOS.
             default: omit
             type: str
 '''
@@ -182,7 +218,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
     NAME = 'ibm.power_hmc.powervm_inventory'
 
     def __init__(self):
-        super(InventoryModule, self).__init__()
+        super().__init__()
 
         self.group_prefix = 'power_hmc_'
 
@@ -190,8 +226,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         """
         Verify inventory source is valid
         """
-        if super(InventoryModule, self).verify_file(path):
-            logger.debug("Path: "+path)
+        if super().verify_file(path):
+            logger.debug("Path: %s", path)
             if path.endswith(('.power_hmc.yml', '.power_hmc.yaml')):
                 return True
             raise AnsibleParserError("Path is not valid. All HMC inventory sources must have a suffix of .power_hmc.yml or .power_hmc.yaml.")
@@ -200,7 +236,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         """
         Parse inventory source
         """
-        super(InventoryModule, self).parse(inventory, loader, path, cache)
+        super().parse(inventory, loader, path, cache)
 
         self._configure(path)
         self._populate_from_systems(self.get_lpars_by_system())
@@ -268,7 +304,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                 try:
                     managed_systems = json.loads(rest_conn.getManagedSystemsQuick())
                 except Exception as e:
-                    logger.debug("Could not retrieve systems from %s it may not have any defined" % hmc_host)
+                    logger.debug("Could not retrieve systems from %s it may not have any defined", hmc_host)
                     continue
                 for system in managed_systems:
                     lpars = []
@@ -281,25 +317,25 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                                 system_lpars = self.parse_lpars_xml(lpar_xml)
                                 lpars.extend(system_lpars)
                             except Exception as e:
-                                logger.debug("Could not retrieve LPARs from %s it may not have any defined" % system.get("SystemName"))
+                                logger.debug("Could not retrieve LPARs from %s it may not have any defined", system.get("SystemName"))
                             try:
                                 vios_xml = rest_conn.getVirtualIOServers(system.get("UUID"))
                                 system_vios = self.parse_lpars_xml(vios_xml)
                                 lpars.extend(system_vios)
                             except Exception as e:
-                                logger.debug("Could not retrieve VIOS from %s it may not have any defined" % system.get("SystemName"))
+                                logger.debug("Could not retrieve VIOS from %s it may not have any defined", system.get("SystemName"))
                         # Call the "quick" JSON API
                         else:
                             try:
                                 system_lpars = json.loads(rest_conn.getLogicalPartitionsQuick(system.get("UUID")))
                                 lpars.extend(system_lpars)
                             except Exception as e:
-                                logger.debug("Could not retrieve LPARs from %s it may not have any defined" % system.get("SystemName"))
+                                logger.debug("Could not retrieve LPARs from %s it may not have any defined", system.get("SystemName"))
                             try:
                                 system_vios = json.loads(rest_conn.getVirtualIOServersQuick(system.get("UUID")))
                                 lpars.extend(system_vios)
                             except Exception as e:
-                                logger.debug("Could not retrieve VIOS from %s it may not have any defined" % system.get("SystemName"))
+                                logger.debug("Could not retrieve VIOS from %s it may not have any defined", system.get("SystemName"))
                         systems[system.get("SystemName")] = lpars
                 # Logoff HMC
                 try:
@@ -307,7 +343,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                 except Exception as del_error:
                     error_msg = parse_error_response(del_error)
                     logger.debug(error_msg)
-                    raise HmcError("Error logging off HMC REST Service: %s" % error_msg)
+                    raise HmcError("Error logging off HMC REST Service: %s", error_msg) from del_error
             except Exception as error:
                 error_msg = parse_error_response(error)
                 msg = ("Unable to connect to HMC host %s: %s" % (hmc_host, error_msg))
@@ -371,7 +407,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                     else:
                         raise AnsibleParserError("%s must be a boolean value. Current value is: %s" % (arg, args[arg].get("value")))
                 except TypeError as e:
-                    raise AnsibleParserError(to_native(e))
+                    raise AnsibleParserError(to_native(e)) from e
             elif args[arg]["type"] == 'list':
                 if not isinstance(args[arg].get("value"), list):
                     raise AnsibleParserError("%s is currently %s and needs to be defined as a %s." % (arg, args[arg].get("value"), 'list'))
@@ -383,7 +419,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             else:
                 raise AnsibleParserError("%s is an unhandled type! This shoulddn't happen." % (args[arg]["type"]))
 
-            # Do not allow inventory generation to contine if an argument is set to None, but also do not override a more type specific message that may have been raised.
+            # Do not allow inventory generation to contine if an argument is set to None,
+            # but also do not override a more type specific message that may have been raised.
             if args[arg].get("value") is None:
                 raise AnsibleParserError("%s is an optional value, but cannot be None. Please specify a value or remove it from your inventory source." % (arg))
 
