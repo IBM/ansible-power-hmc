@@ -5,7 +5,7 @@ from __future__ import (absolute_import, division, print_function)
 import xml.etree.ElementTree as ET
 import json
 from ansible.plugins.inventory import BaseInventoryPlugin, Constructable, Cacheable, to_safe_group_name
-from ansible.module_utils.six import string_types, viewitems
+from ansible.module_utils.six import string_types, viewitems, reraise
 from ansible.module_utils._text import to_native
 from ansible.errors import AnsibleParserError
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
@@ -115,7 +115,7 @@ DOCUMENTATION = '''
             type: bool
         identify_unknown_by:
             description:
-                - Allows you to include partitions unable to be automatically detected 
+                - Allows you to include partitions unable to be automatically detected
                   as a valid Ansible target.
                 - By default, partitions without ip's are ommited from the inventory.
                   This may not be the case in the event you have lpar_name set for ansible_host_type.
