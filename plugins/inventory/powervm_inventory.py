@@ -44,16 +44,16 @@ DOCUMENTATION = '''
         - Python >= 3
     short_description: HMC-based inventory source for Power Systems
     description:
-        - This plugin makes use of HMC APIs to build a dynamic inventory 
+        - This plugin makes use of HMC APIs to build a dynamic inventory
           of defined partitions (LPAR, VIOS).
         - Power HMC inventory sources must be structured as name.power_hmc.yml
           or name.power_hmc.yaml.
         - To create a usable Ansible host for a given LPAR, the ip or hostname
-          of the LPAR must be exposed through the HMC in some way. 
-          Currently there are only 2 such sources supported by this tool, 
+          of the LPAR must be exposed through the HMC in some way.
+          Currently there are only 2 such sources supported by this tool,
           an RMC ip address or the name of the LPAR must be a valid hostname.
         - Like with other dynamic inventories Ansible grouping methods
-          and composite variables can be used. 
+          and composite variables can be used.
         - Possible values can be found in the HMC REST API
           documentation in Knowledge Center under the sections "Logical Partition"
           and "Virtual IO Server". By default properties listed as "Quick Properties"
@@ -65,7 +65,7 @@ DOCUMENTATION = '''
           required: true
         filters:
             description:
-                - A key value pair for filtering by various LPAR attributes. 
+                - A key value pair for filtering by various LPAR attributes.
                   Only results matching the filter will be included in the inventory.
                 - Possible filtering values can be found in the HMC REST API
                   documentation in Knowledge Center under the sections "Logical Partition"
@@ -74,7 +74,7 @@ DOCUMENTATION = '''
                   the extended "Advanced" group for LPARs and VIOS.
             default: {}
         exclude_ip:
-            description: A list of IP addresses to exclude from the inventory. 
+            description: A list of IP addresses to exclude from the inventory.
               This will be compared to the RMC ip address specified in the HMC.
             type: list
             default: []
@@ -88,24 +88,24 @@ DOCUMENTATION = '''
             type: list
             default: []
         ansible_display_name:
-            description: By default, partitions names will be used as the name displayed by 
-              Ansible in output. If you wish this to display the ip address instead you may 
-              set this to "ip"
+            description: By default, partitions names will be used as the name displayed by
+              Ansible in output. If you wish this to display the ip address instead you may
+              set this to "ip".
             default: "lpar_name"
             choices: [lpar_name, ip]
             type: str
         ansible_host_type:
-            description: Determines if the ip address or the LPAR name will be used as 
+            description: Determines if the ip address or the LPAR name will be used as
               the "ansible_host" variable in playbooks.
             default: "ip"
             choices: [lpar_name, ip]
             type: str
         advanced_fields:
             description:
-                - Allows for additional LPAR/VIOS properties to be used for 
+                - Allows for additional LPAR/VIOS properties to be used for
                   the purposes of grouping and filtering.
-                - Retrieving these properties requires a significantly slower 
-                  REST call to HMC APIs. Depending on the size of your environment, 
+                - Retrieving these properties requires a significantly slower
+                  REST call to HMC APIs. Depending on the size of your environment,
                   it could increase dynamic inventory generation time by a factor of ten.
             default: false
             type: bool
@@ -117,14 +117,14 @@ DOCUMENTATION = '''
             description:
                 - Allows you to include partitions unable to be automatically detected 
                   as a valid Ansible target.
-                - By default, partitions without ip's are ommited from the inventory. 
+                - By default, partitions without ip's are ommited from the inventory.
                   This may not be the case in the event you have lpar_name set for ansible_host_type.
-                - If not omitted partitions will be added to a group called "unknown" 
-                  and will can be identified by any LPAR property of your choosing 
+                - If not omitted partitions will be added to a group called "unknown"
+                  and will can be identified by any LPAR property of your choosing
                   (PartitionName or UUID are common identifiers).
-                - If you do not omit unknown partitions, you may run into issues 
+                - If you do not omit unknown partitions, you may run into issues
                   targetting groups that include them. To avoid this you can specify a host pattern
-                  in a playbooks such as "targetgroup:!unknown". 
+                  in a playbooks such as "targetgroup:!unknown".
                   This will your playbook to run against all known hosts in your target group.
                 - Possible LPAR property values can be found in the HMC REST API
                   documentation in Knowledge Center under the sections "Logical Partition"
@@ -343,7 +343,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                 except Exception as del_error:
                     error_msg = parse_error_response(del_error)
                     logger.debug(error_msg)
-                    raise HmcError("Error logging off HMC REST Service: %s", error_msg) from del_error
+                    raise HmcError("Error logging off HMC REST Service: %s" % error_msg) from del_error
             except Exception as error:
                 error_msg = parse_error_response(error)
                 msg = ("Unable to connect to HMC host %s: %s" % (hmc_host, error_msg))
