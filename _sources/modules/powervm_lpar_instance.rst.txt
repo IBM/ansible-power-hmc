@@ -1,0 +1,143 @@
+.. _powervm_lpar_instance_module:
+
+
+powervm_lpar_instance -- Create/Delete an AIX/Linux or IBMi partition
+=====================================================================
+
+.. contents::
+   :local:
+   :depth: 1
+
+
+Synopsis
+--------
+
+Creates AIX/Linux or IBMi partition with specified configuration details on mentioned system
+
+Or Deletes specified AIX/Linux or IBMi partition on specified system
+
+
+
+Requirements
+------------
+The below requirements are needed on the host that executes this module.
+
+- Python >= 3
+
+
+
+Parameters
+----------
+
+  hmc_host (True, str, None)
+    The ipaddress or hostname of HMC
+
+
+  hmc_auth (True, dict, None)
+    Username and Password credential of HMC
+
+
+    username (True, str, None)
+      HMC user name
+
+
+    password (True, str, None)
+      HMC password
+
+
+
+  system_name (True, str, None)
+    The name of the managed system
+
+
+  vm_name (True, str, None)
+    The name of the powervm partition to create/delete
+
+
+  proc (optional, int, None)
+    The number of dedicated processors to create partition Default value is 2
+
+
+  mem (optional, int, None)
+    The value of dedicated memory value in megabytes to create partition Default value is 1024
+
+
+  os_type (optional, str, None)
+    Type of logical partition to be created
+
+    ``aix_linux`` for AIX or Linux operating system
+
+    ``linux`` for Linux operating system
+
+    ``aix`` for AIX operating system
+
+    ``ibmi`` for IBM i operating system
+
+
+  state (True, str, None)
+    ``present`` creates a partition of specifed os_type, vm_name, proc and memory on specified system_name
+
+    ``absent`` deletes a partition of specified vm_name on specified system_name
+
+
+
+
+
+Notes
+-----
+
+.. note::
+   - Currently supports creation of partition (powervm instance) with only processor and memory settings
+
+
+
+
+Examples
+--------
+
+.. code-block:: yaml+jinja
+
+    
+    - name: Create an IBMi logical partition instance
+      powervm_lpar_instance:
+          hmc_host: '{{ inventory_hostname }}'
+          hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+          system_name: <system_name>
+          vm_name: <vm_name>
+          proc: 4
+          mem: 20480
+          os_type: ibmi
+          state: present
+
+
+
+Return Values
+-------------
+
+partition_info (on success for state C(present), dict, {'AllocatedVirtualProcessors': None, 'AssociatedManagedSystem': '<system-name>', 'CurrentMemory': 1024, 'CurrentProcessingUnits': None, 'CurrentProcessors': 1, 'Description': None, 'HasDedicatedProcessors': 'true', 'HasPhysicalIO': 'true', 'IsVirtualServiceAttentionLEDOn': 'false', 'LastActivatedProfile': 'default_profile', 'MemoryMode': 'Dedicated', 'MigrationState': 'Not_Migrating', 'OperatingSystemVersion': 'Unknown', 'PartitionID': 11, 'PartitionName': '<partition-name>', 'PartitionState': 'not activated', 'PartitionType': 'AIX/Linux', 'PowerManagementMode': None, 'ProgressState': None, 'RMCState': 'inactive', 'ReferenceCode': '', 'RemoteRestartState': 'Invalid', 'ResourceMonitoringIPAddress': None, 'SharingMode': 'sre idle proces'})
+  The configuration of the partition after creation
+
+
+
+
+
+Status
+------
+
+
+
+
+- This module is not guaranteed to have a backwards compatible interface. *[preview]*
+
+
+- This module is maintained by community.
+
+
+
+Authors
+~~~~~~~
+
+- Anil Vijayan (@AnilVijayan)
+
