@@ -111,8 +111,8 @@ EXAMPLES = '''
          password: '{{ hmc_password }}'
       system_name: <system_name>
       vm_name: <vm_name>
-      proc: 
-      mem: 
+      proc:
+      mem:
       os_type: aix_linux
       state: present
 
