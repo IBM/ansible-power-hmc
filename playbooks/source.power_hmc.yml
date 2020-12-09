@@ -1,0 +1,25 @@
+plugin: ibm.power_hmc.powervm_inventory
+hmc_hosts:
+  "hmc_url1":
+    user: user
+    password: password
+  "hmc_url2":
+    user: user
+    password: password
+filters:
+    PartitionState: 'running'
+groups:
+    AIX_72: "'7.2' in OperatingSystemVersion"
+keyed_groups:
+  - prefix: type
+    key: PartitionType
+compose:
+  current_memory: CurrentMemory
+  os: OperatingSystemVersion
+  name: PartitionName
+exclude_ip:
+    - 10.0.0.44
+exclude_lpar:
+    - nonsense
+exclude_system:
+    - Frame1-XXX-MMB-WWWWWW
