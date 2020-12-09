@@ -268,7 +268,7 @@ class HmcRestClient:
                             method='GET',
                             validate_certs=False,
                             force_basic_auth=True,
-                            timeout=60)
+                            timeout=120)
 
         if response.code == 204:
             return None, None
@@ -337,7 +337,7 @@ class HmcRestClient:
                         method='GET',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=60)
+                        timeout=120)
         if resp.code != 200:
             logger.debug("Get of Logical Partition failed. Respsonse code: %d", resp.code)
             return None, None
@@ -506,7 +506,7 @@ class HmcRestClient:
                         method='GET',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=30)
+                        timeout=60)
         if resp.code == 200:
             response = resp.read()
         else:
