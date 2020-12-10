@@ -17,10 +17,9 @@ DOCUMENTATION = '''
 module: powervm_lpar_instance
 author:
     - Anil Vijayan (@AnilVijayan)
-    - Navinakumar Kandakur (@nkandak1)
 short_description: Create/Delete an AIX/Linux or IBMi partition
 notes:
-    - Currently supports creation of partition (powervm instance) with only processor and memory settings in dedicated mode
+    - Currently supports creation of partition (powervm instance) with only processor and memory settings
 description:
     - "Creates AIX/Linux or IBMi partition with specified configuration details on mentioned system"
     - "Or Deletes specified AIX/Linux or IBMi partition on specified system"
@@ -63,12 +62,12 @@ options:
     proc:
         description:
             - The number of dedicated processors to create partition
-            - Default value is 2
+              Default value is 2
         type: int
     mem:
         description:
             - The value of dedicated memory value in megabytes to create partition
-            - Default value is 1024
+              Default value is 1024
         type: int
     os_type:
         description:
@@ -101,31 +100,6 @@ EXAMPLES = '''
       mem: 20480
       os_type: ibmi
       state: present
-
-
-- name: Create an AIX/Linux logical partition instance with default proc and mem values
-  powervm_lpar_instance:
-      hmc_host: '{{ inventory_hostname }}'
-      hmc_auth:
-         username: '{{ ansible_user }}'
-         password: '{{ hmc_password }}'
-      system_name: <system_name>
-      vm_name: <vm_name>
-      proc:
-      mem:
-      os_type: aix_linux
-      state: present
-
-
-- name: Delete a logical partition instance
-  powervm_lpar_instance:
-      hmc_host: '{{ inventory_hostname }}'
-      hmc_auth:
-         username: '{{ ansible_user }}'
-         password: '{{ hmc_password }}'
-      system_name: <system_name>
-      vm_name: <vm_name>
-      state: absent
 '''
 
 RETURN = '''
@@ -439,7 +413,7 @@ def run_module():
     module = AnsibleModule(
         argument_spec=module_args,
         required_if=[['state', 'absent', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
-                     ['state', 'present', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']]
+                     ['state', 'present', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'proc', 'mem', 'os_type']]
                      ]
 
     )
