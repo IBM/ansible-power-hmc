@@ -17,10 +17,9 @@ DOCUMENTATION = '''
 module: powervm_lpar_instance
 author:
     - Anil Vijayan (@AnilVijayan)
-    - Navinakumar Kandakur (@nkandak1)
 short_description: Create/Delete an AIX/Linux or IBMi partition
 notes:
-    - Currently supports creation of partition (powervm instance) with only processor and memory settings in dedicated mode
+    - Currently supports creation of partition (powervm instance) with only processor and dedicated memory settings
 description:
     - "Creates AIX/Linux or IBMi partition with specified configuration details on mentioned system"
     - "Or Deletes specified AIX/Linux or IBMi partition on specified system"
@@ -63,12 +62,12 @@ options:
     proc:
         description:
             - The number of dedicated processors to create partition
-            - Default value is 2
+              Default value is 2
         type: int
     mem:
         description:
             - The value of dedicated memory value in megabytes to create partition
-            - Default value is 1024
+              Default value is 1024
         type: int
     os_type:
         description:
@@ -102,7 +101,6 @@ EXAMPLES = '''
       os_type: ibmi
       state: present
 
-
 - name: Create an AIX/Linux logical partition instance with default proc and mem values
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
@@ -113,7 +111,6 @@ EXAMPLES = '''
       vm_name: <vm_name>
       os_type: aix_linux
       state: present
-
 
 - name: Delete a logical partition instance
   powervm_lpar_instance:
