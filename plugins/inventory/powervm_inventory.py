@@ -45,38 +45,46 @@ DOCUMENTATION = '''
         - Python >= 3
     short_description: HMC-based inventory source for Power Systems
     description:
-        - This plugin makes use of HMC APIs to build a dynamic inventory
-          of defined partitions (LPAR, VIOS).
-        - Power HMC inventory sources must be structured as name.power_hmc.yml
+        - This plugin utilizes HMC APIs to build a dynamic inventory
+          of defined partitions (LPAR, VIOS). Inventory sources must be structured as name.power_hmc.yml
           or name.power_hmc.yaml.
         - To create a usable Ansible host for a given LPAR, the ip or hostname
           of the LPAR must be exposed through the HMC in some way.
           Currently there are only 2 such sources supported by this tool,
           an RMC ip address or the name of the LPAR must be a valid hostname.
-        - Like with other dynamic inventories Ansible grouping methods
-          and composite variables can be used.
-        - Possible values can be found in the HMC REST API
-          documentation in Knowledge Center under the sections "Logical Partition"
-          and "Virtual IO Server". By default properties listed as "Quick Properties"
-          can be used, but if advanced fields are enabled you may use properties from
-          the extended "Advanced" group for LPARs and VIOS.
+        - Valid LPAR/VIOS properties that can be used for groups, keyed groups, filters, unknown partition identification,
+          and composite variables can be found in the HMC REST API documentation. By default, valid properties include those
+          listed as "Quick Properties", but if `advanced_fields` are enabled you may use properties included in
+          the "Advanced" group as well.
     options:
         hmc_hosts:
           description: A dictionary of hosts and their associated usernames and passwords.
           required: true
+          type: dict
+          elements: dict
         filters:
             description:
-                - A key value pair for filtering by various LPAR attributes.
+                - A key value pair for filtering by various LPAR/VIOS attributes.
                   Only results matching the filter will be included in the inventory.
-                - Possible filtering values can be found in the HMC REST API
-                  documentation in Knowledge Center under the sections "Logical Partition"
-                  and "Virtual IO Server". By default properties listed as "Quick Properties"
-                  can be used, but if advanced fields are enabled you may use properties from
-                  the extended "Advanced" group for LPARs and VIOS.
             default: {}
+        compose:
+            description: Create vars from jinja2 expressions.
+            default: {}
+            type: dict
+        groups:
+            description: Add hosts to group based on Jinja2 conditionals.
+            default: {}
+            type: dict
+        keyed_groups:
+            description: Add hosts to group based on the values of a variable.
+            type: list
+            elements: str
+            default: []
         exclude_ip:
             description: A list of IP addresses to exclude from the inventory.
               This will be compared to the RMC ip address specified in the HMC.
+              Currently, no hostname lookup is performed, so only ip addresses
+              that match the RMC ip address specified in the HMC will be exlcuded.
             type: list
             default: []
         exclude_lpar:
@@ -106,8 +114,8 @@ DOCUMENTATION = '''
                 - Allows for additional LPAR/VIOS properties to be used for
                   the purposes of grouping and filtering.
                 - Retrieving these properties requires a significantly slower
-                  REST call to HMC APIs. Depending on the size of your environment,
-                  it could increase dynamic inventory generation time by a factor of ten.
+                  call to HMC APIs. Depending on the size of your environment,
+                  it could increase dynamic inventory generation run time dramatically.
             default: false
             type: bool
         group_by_managed_system:
@@ -119,19 +127,14 @@ DOCUMENTATION = '''
                 - Allows you to include partitions unable to be automatically detected
                   as a valid Ansible target.
                 - By default, partitions without ip's are ommited from the inventory.
-                  This may not be the case in the event you have lpar_name set for ansible_host_type.
-                - If not omitted partitions will be added to a group called "unknown"
+                  This is not be the case in the event you have lpar_name set for ansible_host_type.
+                  If not, omitted partitions will be added to a group called "unknown"
                   and will can be identified by any LPAR property of your choosing
                   (PartitionName or UUID are common identifiers).
                 - If you do not omit unknown partitions, you may run into issues
                   targetting groups that include them. To avoid this you can specify a host pattern
-                  in a playbooks such as "targetgroup:!unknown".
+                  in a playbooks such as `targetgroup:!unknown`.
                   This will your playbook to run against all known hosts in your target group.
-                - Possible LPAR property values can be found in the HMC REST API
-                  documentation in Knowledge Center under the sections "Logical Partition"
-                  and "Virtual IO Server". By default properties listed as "Quick Properties"
-                  can be used, but if advanced fields are enabled you may use properties from
-                  the extended "Advanced" group for LPARs and VIOS.
             default: omit
             type: str
 '''
