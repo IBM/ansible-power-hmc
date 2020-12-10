@@ -20,7 +20,7 @@ author:
     - Navinakumar Kandakur (@nkandak1)
 short_description: Create/Delete an AIX/Linux or IBMi partition
 notes:
-    - Currently supports creation of partition (powervm instance) with only processor and memory settings
+    - Currently supports creation of partition (powervm instance) with only processor and memory settings in dedicated mode
 description:
     - "Creates AIX/Linux or IBMi partition with specified configuration details on mentioned system"
     - "Or Deletes specified AIX/Linux or IBMi partition on specified system"
@@ -81,7 +81,7 @@ options:
         choices: ['aix','linux','aix_linux','ibmi']
     state:
         description:
-            - C(present) creates a partition of specifed os_type, vm_name, proc and dedicated memory on specified system_name
+            - C(present) creates a partition of specifed os_type, vm_name, proc and memory on specified system_name
             - C(absent) deletes a partition of specified vm_name on specified system_name
         required: true
         type: str
@@ -439,7 +439,7 @@ def run_module():
     module = AnsibleModule(
         argument_spec=module_args,
         required_if=[['state', 'absent', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
-                     ['state', 'present', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'proc', 'mem', 'os_type']]
+                     ['state', 'present', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']]
                      ]
 
     )
