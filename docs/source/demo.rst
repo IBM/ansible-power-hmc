@@ -56,7 +56,7 @@ powervm_lpar_instance
 Create and Delete lpar instance
 """""""""""""""""""""""""""""""
 
-The following gif demonstrates the Creating an aix lpar instance and deleting it.
+The following gif demonstrates the creation of an aix lpar instance and deletion of it.
 
 .. figure:: ../images/demo_create_partition.gif
    :alt:
