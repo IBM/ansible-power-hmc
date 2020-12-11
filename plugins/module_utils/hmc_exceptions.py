@@ -37,4 +37,8 @@ class HmcError(Error):
     """
     def __repr__(self):
         if self.message:
-            return "HmcError: {0}".format(self.message)
+            # In case if the message is in unicode
+            if isinstance(self.message, u''.__class__):
+                return "HmcError: {0}".format(self.message.encode('utf-8'))
+            else:
+                return "HmcError: {0}".format(self.message)

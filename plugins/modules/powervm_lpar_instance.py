@@ -129,7 +129,7 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client impo
 from random import randint
 try:
     from lxml import etree
-except Exception:
+except ImportError:
     pass  # Handled by hmc rest client module
 
 # Generic setting for log initializing and log rotation
