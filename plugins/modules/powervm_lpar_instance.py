@@ -19,7 +19,7 @@ author:
     - Anil Vijayan (@AnilVijayan)
 short_description: Create/Delete an AIX/Linux or IBMi partition
 notes:
-    - Currently supports creation of partition (powervm instance) with only processor and dedicated memory settings
+    - Currently supports creation of partition (powervm instance) with only processor and memory settings on dedicated mode
 description:
     - "Creates AIX/Linux or IBMi partition with specified configuration details on mentioned system"
     - "Or Deletes specified AIX/Linux or IBMi partition on specified system"
