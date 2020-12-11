@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 NEED_LXML = False
 try:
     from lxml import etree, objectify
-except Exception:
+except ImportError:
     NEED_LXML = True
 
 import logging
