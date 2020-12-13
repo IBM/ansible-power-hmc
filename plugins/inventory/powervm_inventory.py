@@ -148,6 +148,16 @@ hmc_hosts:
     user: user
     password: password
 
+# Create an inventory consisting of only Virtual IO Servers. 
+# This may be important if grouping by advanced_fields exclusive to VIOS.
+plugin: ibm.power_hmc.powervm_inventory
+hmc_hosts:
+  "hmc_host_name":
+    user: user
+    password: password
+filters:
+    PartitionType: 'Virtual IO Server'
+
 # Target multiple HMC hosts and only add running partitions to the inventory
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
