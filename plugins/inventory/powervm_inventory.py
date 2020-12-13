@@ -54,10 +54,10 @@ DOCUMENTATION = '''
           either an RMC ip address or the name of the LPAR must be also a valid hostname.
         - Valid LPAR/VIOS properties that can be used for groups, keyed groups, filters, unknown partition identification,
           and composite variables can be found in the HMC REST API documentation. By default, valid properties include those
-          listed as "Quick Properties", but if `advanced_fields` are enabled you may be able to use more advanced properties of the 
+          listed as "Quick Properties", but if `advanced_fields` are enabled you may be able to use more advanced properties of the
           partition. Further information about this APIs can be found in the
           L(Knowledge Center, https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/LogicalPartition.htm)
-          
+
     options:
         hmc_hosts:
           description: A dictionary of hosts and their associated usernames and passwords.
@@ -115,7 +115,7 @@ DOCUMENTATION = '''
             description:
                 - Allows for additional LPAR/VIOS properties to be used for
                   the purposes of grouping and filtering.
-                - Retrieving these properties could increase dynamic inventory generation run time, 
+                - Retrieving these properties could increase dynamic inventory generation run time,
                   depending on the size of your environment and the properties to be fetched.
             default: false
             type: bool
@@ -148,7 +148,7 @@ hmc_hosts:
     user: user
     password: password
 
-# Create an inventory consisting of only Virtual IO Servers. 
+# Create an inventory consisting of only Virtual IO Servers.
 # This may be important if grouping by advanced_fields exclusive to VIOS.
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
