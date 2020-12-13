@@ -50,12 +50,14 @@ DOCUMENTATION = '''
           or name.power_hmc.yaml.
         - To create a usable Ansible host for a given LPAR, the ip or hostname
           of the LPAR must be exposed through the HMC in some way.
-          Currently there are only 2 such sources supported by this tool,
-          an RMC ip address or the name of the LPAR must be a valid hostname.
+          Currently there are only two such sources supported by this plugin,
+          either an RMC ip address or the name of the LPAR must be also a valid hostname.
         - Valid LPAR/VIOS properties that can be used for groups, keyed groups, filters, unknown partition identification,
           and composite variables can be found in the HMC REST API documentation. By default, valid properties include those
-          listed as "Quick Properties", but if `advanced_fields` are enabled you may use properties included in
-          the "Advanced" group as well.
+          listed as "Quick Properties", but if `advanced_fields` are enabled you may be able to use more advanced properties of the 
+          partition. Further information about this APIs can be found in the
+          L(Knowledge Center, https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/LogicalPartition.htm)
+          
     options:
         hmc_hosts:
           description: A dictionary of hosts and their associated usernames and passwords.
@@ -68,7 +70,7 @@ DOCUMENTATION = '''
                   Only results matching the filter will be included in the inventory.
             default: {}
         compose:
-            description: Create vars from jinja2 expressions.
+            description: Create vars from Jinja2 expressions.
             default: {}
             type: dict
         groups:
@@ -113,9 +115,8 @@ DOCUMENTATION = '''
             description:
                 - Allows for additional LPAR/VIOS properties to be used for
                   the purposes of grouping and filtering.
-                - Retrieving these properties requires a significantly slower
-                  call to HMC APIs. Depending on the size of your environment,
-                  it could increase dynamic inventory generation run time dramatically.
+                - Retrieving these properties could increase dynamic inventory generation run time, 
+                  depending on the size of your environment and the properties to be fetched.
             default: false
             type: bool
         group_by_managed_system:
@@ -143,16 +144,17 @@ EXAMPLES = '''
 # The most minimal example, targetting only a single HMC
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_url1":
+  "hmc_host_name":
     user: user
     password: password
+
 # Target multiple HMC hosts and only add running partitions to the inventory
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_url1":
+  "hmc_host_name":
     user: user
     password: password
-  "hmc_url2":
+  "hmc_host_name2":
     user: user
     password: password
 filters:
@@ -161,10 +163,10 @@ filters:
 # Generate an inventory including all running partitions and also create a group allowing us to target AIX 7.2 specifically
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_url1":
+  "hmc_host_name":
     user: user
     password: password
-  "hmc_url2":
+  "hmc_host_name2":
     user: user
     password: password
 filters:
@@ -177,10 +179,10 @@ groups:
 # Additionally, include the following variables as host_vars for a given target host: CurrentMemory, OperatingSystemVersion, PartitionName
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_url1":
+  "hmc_host_name":
     user: user
     password: password
-  "hmc_url2":
+  "hmc_host_name2":
     user: user
     password: password
 filters:
