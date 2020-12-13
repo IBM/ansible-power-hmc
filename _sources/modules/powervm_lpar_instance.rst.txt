@@ -87,7 +87,7 @@ Notes
 -----
 
 .. note::
-   - Currently supports creation of partition (powervm instance) with only processor and memory settings
+   - Currently supports creation of partition (powervm instance) with only processor and memory settings on dedicated mode
 
 
 
@@ -110,6 +110,27 @@ Examples
           mem: 20480
           os_type: ibmi
           state: present
+
+    - name: Create an AIX/Linux logical partition instance with default proc and mem values
+      powervm_lpar_instance:
+          hmc_host: '{{ inventory_hostname }}'
+          hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+          system_name: <system_name>
+          vm_name: <vm_name>
+          os_type: aix_linux
+          state: present
+
+    - name: Delete a logical partition instance
+      powervm_lpar_instance:
+          hmc_host: '{{ inventory_hostname }}'
+          hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+          system_name: <system_name>
+          vm_name: <vm_name>
+          state: absent
 
 
 

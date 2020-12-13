@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
+  <title>Plugins &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
   
 
   
@@ -36,8 +36,10 @@
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-    <link rel="index" title="Index" href="#" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="powervm_inventory – HMC-based inventory source for Power Systems" href="plugins/powervm_inventory.html" />
+    <link rel="prev" title="powervm_lpar_instance – Create/Delete an AIX/Linux or IBMi partition" href="modules/powervm_lpar_instance.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -88,9 +90,15 @@
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 </ul>
 <p class="caption"><span class="caption-text">References</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="modules.html">Modules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="plugins.html">Plugins</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Plugins</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#plugin-reference">Plugin reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="plugins/powervm_inventory.html">powervm_inventory – HMC-based inventory source for Power Systems</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="playbooks.html">Playbooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo.html">Demo</a></li>
 </ul>
@@ -152,14 +160,14 @@
     
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>Index</li>
+      <li>Plugins</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
             
-              <a href="https://github.com/IBM/ansible-power-hmc/blob/dev-collection/docs/source/genindex" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/IBM/ansible-power-hmc/blob/dev-collection/docs/source/plugins.rst" class="fa fa-github"> Edit on GitHub</a>
             
           
         
@@ -173,11 +181,22 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-
-<h1 id="index">Index</h1>
-
-<div class="genindex-jumpbox">
- 
+  <div class="section" id="plugins">
+<h1>Plugins<a class="headerlink" href="#plugins" title="Permalink to this headline">¶</a></h1>
+<p>The <strong>IBM Power Systems HMC collection</strong> contains plugins that can be used in a playbook
+to automate tasks using HMC. Ansible executes each tasks on the target node and
+returns the result back to the controller.</p>
+<div class="section" id="plugin-reference">
+<h2>Plugin reference<a class="headerlink" href="#plugin-reference" title="Permalink to this headline">¶</a></h2>
+<p>Reference material for each plugin contains documentation on the accepted
+parameters and their expected values.</p>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="plugins/powervm_inventory.html">powervm_inventory – HMC-based inventory source for Power Systems</a></li>
+</ul>
+</div>
+</div>
 </div>
 
 
@@ -185,6 +204,15 @@
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="plugins/powervm_inventory.html" class="btn btn-neutral float-right" title="powervm_inventory – HMC-based inventory source for Power Systems" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="modules/powervm_lpar_instance.html" class="btn btn-neutral float-left" title="powervm_lpar_instance – Create/Delete an AIX/Linux or IBMi partition" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
