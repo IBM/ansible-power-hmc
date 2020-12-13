@@ -63,6 +63,7 @@ This Ansible collection is maintained by the IBM Power HMC development team.
    :hidden:
 
    modules
+   plugins
    playbooks
    demo
 

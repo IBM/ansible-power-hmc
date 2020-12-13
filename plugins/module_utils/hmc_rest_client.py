@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 NEED_LXML = False
 try:
     from lxml import etree, objectify
-except Exception:
+except ImportError:
     NEED_LXML = True
 
 import logging
@@ -277,8 +277,26 @@ class HmcRestClient:
         uuid = managedsystem_root.xpath("//AtomID")[0].text
         return uuid, managedsystem_root.xpath("//ManagedSystem")[0]
 
-    def getLogicalPartitionsQuick(self, system_uuid):
-        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/LogicalPartition/quick/All".format(self.hmc_ip, system_uuid)
+    def getManagedSystems(self):
+        url = "https://{0}/rest/api/uom/ManagedSystem".format(self.hmc_ip)
+        header = {'X-API-Session': self.session,
+                  'Accept': 'application/vnd.ibm.powervm.uom+xml; type=ManagedSystem'}
+
+        response = open_url(url,
+                            headers=header,
+                            method='GET',
+                            validate_certs=False,
+                            force_basic_auth=True,
+                            timeout=300)
+
+        if response.code == 204:
+            return None, None
+
+        managedsystems_root = xml_strip_namespace(response.read())
+        return managedsystems_root
+
+    def getManagedSystemsQuick(self):
+        url = "https://{0}/rest/api/uom/ManagedSystem/quick/All".format(self.hmc_ip)
         header = {'X-API-Session': self.session,
                   'Accept': '*/*'}
         resp = open_url(url,
@@ -286,9 +304,9 @@ class HmcRestClient:
                         method='GET',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=3000)
+                        timeout=60)
         if resp.code != 200:
-            logger.debug("Get of Logical Partitions failed. Respsonse code: %d", resp.code)
+            logger.debug("Get of Managed Systems failed. Respsonse code: %d", resp.code)
             return None
         response = resp.read()
         return response
@@ -330,6 +348,70 @@ class HmcRestClient:
             return lpar_uuid, partition_dom
 
         return None, None
+
+    def getLogicalPartitions(self, system_uuid):
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/LogicalPartition?group=Advanced".format(self.hmc_ip, system_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': 'application/vnd.ibm.powervm.uom+xml; type=LogicalPartition'}
+        resp = open_url(url,
+                        headers=header,
+                        method='GET',
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=3000)
+        if resp.code != 200:
+            logger.debug("Get of Logical Partitions failed. Respsonse code: %d", resp.code)
+            return None
+        response = resp.read()
+        return response
+
+    def getLogicalPartitionsQuick(self, system_uuid):
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/LogicalPartition/quick/All".format(self.hmc_ip, system_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': '*/*'}
+        resp = open_url(url,
+                        headers=header,
+                        method='GET',
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=60)
+        if resp.code != 200:
+            logger.debug("Get of Logical Partitions failed. Respsonse code: %d", resp.code)
+            return None
+        response = resp.read()
+        return response
+
+    def getVirtualIOServers(self, system_uuid):
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/VirtualIOServer?group=Advanced".format(self.hmc_ip, system_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': 'application/vnd.ibm.powervm.uom+xml; type=VirtualIOServer'}
+        resp = open_url(url,
+                        headers=header,
+                        method='GET',
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=3000)
+        if resp.code != 200:
+            logger.debug("Get of Virtual IO Servers failed. Respsonse code: %d", resp.code)
+            return None
+        response = resp.read()
+        return response
+
+    def getVirtualIOServersQuick(self, system_uuid):
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/VirtualIOServer/quick/All".format(self.hmc_ip, system_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': '*/*'}
+        resp = open_url(url,
+                        headers=header,
+                        method='GET',
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=60)
+        if resp.code != 200:
+            logger.debug("Get of Virtual IO Servers failed. Respsonse code: %d", resp.code)
+            return None
+        response = resp.read()
+        return response
 
     def deleteLogicalPartition(self, partition_uuid):
         url = "https://{0}/rest/api/uom/LogicalPartition/{1}".format(self.hmc_ip, partition_uuid)

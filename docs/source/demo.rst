@@ -48,3 +48,15 @@ policy then modify and activate it.
 
 .. figure:: ../images/demo_password_policy_modify.gif
    :alt: 
+
+
+powervm_lpar_instance
+---------------------
+
+Create and Delete lpar instance
+"""""""""""""""""""""""""""""""
+
+The following gif demonstrates the creation of an aix lpar instance and deletion of it.
+
+.. figure:: ../images/demo_create_partition.gif
+   :alt:

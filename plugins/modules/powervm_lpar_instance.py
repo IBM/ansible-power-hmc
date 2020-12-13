@@ -19,7 +19,7 @@ author:
     - Anil Vijayan (@AnilVijayan)
 short_description: Create/Delete an AIX/Linux or IBMi partition
 notes:
-    - Currently supports creation of partition (powervm instance) with only processor and memory settings
+    - Currently supports creation of partition (powervm instance) with only processor and memory settings on dedicated mode
 description:
     - "Creates AIX/Linux or IBMi partition with specified configuration details on mentioned system"
     - "Or Deletes specified AIX/Linux or IBMi partition on specified system"
@@ -100,6 +100,27 @@ EXAMPLES = '''
       mem: 20480
       os_type: ibmi
       state: present
+
+- name: Create an AIX/Linux logical partition instance with default proc and mem values
+  powervm_lpar_instance:
+      hmc_host: '{{ inventory_hostname }}'
+      hmc_auth:
+         username: '{{ ansible_user }}'
+         password: '{{ hmc_password }}'
+      system_name: <system_name>
+      vm_name: <vm_name>
+      os_type: aix_linux
+      state: present
+
+- name: Delete a logical partition instance
+  powervm_lpar_instance:
+      hmc_host: '{{ inventory_hostname }}'
+      hmc_auth:
+         username: '{{ ansible_user }}'
+         password: '{{ hmc_password }}'
+      system_name: <system_name>
+      vm_name: <vm_name>
+      state: absent
 '''
 
 RETURN = '''
@@ -129,7 +150,7 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client impo
 from random import randint
 try:
     from lxml import etree
-except Exception:
+except ImportError:
     pass  # Handled by hmc rest client module
 
 # Generic setting for log initializing and log rotation
@@ -413,7 +434,7 @@ def run_module():
     module = AnsibleModule(
         argument_spec=module_args,
         required_if=[['state', 'absent', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
-                     ['state', 'present', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'proc', 'mem', 'os_type']]
+                     ['state', 'present', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']]
                      ]
 
     )

@@ -7,24 +7,35 @@
   vars:
     curr_hmc_auth:
       username: hscroot 
-      password: abc123
+      password: !vault |
+                $ANSIBLE_VAULT;1.1;AES256
+                63333364316262646163393034636564353461333237323833663064666339643965353138653535
+                3565376565666532326532663462323966353631396538340a383936626439363830393361373361
+                61363663363064366366366136623262386366623361636638616464326539343931316462346232
+                3830656631393734630a343331333133616662356335343064353239326162653839343733616364
+                3566
 
   tasks:
   - name: Create logical partition
     powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth: "{{ curr_hmc_auth }}"
-      system_name: alpfp019 
-      vm_name: test-ansible
-      proc: 1
+      system_name: zepp31fp 
+      vm_name: test123
+      proc: 2
       mem: 2048
-      os_type: ibmi 
+      os_type: aix
       state: present
+    register: testout
+
+  - name: Stdout the created logical partition
+    debug:
+        msg: '{{ testout }}'
 
   - name: Delete logical partition
     powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth: "{{ curr_hmc_auth }}"
-      system_name: alpfp019 
-      vm_name: test-ansible 
+      system_name: zepp31fp 
+      vm_name: test123
       state: absent
