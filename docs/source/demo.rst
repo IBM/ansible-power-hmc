@@ -60,3 +60,15 @@ The following gif demonstrates the creation of an aix lpar instance and deletion
 
 .. figure:: ../images/demo_create_partition.gif
    :alt:
+
+
+powervm_inventory
+-----------------
+
+List all running AIX and VIOS lpar instances
+""""""""""""""""""""""""""""""""""""""""""""
+
+The following gif demonstrates how to list the lpar instances using dynamic inventory plugin
+
+.. figure:: ../images/demo_powervm_inventory.gif
+   :alt:
