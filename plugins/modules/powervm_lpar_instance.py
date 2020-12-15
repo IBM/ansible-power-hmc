@@ -67,7 +67,7 @@ options:
     mem:
         description:
             - The value of dedicated memory value in megabytes to create partition
-              Default value is 1024
+              Default value is 2048
         type: int
     os_type:
         description:
