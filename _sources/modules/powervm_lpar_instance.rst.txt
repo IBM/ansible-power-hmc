@@ -59,7 +59,7 @@ Parameters
 
 
   mem (optional, int, None)
-    The value of dedicated memory value in megabytes to create partition Default value is 1024
+    The value of dedicated memory value in megabytes to create partition Default value is 2048
 
 
   os_type (optional, str, None)
