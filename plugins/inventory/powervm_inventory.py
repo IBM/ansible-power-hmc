@@ -319,7 +319,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         systems = {}
         for hmc_host in self.hmc_hosts:
             try:
-                rest_conn = HmcRestClient(hmc_host, self.hmc_hosts[hmc_host]["user"], self.hmc_hosts[hmc_host]["password"])
+                rest_conn = HmcRestClient(str(hmc_host), str(self.hmc_hosts[hmc_host]["user"]), str(self.hmc_hosts[hmc_host]["password"]))
                 try:
                     managed_systems = json.loads(rest_conn.getManagedSystemsQuick())
                 except Exception as e:
