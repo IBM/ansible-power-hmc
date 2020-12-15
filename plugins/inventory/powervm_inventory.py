@@ -46,8 +46,8 @@ DOCUMENTATION = '''
     short_description: HMC-based inventory source for Power Systems
     description:
         - This plugin utilizes HMC APIs to build a dynamic inventory
-          of defined partitions (LPAR, VIOS). Inventory sources must be structured as name.power_hmc.yml
-          or name.power_hmc.yaml.
+          of defined partitions (LPAR, VIOS). Inventory sources must be structured as *.power_hmc.yml
+          or *.power_hmc.yaml.
         - To create a usable Ansible host for a given LPAR, the ip or hostname
           of the LPAR must be exposed through the HMC in some way.
           Currently there are only two such sources supported by this plugin,
@@ -55,8 +55,11 @@ DOCUMENTATION = '''
         - Valid LPAR/VIOS properties that can be used for groups, keyed groups, filters, unknown partition identification,
           and composite variables can be found in the HMC REST API documentation. By default, valid properties include those
           listed as "Quick Properties", but if `advanced_fields` are enabled you may be able to use more advanced properties of the
-          partition. Further information about this APIs can be found in the
-          L(Knowledge Center, https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/LogicalPartition.htm)
+          partition. Further information about the APIs can be found in the
+          L(Knowledge Center, https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/LogicalPartition.htm).
+        - If a property is used in the inventory source that is unique to a partition type,
+          only partitions for which that property is defined may be included. Non-compatible partitions can be
+          filtered out by `OperatingSystemVersion` or `PartitionType` as detailed in the second example.
 
     options:
         hmc_hosts:
@@ -133,7 +136,7 @@ DOCUMENTATION = '''
                   and will can be identified by any LPAR property of your choosing
                   (PartitionName or UUID are common identifiers).
                 - If you do not omit unknown partitions, you may run into issues
-                  targetting groups that include them. To avoid this you can specify a host pattern
+                  targetting groups that include them. To avoid this, you can specify a host pattern
                   in a playbooks such as `targetgroup:!unknown`.
                   This will your playbook to run against all known hosts in your target group.
             default: omit
@@ -208,7 +211,7 @@ compose:
 ## Generate an inventory that excludes partitions by ip, name, or the name of managed system on which they run
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_url1":
+  "hmc_host_name":
     user: user
     password: password
 exclude_ip:
