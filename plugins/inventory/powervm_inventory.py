@@ -46,16 +46,21 @@ DOCUMENTATION = '''
     short_description: HMC-based inventory source for Power Systems
     description:
         - This plugin utilizes HMC APIs to build a dynamic inventory
-          of defined partitions (LPAR, VIOS). Inventory sources must be structured as name.power_hmc.yml
-          or name.power_hmc.yaml.
+          of defined partitions (LPAR, VIOS). Inventory sources must be structured as *.power_hmc.yml
+          or *.power_hmc.yaml.
         - To create a usable Ansible host for a given LPAR, the ip or hostname
           of the LPAR must be exposed through the HMC in some way.
-          Currently there are only 2 such sources supported by this tool,
-          an RMC ip address or the name of the LPAR must be a valid hostname.
+          Currently there are only two such sources supported by this plugin,
+          either an RMC ip address or the name of the LPAR must be also a valid hostname.
         - Valid LPAR/VIOS properties that can be used for groups, keyed groups, filters, unknown partition identification,
           and composite variables can be found in the HMC REST API documentation. By default, valid properties include those
-          listed as "Quick Properties", but if `advanced_fields` are enabled you may use properties included in
-          the "Advanced" group as well.
+          listed as "Quick Properties", but if `advanced_fields` are enabled you may be able to use more advanced properties of the
+          partition. Further information about the APIs can be found in the
+          L(Knowledge Center, https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/LogicalPartition.htm).
+        - If a property is used in the inventory source that is unique to a partition type,
+          only partitions for which that property is defined may be included. Non-compatible partitions can be
+          filtered out by `OperatingSystemVersion` or `PartitionType` as detailed in the second example.
+
     options:
         hmc_hosts:
           description: A dictionary of hosts and their associated usernames and passwords.
@@ -68,7 +73,7 @@ DOCUMENTATION = '''
                   Only results matching the filter will be included in the inventory.
             default: {}
         compose:
-            description: Create vars from jinja2 expressions.
+            description: Create vars from Jinja2 expressions.
             default: {}
             type: dict
         groups:
@@ -113,9 +118,8 @@ DOCUMENTATION = '''
             description:
                 - Allows for additional LPAR/VIOS properties to be used for
                   the purposes of grouping and filtering.
-                - Retrieving these properties requires a significantly slower
-                  call to HMC APIs. Depending on the size of your environment,
-                  it could increase dynamic inventory generation run time dramatically.
+                - Retrieving these properties could increase dynamic inventory generation run time,
+                  depending on the size of your environment and the properties to be fetched.
             default: false
             type: bool
         group_by_managed_system:
@@ -132,7 +136,7 @@ DOCUMENTATION = '''
                   and will can be identified by any LPAR property of your choosing
                   (PartitionName or UUID are common identifiers).
                 - If you do not omit unknown partitions, you may run into issues
-                  targetting groups that include them. To avoid this you can specify a host pattern
+                  targetting groups that include them. To avoid this, you can specify a host pattern
                   in a playbooks such as `targetgroup:!unknown`.
                   This will your playbook to run against all known hosts in your target group.
             default: omit
@@ -143,16 +147,27 @@ EXAMPLES = '''
 # The most minimal example, targetting only a single HMC
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_url1":
+  "hmc_host_name":
     user: user
     password: password
+
+# Create an inventory consisting of only Virtual IO Servers.
+# This may be important if grouping by advanced_fields exclusive to VIOS.
+plugin: ibm.power_hmc.powervm_inventory
+hmc_hosts:
+  "hmc_host_name":
+    user: user
+    password: password
+filters:
+    PartitionType: 'Virtual IO Server'
+
 # Target multiple HMC hosts and only add running partitions to the inventory
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_url1":
+  "hmc_host_name":
     user: user
     password: password
-  "hmc_url2":
+  "hmc_host_name2":
     user: user
     password: password
 filters:
@@ -161,10 +176,10 @@ filters:
 # Generate an inventory including all running partitions and also create a group allowing us to target AIX 7.2 specifically
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_url1":
+  "hmc_host_name":
     user: user
     password: password
-  "hmc_url2":
+  "hmc_host_name2":
     user: user
     password: password
 filters:
@@ -177,10 +192,10 @@ groups:
 # Additionally, include the following variables as host_vars for a given target host: CurrentMemory, OperatingSystemVersion, PartitionName
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_url1":
+  "hmc_host_name":
     user: user
     password: password
-  "hmc_url2":
+  "hmc_host_name2":
     user: user
     password: password
 filters:
@@ -196,7 +211,7 @@ compose:
 ## Generate an inventory that excludes partitions by ip, name, or the name of managed system on which they run
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_url1":
+  "hmc_host_name":
     user: user
     password: password
 exclude_ip:
@@ -304,7 +319,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         systems = {}
         for hmc_host in self.hmc_hosts:
             try:
-                rest_conn = HmcRestClient(hmc_host, self.hmc_hosts[hmc_host]["user"], self.hmc_hosts[hmc_host]["password"])
+                rest_conn = HmcRestClient(str(hmc_host), str(self.hmc_hosts[hmc_host]["user"]), str(self.hmc_hosts[hmc_host]["password"]))
                 try:
                     managed_systems = json.loads(rest_conn.getManagedSystemsQuick())
                 except Exception as e:
