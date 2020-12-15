@@ -295,8 +295,8 @@ def create_partition(module, params):
 
         # On servers that do not support the IBM i partitions with native I/O capability
         if os_type == 'ibmi' and \
-               server_dom.xpath("//IBMiNativeIOCapable") and \
-               server_dom.xpath("//IBMiNativeIOCapable")[0].text == 'false':
+                server_dom.xpath("//IBMiNativeIOCapable") and \
+                server_dom.xpath("//IBMiNativeIOCapable")[0].text == 'false':
             temporary_temp_dom = rest_conn.getPartitionTemplate(name=temp_template_name)
             temp_uuid = temporary_temp_dom.xpath("//AtomID")[0].text
             srrTag = temporary_temp_dom.xpath("//SimplifiedRemoteRestartEnable")[0]
