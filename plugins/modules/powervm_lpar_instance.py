@@ -230,7 +230,7 @@ def create_partition(module, params):
     system_name = params['system_name']
     vm_name = params['vm_name']
     proc = str(params['proc'] or 2)
-    mem = str(params['mem'] or 1024)
+    mem = str(params['mem'] or 2048)
     os_type = params['os_type']
     temp_template_name = "draft_ansible_powervm_create_{0}".format(str(randint(1000, 9999)))
     temp_copied = False
