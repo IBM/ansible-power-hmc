@@ -65,8 +65,8 @@ The following gif demonstrates the creation of an aix lpar instance and deletion
 powervm_inventory
 -----------------
 
-List all running AIX and VIOS lpar instances
-""""""""""""""""""""""""""""""""""""""""""""
+Collects the inventory of all AIX and VIOS instances
+""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 The following gif demonstrates how to list the lpar instances using dynamic inventory plugin
 
