@@ -61,27 +61,25 @@ options:
         type: str
     proc:
         description:
-            - The number of dedicated processors to create partition
-              Default value is 2
+            - The number of dedicated processors to create partition.
+            - Default value is 2.
         type: int
     mem:
         description:
-            - The value of dedicated memory value in megabytes to create partition
-              Default value is 2048
+            - The value of dedicated memory value in megabytes to create partition.
+            - Default value is 2048 MB.
         type: int
     os_type:
         description:
             - Type of logical partition to be created
-            - C(aix_linux) for AIX or Linux operating system
-            - C(linux) for Linux operating system
-            - C(aix) for AIX operating system
-            - C(ibmi) for IBM i operating system
+            - C(aix_linux) or C(linux) or C(aix) for AIX or Linux operating system
+            - C(ibmi) for IBMi operating system
         type: str
         choices: ['aix','linux','aix_linux','ibmi']
     state:
         description:
-            - C(present) creates a partition of specifed os_type, vm_name, proc and memory on specified system_name
-            - C(absent) deletes a partition of specified vm_name on specified system_name
+            - C(present) creates a partition of specifed I(os_type), I(vm_name), I(proc) and I(memory) on specified I(system_name)
+            - C(absent) deletes a partition of specified I(vm_name) on specified I(system_name)
         required: true
         type: str
         choices: ['present', 'absent']
