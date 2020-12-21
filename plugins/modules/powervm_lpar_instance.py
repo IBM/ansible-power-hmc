@@ -178,7 +178,7 @@ def validate_proc_mem(system_dom, proc, mem, proc_units=None):
     if proc_units:
         min_proc_unit_per_virtproc = system_dom.xpath('//MinimumProcessorUnitsPerVirtualProcessor')[0].text
         float_min_proc_unit_per_virtproc = float(min_proc_unit_per_virtproc)
-        if round(float(proc_units)%float_min_proc_unit_per_virtproc, 2) != float_min_proc_unit_per_virtproc:
+        if round(float(proc_units) % float_min_proc_unit_per_virtproc, 2) != float_min_proc_unit_per_virtproc:
             raise HmcError("Input processor units: {0} must be a multiple of {1}".format(proc_units, min_proc_unit_per_virtproc))
 
     curr_avail_mem = system_dom.xpath('//CurrentAvailableSystemMemory')[0].text
@@ -315,7 +315,7 @@ def create_partition(module, params):
         config_dict = {'lpar_id': str(next_lpar_id)}
         config_dict['vm_name'] = vm_name
         config_dict['proc'] = proc
-        config_dict['proc_unit'] = str(proc_unit) 
+        config_dict['proc_unit'] = str(proc_unit)
         config_dict['mem'] = mem
         if os_type == 'ibmi':
             add_taggedIO_details(temporary_temp_dom)
@@ -329,7 +329,6 @@ def create_partition(module, params):
         if not draft_template_xml:
             module.fail_json(msg="Not able to fetch template for partition deploy")
 
-        #rest_conn.updatePartitionTemplate(draft_uuid, draft_template_xml, config_dict)
         rest_conn.transformPartitionTemplate(draft_uuid, system_uuid)
         resp_dom = rest_conn.deployPartitionTemplate(draft_uuid, system_uuid)
         partition_uuid = resp_dom.xpath("//ParameterName[text()='PartitionUuid']/following-sibling::ParameterValue")[0].text

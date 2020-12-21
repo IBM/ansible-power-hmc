@@ -430,7 +430,7 @@ class HmcRestClient:
         template_xml.xpath("//partitionId")[0].text = config_dict['lpar_id']
         template_xml.xpath("//partitionName")[0].text = config_dict['vm_name']
 
-        #shared processor configuration
+        # shared processor configuration
         if config_dict['proc_unit']:
             shared_payload = '''<sharedProcessorConfiguration kxe="false" kb="CUD" schemaVersion="V1_0">
                 <Metadata>
@@ -465,7 +465,6 @@ class HmcRestClient:
             template_xml.xpath("//currMinMemory")[0].text = config_dict['mem']
             template_xml.xpath("//currMemory")[0].text = config_dict['mem']
             template_xml.xpath("//currMaxMemory")[0].text = config_dict['mem']
-
 
     def updatePartitionTemplate(self, uuid, template_xml):
         templateUrl = "https://{0}/rest/api/templates/PartitionTemplate/{1}".format(self.hmc_ip, uuid)
