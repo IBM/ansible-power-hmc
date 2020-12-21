@@ -425,11 +425,39 @@ class HmcRestClient:
                  force_basic_auth=True,
                  timeout=60)
 
-    def updatePartitionTemplate(self, uuid, template_xml, config_dict=None):
-        if config_dict:
-            template_xml.xpath("//partitionId")[0].text = config_dict['lpar_id']
-            template_xml.xpath("//partitionName")[0].text = config_dict['vm_name']
+    def updateProcMemSettingsToDom(self, template_xml, config_dict):
+        shared_config_tag = None
+        template_xml.xpath("//partitionId")[0].text = config_dict['lpar_id']
+        template_xml.xpath("//partitionName")[0].text = config_dict['vm_name']
 
+        #shared processor configuration
+        if config_dict['proc_unit']:
+            shared_payload = '''<sharedProcessorConfiguration kxe="false" kb="CUD" schemaVersion="V1_0">
+                <Metadata>
+                    <Atom/>
+                </Metadata>
+                <sharedProcessorPoolId kxe="false" kb="CUD">0</sharedProcessorPoolId>
+                <minProcessingUnits kb="CUD" kxe="false">0.1</minProcessingUnits>
+                <desiredProcessingUnits kxe="false" kb="CUD">{0}</desiredProcessingUnits>
+                <maxProcessingUnits kb="CUD" kxe="false">{0}</maxProcessingUnits>
+                <minVirtualProcessors kb="CUD" kxe="false">1</minVirtualProcessors>
+                <desiredVirtualProcessors kxe="false" kb="CUD">{1}</desiredVirtualProcessors>
+                <maxVirtualProcessors kxe="false" kb="CUD">{1}</maxVirtualProcessors>
+                </sharedProcessorConfiguration>'''.format(config_dict['proc_unit'], config_dict['proc'])
+
+            shared_config_tag = template_xml.xpath("//sharedProcessorConfiguration")[0]
+            if shared_config_tag:
+                shared_config_tag.getparent().remove(shared_config_tag)
+            sharingMode_tag = template_xml.xpath("//sharingMode")[0]
+            sharingMode_tag.addnext(etree.XML(shared_payload))
+
+            dedi_tag = template_xml.xpath("//dedicatedProcessorConfiguration")[0]
+            if dedi_tag:
+                dedi_tag.getparent().remove(dedi_tag)
+
+            template_xml.xpath("//currHasDedicatedProcessors")[0].text = 'false'
+            template_xml.xpath("//currSharingMode")[0].text = 'uncapped'
+        else:
             template_xml.xpath("//minProcessors")[0].text = '1'
             template_xml.xpath("//desiredProcessors")[0].text = config_dict['proc']
             template_xml.xpath("//maxProcessors")[0].text = config_dict['proc']
@@ -438,6 +466,8 @@ class HmcRestClient:
             template_xml.xpath("//currMemory")[0].text = config_dict['mem']
             template_xml.xpath("//currMaxMemory")[0].text = config_dict['mem']
 
+
+    def updatePartitionTemplate(self, uuid, template_xml):
         templateUrl = "https://{0}/rest/api/templates/PartitionTemplate/{1}".format(self.hmc_ip, uuid)
         header = {'X-API-Session': self.session,
                   'Content-Type': 'application/vnd.ibm.powervm.templates+xml;type=PartitionTemplate'}

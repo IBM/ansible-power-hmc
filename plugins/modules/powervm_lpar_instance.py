@@ -62,8 +62,14 @@ options:
     proc:
         description:
             - The number of dedicated processors to create partition.
-            - Default value is 2.
+            - If C(proc_unit) parameter is set, then this value will work as Virtual Processors for
+              shared processor setting
+            - Default value is 2. This will not work during shared processor setting
         type: int
+    proc_unit:
+        description:
+            - The number of shared processing units to create partition.
+        type: float
     mem:
         description:
             - The value of dedicated memory value in megabytes to create partition.
@@ -164,10 +170,16 @@ def init_logger():
         level=logging.DEBUG)
 
 
-def validate_proc_mem(system_dom, proc, mem):
+def validate_proc_mem(system_dom, proc, mem, proc_units=None):
 
     curr_avail_proc_units = system_dom.xpath('//CurrentAvailableSystemProcessorUnits')[0].text
     int_avail_proc = int(float(curr_avail_proc_units))
+
+    if proc_units:
+        min_proc_unit_per_virtproc = system_dom.xpath('//MinimumProcessorUnitsPerVirtualProcessor')[0].text
+        float_min_proc_unit_per_virtproc = float(min_proc_unit_per_virtproc)
+        if round(float(proc_units)%float_min_proc_unit_per_virtproc, 2) != float_min_proc_unit_per_virtproc:
+            raise HmcError("Input processor units: {0} must be a multiple of {1}".format(proc_units, min_proc_unit_per_virtproc))
 
     curr_avail_mem = system_dom.xpath('//CurrentAvailableSystemMemory')[0].text
     int_avail_mem = int(curr_avail_mem)
@@ -229,10 +241,10 @@ def create_partition(module, params):
     vm_name = params['vm_name']
     proc = str(params['proc'] or 2)
     mem = str(params['mem'] or 2048)
+    proc_unit = params['proc_unit']
     os_type = params['os_type']
     temp_template_name = "draft_ansible_powervm_create_{0}".format(str(randint(1000, 9999)))
     temp_copied = False
-
     cli_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(cli_conn)
 
@@ -291,15 +303,25 @@ def create_partition(module, params):
         logger.debug("Next Partiion ID: %s", str(next_lpar_id))
         logger.debug("CEC uuid: %s", system_uuid)
 
+        temporary_temp_dom = rest_conn.getPartitionTemplate(name=temp_template_name)
+        temp_uuid = temporary_temp_dom.xpath("//AtomID")[0].text
         # On servers that do not support the IBM i partitions with native I/O capability
         if os_type == 'ibmi' and \
                 server_dom.xpath("//IBMiNativeIOCapable") and \
                 server_dom.xpath("//IBMiNativeIOCapable")[0].text == 'false':
-            temporary_temp_dom = rest_conn.getPartitionTemplate(name=temp_template_name)
-            temp_uuid = temporary_temp_dom.xpath("//AtomID")[0].text
             srrTag = temporary_temp_dom.xpath("//SimplifiedRemoteRestartEnable")[0]
             srrTag.addnext(etree.XML('<isRestrictedIOPartition kb="CUD" kxe="false">true</isRestrictedIOPartition>'))
-            rest_conn.updatePartitionTemplate(temp_uuid, temporary_temp_dom)
+
+        config_dict = {'lpar_id': str(next_lpar_id)}
+        config_dict['vm_name'] = vm_name
+        config_dict['proc'] = proc
+        config_dict['proc_unit'] = str(proc_unit) 
+        config_dict['mem'] = mem
+        if os_type == 'ibmi':
+            add_taggedIO_details(temporary_temp_dom)
+
+        rest_conn.updateProcMemSettingsToDom(temporary_temp_dom, config_dict)
+        rest_conn.updatePartitionTemplate(temp_uuid, temporary_temp_dom)
 
         resp = rest_conn.checkPartitionTemplate(temp_template_name, system_uuid)
         draft_uuid = resp.xpath("//ParameterName[text()='TEMPLATE_UUID']/following-sibling::ParameterValue")[0].text
@@ -307,14 +329,7 @@ def create_partition(module, params):
         if not draft_template_xml:
             module.fail_json(msg="Not able to fetch template for partition deploy")
 
-        config_dict = {'lpar_id': str(next_lpar_id)}
-        config_dict['vm_name'] = vm_name
-        config_dict['proc'] = proc
-        config_dict['mem'] = mem
-        if os_type == 'ibmi':
-            add_taggedIO_details(draft_template_xml)
-
-        rest_conn.updatePartitionTemplate(draft_uuid, draft_template_xml, config_dict)
+        #rest_conn.updatePartitionTemplate(draft_uuid, draft_template_xml, config_dict)
         rest_conn.transformPartitionTemplate(draft_uuid, system_uuid)
         resp_dom = rest_conn.deployPartitionTemplate(draft_uuid, system_uuid)
         partition_uuid = resp_dom.xpath("//ParameterName[text()='PartitionUuid']/following-sibling::ParameterValue")[0].text
@@ -425,6 +440,7 @@ def run_module():
         system_name=dict(type='str', required=True),
         vm_name=dict(type='str', required=True),
         proc=dict(type='int'),
+        proc_unit=dict(type='float'),
         mem=dict(type='int'),
         os_type=dict(type='str', choices=['aix', 'linux', 'aix_linux', 'ibmi']),
         state=dict(required=True, type='str',
@@ -435,7 +451,10 @@ def run_module():
         argument_spec=module_args,
         required_if=[['state', 'absent', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
                      ['state', 'present', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']]
-                     ]
+                     ],
+        required_by=dict(
+            proc_unit=('proc', ),
+        ),
 
     )
 
