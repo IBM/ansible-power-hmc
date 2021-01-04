@@ -315,7 +315,7 @@ def create_partition(module, params):
         config_dict = {'lpar_id': str(next_lpar_id)}
         config_dict['vm_name'] = vm_name
         config_dict['proc'] = proc
-        config_dict['proc_unit'] = str(proc_unit)
+        config_dict['proc_unit'] = str(proc_unit) if proc_unit else None
         config_dict['mem'] = mem
         if os_type == 'ibmi':
             add_taggedIO_details(temporary_temp_dom)
