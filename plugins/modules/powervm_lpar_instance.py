@@ -142,6 +142,7 @@ partition_info:
 '''
 
 import sys
+import json
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_resource import Hmc
@@ -196,10 +197,36 @@ def validate_proc_mem(system_dom, proc, mem, proc_units=None):
         raise HmcError("Available system memory is not enough. Provide value on or below {0}".format(curr_avail_mem))
 
 
+def validate_sub_dict(sub_key, params):
+    mutually_exclusive_list = []
+    together = []
+
+    for each in params.copy():
+        if not params[each] or params[each] == '':
+            #raise ParameterError("Parameter '%s' provided with empty data" %(each))
+            #del params[each]
+            params.pop(each)
+
+    if 'volume_config' in sub_key:
+        options = set(params.keys())
+        together = ['volume_name', 'vios_name']
+        mutually_exclusive_list = [('volume_name', 'vios_name'), ('volume_size',)]
+
+    list1 = [each for each in options if each in mutually_exclusive_list[0]]
+    list2 = [each for each in options if each in mutually_exclusive_list[1]]
+    if list1 and list2:
+        raise ParameterError("Parameters: '%s' and '%s' are  mutually exclusive" % \
+                (', '.join(mutually_exclusive_list[0]), ', '.join(mutually_exclusive_list[1])))
+
+    list3 = [each for each in options if each in together]
+    if set(list3) != set(together):
+        raise ParameterError("Missing parameters %s" % (', '.join(set(together)-set(list3))))
+
+
 def validate_parameters(params):
     '''Check that the input parameters satisfy the mutual exclusiveness of HMC'''
     if params['state'] == 'present':
-        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']
+        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type', 'volume_config']
         unsupportedList = []
     else:
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
@@ -226,6 +253,92 @@ def validate_parameters(params):
         else:
             raise ParameterError("unsupported parameters: %s" % (', '.join(collate)))
 
+    logger.debug(params)
+    if params['volume_config']:
+        validate_sub_dict('volume_config', params['volume_config'])
+
+
+def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, vios_name=None):
+    user_choice_vios = None
+    user_choice_pvid = None
+    vios_response = rest_conn.getVirtualIOServersQuick(system_uuid)
+    logger.debug(vios_response)
+    vios_uuid_list = []
+    if vios_response:
+        vios_list = json.loads(vios_response)
+        logger.debug(vios_list)
+
+        vios_uuid_list = [(vios['UUID'], vios['PartitionName']) for vios in vios_list if vios['RMCState'] == 'active']
+        logger.debug(vios_uuid_list)
+
+        if not vios_uuid_list:
+            raise Error("Vioses are not available or RMC down")
+    else:
+        raise Error("Requested vioses are not available")
+
+    if vios_name and volume_name:
+        for uuid, name in vios_uuid_list:
+            if vios_name == name:
+                user_choice_vios = vios_name
+                break
+        if not user_choice_vios:
+            raise Error("Requested vios may not have active RMC state")
+
+    pv_complex = []
+    keys_list = []
+    unique_keys = []
+    for vios_uuid, viosname in vios_uuid_list:
+        logger.debug(vios_uuid)
+        each_pv_complex = {}
+        pv_xml_list = rest_conn.getFreePhyVolume(vios_uuid)
+        for each in pv_xml_list:
+            if volume_size > 0 and int(each.xpath("VolumeCapacity")[0].text) >= volume_size:
+                logger.debug(each.xpath("VolumeName")[0].text)
+                logger.debug(viosname)
+                logger.debug(each.xpath("UniqueDeviceID")[0].text)
+                each_pv_complex.update({each.xpath("UniqueDeviceID")[0].text : each})
+            elif user_choice_vios:
+                dvid = each.xpath("UniqueDeviceID")[0].text
+                each_pv_complex.update({dvid : each})
+                if viosname == user_choice_vios and each.xpath("VolumeName")[0].text == volume_name:
+                    user_choice_pvid = dvid 
+
+        if each_pv_complex:
+            keys_list += each_pv_complex.keys()
+            pv_complex.append((each_pv_complex, vios_uuid, viosname))
+            unique_keys = list(set(keys_list))
+
+    if user_choice_vios:
+        if user_choice_pvid:
+            unique_keys = [user_choice_pvid]
+            logger.debug(unique_keys)
+        else:
+            logger.debug("Not able to identify mentioned volume on free pvs of specified vios")
+            unique_keys = []
+
+    found_list = []
+    for each_DVID in unique_keys:
+        for each_pv_complex in pv_complex:
+            if each_DVID in each_pv_complex[0]:
+                logger.debug(each_pv_complex[0].keys())
+                pv_xml = each_pv_complex[0][each_DVID]
+                found_list += [(each_pv_complex[0][each_DVID].xpath("VolumeName")[0].text, each_pv_complex[2])]
+        if len(found_list) == 2:
+            logger.debug("Found volume visible by two vios")
+            logger.debug(found_list)
+            return found_list
+        elif found_list and user_choice_pvid:
+            return found_list
+        else:
+            found_list = []
+    #if user not specified any vios and could not find volume visible by multiple vioses, then
+    # pick a random volume from any one of the vios
+    if pv_complex and not found_list and not user_choice_vios:
+        volume_nm = list(pv_complex[0][0].values())[0].xpath("VolumeName")[0].text
+        return [(volume_nm, pv_complex[0][2])]
+
+    return None
+
 
 def create_partition(module, params):
     changed = False
@@ -233,6 +346,7 @@ def create_partition(module, params):
     rest_conn = None
     system_uuid = None
     server_dom = None
+    warning_msg = None
     validate_parameters(params)
     hmc_host = params['hmc_host']
     hmc_user = params['hmc_auth']['username']
@@ -243,10 +357,14 @@ def create_partition(module, params):
     mem = str(params['mem'] or 2048)
     proc_unit = params['proc_unit']
     os_type = params['os_type']
+    vios_name = None
     temp_template_name = "draft_ansible_powervm_create_{0}".format(str(randint(1000, 9999)))
     temp_copied = False
     cli_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(cli_conn)
+
+    if params['volume_config']['vios_name']:
+        vios_name = params['volume_config']['vios_name']
 
     try:
         rest_conn = HmcRestClient(hmc_host, hmc_user, password)
@@ -287,7 +405,7 @@ def create_partition(module, params):
                 logger.debug("Logoff error")
             error_msg = parse_error_response(error)
             module.fail_json(msg=error_msg)
-        return False, partition_prop
+        return False, partition_prop, None
 
     validate_proc_mem(server_dom, int(proc), int(mem))
 
@@ -325,11 +443,42 @@ def create_partition(module, params):
 
         resp = rest_conn.checkPartitionTemplate(temp_template_name, system_uuid)
         draft_uuid = resp.xpath("//ParameterName[text()='TEMPLATE_UUID']/following-sibling::ParameterValue")[0].text
-        draft_template_xml = rest_conn.getPartitionTemplate(uuid=draft_uuid)
-        if not draft_template_xml:
+        rest_conn.transformPartitionTemplate(draft_uuid, system_uuid)
+
+        draft_template_dom = rest_conn.getPartitionTemplate(uuid=draft_uuid)
+        if not draft_template_dom:
             module.fail_json(msg="Not able to fetch template for partition deploy")
 
-        rest_conn.transformPartitionTemplate(draft_uuid, system_uuid)
+        if vios_name:
+            vios_response = rest_conn.getVirtualIOServersQuick(system_uuid)
+            if vios_response:
+                vios_list = json.loads(vios_response)
+                logger.debug(vios_list)
+                vios = [vios for vios in vios_list if vios['PartitionName'] == vios_name]
+                if vios:
+                    vios_uuid = vios[0]['UUID']
+                else:
+                    raise Error("Requested vios: {0} is not available".format(vios_name))
+            else:
+                raise Error("Requested vios: {0} is not available".format(vios_name))
+
+            vol_tuple_list = identifyFreeVolume(rest_conn, system_uuid, volume_name=params['volume_config']['volume_name'], \
+                    vios_name=params['volume_config']['vios_name'])
+        else:
+            vol_tuple_list = identifyFreeVolume(rest_conn, system_uuid, volume_size=params['volume_config']['volume_size'])
+
+        logger.debug(vol_tuple_list)
+        if vol_tuple_list:
+            #vios_list = vol_tuple[1]
+            rest_conn.add_vscsi_payload(draft_template_dom, vm_name, vol_tuple_list)
+            #draft_template_dom = xml_strip_namespace(response)
+            et = etree.ElementTree(draft_template_dom)
+            et.write('/tmp/10.xml', pretty_print=True)
+
+            rest_conn.updatePartitionTemplate(draft_uuid, draft_template_dom)
+        else:
+            warning_msg = "Unable to identify free volume!!"
+
         resp_dom = rest_conn.deployPartitionTemplate(draft_uuid, system_uuid)
         partition_uuid = resp_dom.xpath("//ParameterName[text()='PartitionUuid']/following-sibling::ParameterValue")[0].text
         partition_prop = rest_conn.quickGetPartition(partition_uuid)
@@ -353,7 +502,7 @@ def create_partition(module, params):
             error_msg = parse_error_response(logoff_error)
             logger.debug(error_msg)
 
-    return changed, partition_prop
+    return changed, partition_prop, warning_msg
 
 
 def remove_partition(module, params):
@@ -389,7 +538,7 @@ def remove_partition(module, params):
         partition_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, vm_name)
         if not partition_dom:
             logger.debug("Given partition already absent on the managed system")
-            return False, None
+            return False, None, None
 
         if partition_dom.xpath("//PartitionState")[0].text != 'not activated':
             module.fail_json(msg="Given logical partition:{0} is not in shutdown state".format(vm_name))
@@ -407,7 +556,7 @@ def remove_partition(module, params):
             error_msg = parse_error_response(logoff_error)
             module.warn(error_msg)
 
-    return changed, None
+    return changed, None, None
 
 
 def perform_task(module):
@@ -420,7 +569,7 @@ def perform_task(module):
     try:
         return actions[params['state']](module, params)
     except (ParameterError, HmcError, Error) as error:
-        return False, repr(error)
+        return False, repr(error), None
 
 
 def run_module():
@@ -442,6 +591,13 @@ def run_module():
         proc_unit=dict(type='float'),
         mem=dict(type='int'),
         os_type=dict(type='str', choices=['aix', 'linux', 'aix_linux', 'ibmi']),
+        volume_config=dict(type='dict',
+                           options=dict(
+                               volume_name=dict(type='str'),
+                               vios_name=dict(type='str'),
+                               volume_size=dict(type='int'),
+                           )
+                           ),
         state=dict(required=True, type='str',
                    choices=['present', 'absent'])
     )
@@ -449,7 +605,8 @@ def run_module():
     module = AnsibleModule(
         argument_spec=module_args,
         required_if=[['state', 'absent', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
-                     ['state', 'present', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']]
+                     ['state', 'present', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', \
+                             'os_type', 'volume_config']]
                      ],
         required_by=dict(
             proc_unit=('proc', ),
@@ -460,15 +617,20 @@ def run_module():
     if module._verbosity >= 1:
         init_logger()
 
-    changed, result = perform_task(module)
+    changed, info, warning = perform_task(module)
 
-    if isinstance(result, str):
-        module.fail_json(msg=result)
+    if isinstance(info, str):
+        module.fail_json(msg=info)
 
-    if result:
-        module.exit_json(changed=changed, partition_info=result)
-    else:
-        module.exit_json(changed=changed)
+    result = {}
+    result['changed'] = changed
+    if info:
+        result['partition_info'] = info
+
+    if warning:
+        result['warning'] = warning
+
+    module.exit_json(**result)
 
 
 def main():

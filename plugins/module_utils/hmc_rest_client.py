@@ -71,6 +71,7 @@ def _logonPayload(user, password):
 def _jobHeader(session):
 
     header = {'Content-Type': 'application/vnd.ibm.powervm.web+xml; type=JobRequest',
+              'Accept': 'application/atom+xml',
               'Authorization': 'Basic Og=='}
     header['X-API-Session'] = session
 
@@ -89,13 +90,13 @@ def _kxe_kb_schema(kxe=None, kb=None, schema=None):
     return attrib
 
 
-def _job_parameter(parameter, parameterVal):
+def _job_parameter(parameter, parameterVal, schemaVersion="V1_0"):
 
     metaData = ET.Element("Metadata")
     metaData.insert(1, ET.Element("Atom"))
 
     jobParameter = ET.Element("JobParameter")
-    jobParameter.attrib = _kxe_kb_schema(schema="V1_0")
+    jobParameter.attrib = _kxe_kb_schema(schema=schemaVersion)
     jobParameter.insert(1, metaData)
     parameterName = ET.Element("ParameterName")
     parameterName.attrib = _kxe_kb_schema("false", "ROR")
@@ -108,13 +109,12 @@ def _job_parameter(parameter, parameterVal):
 
     return jobParameter
 
-
-def _job_RequestPayload(reqdOperation, jobParams):
+def _job_RequestPayload(reqdOperation, jobParams, schemaVersion="V1_0"):
     root = ET.Element("JobRequest")
     root.attrib = {"xmlns:JobRequest": "http://www.ibm.com/xmlns/systems/power/firmware/web/mc/2012_10/",
                    "xmlns": "http://www.ibm.com/xmlns/systems/power/firmware/web/mc/2012_10/",
                    "xmlns:ns2": "http://www.w3.org/XML/1998/namespace/k2",
-                   "schemaVersion": "V1_0"
+                   "schemaVersion": schemaVersion
                    }
 
     metaData = ET.Element("Metadata")
@@ -122,7 +122,7 @@ def _job_RequestPayload(reqdOperation, jobParams):
     root.insert(1, metaData)
 
     requestedOperation = ET.Element("RequestedOperation")
-    requestedOperation.attrib = _kxe_kb_schema("false", "CUR", "V1_0")
+    requestedOperation.attrib = _kxe_kb_schema("false", "CUR", schemaVersion)
     requestedOperation.insert(1, metaData)
 
     index = 2
@@ -135,7 +135,7 @@ def _job_RequestPayload(reqdOperation, jobParams):
         index = index + 1
 
     jobParameters = ET.Element("JobParameters")
-    jobParameters.attrib = _kxe_kb_schema("false", "CUR", "V1_0")
+    jobParameters.attrib = _kxe_kb_schema("false", "CUR", schemaVersion)
     jobParameters.insert(1, metaData)
 
     index = 2
@@ -209,14 +209,14 @@ class HmcRestClient:
                  force_basic_auth=True,
                  timeout=30)
 
-    def fetchJobStatus(self, jobId, template=False, ignoreSearch=False):
+    def fetchJobStatus(self, jobId, template=False):
 
         if template:
             url = "https://{0}/rest/api/templates/jobs/{1}".format(self.hmc_ip, jobId)
         else:
             url = "https://{0}/rest/api/uom/jobs/{1}".format(self.hmc_ip, jobId)
 
-        header = {'X-API-Session': self.session}
+        header = {'X-API-Session': self.session, 'Accept': "application/atom+xml"}
         result = None
 
         jobStatus = ''
@@ -235,10 +235,8 @@ class HmcRestClient:
             jobStatus = doc.xpath('//Status')[0].text
 
             if jobStatus == 'COMPLETED_OK' or jobStatus == 'COMPLETED_WITH_ERROR':
-                if ignoreSearch:
-                    result = doc
-                else:
-                    result = doc.xpath("//ParameterValue")[3].text
+                logger.debug(resp)
+                result = doc
                 break
 
             if jobStatus != 'RUNNING':
@@ -317,7 +315,7 @@ class HmcRestClient:
 
         lpar_response = self.getLogicalPartitionsQuick(system_uuid)
         if lpar_response:
-            lpar_quick_list = json.loads(self.getLogicalPartitionsQuick(system_uuid))
+            lpar_quick_list = json.loads(lpar_response)
 
         if lpar_quick_list:
             for eachLpar in lpar_quick_list:
@@ -621,7 +619,7 @@ class HmcRestClient:
 
         jobID = checkjob_resp.xpath('//JobID')[0].text
 
-        return self.fetchJobStatus(jobID, template=True, ignoreSearch=True)
+        return self.fetchJobStatus(jobID, template=True)
 
     def deployPartitionTemplate(self, draft_uuid, cec_uuid):
 
@@ -647,7 +645,7 @@ class HmcRestClient:
 
         deploy_resp = xml_strip_namespace(resp)
         jobID = deploy_resp.xpath('//JobID')[0].text
-        return self.fetchJobStatus(jobID, template=True, ignoreSearch=True)
+        return self.fetchJobStatus(jobID, template=True)
 
     def transformPartitionTemplate(self, draft_uuid, cec_uuid):
 
@@ -673,4 +671,138 @@ class HmcRestClient:
 
         transform_resp = xml_strip_namespace(resp)
         jobID = transform_resp.xpath('//JobID')[0].text
-        return self.fetchJobStatus(jobID, template=True, ignoreSearch=True)
+        return self.fetchJobStatus(jobID, template=True)
+
+    def add_vscsi_payload1(self, lpar_template_dom, lpar_name, vios_name, pv_name):
+        payload = '''
+        <virtualSCSIClientAdapters kxe="false" kb="CUD" schemaVersion="V1_0">
+	<Metadata>
+		<Atom/>
+	</Metadata>
+	<VirtualSCSIClientAdapter schemaVersion="V1_0">
+		<Metadata>
+			<Atom/>
+		</Metadata>
+		<name kb="CUD" kxe="false"></name>
+		<PhyscalVolumeVTDName kxe="false" kb="CUD">{0}</PhyscalVolumeVTDName>
+		<associatedLogicalUnits kb="CUD" kxe="false" schemaVersion="V1_0">
+			<Metadata>
+				<Atom/>
+			</Metadata>
+		</associatedLogicalUnits>
+		<associatedPhysicalVolume kb="CUD" kxe="false" schemaVersion="V1_0">
+			<Metadata>
+				<Atom/>
+			</Metadata>
+			<PhysicalVolume schemaVersion="V1_0">
+				<Metadata>
+					<Atom/>
+				</Metadata>
+				<name kb="CUD" kxe="false">{1}</name>
+			</PhysicalVolume>
+		</associatedPhysicalVolume>
+		<connectingPartitionName kxe="false" kb="CUD">{2}</connectingPartitionName>
+		<AssociatedTargetDevices kb="CUD" kxe="false" schemaVersion="V1_0">
+			<Metadata>
+				<Atom/>
+			</Metadata>
+		</AssociatedTargetDevices>
+		<associatedVirtualOpticalMedia kb="CUD" kxe="false" schemaVersion="V1_0">
+			<Metadata>
+				<Atom/>
+			</Metadata>
+		</associatedVirtualOpticalMedia>
+	</VirtualSCSIClientAdapter>
+        </virtualSCSIClientAdapters>'''.format(lpar_name, pv_name, vios_name)
+        suspendEnableTag = lpar_template_dom.xpath("//suspendEnable")[0]
+        suspendEnableTag.addprevious(etree.XML(payload))
+
+    def add_vscsi_payload(self, lpar_template_dom, lpar_name, pv_tup):
+
+        payload = ''
+        #pv_name = pv_xml
+        for pv_name, vios_name in pv_tup:
+            payload += '''
+            <VirtualSCSIClientAdapter schemaVersion="V1_0">
+                    <Metadata>
+                            <Atom/>
+                    </Metadata>
+                    <name kb="CUD" kxe="false"></name>
+                    <PhyscalVolumeVTDName kxe="false" kb="CUD">{0}</PhyscalVolumeVTDName>
+                    <associatedLogicalUnits kb="CUD" kxe="false" schemaVersion="V1_0">
+                            <Metadata>
+                                    <Atom/>
+                            </Metadata>
+                    </associatedLogicalUnits>
+                    <associatedPhysicalVolume kb="CUD" kxe="false" schemaVersion="V1_0">
+                            <Metadata>
+                                    <Atom/>
+                            </Metadata>
+                            <PhysicalVolume schemaVersion="V1_0">
+                                    <Metadata>
+                                            <Atom/>
+                                    </Metadata>
+                                    <name kb="CUD" kxe="false">{1}</name>
+                            </PhysicalVolume>
+                    </associatedPhysicalVolume>
+                    <connectingPartitionName kxe="false" kb="CUD">{2}</connectingPartitionName>
+                    <AssociatedTargetDevices kb="CUD" kxe="false" schemaVersion="V1_0">
+                            <Metadata>
+                                    <Atom/>
+                            </Metadata>
+                    </AssociatedTargetDevices>
+                    <associatedVirtualOpticalMedia kb="CUD" kxe="false" schemaVersion="V1_0">
+                            <Metadata>
+                                    <Atom/>
+                            </Metadata>
+                    </associatedVirtualOpticalMedia>
+            </VirtualSCSIClientAdapter>'''.format(lpar_name, pv_name, vios_name)
+
+        vscsi_client_payload = '''
+        <virtualSCSIClientAdapters kxe="false" kb="CUD" schemaVersion="V1_0">
+        <Metadata>
+                <Atom/>
+        </Metadata>
+        {0}
+        </virtualSCSIClientAdapters>'''.format(payload)
+        suspendEnableTag = lpar_template_dom.xpath("//suspendEnable")[0]
+        suspendEnableTag.addprevious(etree.XML(vscsi_client_payload))
+
+    def getFreePhyVolume(self, vios_uuid):
+        disk_name_selected = None
+        logger.debug(vios_uuid)
+        url = "https://{0}/rest/api/uom/VirtualIOServer/{1}/do/GetFreePhysicalVolumes".format(self.hmc_ip, vios_uuid)
+        logger.debug(url)
+        header = _jobHeader(self.session)
+ 
+        reqdOperation = {'OperationName': 'GetFreePhysicalVolumes',
+                         'GroupName': 'VirtualIOServer',
+                         'ProgressType': 'DISCRETE'}
+        jobParams = {}
+
+        payload = _job_RequestPayload(reqdOperation, jobParams, "V1_3_0")
+        logger.debug(payload)
+
+        resp = open_url(url,
+                        headers=header,
+                        data=payload,
+                        method='PUT',
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=30).read()
+
+        resp = xml_strip_namespace(resp)
+        jobID = resp.xpath('//JobID')[0].text
+
+        pv_resp = self.fetchJobStatus(jobID)
+        logger.debug("Free Physical Volume job response")
+        logger.debug(pv_resp)
+        pv_xml = pv_resp.xpath("//Results//ParameterName[text()='result']//following-sibling::ParameterValue")[0].text
+        pv_xml = pv_xml.encode()
+        resp = xml_strip_namespace(pv_xml)
+        list_pv_elem = resp.xpath("//PhysicalVolume")
+
+        disk_dict = {}
+        for each in list_pv_elem:
+            disk_dict.update({each.xpath("VolumeUniqueID")[0].text : each})
+        return list_pv_elem
