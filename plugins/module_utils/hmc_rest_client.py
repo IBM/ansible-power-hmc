@@ -109,6 +109,7 @@ def _job_parameter(parameter, parameterVal, schemaVersion="V1_0"):
 
     return jobParameter
 
+
 def _job_RequestPayload(reqdOperation, jobParams, schemaVersion="V1_0"):
     root = ET.Element("JobRequest")
     root.attrib = {"xmlns:JobRequest": "http://www.ibm.com/xmlns/systems/power/firmware/web/mc/2012_10/",
@@ -676,43 +677,43 @@ class HmcRestClient:
     def add_vscsi_payload1(self, lpar_template_dom, lpar_name, vios_name, pv_name):
         payload = '''
         <virtualSCSIClientAdapters kxe="false" kb="CUD" schemaVersion="V1_0">
-	<Metadata>
-		<Atom/>
-	</Metadata>
-	<VirtualSCSIClientAdapter schemaVersion="V1_0">
-		<Metadata>
-			<Atom/>
-		</Metadata>
-		<name kb="CUD" kxe="false"></name>
-		<PhyscalVolumeVTDName kxe="false" kb="CUD">{0}</PhyscalVolumeVTDName>
-		<associatedLogicalUnits kb="CUD" kxe="false" schemaVersion="V1_0">
-			<Metadata>
-				<Atom/>
-			</Metadata>
-		</associatedLogicalUnits>
-		<associatedPhysicalVolume kb="CUD" kxe="false" schemaVersion="V1_0">
-			<Metadata>
-				<Atom/>
-			</Metadata>
-			<PhysicalVolume schemaVersion="V1_0">
-				<Metadata>
-					<Atom/>
-				</Metadata>
-				<name kb="CUD" kxe="false">{1}</name>
-			</PhysicalVolume>
-		</associatedPhysicalVolume>
-		<connectingPartitionName kxe="false" kb="CUD">{2}</connectingPartitionName>
-		<AssociatedTargetDevices kb="CUD" kxe="false" schemaVersion="V1_0">
-			<Metadata>
-				<Atom/>
-			</Metadata>
-		</AssociatedTargetDevices>
-		<associatedVirtualOpticalMedia kb="CUD" kxe="false" schemaVersion="V1_0">
-			<Metadata>
-				<Atom/>
-			</Metadata>
-		</associatedVirtualOpticalMedia>
-	</VirtualSCSIClientAdapter>
+        <Metadata>
+                <Atom/>
+        </Metadata>
+        <VirtualSCSIClientAdapter schemaVersion="V1_0">
+                <Metadata>
+                        <Atom/>
+                </Metadata>
+                <name kb="CUD" kxe="false"></name>
+                <PhyscalVolumeVTDName kxe="false" kb="CUD">{0}</PhyscalVolumeVTDName>
+                <associatedLogicalUnits kb="CUD" kxe="false" schemaVersion="V1_0">
+                        <Metadata>
+                                <Atom/>
+                        </Metadata>
+                </associatedLogicalUnits>
+                <associatedPhysicalVolume kb="CUD" kxe="false" schemaVersion="V1_0">
+                        <Metadata>
+                                <Atom/>
+                        </Metadata>
+                        <PhysicalVolume schemaVersion="V1_0">
+                                <Metadata>
+                                        <Atom/>
+                                </Metadata>
+                                <name kb="CUD" kxe="false">{1}</name>
+                        </PhysicalVolume>
+                </associatedPhysicalVolume>
+                <connectingPartitionName kxe="false" kb="CUD">{2}</connectingPartitionName>
+                <AssociatedTargetDevices kb="CUD" kxe="false" schemaVersion="V1_0">
+                        <Metadata>
+                                <Atom/>
+                        </Metadata>
+                </AssociatedTargetDevices>
+                <associatedVirtualOpticalMedia kb="CUD" kxe="false" schemaVersion="V1_0">
+                        <Metadata>
+                                <Atom/>
+                        </Metadata>
+                </associatedVirtualOpticalMedia>
+        </VirtualSCSIClientAdapter>
         </virtualSCSIClientAdapters>'''.format(lpar_name, pv_name, vios_name)
         suspendEnableTag = lpar_template_dom.xpath("//suspendEnable")[0]
         suspendEnableTag.addprevious(etree.XML(payload))
@@ -720,7 +721,6 @@ class HmcRestClient:
     def add_vscsi_payload(self, lpar_template_dom, lpar_name, pv_tup):
 
         payload = ''
-        #pv_name = pv_xml
         for pv_name, vios_name in pv_tup:
             payload += '''
             <VirtualSCSIClientAdapter schemaVersion="V1_0">
@@ -769,12 +769,11 @@ class HmcRestClient:
         suspendEnableTag.addprevious(etree.XML(vscsi_client_payload))
 
     def getFreePhyVolume(self, vios_uuid):
-        disk_name_selected = None
         logger.debug(vios_uuid)
         url = "https://{0}/rest/api/uom/VirtualIOServer/{1}/do/GetFreePhysicalVolumes".format(self.hmc_ip, vios_uuid)
         logger.debug(url)
         header = _jobHeader(self.session)
- 
+
         reqdOperation = {'OperationName': 'GetFreePhysicalVolumes',
                          'GroupName': 'VirtualIOServer',
                          'ProgressType': 'DISCRETE'}
@@ -804,5 +803,5 @@ class HmcRestClient:
 
         disk_dict = {}
         for each in list_pv_elem:
-            disk_dict.update({each.xpath("VolumeUniqueID")[0].text : each})
+            disk_dict.update({each.xpath("VolumeUniqueID")[0].text: each})
         return list_pv_elem

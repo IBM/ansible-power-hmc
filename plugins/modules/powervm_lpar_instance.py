@@ -89,6 +89,24 @@ options:
         required: true
         type: str
         choices: ['present', 'absent']
+    volume_config:
+        description: storage volume configurations of partition
+        type: dict
+        suboptions:
+            volume_name:
+                description:
+                    - Physical volume name (ex: hdiskx) visible through vios
+                      This option is mutually exclusive with I(volume_size)
+                type: str
+            volume_size:
+                description:
+                    - Physical volume name (ex: hdiskx) visible through vios
+                type: str
+            vios_name:
+                description:
+                    - Physical volume name (ex: hdiskx) visible through vios
+                      This option is mutually exclusive with I(volume_size)
+                type: str
 '''
 
 EXAMPLES = '''
@@ -203,8 +221,6 @@ def validate_sub_dict(sub_key, params):
 
     for each in params.copy():
         if not params[each] or params[each] == '':
-            #raise ParameterError("Parameter '%s' provided with empty data" %(each))
-            #del params[each]
             params.pop(each)
 
     if 'volume_config' in sub_key:
@@ -215,12 +231,12 @@ def validate_sub_dict(sub_key, params):
     list1 = [each for each in options if each in mutually_exclusive_list[0]]
     list2 = [each for each in options if each in mutually_exclusive_list[1]]
     if list1 and list2:
-        raise ParameterError("Parameters: '%s' and '%s' are  mutually exclusive" % \
-                (', '.join(mutually_exclusive_list[0]), ', '.join(mutually_exclusive_list[1])))
+        raise ParameterError("Parameters: '%s' and '%s' are  mutually exclusive" %
+                             (', '.join(mutually_exclusive_list[0]), ', '.join(mutually_exclusive_list[1])))
 
     list3 = [each for each in options if each in together]
-    if set(list3) != set(together):
-        raise ParameterError("Missing parameters %s" % (', '.join(set(together)-set(list3))))
+    if len(list3) >= 1 and set(list3) != set(together):
+        raise ParameterError("Missing parameters %s" % (', '.join(set(together) - set(list3))))
 
 
 def validate_parameters(params):
@@ -296,12 +312,12 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
                 logger.debug(each.xpath("VolumeName")[0].text)
                 logger.debug(viosname)
                 logger.debug(each.xpath("UniqueDeviceID")[0].text)
-                each_pv_complex.update({each.xpath("UniqueDeviceID")[0].text : each})
+                each_pv_complex.update({each.xpath("UniqueDeviceID")[0].text: each})
             elif user_choice_vios:
                 dvid = each.xpath("UniqueDeviceID")[0].text
-                each_pv_complex.update({dvid : each})
+                each_pv_complex.update({dvid: each})
                 if viosname == user_choice_vios and each.xpath("VolumeName")[0].text == volume_name:
-                    user_choice_pvid = dvid 
+                    user_choice_pvid = dvid
 
         if each_pv_complex:
             keys_list += each_pv_complex.keys()
@@ -321,7 +337,6 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
         for each_pv_complex in pv_complex:
             if each_DVID in each_pv_complex[0]:
                 logger.debug(each_pv_complex[0].keys())
-                pv_xml = each_pv_complex[0][each_DVID]
                 found_list += [(each_pv_complex[0][each_DVID].xpath("VolumeName")[0].text, each_pv_complex[2])]
         if len(found_list) == 2:
             logger.debug("Found volume visible by two vios")
@@ -331,7 +346,7 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
             return found_list
         else:
             found_list = []
-    #if user not specified any vios and could not find volume visible by multiple vioses, then
+    # if user not specified any vios and could not find volume visible by multiple vioses, then
     # pick a random volume from any one of the vios
     if pv_complex and not found_list and not user_choice_vios:
         volume_nm = list(pv_complex[0][0].values())[0].xpath("VolumeName")[0].text
@@ -363,7 +378,7 @@ def create_partition(module, params):
     cli_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(cli_conn)
 
-    if params['volume_config']['vios_name']:
+    if 'vios_name' in params['volume_config'] and params['volume_config']['vios_name']:
         vios_name = params['volume_config']['vios_name']
 
     try:
@@ -455,26 +470,19 @@ def create_partition(module, params):
                 vios_list = json.loads(vios_response)
                 logger.debug(vios_list)
                 vios = [vios for vios in vios_list if vios['PartitionName'] == vios_name]
-                if vios:
-                    vios_uuid = vios[0]['UUID']
-                else:
+                if not vios:
                     raise Error("Requested vios: {0} is not available".format(vios_name))
             else:
                 raise Error("Requested vios: {0} is not available".format(vios_name))
 
-            vol_tuple_list = identifyFreeVolume(rest_conn, system_uuid, volume_name=params['volume_config']['volume_name'], \
-                    vios_name=params['volume_config']['vios_name'])
+            vol_tuple_list = identifyFreeVolume(rest_conn, system_uuid, volume_name=params['volume_config']['volume_name'],
+                                                vios_name=params['volume_config']['vios_name'])
         else:
             vol_tuple_list = identifyFreeVolume(rest_conn, system_uuid, volume_size=params['volume_config']['volume_size'])
 
         logger.debug(vol_tuple_list)
         if vol_tuple_list:
-            #vios_list = vol_tuple[1]
             rest_conn.add_vscsi_payload(draft_template_dom, vm_name, vol_tuple_list)
-            #draft_template_dom = xml_strip_namespace(response)
-            et = etree.ElementTree(draft_template_dom)
-            et.write('/tmp/10.xml', pretty_print=True)
-
             rest_conn.updatePartitionTemplate(draft_uuid, draft_template_dom)
         else:
             warning_msg = "Unable to identify free volume!!"
@@ -605,8 +613,8 @@ def run_module():
     module = AnsibleModule(
         argument_spec=module_args,
         required_if=[['state', 'absent', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
-                     ['state', 'present', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', \
-                             'os_type', 'volume_config']]
+                     ['state', 'present', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name',
+                      'os_type', 'volume_config']]
                      ],
         required_by=dict(
             proc_unit=('proc', ),
