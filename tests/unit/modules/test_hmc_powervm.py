@@ -33,7 +33,7 @@ test_data = [
       'system_name': "systemname", 'vm_name': "vmname", 'proc': '4', 'mem':
       '2048', 'os_type': 'aix'}, "ParameterError: mandatory parameter 'hmc_auth' is missing"),
     # volume_config is missing
-    ({'hmc_host': "0.0.0.0", 'hmc_auth': None, 'state': 'present', 'volume_config': None,
+    ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'present', 'volume_config': None,
       'system_name': "systemname", 'vm_name': "vmname", 'proc': '4', 'mem':
       '2048', 'os_type': 'aix'}, "ParameterError: mandatory parameter 'volume_config' is missing"),
     # vmname, proc and mem are missing
