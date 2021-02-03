@@ -247,7 +247,7 @@ def validate_parameters(params):
         unsupportedList = []
     else:
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
-        unsupportedList = ['proc', 'mem', 'os_type']
+        unsupportedList = ['proc', 'mem', 'os_type', 'volume_config']
 
     collate = []
     for eachMandatory in mandatoryList:
@@ -270,7 +270,6 @@ def validate_parameters(params):
         else:
             raise ParameterError("unsupported parameters: %s" % (', '.join(collate)))
 
-    logger.debug(params)
     if params['volume_config']:
         validate_sub_dict('volume_config', params['volume_config'])
 
