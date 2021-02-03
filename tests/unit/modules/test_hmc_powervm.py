@@ -60,9 +60,8 @@ test_data1 = [
       'system_name': "systemname", 'vm_name': "vmname"}, "ParameterError: mandatory parameter 'hmc_auth' is missing"),
     # unsupported parameter os_type,proc,mem
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'absent',
-      'system_name': "systemname", 'vm_name': 'vmname', 'proc': '4', 'mem':
-      '1024', 'os_type': 'aix_linux', 'volume_config': volume_config},
-      "ParameterError: unsupported parameters: proc, mem, os_type, volume_config")]
+      'system_name': "systemname", 'vm_name': 'vmname', 'proc': '4', 'mem': '1024', 'os_type': 'aix_linux',
+      'volume_config': volume_config}, "ParameterError: unsupported parameters: proc, mem, os_type, volume_config")]
 
 
 def common_mock_setup(mocker):
