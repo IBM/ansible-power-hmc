@@ -90,21 +90,22 @@ options:
         type: str
         choices: ['present', 'absent']
     volume_config:
-        description: storage volume configurations of partition
+        description:
+            - storage volume configurations of partition
         type: dict
         suboptions:
             volume_name:
                 description:
-                    - Physical volume name (ex: hdiskx) visible through vios
+                    - Physical volume name visible through vios
                       This option is mutually exclusive with I(volume_size)
                 type: str
             volume_size:
                 description:
-                    - Physical volume name (ex: hdiskx) visible through vios
-                type: str
+                    - Physical volume size in MB
+                type: int
             vios_name:
                 description:
-                    - Physical volume name (ex: hdiskx) visible through vios
+                    - Vios name to which mentioned I(volume_name) is present
                       This option is mutually exclusive with I(volume_size)
                 type: str
 '''
