@@ -721,7 +721,7 @@ class HmcRestClient:
     def add_vscsi_payload(self, lpar_template_dom, lpar_name, pv_tup):
 
         payload = ''
-        for pv_name, vios_name in pv_tup:
+        for pv_name, vios_name, pv_obj in pv_tup:
             payload += '''
             <VirtualSCSIClientAdapter schemaVersion="V1_0">
                     <Metadata>

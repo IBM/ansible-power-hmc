@@ -290,7 +290,7 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
         if not vios_uuid_list:
             raise Error("Vioses are not available or RMC down")
     else:
-        raise Error("Requested vioses are not available")
+        raise Error("Vioses are not available")
 
     if vios_name and volume_name:
         for uuid, name in vios_uuid_list:
@@ -298,7 +298,7 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
                 user_choice_vios = vios_name
                 break
         if not user_choice_vios:
-            raise Error("Requested vios may not have active RMC state")
+            raise Error("Mentioned vios may not have active RMC state")
 
     pv_complex = []
     keys_list = []
@@ -307,11 +307,11 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
         logger.debug(vios_uuid)
         each_pv_complex = {}
         pv_xml_list = rest_conn.getFreePhyVolume(vios_uuid)
+        logger.debug(len(pv_xml_list))
         for each in pv_xml_list:
             if volume_size > 0 and int(each.xpath("VolumeCapacity")[0].text) >= volume_size:
-                logger.debug(each.xpath("VolumeName")[0].text)
-                logger.debug(viosname)
-                logger.debug(each.xpath("UniqueDeviceID")[0].text)
+                logger.debug("Vios Name: %s", viosname)
+                logger.debug("Volume Name: %s", each.xpath("VolumeName")[0].text)
                 each_pv_complex.update({each.xpath("UniqueDeviceID")[0].text: each})
             elif user_choice_vios:
                 dvid = each.xpath("UniqueDeviceID")[0].text
@@ -322,35 +322,45 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
         if each_pv_complex:
             keys_list += each_pv_complex.keys()
             pv_complex.append((each_pv_complex, vios_uuid, viosname))
-            unique_keys = list(set(keys_list))
+
+    unique_keys = list(set(keys_list))
 
     if user_choice_vios:
         if user_choice_pvid:
             unique_keys = [user_choice_pvid]
             logger.debug(unique_keys)
         else:
-            logger.debug("Not able to identify mentioned volume on free pvs of specified vios")
+            logger.debug("Not able to identify mentioned volume")
             unique_keys = []
+            raise Error("Not able to identify mentioned volume on free pvs of specified vios")
 
     found_list = []
+    one_is_singlepath_l = []
     for each_DVID in unique_keys:
         for each_pv_complex in pv_complex:
             if each_DVID in each_pv_complex[0]:
-                logger.debug(each_pv_complex[0].keys())
-                found_list += [(each_pv_complex[0][each_DVID].xpath("VolumeName")[0].text, each_pv_complex[2])]
+                found_list += [(each_pv_complex[0][each_DVID].xpath("VolumeName")[0].text,
+                                each_pv_complex[2], each_pv_complex[0][each_DVID])]
         if len(found_list) == 2:
-            logger.debug("Found volume visible by two vios")
-            logger.debug(found_list)
+            logger.debug("Identified volume visible by two vios")
+            one_is_singlepath_l = [each for each in found_list if each[2].xpath("ReservePolicy")[0].text == 'SinglePath']
+            if one_is_singlepath_l:
+                continue
             return found_list
         elif found_list and user_choice_pvid:
             return found_list
         else:
             found_list = []
+
+    if one_is_singlepath_l:
+        return one_is_singlepath_l
+
     # if user not specified any vios and could not find volume visible by multiple vioses, then
     # pick a random volume from any one of the vios
     if pv_complex and not found_list and not user_choice_vios:
-        volume_nm = list(pv_complex[0][0].values())[0].xpath("VolumeName")[0].text
-        return [(volume_nm, pv_complex[0][2])]
+        pv_obj = list(pv_complex[0][0].values())[0]
+        volume_nm = pv_obj.xpath("VolumeName")[0].text
+        return [(volume_nm, pv_complex[0][2], pv_obj)]
 
     return None
 
