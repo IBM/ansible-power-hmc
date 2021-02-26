@@ -274,6 +274,18 @@ def validate_parameters(params):
         validate_sub_dict('volume_config', params['volume_config'])
 
 
+def fetchAllInUsePhyVolumes(rest_conn, vios_uuid):
+    pvid_in_use = []
+    vios_response = rest_conn.getVirtualIOServer(vios_uuid, group="ViosStorage")
+    phy_vol_list = vios_response.xpath("//MoverServicePartition/following-sibling::PhysicalVolumes/PhysicalVolume")
+    for each_phy_vol in phy_vol_list:
+        if each_phy_vol.xpath("AvailableForUsage")[0].text == "false":
+            pvid_in_use.append(each_phy_vol.xpath("UniqueDeviceID")[0].text)
+
+    logger.debug("Disks in use for vios: %s are %s", vios_uuid, pvid_in_use)
+    return pvid_in_use
+
+
 def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, vios_name=None):
     user_choice_vios = None
     user_choice_pvid = None
@@ -303,25 +315,27 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
     pv_complex = []
     keys_list = []
     unique_keys = []
+    pvs_in_use = []
     for vios_uuid, viosname in vios_uuid_list:
         logger.debug(vios_uuid)
-        each_pv_complex = {}
+        each_vios_pv_complex = {}
         pv_xml_list = rest_conn.getFreePhyVolume(vios_uuid)
+        pvs_in_use += fetchAllInUsePhyVolumes(rest_conn, vios_uuid)
         logger.debug(len(pv_xml_list))
         for each in pv_xml_list:
             if volume_size > 0 and int(each.xpath("VolumeCapacity")[0].text) >= volume_size:
                 logger.debug("Vios Name: %s", viosname)
                 logger.debug("Volume Name: %s", each.xpath("VolumeName")[0].text)
-                each_pv_complex.update({each.xpath("UniqueDeviceID")[0].text: each})
+                each_vios_pv_complex.update({each.xpath("UniqueDeviceID")[0].text: each})
             elif user_choice_vios:
                 dvid = each.xpath("UniqueDeviceID")[0].text
-                each_pv_complex.update({dvid: each})
+                each_vios_pv_complex.update({dvid: each})
                 if viosname == user_choice_vios and each.xpath("VolumeName")[0].text == volume_name:
                     user_choice_pvid = dvid
 
-        if each_pv_complex:
-            keys_list += each_pv_complex.keys()
-            pv_complex.append((each_pv_complex, vios_uuid, viosname))
+        if each_vios_pv_complex:
+            keys_list += each_vios_pv_complex.keys()
+            pv_complex.append((each_vios_pv_complex, vios_uuid, viosname))
 
     unique_keys = list(set(keys_list))
 
@@ -330,30 +344,44 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
             unique_keys = [user_choice_pvid]
             logger.debug(unique_keys)
         else:
-            logger.debug("Not able to identify mentioned volume")
             unique_keys = []
             raise Error("Not able to identify mentioned volume on free pvs of specified vios")
 
     found_list = []
     one_is_singlepath_l = []
+    in_use_count = 0
     for each_DVID in unique_keys:
+
+        if each_DVID in pvs_in_use:
+            in_use_count += 1
+            continue
+
         for each_pv_complex in pv_complex:
             if each_DVID in each_pv_complex[0]:
                 found_list += [(each_pv_complex[0][each_DVID].xpath("VolumeName")[0].text,
                                 each_pv_complex[2], each_pv_complex[0][each_DVID])]
         if len(found_list) == 2:
-            logger.debug("Identified volume visible by two vios")
-            one_is_singlepath_l = [each for each in found_list if each[2].xpath("ReservePolicy")[0].text == 'SinglePath']
+            logger.debug("Identified a volume visible by two vioses")
+            if user_choice_vios:
+                one_is_singlepath_l = [each for each in found_list if each[1] == user_choice_vios]
+            else:
+                one_is_singlepath_l = [each for each in found_list if each[2].xpath("ReservePolicy")[0].text == 'SinglePath']
+
             if one_is_singlepath_l:
                 continue
+
             return found_list
         elif found_list and user_choice_pvid:
             return found_list
         else:
             found_list = []
 
+    if in_use_count == len(unique_keys):
+        logger.debug("All disk reported as free by some vioses is in use on some other vioses")
+        return None
+
     if one_is_singlepath_l:
-        return one_is_singlepath_l
+        return [(one_is_singlepath_l[0])]
 
     # if user not specified any vios and could not find volume visible by multiple vioses, then
     # pick a random volume from any one of the vios
@@ -492,10 +520,10 @@ def create_partition(module, params):
 
         logger.debug(vol_tuple_list)
         if vol_tuple_list:
-            rest_conn.add_vscsi_payload(draft_template_dom, vm_name, vol_tuple_list)
+            rest_conn.add_vscsi_payload(draft_template_dom, config_dict['lpar_id'], vol_tuple_list)
             rest_conn.updatePartitionTemplate(draft_uuid, draft_template_dom)
         else:
-            warning_msg = "Unable to identify free volume!!"
+            module.fail_json(msg="Unable to identify free physical volume")
 
         resp_dom = rest_conn.deployPartitionTemplate(draft_uuid, system_uuid)
         partition_uuid = resp_dom.xpath("//ParameterName[text()='PartitionUuid']/following-sibling::ParameterValue")[0].text

@@ -2,6 +2,8 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 import time
 import json
+import random
+import string
 from ansible.module_utils.urls import open_url
 import ansible.module_utils.six.moves.urllib.error as urllib_error
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
@@ -412,6 +414,28 @@ class HmcRestClient:
         response = resp.read()
         return response
 
+    def getVirtualIOServer(self, vios_uuid, group=None):
+        header = {'X-API-Session': self.session,
+                  'Accept': 'application/vnd.ibm.powervm.uom+xml; type=VirtualIOServer'}
+
+        if group:
+            url = "https://{0}/rest/api/uom/VirtualIOServer/{1}?group={2}".format(self.hmc_ip, vios_uuid, group)
+        else:
+            url = "https://{0}/rest/api/uom/VirtualIOServer/{1}".format(self.hmc_ip, vios_uuid)
+
+        resp = open_url(url,
+                        headers=header,
+                        method='GET',
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=3000)
+
+        if resp.code != 200:
+            logger.debug("Get of Virtual IO Server failed. Respsonse code: %d", resp.code)
+            return None
+        response = xml_strip_namespace(resp.read())
+        return response
+
     def deleteLogicalPartition(self, partition_uuid):
         url = "https://{0}/rest/api/uom/LogicalPartition/{1}".format(self.hmc_ip, partition_uuid)
         header = {'X-API-Session': self.session,
@@ -472,7 +496,6 @@ class HmcRestClient:
 
         partiton_template_xmlstr = etree.tostring(template_xml)
         partiton_template_xmlstr = partiton_template_xmlstr.decode("utf-8").replace("PartitionTemplate", LPAR_TEMPLATE_NS, 1)
-        logger.debug(partiton_template_xmlstr)
 
         resp = open_url(templateUrl,
                         headers=header,
@@ -718,8 +741,10 @@ class HmcRestClient:
         suspendEnableTag = lpar_template_dom.xpath("//suspendEnable")[0]
         suspendEnableTag.addprevious(etree.XML(payload))
 
-    def add_vscsi_payload(self, lpar_template_dom, lpar_name, pv_tup):
+    def add_vscsi_payload(self, lpar_template_dom, lpar_id, pv_tup):
 
+        vtd_name = ''.join(random.SystemRandom().choice(string.ascii_lowercase) for i in range(5))
+        vtd_name = vtd_name + '_' + lpar_id
         payload = ''
         for pv_name, vios_name, pv_obj in pv_tup:
             payload += '''
@@ -756,7 +781,7 @@ class HmcRestClient:
                                     <Atom/>
                             </Metadata>
                     </associatedVirtualOpticalMedia>
-            </VirtualSCSIClientAdapter>'''.format(lpar_name, pv_name, vios_name)
+            </VirtualSCSIClientAdapter>'''.format(vtd_name, pv_name, vios_name)
 
         vscsi_client_payload = '''
         <virtualSCSIClientAdapters kxe="false" kb="CUD" schemaVersion="V1_0">
