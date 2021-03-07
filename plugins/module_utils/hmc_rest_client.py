@@ -697,50 +697,6 @@ class HmcRestClient:
         jobID = transform_resp.xpath('//JobID')[0].text
         return self.fetchJobStatus(jobID, template=True)
 
-    def add_vscsi_payload1(self, lpar_template_dom, lpar_name, vios_name, pv_name):
-        payload = '''
-        <virtualSCSIClientAdapters kxe="false" kb="CUD" schemaVersion="V1_0">
-        <Metadata>
-                <Atom/>
-        </Metadata>
-        <VirtualSCSIClientAdapter schemaVersion="V1_0">
-                <Metadata>
-                        <Atom/>
-                </Metadata>
-                <name kb="CUD" kxe="false"></name>
-                <PhyscalVolumeVTDName kxe="false" kb="CUD">{0}</PhyscalVolumeVTDName>
-                <associatedLogicalUnits kb="CUD" kxe="false" schemaVersion="V1_0">
-                        <Metadata>
-                                <Atom/>
-                        </Metadata>
-                </associatedLogicalUnits>
-                <associatedPhysicalVolume kb="CUD" kxe="false" schemaVersion="V1_0">
-                        <Metadata>
-                                <Atom/>
-                        </Metadata>
-                        <PhysicalVolume schemaVersion="V1_0">
-                                <Metadata>
-                                        <Atom/>
-                                </Metadata>
-                                <name kb="CUD" kxe="false">{1}</name>
-                        </PhysicalVolume>
-                </associatedPhysicalVolume>
-                <connectingPartitionName kxe="false" kb="CUD">{2}</connectingPartitionName>
-                <AssociatedTargetDevices kb="CUD" kxe="false" schemaVersion="V1_0">
-                        <Metadata>
-                                <Atom/>
-                        </Metadata>
-                </AssociatedTargetDevices>
-                <associatedVirtualOpticalMedia kb="CUD" kxe="false" schemaVersion="V1_0">
-                        <Metadata>
-                                <Atom/>
-                        </Metadata>
-                </associatedVirtualOpticalMedia>
-        </VirtualSCSIClientAdapter>
-        </virtualSCSIClientAdapters>'''.format(lpar_name, pv_name, vios_name)
-        suspendEnableTag = lpar_template_dom.xpath("//suspendEnable")[0]
-        suspendEnableTag.addprevious(etree.XML(payload))
-
     def add_vscsi_payload(self, lpar_template_dom, lpar_id, pv_tup):
 
         vtd_name = ''.join(random.SystemRandom().choice(string.ascii_lowercase) for i in range(5))

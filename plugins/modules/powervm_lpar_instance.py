@@ -243,7 +243,7 @@ def validate_sub_dict(sub_key, params):
 def validate_parameters(params):
     '''Check that the input parameters satisfy the mutual exclusiveness of HMC'''
     if params['state'] == 'present':
-        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type', 'volume_config']
+        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']
         unsupportedList = []
     else:
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
@@ -334,8 +334,10 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
                     user_choice_pvid = dvid
 
         if each_vios_pv_complex:
-            keys_list += each_vios_pv_complex.keys()
-            pv_complex.append((each_vios_pv_complex, vios_uuid, viosname))
+            sorted_each_vios_pv_complex = dict(sorted(each_vios_pv_complex.items(),
+                                               key=lambda x: int(x[1].xpath("VolumeCapacity")[0].text)))
+            keys_list += sorted_each_vios_pv_complex.keys()
+            pv_complex.append((sorted_each_vios_pv_complex, vios_uuid, viosname))
 
     unique_keys = list(set(keys_list))
 
@@ -415,9 +417,6 @@ def create_partition(module, params):
     temp_copied = False
     cli_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(cli_conn)
-
-    if 'vios_name' in params['volume_config'] and params['volume_config']['vios_name']:
-        vios_name = params['volume_config']['vios_name']
 
     try:
         rest_conn = HmcRestClient(hmc_host, hmc_user, password)
@@ -502,28 +501,31 @@ def create_partition(module, params):
         if not draft_template_dom:
             module.fail_json(msg="Not able to fetch template for partition deploy")
 
-        if vios_name:
-            vios_response = rest_conn.getVirtualIOServersQuick(system_uuid)
-            if vios_response:
-                vios_list = json.loads(vios_response)
-                logger.debug(vios_list)
-                vios = [vios for vios in vios_list if vios['PartitionName'] == vios_name]
-                if not vios:
+        if params['volume_config']:
+            if 'vios_name' in params['volume_config'] and params['volume_config']['vios_name']:
+                vios_name = params['volume_config']['vios_name']
+                vios_response = rest_conn.getVirtualIOServersQuick(system_uuid)
+
+                if vios_response:
+                    vios_list = json.loads(vios_response)
+                    logger.debug(vios_list)
+                    vios = [vios for vios in vios_list if vios['PartitionName'] == vios_name]
+                    if not vios:
+                        raise Error("Requested vios: {0} is not available".format(vios_name))
+                else:
                     raise Error("Requested vios: {0} is not available".format(vios_name))
+
+                vol_tuple_list = identifyFreeVolume(rest_conn, system_uuid, volume_name=params['volume_config']['volume_name'],
+                                                    vios_name=params['volume_config']['vios_name'])
             else:
-                raise Error("Requested vios: {0} is not available".format(vios_name))
+                vol_tuple_list = identifyFreeVolume(rest_conn, system_uuid, volume_size=params['volume_config']['volume_size'])
 
-            vol_tuple_list = identifyFreeVolume(rest_conn, system_uuid, volume_name=params['volume_config']['volume_name'],
-                                                vios_name=params['volume_config']['vios_name'])
-        else:
-            vol_tuple_list = identifyFreeVolume(rest_conn, system_uuid, volume_size=params['volume_config']['volume_size'])
-
-        logger.debug(vol_tuple_list)
-        if vol_tuple_list:
-            rest_conn.add_vscsi_payload(draft_template_dom, config_dict['lpar_id'], vol_tuple_list)
-            rest_conn.updatePartitionTemplate(draft_uuid, draft_template_dom)
-        else:
-            module.fail_json(msg="Unable to identify free physical volume")
+            logger.debug(vol_tuple_list)
+            if vol_tuple_list:
+                rest_conn.add_vscsi_payload(draft_template_dom, config_dict['lpar_id'], vol_tuple_list)
+                rest_conn.updatePartitionTemplate(draft_uuid, draft_template_dom)
+            else:
+                module.fail_json(msg="Unable to identify free physical volume")
 
         resp_dom = rest_conn.deployPartitionTemplate(draft_uuid, system_uuid)
         partition_uuid = resp_dom.xpath("//ParameterName[text()='PartitionUuid']/following-sibling::ParameterValue")[0].text
@@ -652,7 +654,7 @@ def run_module():
         argument_spec=module_args,
         required_if=[['state', 'absent', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
                      ['state', 'present', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name',
-                      'os_type', 'volume_config']]
+                      'os_type']]
                      ],
         required_by=dict(
             proc_unit=('proc', ),
