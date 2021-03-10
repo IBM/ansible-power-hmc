@@ -350,7 +350,7 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
             raise Error("Not able to identify mentioned volume on free pvs of specified vios")
 
     found_list = []
-    one_is_singlepath_l = []
+    first_singlepath_incidence = []
     in_use_count = 0
     for each_DVID in unique_keys:
 
@@ -364,12 +364,11 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
                                 each_pv_complex[2], each_pv_complex[0][each_DVID])]
         if len(found_list) == 2:
             logger.debug("Identified a volume visible by two vioses")
-            if user_choice_vios:
-                one_is_singlepath_l = [each for each in found_list if each[1] == user_choice_vios]
-            else:
-                one_is_singlepath_l = [each for each in found_list if each[2].xpath("ReservePolicy")[0].text == 'SinglePath']
+            one_is_singlepath_l = [each for each in found_list if each[2].xpath("ReservePolicy")[0].text == 'SinglePath']
 
             if one_is_singlepath_l:
+                if user_choice_vios and not first_singlepath_incidence:
+                    first_singlepath_incidence = [each for each in found_list if each[1] == user_choice_vios]
                 continue
 
             return found_list
@@ -382,8 +381,8 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
         logger.debug("All disk reported as free by some vioses is in use on some other vioses")
         return None
 
-    if one_is_singlepath_l:
-        return [(one_is_singlepath_l[0])]
+    if first_singlepath_incidence:
+        return [(first_singlepath_incidence[0])]
 
     # if user not specified any vios and could not find volume visible by multiple vioses, then
     # pick a random volume from any one of the vios
