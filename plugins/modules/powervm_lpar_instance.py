@@ -494,7 +494,6 @@ def create_partition(module, params):
 
         resp = rest_conn.checkPartitionTemplate(temp_template_name, system_uuid)
         draft_uuid = resp.xpath("//ParameterName[text()='TEMPLATE_UUID']/following-sibling::ParameterValue")[0].text
-        rest_conn.transformPartitionTemplate(draft_uuid, system_uuid)
 
         draft_template_dom = rest_conn.getPartitionTemplate(uuid=draft_uuid)
         if not draft_template_dom:
