@@ -28,7 +28,7 @@ qualified name ``power_hmc``. For example:
           state: facts
           hmc_host: '{{ inventory_hostname }}'
           hmc_auth:
-              userid: '{{ ansible_user }}'
+              username: '{{ ansible_user }}'
 
 
 In Ansible 2.9, the ``collections`` keyword was added to reduce the need
@@ -47,7 +47,7 @@ to refer to the collection repeatedly. For example, you can use the
           state: facts
           hmc_host: '{{ inventory_hostname }}'
           hmc_auth:
-              userid: '{{ ansible_user }}'
+              username: '{{ ansible_user }}'
 
 ansible-doc
 -----------
