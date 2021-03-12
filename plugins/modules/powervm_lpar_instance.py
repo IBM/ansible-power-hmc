@@ -5,6 +5,7 @@
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
+from collections import OrderedDict
 
 ANSIBLE_METADATA = {
     'metadata_version': '1.1',
@@ -341,7 +342,9 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
             keys_list += sorted_each_vios_pv_complex.keys()
             pv_complex.append((sorted_each_vios_pv_complex, vios_uuid, viosname))
 
-    unique_keys = list(set(keys_list))
+    # Since the set is not order, ising OrderedDict to find unique keys
+    ordered_key_d = OrderedDict.fromkeys(keys_list)
+    unique_keys = [each[0] for each in ordered_key_d.items()]
 
     if user_choice_vios:
         if user_choice_pvid:
@@ -516,7 +519,6 @@ def create_partition(module, params):
 
         resp = rest_conn.checkPartitionTemplate(temp_template_name, system_uuid)
         draft_uuid = resp.xpath("//ParameterName[text()='TEMPLATE_UUID']/following-sibling::ParameterValue")[0].text
-        rest_conn.transformPartitionTemplate(draft_uuid, system_uuid)
 
         draft_template_dom = rest_conn.getPartitionTemplate(uuid=draft_uuid)
         if not draft_template_dom:
