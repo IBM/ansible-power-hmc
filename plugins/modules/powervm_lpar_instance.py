@@ -336,6 +336,8 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
         if each_vios_pv_complex:
             sorted_each_vios_pv_complex = dict(sorted(each_vios_pv_complex.items(),
                                                key=lambda x: int(x[1].xpath("VolumeCapacity")[0].text)))
+            for each in sorted_each_vios_pv_complex.items():
+                logger.debug("Sorted Volume Name:%s", each[1].xpath("VolumeName")[0].text)
             keys_list += sorted_each_vios_pv_complex.keys()
             pv_complex.append((sorted_each_vios_pv_complex, vios_uuid, viosname))
 
@@ -355,23 +357,41 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
     for each_DVID in unique_keys:
 
         if each_DVID in pvs_in_use:
+            logger.debug("Identified pv in use on other vios: %s", each_DVID)
             in_use_count += 1
             continue
 
         for each_pv_complex in pv_complex:
             if each_DVID in each_pv_complex[0]:
+                logger.debug("Adding to found list: %s", each_pv_complex[0][each_DVID].xpath("VolumeName")[0].text)
                 found_list += [(each_pv_complex[0][each_DVID].xpath("VolumeName")[0].text,
                                 each_pv_complex[2], each_pv_complex[0][each_DVID])]
-        if len(found_list) == 2:
+        if len(found_list) >= 2:
             logger.debug("Identified a volume visible by two vioses")
-            one_is_singlepath_l = [each for each in found_list if each[2].xpath("ReservePolicy")[0].text == 'SinglePath']
+            singlepath_l = [each for each in found_list if each[2].xpath("ReservePolicy")[0].text == 'SinglePath']
 
-            if one_is_singlepath_l:
-                if user_choice_vios and not first_singlepath_incidence:
-                    first_singlepath_incidence = [each for each in found_list if each[1] == user_choice_vios]
+            if user_choice_vios:
+                other_pv = []
+                match_vios_pv = []
+                for each in found_list:
+                    if each[1] == user_choice_vios and each in singlepath_l:
+                        return [each]
+                    elif each[1] == user_choice_vios:
+                        match_vios_pv = [each]
+                    else:
+                        other_pv = [each]
+                        if match_vios_pv:
+                            break
+                return match_vios_pv + other_pv
+
+            if singlepath_l and (len(found_list) - len(singlepath_l)) <= 1:
+                if not first_singlepath_incidence:
+                    first_singlepath_incidence.append(singlepath_l[0])
+                logger.debug("Continued...")
+                found_list = []
                 continue
 
-            return found_list
+            return list(set(found_list) - set(singlepath_l))
         elif found_list and user_choice_pvid:
             return found_list
         else:
@@ -382,11 +402,13 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
         return None
 
     if first_singlepath_incidence:
-        return [(first_singlepath_incidence[0])]
+        logger.debug("Picked the first instance")
+        return first_singlepath_incidence
 
     # if user not specified any vios and could not find volume visible by multiple vioses, then
     # pick a random volume from any one of the vios
     if pv_complex and not found_list and not user_choice_vios:
+        logger.debug("Picking a random single disk..")
         pv_obj = list(pv_complex[0][0].values())[0]
         volume_nm = pv_obj.xpath("VolumeName")[0].text
         return [(volume_nm, pv_complex[0][2], pv_obj)]
@@ -494,6 +516,7 @@ def create_partition(module, params):
 
         resp = rest_conn.checkPartitionTemplate(temp_template_name, system_uuid)
         draft_uuid = resp.xpath("//ParameterName[text()='TEMPLATE_UUID']/following-sibling::ParameterValue")[0].text
+        rest_conn.transformPartitionTemplate(draft_uuid, system_uuid)
 
         draft_template_dom = rest_conn.getPartitionTemplate(uuid=draft_uuid)
         if not draft_template_dom:
