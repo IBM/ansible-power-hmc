@@ -5,15 +5,13 @@ from __future__ import (absolute_import, division, print_function)
 import xml.etree.ElementTree as ET
 import json
 import sys
-from ansible.plugins.inventory import BaseInventoryPlugin, Constructable, Cacheable, to_safe_group_name
+from ansible.plugins.inventory import BaseInventoryPlugin, Constructable, Cacheable
 from ansible.module_utils.six import string_types, viewitems, reraise
-from ansible.module_utils._text import to_native
 from ansible.errors import AnsibleParserError
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import parse_error_response
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import HmcRestClient
 from ansible.config.manager import ensure_type
-from ansible.module_utils.parsing.convert_bool import boolean
 
 from ansible.utils.display import Display
 display = Display()
@@ -282,7 +280,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                             entry_name = lpar_name
                         else:
                             entry_name = ip
-                    except LparFieldNotFoundError as e:
+                    except LparFieldNotFoundError:
                         # If the IP address was missing, this LPAR is 'unknown' and
                         # cannot be added as a valid Ansible host.
                         if self.identify_unknown_by.lower() != 'omit':
@@ -322,7 +320,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                 rest_conn = HmcRestClient(str(hmc_host), str(self.hmc_hosts[hmc_host]["user"]), str(self.hmc_hosts[hmc_host]["password"]))
                 try:
                     managed_systems = json.loads(rest_conn.getManagedSystemsQuick())
-                except Exception as e:
+                except Exception:
                     logger.debug("Could not retrieve systems from %s it may not have any defined", hmc_host)
                     continue
                 for system in managed_systems:
@@ -335,25 +333,25 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                                 lpar_xml = rest_conn.getLogicalPartitions(system.get("UUID"))
                                 system_lpars = self.parse_lpars_xml(lpar_xml)
                                 lpars.extend(system_lpars)
-                            except Exception as e:
+                            except Exception:
                                 logger.debug("Could not retrieve LPARs from %s it may not have any defined", system.get("SystemName"))
                             try:
                                 vios_xml = rest_conn.getVirtualIOServers(system.get("UUID"))
                                 system_vios = self.parse_lpars_xml(vios_xml)
                                 lpars.extend(system_vios)
-                            except Exception as e:
+                            except Exception:
                                 logger.debug("Could not retrieve VIOS from %s it may not have any defined", system.get("SystemName"))
                         # Call the "quick" JSON API
                         else:
                             try:
                                 system_lpars = json.loads(rest_conn.getLogicalPartitionsQuick(system.get("UUID")))
                                 lpars.extend(system_lpars)
-                            except Exception as e:
+                            except Exception:
                                 logger.debug("Could not retrieve LPARs from %s it may not have any defined", system.get("SystemName"))
                             try:
                                 system_vios = json.loads(rest_conn.getVirtualIOServersQuick(system.get("UUID")))
                                 lpars.extend(system_vios)
-                            except Exception as e:
+                            except Exception:
                                 logger.debug("Could not retrieve VIOS from %s it may not have any defined", system.get("SystemName"))
                         systems[system.get("SystemName")] = lpars
                 # Logoff HMC

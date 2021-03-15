@@ -265,7 +265,7 @@ def image_copy_from_local_to_hmc(module, params):
         rc, out, err = module.run_command(list_cmd)
         if rc == 0:
             logger.debug(out)
-            if not all([True if each in out else False for each in imageFilesUpg]):
+            if not all(True if each in out else False for each in imageFilesUpg):
                 raise ParameterError("local path mentioned does not contain valid network files")
         else:
             logger.debug(err)
@@ -288,7 +288,7 @@ def image_copy_from_local_to_hmc(module, params):
     rc3, out3, err3 = module.run_command(list_on_hmc)
     if rc3 == 0:
         if params['state'] == 'upgraded':
-            if not all([True if each in out3 else False for each in imageFilesUpg]):
+            if not all(True if each in out3 else False for each in imageFilesUpg):
                 remove_image_from_hmc(module, params)
                 raise Error("copy of image to hmc is incomplete. Necessary files are missing")
         else:
