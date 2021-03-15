@@ -382,7 +382,8 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
                     elif each[1] == user_choice_vios:
                         match_vios_pv = [each]
                     else:
-                        other_pv = [each]
+                        if each not in singlepath_l:
+                            other_pv = [each]
                         if match_vios_pv:
                             break
                 return match_vios_pv + other_pv

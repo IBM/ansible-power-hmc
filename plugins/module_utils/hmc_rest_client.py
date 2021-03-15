@@ -460,6 +460,7 @@ class HmcRestClient:
                     <Atom/>
                 </Metadata>
                 <sharedProcessorPoolId kxe="false" kb="CUD">0</sharedProcessorPoolId>
+                <uncappedWeight kxe="false" kb="CUD">128</uncappedWeight>
                 <minProcessingUnits kb="CUD" kxe="false">0.1</minProcessingUnits>
                 <desiredProcessingUnits kxe="false" kb="CUD">{0}</desiredProcessingUnits>
                 <maxProcessingUnits kb="CUD" kxe="false">{0}</maxProcessingUnits>
@@ -702,7 +703,8 @@ class HmcRestClient:
         vtd_name = ''.join(random.SystemRandom().choice(string.ascii_lowercase) for i in range(5))
         vtd_name = vtd_name + '_' + lpar_id
         payload = ''
-        for pv_name, vios_name, pv_obj in pv_tup:
+        pv_tup_list_slice = pv_tup[:2]
+        for pv_name, vios_name, pv_obj in pv_tup_list_slice:
             payload += '''
             <VirtualSCSIClientAdapter schemaVersion="V1_0">
                     <Metadata>
