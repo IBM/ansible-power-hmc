@@ -747,7 +747,8 @@ class HmcRestClient:
                             timeout=60)
 
         if response.code == 204:
-            return None, None
+            return None
 
         lparProfiles_root = xml_strip_namespace(response.read())
-        return lparProfiles_root
+        lparProfiles = lparProfiles_root.xpath('//LogicalPartitionProfile')
+        return lparProfiles

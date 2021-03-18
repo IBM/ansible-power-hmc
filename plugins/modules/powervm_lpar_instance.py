@@ -25,7 +25,7 @@ description:
     - "Creates AIX/Linux or IBMi partition with specified configuration details on mentioned system"
     - "Or Deletes specified AIX/Linux or IBMi partition on specified system"
     - "Or Shutdown specified AIX/Linux or IBMi partition on specified system"
-    - "Or Poweron/Activate specified AIX/Linux or IBMi partition with specified configuration details on specified system"
+    - "Or Poweron/Activate specified AIX/Linux or IBMi partition with provided configuration details on the mentioned system"
 
 version_added: "1.1.0"
 requirements:
@@ -502,10 +502,10 @@ def poweroff_partition(module, params):
                     lpar_uuid = eachLpar['UUID']
                     break
         else:
-            module.fail_json(msg="There are no Logical Partitions present on given system or user is not assigned with required resource roles")
+            module.fail_json(msg="There are no Logical Partitions present on a system")
 
         if not lpar_uuid:
-            module.fail_json(msg="Given Logical Partition is not present on given system or user is not assigned with required resource roles")
+            module.fail_json(msg="Given Logical Partition is not present on a system")
 
         partition_state = partition_dict["PartitionState"]
 
@@ -570,14 +570,13 @@ def poweron_partition(module, params):
                     lpar_uuid = eachLpar['UUID']
                     break
         else:
-            module.fail_json(msg="There are no Logical Partitions present on provided system or user is not assigned with required resource roles")
+            module.fail_json(msg="There are no Logical Partitions present on a system")
 
         if not lpar_uuid:
-            module.fail_json(msg="Provided Logical Partition is not present on given system")
+            module.fail_json(msg="Provided Logical Partition is not present on a system")
 
         if prof_name:
-            doc = rest_conn.getPartitionProfiles(lpar_uuid)
-            profs = doc.xpath('//LogicalPartitionProfile')
+            profs = rest_conn.getPartitionProfiles(lpar_uuid)
             for prof in profs:
                 prof1 = etree.ElementTree(prof)
                 pro_nam = prof1.xpath('//ProfileName/text()')[0]
@@ -587,7 +586,7 @@ def poweron_partition(module, params):
                     break
 
         if prof_name and not prof_uuid:
-            module.fail_json(msg="Given Logical Partition Profile is not present on given logical Partition")
+            module.fail_json(msg="Provided Logical Partition Profile is not present on a logical Partition")
 
         partition_state = partition_dict["PartitionState"]
         partition_type = partition_dict["PartitionType"]
