@@ -502,10 +502,10 @@ def poweroff_partition(module, params):
                     lpar_uuid = eachLpar['UUID']
                     break
         else:
-            module.fail_json(msg="There are no Logical Partitions present on a system")
+            module.fail_json(msg="There are no Logical Partitions present on the system")
 
         if not lpar_uuid:
-            module.fail_json(msg="Given Logical Partition is not present on a system")
+            module.fail_json(msg="Given Logical Partition is not present on the system")
 
         partition_state = partition_dict["PartitionState"]
 
@@ -570,10 +570,10 @@ def poweron_partition(module, params):
                     lpar_uuid = eachLpar['UUID']
                     break
         else:
-            module.fail_json(msg="There are no Logical Partitions present on a system")
+            module.fail_json(msg="There are no Logical Partitions present on the system")
 
         if not lpar_uuid:
-            module.fail_json(msg="Provided Logical Partition is not present on a system")
+            module.fail_json(msg="Provided Logical Partition is not present on the system")
 
         if prof_name:
             profs = rest_conn.getPartitionProfiles(lpar_uuid)
@@ -586,7 +586,7 @@ def poweron_partition(module, params):
                     break
 
         if prof_name and not prof_uuid:
-            module.fail_json(msg="Provided Logical Partition Profile is not present on a logical Partition")
+            module.fail_json(msg="Provided Logical Partition Profile is not present on the logical Partition")
 
         partition_state = partition_dict["PartitionState"]
         partition_type = partition_dict["PartitionType"]
