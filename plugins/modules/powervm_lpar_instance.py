@@ -5,7 +5,7 @@
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
-from collections import OrderedDict
+
 
 ANSIBLE_METADATA = {
     'metadata_version': '1.1',
@@ -94,7 +94,7 @@ options:
         description:
             - Storage volume configurations of partition
             - Attachs the virtual SCSI backing physical volume provided by the Virtual IO Server Partition
-            - Give implicit preference to redundancy in case if the identified/provided disk visible by two VIOSes  
+            - Give implicit preference to redundancy in case if the identified/provided disk visible by two VIOSes
         type: dict
         suboptions:
             volume_name:
@@ -175,6 +175,7 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client impo
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import HmcRestClient
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import add_taggedIO_details
 from random import randint
+from collections import OrderedDict
 try:
     from lxml import etree
 except ImportError:
