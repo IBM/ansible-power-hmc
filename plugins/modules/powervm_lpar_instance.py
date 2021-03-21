@@ -92,7 +92,9 @@ options:
         choices: ['present', 'absent']
     volume_config:
         description:
-            - storage volume configurations of partition
+            - Storage volume configurations of partition
+            - Attachs the virtual SCSI backing physical volume provided by the Virtual IO Server Partition
+            - Give implicit preference to redundancy in case if the identified/provided disk visible by two VIOSes  
         type: dict
         suboptions:
             volume_name:
