@@ -37,6 +37,7 @@ script:
   #  W503: line break before binary operator (PEP8 advices to put logical operator ahead)
   - flake8 plugins/modules/* --max-line-length=160 --ignore=E402,W503
   - flake8 plugins/module_utils/* --max-line-length=160 --ignore=E402,W503
+  - flake8 plugins/inventory/* --max-line-length=160 --ignore=E402,W503  
   - flake8 tests/unit/*/* --max-line-length=160 --ignore=E402,W503
   - ansible-galaxy collection build
   - ansible-galaxy collection install ibm-power_hmc*
