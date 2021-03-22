@@ -212,7 +212,7 @@ class HmcRestClient:
                  force_basic_auth=True,
                  timeout=30)
 
-    def fetchJobStatus(self, jobId, template=False):
+    def fetchJobStatus(self, jobId, template=False, timeout_counter=0):
 
         if template:
             url = "https://{0}/rest/api/templates/jobs/{1}".format(self.hmc_ip, jobId)
@@ -223,7 +223,6 @@ class HmcRestClient:
         result = None
 
         jobStatus = ''
-        timeout_counter = 0
         while True:
             time.sleep(30)
             timeout_counter += 1
@@ -236,11 +235,23 @@ class HmcRestClient:
             doc = xml_strip_namespace(resp)
 
             jobStatus = doc.xpath('//Status')[0].text
+            logger.debug("jobStatus: %s", jobStatus)
 
-            if jobStatus == 'COMPLETED_OK' or jobStatus == 'COMPLETED_WITH_ERROR':
+            if jobStatus == 'COMPLETED_OK':
                 logger.debug(resp)
                 result = doc
                 break
+
+            if jobStatus == 'COMPLETED_WITH_ERROR':
+                logger.debug("jobStatus: %s", jobStatus)
+                resp_msg = None
+                resp_msg = doc.xpath("//ParameterName[text()='result']/following-sibling::ParameterValue")
+                if resp_msg:
+                    logger.debug("debugger: %s", resp_msg[0].text)
+                    raise HmcError(resp_msg[0].text)
+                else:
+                    err_msg = "Failed: Job completed with error"
+                    raise HmcError(err_msg)
 
             if jobStatus != 'RUNNING':
                 logger.debug("jobStatus: %s", jobStatus)
@@ -263,14 +274,12 @@ class HmcRestClient:
         url = "https://{0}/rest/api/uom/ManagedSystem/search/(SystemName=={1})".format(self.hmc_ip, system_name)
         header = {'X-API-Session': self.session,
                   'Accept': 'application/vnd.ibm.powervm.uom+xml; type=ManagedSystem'}
-
         response = open_url(url,
                             headers=header,
                             method='GET',
                             validate_certs=False,
                             force_basic_auth=True,
                             timeout=60)
-
         if response.code == 204:
             return None, None
 
@@ -378,6 +387,22 @@ class HmcRestClient:
                         timeout=60)
         if resp.code != 200:
             logger.debug("Get of Logical Partitions failed. Respsonse code: %d", resp.code)
+            return None
+        response = resp.read()
+        return response
+
+    def getLogicalPartitionQuick(self, partition_uuid):
+        url = "https://{0}/rest/api/uom/LogicalPartition/{1}/quick".format(self.hmc_ip, partition_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': '*/*'}
+        resp = open_url(url,
+                        headers=header,
+                        method='GET',
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=60)
+        if resp.code != 200:
+            logger.debug("Get of Logical Partition failed. Respsonse code: %d", resp.code)
             return None
         response = resp.read()
         return response
@@ -697,6 +722,88 @@ class HmcRestClient:
         transform_resp = xml_strip_namespace(resp)
         jobID = transform_resp.xpath('//JobID')[0].text
         return self.fetchJobStatus(jobID, template=True)
+
+    def poweroffPartition(self, vm_uuid, operation, immediate='false'):
+        url = "https://{0}/rest/api/uom/LogicalPartition/{1}/do/PowerOff".format(self.hmc_ip, vm_uuid)
+        header = _jobHeader(self.session)
+
+        reqdOperation = {'OperationName': 'PowerOff',
+                         'GroupName': 'LogicalPartition',
+                         'ProgressType': 'DISCRETE'}
+
+        jobParams = {'immediate': immediate,
+                     'restart': 'false',
+                     'operation': operation}
+
+        payload = _job_RequestPayload(reqdOperation, jobParams)
+
+        resp = open_url(url,
+                        headers=header,
+                        data=payload,
+                        method='PUT',
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=30).read()
+
+        shutdown_resp = xml_strip_namespace(resp)
+        jobID = shutdown_resp.xpath('//JobID')[0].text
+        return self.fetchJobStatus(jobID, timeout_counter=40)
+
+    def poweronPartition(self, vm_uuid, prof_uuid, keylock, iIPLsource, os_type):
+        url = "https://{0}/rest/api/uom/LogicalPartition/{1}/do/PowerOn".format(self.hmc_ip, vm_uuid)
+        header = _jobHeader(self.session)
+
+        reqdOperation = {'OperationName': 'PowerOn',
+                         'GroupName': 'LogicalPartition',
+                         'ProgressType': 'DISCRETE'}
+
+        jobParams = {'force': 'false',
+                     'novsi': 'true',
+                     'bootmode': 'norm'}
+
+        if prof_uuid:
+            jobParams.update({'LogicalPartitionProfile': prof_uuid})
+
+        if keylock:
+            if keylock == 'normal':
+                keylock = 'norm'
+            jobParams.update({'keylock': keylock})
+
+        if os_type == 'OS400' and iIPLsource:
+            jobParams.update({'iIPLsource': iIPLsource})
+
+        payload = _job_RequestPayload(reqdOperation, jobParams)
+
+        resp = open_url(url,
+                        headers=header,
+                        data=payload,
+                        method='PUT',
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=30).read()
+
+        activate_resp = xml_strip_namespace(resp)
+        jobID = activate_resp.xpath('//JobID')[0].text
+        return self.fetchJobStatus(jobID, timeout_counter=40)
+
+    def getPartitionProfiles(self, vm_uuid):
+        url = "https://{0}/rest/api/uom/LogicalPartition/{1}/LogicalPartitionProfile".format(self.hmc_ip, vm_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': 'application/vnd.ibm.powervm.uom+xml; type=LogicalPartitionProfile'}
+
+        response = open_url(url,
+                            headers=header,
+                            method='GET',
+                            validate_certs=False,
+                            force_basic_auth=True,
+                            timeout=60)
+
+        if response.code == 204:
+            return None
+
+        lparProfiles_root = xml_strip_namespace(response.read())
+        lparProfiles = lparProfiles_root.xpath('//LogicalPartitionProfile')
+        return lparProfiles
 
     def add_vscsi_payload(self, lpar_template_dom, lpar_id, pv_tup):
 

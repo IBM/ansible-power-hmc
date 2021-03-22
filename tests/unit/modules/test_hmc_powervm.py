@@ -56,8 +56,48 @@ test_data1 = [
       'system_name': "systemname", 'vm_name': "vmname"}, "ParameterError: mandatory parameter 'hmc_auth' is missing"),
     # unsupported parameter os_type,proc,mem
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'absent',
-      'system_name': "systemname", 'vm_name': 'vmname', 'proc': '4', 'mem': '1024', 'os_type': 'aix_linux',
-      'volume_config': volume_config}, "ParameterError: unsupported parameters: proc, mem, os_type, volume_config")]
+      'system_name': "systemname", 'vm_name': 'vmname', 'proc': '4', 'mem':
+      '1024', 'os_type': 'aix_linux', 'prof_name': 'default', 'keylock': 'manual', 'iIPLsource': 'a',
+      'volume_config': volume_config},
+     "ParameterError: unsupported parameters: proc, mem, os_type, prof_name, keylock, iIPLsource, volume_config")]
+test_data2 = [
+    # ALL Shutdown partition testdata
+    # system_name value is missing
+    ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'action': 'shutdown', 'state': None,
+      'system_name': None, 'vm_name': "vmname"}, "ParameterError: mandatory parameter 'system_name' is missing"),
+    # vmname value is missing
+    ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'action': 'shutdown', 'state': None,
+      'system_name': "systemname", 'vm_name': None}, "ParameterError: mandatory parameter 'vm_name' is missing"),
+    # hmc_host value is missing
+    ({'hmc_host': None, 'hmc_auth': hmc_auth, 'action': 'shutdown', 'state': None,
+      'system_name': "systemname", 'vm_name': "vm_name"}, "ParameterError: mandatory parameter 'hmc_host' is missing"),
+    # hmc_auth value is missing
+    ({'hmc_host': "0.0.0.0", 'hmc_auth': None, 'action': 'shutdown', 'state': None,
+      'system_name': "systemname", 'vm_name': "vmname"}, "ParameterError: mandatory parameter 'hmc_auth' is missing"),
+    # unsupported parameter os_type,proc,mem,prof_name,keylock,iIPLsource
+    ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'action': 'shutdown', 'state': None,
+      'system_name': "systemname", 'vm_name': 'vmname', 'proc': '4', 'mem':
+      '1024', 'os_type': 'aix_linux', 'prof_name': 'default', 'keylock': 'manual', 'iIPLsource': 'a'},
+     "ParameterError: unsupported parameters: proc, mem, os_type, prof_name, keylock, iIPLsource")]
+test_data3 = [
+    # ALL Shutdown partition testdata
+    # system name is missing
+    ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': None, 'action': 'poweron',
+      'system_name': None, 'vm_name': "vm_name"}, "ParameterError: mandatory parameter 'system_name' is missing"),
+    # vmname is missing
+    ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': None, 'action': 'poweron',
+      'system_name': "systemname", 'vm_name': None}, "ParameterError: mandatory parameter 'vm_name' is missing"),
+    # hmc_host is missing
+    ({'hmc_host': None, 'hmc_auth': hmc_auth, 'state': None, 'action': 'poweron',
+      'system_name': "systemname", 'vm_name': "vm_name"}, "ParameterError: mandatory parameter 'hmc_host' is missing"),
+    # hmc_auth is missing
+    ({'hmc_host': "0.0.0.0", 'hmc_auth': None, 'state': None, 'action': 'poweron',
+      'system_name': "systemname", 'vm_name': "vmname"}, "ParameterError: mandatory parameter 'hmc_auth' is missing"),
+    # unsupported parameter os_type,proc,mem
+    ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': None, 'action': 'poweron',
+      'system_name': "systemname", 'vm_name': 'vmname', 'proc': '4', 'mem':
+      '1024', 'os_type': 'aix_linux'},
+     "ParameterError: unsupported parameters: proc, mem, os_type")]
 
 
 def common_mock_setup(mocker):
@@ -87,3 +127,25 @@ def test_call_inside_powervm_delete_partition(mocker, powervm_test_input, expect
         assert expectedError == repr(e.value)
     else:
         hmc_powervm.remove_partition(hmc_powervm, powervm_test_input)
+
+
+@pytest.mark.parametrize("powervm_test_input, expectedError", test_data2)
+def test_call_inside_powervm_poweroff_partition(mocker, powervm_test_input, expectedError):
+    hmc_powervm = common_mock_setup(mocker)
+    if 'ParameterError' in expectedError:
+        with pytest.raises(ParameterError) as e:
+            hmc_powervm.poweroff_partition(hmc_powervm, powervm_test_input)
+        assert expectedError == repr(e.value)
+    else:
+        hmc_powervm.poweroff_partition(hmc_powervm, powervm_test_input)
+
+
+@pytest.mark.parametrize("powervm_test_input, expectedError", test_data3)
+def test_call_inside_powervm_poweron_partition(mocker, powervm_test_input, expectedError):
+    hmc_powervm = common_mock_setup(mocker)
+    if 'ParameterError' in expectedError:
+        with pytest.raises(ParameterError) as e:
+            hmc_powervm.poweron_partition(hmc_powervm, powervm_test_input)
+        assert expectedError == repr(e.value)
+    else:
+        hmc_powervm.poweron_partition(hmc_powervm, powervm_test_input)
