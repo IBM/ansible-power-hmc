@@ -100,6 +100,7 @@ test_data3 = [
       '1024', 'os_type': 'aix_linux', 'volume_config': volume_config},
      "ParameterError: unsupported parameters: proc, mem, os_type, volume_config")]
 
+
 def common_mock_setup(mocker):
     hmc_powervm = importlib.import_module(IMPORT_HMC_POWERVM)
     mocker.patch.object(hmc_powervm, 'HmcCliConnection')
