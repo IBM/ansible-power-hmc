@@ -77,10 +77,11 @@ test_data2 = [
     # unsupported parameter os_type,proc,mem,prof_name,keylock,iIPLsource
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'action': 'shutdown', 'state': None,
       'system_name': "systemname", 'vm_name': 'vmname', 'proc': '4', 'mem':
-      '1024', 'os_type': 'aix_linux', 'prof_name': 'default', 'keylock': 'manual', 'iIPLsource': 'a'},
-     "ParameterError: unsupported parameters: proc, mem, os_type, prof_name, keylock, iIPLsource")]
+      '1024', 'os_type': 'aix_linux', 'prof_name': 'default', 'keylock': 'manual', 'iIPLsource': 'a',
+      'volume_config': volume_config},
+     "ParameterError: unsupported parameters: proc, mem, os_type, prof_name, keylock, iIPLsource, volume_config")]
 test_data3 = [
-    # ALL Shutdown partition testdata
+    # ALL Activate partition testdata
     # system name is missing
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': None, 'action': 'poweron',
       'system_name': None, 'vm_name': "vm_name"}, "ParameterError: mandatory parameter 'system_name' is missing"),
@@ -96,8 +97,8 @@ test_data3 = [
     # unsupported parameter os_type,proc,mem
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': None, 'action': 'poweron',
       'system_name': "systemname", 'vm_name': 'vmname', 'proc': '4', 'mem':
-      '1024', 'os_type': 'aix_linux'},
-     "ParameterError: unsupported parameters: proc, mem, os_type")]
+      '1024', 'os_type': 'aix_linux', 'volume_config': volume_config},
+     "ParameterError: unsupported parameters: proc, mem, os_type, volume_config")]
 
 
 def common_mock_setup(mocker):
