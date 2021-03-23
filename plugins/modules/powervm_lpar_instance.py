@@ -104,12 +104,6 @@ options:
             - If this option provided to AIX/Linux type partition, operation gives a warning and then ignores this option and proceed with operation.
         type: str
         choices: ['a','b','c','d']
-    state:
-        description:
-            - C(present) creates a partition of specifed I(os_type), I(vm_name), I(proc) and I(memory) on specified I(system_name)
-            - C(absent) deletes a partition of specified I(vm_name) on specified I(system_name)
-        type: str
-        choices: ['present', 'absent']
     volume_config:
         description:
             - Storage volume configurations of partition
@@ -131,6 +125,12 @@ options:
                     - Vios name to which mentioned I(volume_name) is present
                       This option is mutually exclusive with I(volume_size)
                 type: str
+    state:
+        description:
+            - C(present) creates a partition of specifed I(os_type), I(vm_name), I(proc) and I(memory) on specified I(system_name)
+            - C(absent) deletes a partition of specified I(vm_name) on specified I(system_name)
+        type: str
+        choices: ['present', 'absent']
     action:
         description:
             - C(shutdown) shutdown a partition of specified I(vm_name) on specified I(system_name)
@@ -288,8 +288,11 @@ def validate_sub_dict(sub_key, params):
         if not params[each] or params[each] == '':
             params.pop(each)
 
-    if 'volume_config' in sub_key:
-        options = set(params.keys())
+    if not params:
+        raise ParameterError("Key values of '%s' are invalid" % sub_key)
+
+    if 'volume_config' == sub_key:
+        options = params.keys()
         together = ['volume_name', 'vios_name']
         mutually_exclusive_list = [('volume_name', 'vios_name'), ('volume_size',)]
 
@@ -363,19 +366,16 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
     user_choice_vios = None
     user_choice_pvid = None
     vios_response = rest_conn.getVirtualIOServersQuick(system_uuid)
-    logger.debug(vios_response)
     vios_uuid_list = []
     if vios_response:
         vios_list = json.loads(vios_response)
-        logger.debug(vios_list)
 
         vios_uuid_list = [(vios['UUID'], vios['PartitionName']) for vios in vios_list if vios['RMCState'] == 'active']
-        logger.debug(vios_uuid_list)
 
         if not vios_uuid_list:
-            raise Error("Vioses are not available or RMC down")
+            raise Error("VIOSes are not available or RMC down")
     else:
-        raise Error("Vioses are not available")
+        raise Error("VIOSes are not available")
 
     if vios_name and volume_name:
         for uuid, name in vios_uuid_list:

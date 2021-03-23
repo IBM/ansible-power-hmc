@@ -807,8 +807,6 @@ class HmcRestClient:
 
     def add_vscsi_payload(self, lpar_template_dom, lpar_id, pv_tup):
 
-        vtd_name = ''.join(random.SystemRandom().choice(string.ascii_lowercase) for i in range(5))
-        vtd_name = vtd_name + '_' + lpar_id
         payload = ''
         pv_tup_list_slice = pv_tup[:2]
         for pv_name, vios_name, pv_obj in pv_tup_list_slice:
@@ -818,7 +816,6 @@ class HmcRestClient:
                             <Atom/>
                     </Metadata>
                     <name kb="CUD" kxe="false"></name>
-                    <PhyscalVolumeVTDName kxe="false" kb="CUD">{0}</PhyscalVolumeVTDName>
                     <associatedLogicalUnits kb="CUD" kxe="false" schemaVersion="V1_0">
                             <Metadata>
                                     <Atom/>
@@ -832,10 +829,10 @@ class HmcRestClient:
                                     <Metadata>
                                             <Atom/>
                                     </Metadata>
-                                    <name kb="CUD" kxe="false">{1}</name>
+                                    <name kb="CUD" kxe="false">{0}</name>
                             </PhysicalVolume>
                     </associatedPhysicalVolume>
-                    <connectingPartitionName kxe="false" kb="CUD">{2}</connectingPartitionName>
+                    <connectingPartitionName kxe="false" kb="CUD">{1}</connectingPartitionName>
                     <AssociatedTargetDevices kb="CUD" kxe="false" schemaVersion="V1_0">
                             <Metadata>
                                     <Atom/>
@@ -846,7 +843,7 @@ class HmcRestClient:
                                     <Atom/>
                             </Metadata>
                     </associatedVirtualOpticalMedia>
-            </VirtualSCSIClientAdapter>'''.format(vtd_name, pv_name, vios_name)
+            </VirtualSCSIClientAdapter>'''.format(pv_name, vios_name)
 
         vscsi_client_payload = '''
         <virtualSCSIClientAdapters kxe="false" kb="CUD" schemaVersion="V1_0">
@@ -861,7 +858,6 @@ class HmcRestClient:
     def getFreePhyVolume(self, vios_uuid):
         logger.debug(vios_uuid)
         url = "https://{0}/rest/api/uom/VirtualIOServer/{1}/do/GetFreePhysicalVolumes".format(self.hmc_ip, vios_uuid)
-        logger.debug(url)
         header = _jobHeader(self.session)
 
         reqdOperation = {'OperationName': 'GetFreePhysicalVolumes',
@@ -870,7 +866,6 @@ class HmcRestClient:
         jobParams = {}
 
         payload = _job_RequestPayload(reqdOperation, jobParams, "V1_3_0")
-        logger.debug(payload)
 
         resp = open_url(url,
                         headers=header,
