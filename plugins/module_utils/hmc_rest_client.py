@@ -2,8 +2,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 import time
 import json
-import random
-import string
 from ansible.module_utils.urls import open_url
 import ansible.module_utils.six.moves.urllib.error as urllib_error
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
