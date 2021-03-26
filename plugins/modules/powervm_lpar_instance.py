@@ -595,9 +595,9 @@ def create_partition(module, params):
 
         rest_conn.updateProcMemSettingsToDom(temporary_temp_dom, config_dict)
         if params['virt_network_name']:
-            sea_response = rest_conn.getVirtualNetworksQuick(system_uuid)
-            if sea_response:
-                for nw in sea_response:
+            vnw_response = rest_conn.getVirtualNetworksQuick(system_uuid)
+            if vnw_response:
+                for nw in vnw_response:
                     nw_name = nw['NetworkName']
                     if nw_name == virt_network_name:
                         nw_uuid = nw['UUID']
