@@ -107,7 +107,7 @@ options:
     volume_config:
         description:
             - Storage volume configurations of partition
-            - Attachs the virtual SCSI backing physical volume provided by the Virtual IO Server Partition
+            - Attaches the virtual SCSI backing physical volume provided by the Virtual IO Server Partition
             - Give implicit preference to redundancy in case if the identified/provided disk visible by two VIOSes
         type: dict
         suboptions:
@@ -125,6 +125,10 @@ options:
                     - Vios name to which mentioned I(volume_name) is present
                       This option is mutually exclusive with I(volume_size)
                 type: str
+    virt_network_name:
+        description:
+            - Virtual Network Configuration of the Partition
+        type: str
     state:
         description:
             - C(present) creates a partition of specifed I(os_type), I(vm_name), I(proc) and I(memory) on specified I(system_name)
@@ -320,10 +324,10 @@ def validate_parameters(params):
         unsupportedList = ['prof_name', 'keylock', 'iIPLsource']
     elif opr == 'poweron':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
-        unsupportedList = ['proc', 'mem', 'os_type', 'volume_config']
+        unsupportedList = ['proc', 'mem', 'os_type', 'volume_config', 'virt_network_name']
     else:
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
-        unsupportedList = ['proc', 'mem', 'os_type', 'prof_name', 'keylock', 'iIPLsource', 'volume_config']
+        unsupportedList = ['proc', 'mem', 'os_type', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_name']
 
     collate = []
     for eachMandatory in mandatoryList:
@@ -509,9 +513,11 @@ def create_partition(module, params):
     mem = str(params['mem'] or 2048)
     proc_unit = params['proc_unit']
     os_type = params['os_type']
+    virt_network_name = params['virt_network_name']
     vios_name = None
-    temp_template_name = "draft_ansible_powervm_create_{0}".format(str(randint(1000, 9999)))
+    temp_template_name = "ansible_powervm_create_{0}".format(str(randint(1000, 9999)))
     temp_copied = False
+    nw_uuid = None
     cli_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(cli_conn)
 
@@ -588,6 +594,21 @@ def create_partition(module, params):
             add_taggedIO_details(temporary_temp_dom)
 
         rest_conn.updateProcMemSettingsToDom(temporary_temp_dom, config_dict)
+        if params['virt_network_name']:
+            sea_response = rest_conn.getVirtualNetworksQuick(system_uuid)
+            if sea_response:
+                for nw in sea_response:
+                    nw_name = nw['NetworkName']
+                    if nw_name == virt_network_name:
+                        nw_uuid = nw['UUID']
+                        nw_dict = {'nw_name': nw_name, 'nw_uuid': nw_uuid}
+                        rest_conn.updateVirtualNWSettingsToDom(temporary_temp_dom, nw_dict)
+                        break
+                if not nw_uuid:
+                    raise Error("Requested Virtual Network: {0} is not available".format(virt_network_name))
+
+            else:
+                raise Error("There are no  shared ethernet adapters present in the system")
         rest_conn.updatePartitionTemplate(temp_uuid, temporary_temp_dom)
 
         resp = rest_conn.checkPartitionTemplate(temp_template_name, system_uuid)
@@ -618,7 +639,7 @@ def create_partition(module, params):
 
             logger.debug(vol_tuple_list)
             if vol_tuple_list:
-                rest_conn.add_vscsi_payload(draft_template_dom, config_dict['lpar_id'], vol_tuple_list)
+                rest_conn.add_vscsi_payload(draft_template_dom, vol_tuple_list)
                 rest_conn.updatePartitionTemplate(draft_uuid, draft_template_dom)
             else:
                 module.fail_json(msg="Unable to identify free physical volume")
@@ -748,7 +769,7 @@ def poweroff_partition(module, params):
 
         if partition_state == 'not activated':
             logger.debug("Given partition already in not activated state")
-            return False, None
+            return False, None, None
         else:
             rest_conn.poweroffPartition(lpar_uuid, 'shutdown')
             changed = True
@@ -764,7 +785,7 @@ def poweroff_partition(module, params):
             error_msg = parse_error_response(logoff_error)
             module.warn(error_msg)
 
-    return changed, None
+    return changed, None, None
 
 
 def poweron_partition(module, params):
@@ -848,7 +869,7 @@ def poweron_partition(module, params):
 
         else:
             logger.debug("Given partition already in not activated state")
-            return False, None
+            return False, None, None
 
     except Exception as error:
         error_msg = parse_error_response(error)
@@ -861,7 +882,7 @@ def poweron_partition(module, params):
             error_msg = parse_error_response(logoff_error)
             module.warn(error_msg)
 
-    return changed, None
+    return changed, None, None
 
 
 def perform_task(module):
@@ -909,6 +930,7 @@ def run_module():
                                volume_size=dict(type='int'),
                            )
                            ),
+        virt_network_name=dict(type='str'),
         prof_name=dict(type='str'),
         keylock=dict(type='str', choices=['manual', 'normal']),
         iIPLsource=dict(type='str', choices=['a', 'b', 'c', 'd']),

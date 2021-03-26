@@ -803,7 +803,7 @@ class HmcRestClient:
         lparProfiles = lparProfiles_root.xpath('//LogicalPartitionProfile')
         return lparProfiles
 
-    def add_vscsi_payload(self, lpar_template_dom, lpar_id, pv_tup):
+    def add_vscsi_payload(self, lpar_template_dom, pv_tup):
 
         payload = ''
         pv_tup_list_slice = pv_tup[:2]
@@ -888,3 +888,48 @@ class HmcRestClient:
         for each in list_pv_elem:
             disk_dict.update({each.xpath("VolumeUniqueID")[0].text: each})
         return list_pv_elem
+
+    def getVirtualNetworksQuick(self, system_uuid):
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/VirtualNetwork/quick/All".format(self.hmc_ip, system_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': '*/*'}
+        resp = open_url(url,
+                        headers=header,
+                        method='GET',
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=60)
+        if resp.code != 200:
+            logger.debug("Get of Logical Partitions failed. Respsonse code: %d", resp.code)
+            return None
+        response = resp.read()
+        vnw_quick_list = json.loads(response)
+        return vnw_quick_list
+
+    def updateVirtualNWSettingsToDom(self, template_xml, config_dict):
+        vnw_payload = '''
+        <clientNetworkAdapters kb="CUD" kxe="false" schemaVersion="V1_0">
+            <Metadata>
+                <Atom/>
+            </Metadata>
+            <ClientNetworkAdapter schemaVersion="V1_0">
+                <Metadata>
+                    <Atom/>
+                </Metadata>
+                <clientVirtualNetworks kb="CUD" kxe="false" schemaVersion="V1_0">
+                    <Metadata>
+                        <Atom/>
+                    </Metadata>
+                    <ClientVirtualNetwork schemaVersion="V1_0">
+                        <Metadata>
+                            <Atom/>
+                        </Metadata>
+                        <name kxe="false" kb="CUD">{0}</name>
+                        <uuid kb="CUD" kxe="false">{1}</uuid>
+                    </ClientVirtualNetwork>
+                </clientVirtualNetworks>
+            </ClientNetworkAdapter>
+        </clientNetworkAdapters>'''.format(config_dict['nw_name'], config_dict['nw_uuid'])
+
+        client_nw_adapter_tag = template_xml.xpath("//ioConfiguration")[0]
+        client_nw_adapter_tag.addnext(etree.XML(vnw_payload))
