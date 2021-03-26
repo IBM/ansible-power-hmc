@@ -409,12 +409,10 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
         if each_vios_pv_complex:
             sorted_each_vios_pv_complex = dict(sorted(each_vios_pv_complex.items(),
                                                key=lambda x: int(x[1].xpath("VolumeCapacity")[0].text)))
-            for each in sorted_each_vios_pv_complex.items():
-                logger.debug("Sorted Volume Name:%s", each[1].xpath("VolumeName")[0].text)
             keys_list += sorted_each_vios_pv_complex.keys()
             pv_complex.append((sorted_each_vios_pv_complex, vios_uuid, viosname))
 
-    # Since the set is not order, ising OrderedDict to find unique keys
+    # Since the set is not order, using OrderedDict to find unique keys
     ordered_key_d = OrderedDict.fromkeys(keys_list)
     unique_keys = [each[0] for each in ordered_key_d.items()]
 
@@ -482,12 +480,22 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
         return first_singlepath_incidence
 
     # if user not specified any vios and could not find volume visible by multiple vioses, then
-    # pick a random volume from any one of the vios
+    # pick a random volume from the vios
     if pv_complex and not found_list and not user_choice_vios:
         logger.debug("Picking a random single disk..")
-        pv_obj = list(pv_complex[0][0].values())[0]
-        volume_nm = pv_obj.xpath("VolumeName")[0].text
-        return [(volume_nm, pv_complex[0][2], pv_obj)]
+        first_of_every_vios = []
+        for each_pv_complex in pv_complex:
+            for eachPVID in each_pv_complex[0].keys():
+                if eachPVID in pvs_in_use:
+                    continue
+                pv_obj = each_pv_complex[0][eachPVID]
+                volume_nm = pv_obj.xpath("VolumeName")[0].text
+                volume_size = int(pv_obj.xpath("VolumeCapacity")[0].text)
+                first_of_every_vios.append(tuple([volume_nm, each_pv_complex[2], pv_obj, volume_size]))
+                break
+
+        sort_first_of_every_vios = sorted(first_of_every_vios, key=lambda x: x[3])
+        return [sort_first_of_every_vios[0][:-1]]
 
     return None
 
@@ -748,7 +756,7 @@ def poweroff_partition(module, params):
 
         if partition_state == 'not activated':
             logger.debug("Given partition already in not activated state")
-            return False, None
+            return False, None, None
         else:
             rest_conn.poweroffPartition(lpar_uuid, 'shutdown')
             changed = True
@@ -764,7 +772,7 @@ def poweroff_partition(module, params):
             error_msg = parse_error_response(logoff_error)
             module.warn(error_msg)
 
-    return changed, None
+    return changed, None, None
 
 
 def poweron_partition(module, params):
@@ -848,7 +856,7 @@ def poweron_partition(module, params):
 
         else:
             logger.debug("Given partition already in not activated state")
-            return False, None
+            return False, None, None
 
     except Exception as error:
         error_msg = parse_error_response(error)
@@ -861,7 +869,7 @@ def poweron_partition(module, params):
             error_msg = parse_error_response(logoff_error)
             module.warn(error_msg)
 
-    return changed, None
+    return changed, None, None
 
 
 def perform_task(module):
