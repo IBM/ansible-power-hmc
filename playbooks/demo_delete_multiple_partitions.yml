@@ -1,12 +1,12 @@
 ---
-- name: HMC create partition
-  hosts: hmcs
+- name: HMC delete multiple partition
+  hosts: partitions
   collections:
       - ibm.power_hmc
   connection: local
   vars:
     curr_hmc_auth:
-      username: hscroot 
+      username: hscroot
       password: !vault |
                 $ANSIBLE_VAULT;1.1;AES256
                 63333364316262646163393034636564353461333237323833663064666339643965353138653535
@@ -16,19 +16,10 @@
                 3566
 
   tasks:
-  - name: Create logical partition
+  - name: Delete logical partitions
     powervm_lpar_instance:
-      hmc_host: '{{ inventory_hostname }}'
+      hmc_host: hmc1
       hmc_auth: "{{ curr_hmc_auth }}"
-      system_name: zepp31fp 
-      vm_name: test123
-      proc: 2
-      mem: 2048
-      os_type: aix
-      state: present
-    register: testout
-
-  - name: Stdout the created logical partition
-    debug:
-        msg: '{{ testout }}'
-
+      system_name: system1
+      vm_name: '{{ inventory_hostname }}'
+      state: absent
