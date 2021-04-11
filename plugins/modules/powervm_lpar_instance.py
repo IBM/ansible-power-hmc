@@ -334,10 +334,14 @@ def validate_parameters(params):
         unsupportedList = ['prof_name', 'keylock', 'iIPLsource', 'retain_vios_cfg', 'delete_vdisks']
     elif opr == 'poweron':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
-        unsupportedList = ['proc', 'mem', 'os_type', 'volume_config', 'virt_network_name', 'retain_vios_cfg', 'delete_vdisks']
+        unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'volume_config', 'virt_network_name', 'retain_vios_cfg', 'delete_vdisks']
+    elif opr == 'absent':
+        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
+        unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_name']
     else:
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
-        unsupportedList = ['proc', 'mem', 'os_type', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_name']
+        unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_name',
+                           'retain_vios_cfg', 'delete_vdisks']
 
     collate = []
     for eachMandatory in mandatoryList:
@@ -626,7 +630,7 @@ def create_partition(module, params):
                     raise Error("Requested Virtual Network: {0} is not available".format(virt_network_name))
 
             else:
-                raise Error("There are no  shared ethernet adapters present in the system")
+                raise Error("There are no Virtual Networks present in the system")
         rest_conn.updatePartitionTemplate(temp_uuid, temporary_temp_dom)
 
         resp = rest_conn.checkPartitionTemplate(temp_template_name, system_uuid)
@@ -706,11 +710,12 @@ def remove_partition(module, params):
     except HmcError as del_lpar_error:
         error_msg = parse_error_response(del_lpar_error)
         if 'HSCL8012' in error_msg:
-            return False,None,None
+            return False, None, None
         else:
-            return False,repr(del_lpar_error),None
+            return False, repr(del_lpar_error), None
 
     return True, None, None
+
 
 def poweroff_partition(module, params):
     changed = False
