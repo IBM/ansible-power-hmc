@@ -106,7 +106,7 @@ options:
     volume_config:
         description:
             - Storage volume configurations of partition
-            - Attachs the virtual SCSI backing physical volume provided by the Virtual IO Server Partition
+            - Attaches the virtual SCSI backing physical volume provided by the Virtual IO Server Partition
             - Give implicit preference to redundancy in case if the identified/provided disk visible to two VIOSes
         type: dict
         suboptions:
