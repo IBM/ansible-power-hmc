@@ -233,9 +233,9 @@ class Hmc():
 
     def deletePartition(self, cecName, lparName, deleteAssociatedViosCfg=True, deleteVdisks=False):
         rmsyscfgCmd = self.CMD['RMSYSCFG'] + \
-                      self.OPT['RMSYSCFG']['-R']['LPAR'] + \
-                      self.OPT['RMSYSCFG']['-M'] + cecName + \
-                      self.OPT['RMSYSCFG']['-N'] + lparName
+            self.OPT['RMSYSCFG']['-R']['LPAR'] + \
+            self.OPT['RMSYSCFG']['-M'] + cecName + \
+            self.OPT['RMSYSCFG']['-N'] + lparName
         if deleteAssociatedViosCfg:
             rmsyscfgCmd += self.OPT['RMSYSCFG']['VIOSCFG']
         if deleteVdisks:
