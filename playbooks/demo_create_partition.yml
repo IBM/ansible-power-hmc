@@ -31,4 +31,3 @@
   - name: Stdout the created logical partition
     debug:
         msg: '{{ testout }}'
-

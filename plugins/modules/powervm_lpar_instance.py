@@ -19,9 +19,9 @@ module: powervm_lpar_instance
 author:
     - Anil Vijayan (@AnilVijayan)
     - Navinakumar Kandakur (@nkandak1)
-short_description: Create, Delete and shutdown an AIX/Linux or IBMi partition
+short_description: Create, Delete, Shutdown and Activate an AIX/Linux or IBMi partition
 notes:
-    - Currently supports creation of partition (powervm instance) with only processor and memory settings on dedicated mode
+    - Currently the storage configuration supports only the addition of physical volume from VCSI backed volume through VIOS
 description:
     - "Creates AIX/Linux or IBMi partition with specified configuration details on mentioned system"
     - "Or Deletes specified AIX/Linux or IBMi partition on specified system"
@@ -107,12 +107,12 @@ options:
         description:
             - Storage volume configurations of partition
             - Attaches the virtual SCSI backing physical volume provided by the Virtual IO Server Partition
-            - Give implicit preference to redundancy in case if the identified/provided disk visible by two VIOSes
+            - Give implicit preference to redundancy in case if the identified/provided disk visible to two VIOSes
         type: dict
         suboptions:
             volume_name:
                 description:
-                    - Physical volume name visible through vios
+                    - Physical volume name visible through VIOS.
                       This option is mutually exclusive with I(volume_size)
                 type: str
             volume_size:
@@ -121,7 +121,7 @@ options:
                 type: int
             vios_name:
                 description:
-                    - Vios name to which mentioned I(volume_name) is present
+                    - VIOS name to which mentioned I(volume_name) is present.
                       This option is mutually exclusive with I(volume_size)
                 type: str
     virt_network_name:
@@ -949,7 +949,7 @@ def run_module():
         ),
     )
 
-    if module._verbosity >= 1:
+    if module._verbosity >= 5:
         init_logger()
 
     changed, info, warning = perform_task(module)
