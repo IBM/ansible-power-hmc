@@ -51,7 +51,6 @@ options:
             password:
                 description:
                     - HMC password
-                required: true
                 type: str
     system_name:
         description:
@@ -125,6 +124,21 @@ options:
                     - VIOS name to which mentioned I(volume_name) is present.
                       This option is mutually exclusive with I(volume_size)
                 type: str
+    virt_network_name:
+        description:
+            - Virtual Network Configuration of the Partition
+        type: str
+    retain_vios_cfg:
+        description:
+            - Do not remove the VIOS configuration like server adapters, storage mappings associated with the partition when deleting the partition
+            - Applicable only for delete
+            - Default is to remove the associated VIOS configuration when deleting the partition
+        type: bool
+    delete_vdisks:
+        description:
+            - Option to delete the Virtual Disks associated with the partition when deleting the partition
+            - Default is to not delete the virtual disks
+        type: bool
     state:
         description:
             - C(present) creates a partition of specifed I(os_type), I(vm_name), I(proc) and I(memory) on specified I(system_name)
@@ -317,13 +331,17 @@ def validate_parameters(params):
 
     if opr == 'present':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']
-        unsupportedList = ['prof_name', 'keylock', 'iIPLsource']
+        unsupportedList = ['prof_name', 'keylock', 'iIPLsource', 'retain_vios_cfg', 'delete_vdisks']
     elif opr == 'poweron':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
-        unsupportedList = ['proc', 'mem', 'os_type', 'volume_config']
+        unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'volume_config', 'virt_network_name', 'retain_vios_cfg', 'delete_vdisks']
+    elif opr == 'absent':
+        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
+        unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_name']
     else:
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
-        unsupportedList = ['proc', 'mem', 'os_type', 'prof_name', 'keylock', 'iIPLsource', 'volume_config']
+        unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_name',
+                           'retain_vios_cfg', 'delete_vdisks']
 
     collate = []
     for eachMandatory in mandatoryList:
@@ -517,9 +535,11 @@ def create_partition(module, params):
     mem = str(params['mem'] or 2048)
     proc_unit = params['proc_unit']
     os_type = params['os_type']
+    virt_network_name = params['virt_network_name']
     vios_name = None
-    temp_template_name = "draft_ansible_powervm_create_{0}".format(str(randint(1000, 9999)))
+    temp_template_name = "ansible_powervm_create_{0}".format(str(randint(1000, 9999)))
     temp_copied = False
+    nw_uuid = None
     cli_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(cli_conn)
 
@@ -596,6 +616,21 @@ def create_partition(module, params):
             add_taggedIO_details(temporary_temp_dom)
 
         rest_conn.updateProcMemSettingsToDom(temporary_temp_dom, config_dict)
+        if params['virt_network_name']:
+            vnw_response = rest_conn.getVirtualNetworksQuick(system_uuid)
+            if vnw_response:
+                for nw in vnw_response:
+                    nw_name = nw['NetworkName']
+                    if nw_name == virt_network_name:
+                        nw_uuid = nw['UUID']
+                        nw_dict = {'nw_name': nw_name, 'nw_uuid': nw_uuid}
+                        rest_conn.updateVirtualNWSettingsToDom(temporary_temp_dom, nw_dict)
+                        break
+                if not nw_uuid:
+                    raise Error("Requested Virtual Network: {0} is not available".format(virt_network_name))
+
+            else:
+                raise Error("There are no Virtual Networks present in the system")
         rest_conn.updatePartitionTemplate(temp_uuid, temporary_temp_dom)
 
         resp = rest_conn.checkPartitionTemplate(temp_template_name, system_uuid)
@@ -626,7 +661,7 @@ def create_partition(module, params):
 
             logger.debug(vol_tuple_list)
             if vol_tuple_list:
-                rest_conn.add_vscsi_payload(draft_template_dom, config_dict['lpar_id'], vol_tuple_list)
+                rest_conn.add_vscsi_payload(draft_template_dom, vol_tuple_list)
                 rest_conn.updatePartitionTemplate(draft_uuid, draft_template_dom)
             else:
                 module.fail_json(msg="Unable to identify free physical volume")
@@ -658,57 +693,28 @@ def create_partition(module, params):
 
 
 def remove_partition(module, params):
-    changed = False
-    rest_conn = None
-    system_uuid = None
     validate_parameters(params)
     hmc_host = params['hmc_host']
     hmc_user = params['hmc_auth']['username']
     password = params['hmc_auth']['password']
     system_name = params['system_name']
     vm_name = params['vm_name']
+    retainViosCfg = params['retain_vios_cfg']
+    deleteVdisks = params['delete_vdisks']
+
+    hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
+    hmc = Hmc(hmc_conn)
 
     try:
-        rest_conn = HmcRestClient(hmc_host, hmc_user, password)
-    except Exception as error:
-        logger.debug(repr(error))
-        module.fail_json(msg="Logon to HMC failed")
-
-    try:
-        system_uuid, server_dom = rest_conn.getManagedSystem(system_name)
-    except Exception as error:
-        try:
-            rest_conn.logoff()
-        except Exception:
-            logger.debug("Logoff error")
-        error_msg = parse_error_response(error)
-        module.fail_json(msg=error_msg)
-    if not system_uuid:
-        module.fail_json(msg="Given system is not present")
-
-    try:
-        partition_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, vm_name)
-        if not partition_dom:
-            logger.debug("Given partition already absent on the managed system")
+        hmc.deletePartition(system_name, vm_name, not(retainViosCfg), deleteVdisks)
+    except HmcError as del_lpar_error:
+        error_msg = parse_error_response(del_lpar_error)
+        if 'HSCL8012' in error_msg:
             return False, None, None
+        else:
+            return False, repr(del_lpar_error), None
 
-        if partition_dom.xpath("//PartitionState")[0].text != 'not activated':
-            module.fail_json(msg="Given logical partition:{0} is not in shutdown state".format(vm_name))
-
-        rest_conn.deleteLogicalPartition(partition_uuid)
-        changed = True
-    except Exception as error:
-        error_msg = parse_error_response(error)
-        logger.debug("Line number: %d exception: %s", sys.exc_info()[2].tb_lineno, repr(error))
-        module.fail_json(msg=error_msg)
-    finally:
-        try:
-            rest_conn.logoff()
-        except Exception as logoff_error:
-            error_msg = parse_error_response(logoff_error)
-            module.warn(error_msg)
-
-    return changed, None, None
+    return True, None, None
 
 
 def poweroff_partition(module, params):
@@ -901,7 +907,7 @@ def run_module():
                       no_log=True,
                       options=dict(
                           username=dict(required=True, type='str'),
-                          password=dict(required=True, type='str'),
+                          password=dict(type='str'),
                       )
                       ),
         system_name=dict(type='str', required=True),
@@ -917,9 +923,12 @@ def run_module():
                                volume_size=dict(type='int'),
                            )
                            ),
+        virt_network_name=dict(type='str'),
         prof_name=dict(type='str'),
         keylock=dict(type='str', choices=['manual', 'normal']),
         iIPLsource=dict(type='str', choices=['a', 'b', 'c', 'd']),
+        retain_vios_cfg=dict(type='bool'),
+        delete_vdisks=dict(type='bool'),
         state=dict(type='str',
                    choices=['present', 'absent']),
         action=dict(type='str',
