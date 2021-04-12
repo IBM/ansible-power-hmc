@@ -57,9 +57,9 @@ test_data1 = [
     # unsupported parameter os_type,proc,mem
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'absent',
       'system_name': "systemname", 'vm_name': 'vmname', 'proc': '4', 'mem':
-      '1024', 'os_type': 'aix_linux', 'prof_name': 'default', 'keylock': 'manual', 'iIPLsource': 'a',
+      '1024', 'os_type': 'aix_linux', 'proc_unit': '4', 'prof_name': 'default', 'keylock': 'manual', 'iIPLsource': 'a',
       'volume_config': volume_config, 'virt_network_name': 'test_vn_name'},
-     "ParameterError: unsupported parameters: proc, mem, os_type, prof_name, keylock, iIPLsource, volume_config, virt_network_name")]
+     "ParameterError: unsupported parameters: proc, mem, os_type, proc_unit, prof_name, keylock, iIPLsource, volume_config, virt_network_name")]
 test_data2 = [
     # ALL Shutdown partition testdata
     # system_name value is missing
@@ -77,9 +77,10 @@ test_data2 = [
     # unsupported parameter os_type,proc,mem,prof_name,keylock,iIPLsource
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'action': 'shutdown', 'state': None,
       'system_name': "systemname", 'vm_name': 'vmname', 'proc': '4', 'mem':
-      '1024', 'os_type': 'aix_linux', 'prof_name': 'default', 'keylock': 'manual', 'iIPLsource': 'a',
-      'volume_config': volume_config, 'virt_network_name': 'test_vn_name'},
-     "ParameterError: unsupported parameters: proc, mem, os_type, prof_name, keylock, iIPLsource, volume_config, virt_network_name")]
+      '1024', 'os_type': 'aix_linux', 'proc_unit': '4', 'prof_name': 'default', 'keylock': 'manual', 'iIPLsource': 'a',
+      'volume_config': volume_config, 'virt_network_name': 'test_vn_name', 'retain_vios_cfg': True, 'delete_vdisks': True},
+     "ParameterError: unsupported parameters: proc, mem, os_type, proc_unit, prof_name, keylock, iIPLsource, volume_config,"
+     " virt_network_name, retain_vios_cfg, delete_vdisks")]
 test_data3 = [
     # ALL Activate partition testdata
     # system name is missing
@@ -97,8 +98,9 @@ test_data3 = [
     # unsupported parameter os_type,proc,mem
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': None, 'action': 'poweron',
       'system_name': "systemname", 'vm_name': 'vmname', 'proc': '4', 'mem':
-      '1024', 'os_type': 'aix_linux', 'volume_config': volume_config, 'virt_network_name': 'test_vn_name'},
-     "ParameterError: unsupported parameters: proc, mem, os_type, volume_config, virt_network_name")]
+      '1024', 'os_type': 'aix_linux', 'proc_unit': '4', 'volume_config': volume_config, 'virt_network_name': 'test_vn_name',
+      'retain_vios_cfg': True, 'delete_vdisks': True},
+     "ParameterError: unsupported parameters: proc, mem, os_type, proc_unit, volume_config, virt_network_name, retain_vios_cfg, delete_vdisks")]
 
 
 def common_mock_setup(mocker):
