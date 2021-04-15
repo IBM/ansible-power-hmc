@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>powervm_lpar_instance – Create/Delete an AIX/Linux or IBMi partition &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
+  <title>powervm_lpar_instance – Create, Delete, Shutdown and Activate an AIX/Linux or IBMi partition &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
   
 
   
@@ -18,7 +18,10 @@
   
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
   
+
   
+  
+
   
 
   
@@ -31,7 +34,6 @@
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
-        <script src="../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -53,7 +55,7 @@
           
 
           
-            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> IBM Power Systems HMC
+            <a href="../index.html" class="icon icon-home"> IBM Power Systems HMC
           
 
           
@@ -95,7 +97,7 @@
 <li class="toctree-l2 current"><a class="reference internal" href="../modules.html#module-reference">Module reference</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="hmc_pwdpolicy.html">hmc_pwdpolicy – Manages the list, create, change and remove password policies of HMC</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hmc_update_upgrade.html">hmc_update_upgrade – Manages the update and upgrade of HMC</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">powervm_lpar_instance – Create/Delete an AIX/Linux or IBMi partition</a><ul>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">powervm_lpar_instance – Create, Delete, Shutdown and Activate an AIX/Linux or IBMi partition</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#synopsis">Synopsis</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#requirements">Requirements</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#parameters">Parameters</a></li>
@@ -165,6 +167,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -173,12 +177,12 @@
         
           <li><a href="../modules.html">Modules</a> &raquo;</li>
         
-      <li>powervm_lpar_instance – Create/Delete an AIX/Linux or IBMi partition</li>
+      <li>powervm_lpar_instance – Create, Delete, Shutdown and Activate an AIX/Linux or IBMi partition</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             
               <a href="https://github.com/IBM/ansible-power-hmc/blob/dev-collection/docs/source/modules/powervm_lpar_instance.rst" class="fa fa-github"> Edit on GitHub</a>
             
@@ -194,8 +198,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="powervm-lpar-instance-create-delete-an-aix-linux-or-ibmi-partition">
-<span id="powervm-lpar-instance-module"></span><h1>powervm_lpar_instance – Create/Delete an AIX/Linux or IBMi partition<a class="headerlink" href="#powervm-lpar-instance-create-delete-an-aix-linux-or-ibmi-partition" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="powervm-lpar-instance-create-delete-shutdown-and-activate-an-aix-linux-or-ibmi-partition">
+<span id="powervm-lpar-instance-module"></span><h1>powervm_lpar_instance – Create, Delete, Shutdown and Activate an AIX/Linux or IBMi partition<a class="headerlink" href="#powervm-lpar-instance-create-delete-shutdown-and-activate-an-aix-linux-or-ibmi-partition" title="Permalink to this headline">¶</a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
 <li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
@@ -211,6 +215,8 @@
 <h2><a class="toc-backref" href="#id1">Synopsis</a><a class="headerlink" href="#synopsis" title="Permalink to this headline">¶</a></h2>
 <p>Creates AIX/Linux or IBMi partition with specified configuration details on mentioned system</p>
 <p>Or Deletes specified AIX/Linux or IBMi partition on specified system</p>
+<p>Or Shutdown specified AIX/Linux or IBMi partition on specified system</p>
+<p>Or Poweron/Activate specified AIX/Linux or IBMi partition with provided configuration details on the mentioned system</p>
 </div>
 <div class="section" id="requirements">
 <h2><a class="toc-backref" href="#id2">Requirements</a><a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
@@ -229,7 +235,7 @@
 <dl class="simple">
 <dt>username (True, str, None)</dt><dd><p>HMC user name</p>
 </dd>
-<dt>password (True, str, None)</dt><dd><p>HMC password</p>
+<dt>password (optional, str, None)</dt><dd><p>HMC password</p>
 </dd>
 </dl>
 </dd>
@@ -238,7 +244,10 @@
 <dt>vm_name (True, str, None)</dt><dd><p>The name of the powervm partition to create/delete</p>
 </dd>
 <dt>proc (optional, int, None)</dt><dd><p>The number of dedicated processors to create partition.</p>
-<p>Default value is 2.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">proc_unit</span></code> parameter is set, then this value will work as Virtual Processors for shared processor setting</p>
+<p>Default value is 2. This will not work during shared processor setting</p>
+</dd>
+<dt>proc_unit (optional, float, None)</dt><dd><p>The number of shared processing units to create partition.</p>
 </dd>
 <dt>mem (optional, int, None)</dt><dd><p>The value of dedicated memory value in megabytes to create partition.</p>
 <p>Default value is 2048 MB.</p>
@@ -247,8 +256,42 @@
 <p><code class="docutils literal notranslate"><span class="pre">aix_linux</span></code> or <code class="docutils literal notranslate"><span class="pre">linux</span></code> or <code class="docutils literal notranslate"><span class="pre">aix</span></code> for AIX or Linux operating system</p>
 <p><code class="docutils literal notranslate"><span class="pre">ibmi</span></code> for IBMi operating system</p>
 </dd>
-<dt>state (True, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">present</span></code> creates a partition of specifed <em>os_type</em>, <em>vm_name</em>, <em>proc</em> and <em>memory</em> on specified <em>system_name</em></p>
+<dt>prof_name (optional, str, None)</dt><dd><p>Partition profile needs to be used to activate</p>
+<p>If user doesn’t provide this option, current configureation of partition will be used for activation</p>
+</dd>
+<dt>keylock (optional, str, None)</dt><dd><p>The keylock position to set.</p>
+<p>If user doesn’t provide this option, current settings of this option in partition will be considered.</p>
+</dd>
+<dt>iIPLsource (optional, str, None)</dt><dd><p>The inital program load (IPL) source to use when activating an IBMi partition.</p>
+<p>If user doesn’t provide this option, current setting of this option in partition will be considered.</p>
+<p>If this option provided to AIX/Linux type partition, operation gives a warning and then ignores this option and proceed with operation.</p>
+</dd>
+<dt>volume_config (optional, dict, None)</dt><dd><p>Storage volume configurations of partition</p>
+<p>Attaches the virtual SCSI backing physical volume provided by the Virtual IO Server Partition</p>
+<p>Give implicit preference to redundancy in case if the identified/provided disk visible to two VIOSes</p>
+<dl class="simple">
+<dt>volume_name (optional, str, None)</dt><dd><p>Physical volume name visible through VIOS. This option is mutually exclusive with <em>volume_size</em></p>
+</dd>
+<dt>volume_size (optional, int, None)</dt><dd><p>Physical volume size in MB</p>
+</dd>
+<dt>vios_name (optional, str, None)</dt><dd><p>VIOS name to which mentioned <em>volume_name</em> is present. This option is mutually exclusive with <em>volume_size</em></p>
+</dd>
+</dl>
+</dd>
+<dt>virt_network_name (optional, str, None)</dt><dd><p>Virtual Network Configuration of the Partition</p>
+</dd>
+<dt>retain_vios_cfg (optional, bool, None)</dt><dd><p>Do not remove the VIOS configuration like server adapters, storage mappings associated with the partition when deleting the partition</p>
+<p>Applicable only for delete</p>
+<p>Default is to remove the associated VIOS configuration when deleting the partition</p>
+</dd>
+<dt>delete_vdisks (optional, bool, None)</dt><dd><p>Option to delete the Virtual Disks associated with the partition when deleting the partition</p>
+<p>Default is to not delete the virtual disks</p>
+</dd>
+<dt>state (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">present</span></code> creates a partition of specifed <em>os_type</em>, <em>vm_name</em>, <em>proc</em> and <em>memory</em> on specified <em>system_name</em></p>
 <p><code class="docutils literal notranslate"><span class="pre">absent</span></code> deletes a partition of specified <em>vm_name</em> on specified <em>system_name</em></p>
+</dd>
+<dt>action (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">shutdown</span></code> shutdown a partition of specified <em>vm_name</em> on specified <em>system_name</em></p>
+<p><code class="docutils literal notranslate"><span class="pre">poweron</span></code> poweron a partition of specified <em>vm_name</em> with spefified <em>prof_name</em>, <em>keylock</em>, <em>iIPLsource</em> on specified <em>system_name</em></p>
 </dd>
 </dl>
 </div></blockquote>
@@ -258,7 +301,7 @@
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ul class="simple">
-<li><p>Currently supports creation of partition (powervm instance) with only processor and memory settings on dedicated mode</p></li>
+<li><p>Currently the storage configuration supports only the addition of physical volume from VCSI backed volume through VIOS</p></li>
 </ul>
 </div>
 </div>
@@ -297,6 +340,39 @@
       <span class="nt">system_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;system_name&gt;</span>
       <span class="nt">vm_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;vm_name&gt;</span>
       <span class="nt">state</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">absent</span>
+
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Shutdown a logical partition</span>
+  <span class="nt">powervm_lpar_instance</span><span class="p">:</span>
+      <span class="nt">hmc_host</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&#39;</span>
+      <span class="nt">hmc_auth</span><span class="p">:</span>
+         <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
+         <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
+      <span class="nt">system_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;system_name&gt;</span>
+      <span class="nt">vm_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;vm_name&gt;</span>
+      <span class="nt">action</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">shutdown</span>
+
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Activate a AIX/Linux logical partition with user defined profile_name</span>
+  <span class="nt">powervm_lpar_instance</span><span class="p">:</span>
+      <span class="nt">hmc_host</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&#39;</span>
+      <span class="nt">hmc_auth</span><span class="p">:</span>
+         <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
+         <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
+      <span class="nt">system_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;system_name&gt;</span>
+      <span class="nt">vm_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;vm_name&gt;</span>
+      <span class="nt">prof_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;profile_name&gt;</span>
+      <span class="nt">action</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">poweron</span>
+
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Activate IBMi based on its current configuration with keylock and iIPLsource options</span>
+  <span class="nt">powervm_lpar_instance</span><span class="p">:</span>
+      <span class="nt">hmc_host</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&#39;</span>
+      <span class="nt">hmc_auth</span><span class="p">:</span>
+         <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
+         <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
+      <span class="nt">system_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;system_name&gt;</span>
+      <span class="nt">vm_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;vm_name&gt;</span>
+      <span class="nt">keylock</span><span class="p">:</span> <span class="s">&#39;norm&#39;</span>
+      <span class="nt">iIPLsource</span><span class="p">:</span> <span class="s">&#39;d&#39;</span>
+      <span class="nt">action</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">poweron</span>
 </pre></div>
 </div>
 </div>
@@ -317,6 +393,7 @@
 <h3>Authors<a class="headerlink" href="#authors" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Anil Vijayan (&#64;AnilVijayan)</p></li>
+<li><p>Navinakumar Kandakur (&#64;nkandak1)</p></li>
 </ul>
 </div>
 </div>
@@ -327,29 +404,21 @@
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="../plugins.html" class="btn btn-neutral float-right" title="Plugins" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="hmc_update_upgrade.html" class="btn btn-neutral float-left" title="hmc_update_upgrade – Manages the update and upgrade of HMC" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="../plugins.html" class="btn btn-neutral float-right" title="Plugins" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="hmc_update_upgrade.html" class="btn btn-neutral float-left" title="hmc_update_upgrade – Manages the update and upgrade of HMC" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2020, IBM
+        &#169; Copyright 2020, IBM.
 
     </p>
   </div> 
 
 </footer>
-
         </div>
       </div>
 
