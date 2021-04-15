@@ -36,14 +36,14 @@ script:
   #  W503: line break before binary operator (PEP8 advices to put logical operator ahead)
   - flake8 plugins/modules/* --max-line-length=160 --ignore=E402,W503
   - flake8 plugins/module_utils/* --max-line-length=160 --ignore=E402,W503
+  - flake8 plugins/inventory/* --max-line-length=160 --ignore=E402,W503  
   - flake8 tests/unit/*/* --max-line-length=160 --ignore=E402,W503
   - ansible-galaxy collection build
   - ansible-galaxy collection install ibm-power_hmc*
   - build_path=`pwd`
   - cd /home/travis/.ansible/collections/ansible_collections/ibm/power_hmc
 
-  - pyenv global 3.7 2.7 
-  - ansible-test sanity --python 2.7 --skip-test shellcheck
+  - pyenv global 3.7
   - ansible-test sanity --python 3.7 --skip-test shellcheck
   - cd /home/travis/.ansible/collections/
   - python -m pytest

@@ -71,6 +71,7 @@ def _logonPayload(user, password):
 def _jobHeader(session):
 
     header = {'Content-Type': 'application/vnd.ibm.powervm.web+xml; type=JobRequest',
+              'Accept': 'application/atom+xml',
               'Authorization': 'Basic Og=='}
     header['X-API-Session'] = session
 
@@ -89,13 +90,13 @@ def _kxe_kb_schema(kxe=None, kb=None, schema=None):
     return attrib
 
 
-def _job_parameter(parameter, parameterVal):
+def _job_parameter(parameter, parameterVal, schemaVersion="V1_0"):
 
     metaData = ET.Element("Metadata")
     metaData.insert(1, ET.Element("Atom"))
 
     jobParameter = ET.Element("JobParameter")
-    jobParameter.attrib = _kxe_kb_schema(schema="V1_0")
+    jobParameter.attrib = _kxe_kb_schema(schema=schemaVersion)
     jobParameter.insert(1, metaData)
     parameterName = ET.Element("ParameterName")
     parameterName.attrib = _kxe_kb_schema("false", "ROR")
@@ -109,12 +110,12 @@ def _job_parameter(parameter, parameterVal):
     return jobParameter
 
 
-def _job_RequestPayload(reqdOperation, jobParams):
+def _job_RequestPayload(reqdOperation, jobParams, schemaVersion="V1_0"):
     root = ET.Element("JobRequest")
     root.attrib = {"xmlns:JobRequest": "http://www.ibm.com/xmlns/systems/power/firmware/web/mc/2012_10/",
                    "xmlns": "http://www.ibm.com/xmlns/systems/power/firmware/web/mc/2012_10/",
                    "xmlns:ns2": "http://www.w3.org/XML/1998/namespace/k2",
-                   "schemaVersion": "V1_0"
+                   "schemaVersion": schemaVersion
                    }
 
     metaData = ET.Element("Metadata")
@@ -122,7 +123,7 @@ def _job_RequestPayload(reqdOperation, jobParams):
     root.insert(1, metaData)
 
     requestedOperation = ET.Element("RequestedOperation")
-    requestedOperation.attrib = _kxe_kb_schema("false", "CUR", "V1_0")
+    requestedOperation.attrib = _kxe_kb_schema("false", "CUR", schemaVersion)
     requestedOperation.insert(1, metaData)
 
     index = 2
@@ -135,7 +136,7 @@ def _job_RequestPayload(reqdOperation, jobParams):
         index = index + 1
 
     jobParameters = ET.Element("JobParameters")
-    jobParameters.attrib = _kxe_kb_schema("false", "CUR", "V1_0")
+    jobParameters.attrib = _kxe_kb_schema("false", "CUR", schemaVersion)
     jobParameters.insert(1, metaData)
 
     index = 2
@@ -209,18 +210,17 @@ class HmcRestClient:
                  force_basic_auth=True,
                  timeout=30)
 
-    def fetchJobStatus(self, jobId, template=False, ignoreSearch=False):
+    def fetchJobStatus(self, jobId, template=False, timeout_counter=0):
 
         if template:
             url = "https://{0}/rest/api/templates/jobs/{1}".format(self.hmc_ip, jobId)
         else:
             url = "https://{0}/rest/api/uom/jobs/{1}".format(self.hmc_ip, jobId)
 
-        header = {'X-API-Session': self.session}
+        header = {'X-API-Session': self.session, 'Accept': "application/atom+xml"}
         result = None
 
         jobStatus = ''
-        timeout_counter = 0
         while True:
             time.sleep(30)
             timeout_counter += 1
@@ -233,13 +233,23 @@ class HmcRestClient:
             doc = xml_strip_namespace(resp)
 
             jobStatus = doc.xpath('//Status')[0].text
+            logger.debug("jobStatus: %s", jobStatus)
 
-            if jobStatus == 'COMPLETED_OK' or jobStatus == 'COMPLETED_WITH_ERROR':
-                if ignoreSearch:
-                    result = doc
-                else:
-                    result = doc.xpath("//ParameterValue")[3].text
+            if jobStatus == 'COMPLETED_OK':
+                logger.debug(resp)
+                result = doc
                 break
+
+            if jobStatus == 'COMPLETED_WITH_ERROR':
+                logger.debug("jobStatus: %s", jobStatus)
+                resp_msg = None
+                resp_msg = doc.xpath("//ParameterName[text()='result']/following-sibling::ParameterValue")
+                if resp_msg:
+                    logger.debug("debugger: %s", resp_msg[0].text)
+                    raise HmcError(resp_msg[0].text)
+                else:
+                    err_msg = "Failed: Job completed with error"
+                    raise HmcError(err_msg)
 
             if jobStatus != 'RUNNING':
                 logger.debug("jobStatus: %s", jobStatus)
@@ -262,14 +272,12 @@ class HmcRestClient:
         url = "https://{0}/rest/api/uom/ManagedSystem/search/(SystemName=={1})".format(self.hmc_ip, system_name)
         header = {'X-API-Session': self.session,
                   'Accept': 'application/vnd.ibm.powervm.uom+xml; type=ManagedSystem'}
-
         response = open_url(url,
                             headers=header,
                             method='GET',
                             validate_certs=False,
                             force_basic_auth=True,
                             timeout=60)
-
         if response.code == 204:
             return None, None
 
@@ -317,7 +325,7 @@ class HmcRestClient:
 
         lpar_response = self.getLogicalPartitionsQuick(system_uuid)
         if lpar_response:
-            lpar_quick_list = json.loads(self.getLogicalPartitionsQuick(system_uuid))
+            lpar_quick_list = json.loads(lpar_response)
 
         if lpar_quick_list:
             for eachLpar in lpar_quick_list:
@@ -381,6 +389,22 @@ class HmcRestClient:
         response = resp.read()
         return response
 
+    def getLogicalPartitionQuick(self, partition_uuid):
+        url = "https://{0}/rest/api/uom/LogicalPartition/{1}/quick".format(self.hmc_ip, partition_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': '*/*'}
+        resp = open_url(url,
+                        headers=header,
+                        method='GET',
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=60)
+        if resp.code != 200:
+            logger.debug("Get of Logical Partition failed. Respsonse code: %d", resp.code)
+            return None
+        response = resp.read()
+        return response
+
     def getVirtualIOServers(self, system_uuid):
         url = "https://{0}/rest/api/uom/ManagedSystem/{1}/VirtualIOServer?group=Advanced".format(self.hmc_ip, system_uuid)
         header = {'X-API-Session': self.session,
@@ -413,6 +437,28 @@ class HmcRestClient:
         response = resp.read()
         return response
 
+    def getVirtualIOServer(self, vios_uuid, group=None):
+        header = {'X-API-Session': self.session,
+                  'Accept': 'application/vnd.ibm.powervm.uom+xml; type=VirtualIOServer'}
+
+        if group:
+            url = "https://{0}/rest/api/uom/VirtualIOServer/{1}?group={2}".format(self.hmc_ip, vios_uuid, group)
+        else:
+            url = "https://{0}/rest/api/uom/VirtualIOServer/{1}".format(self.hmc_ip, vios_uuid)
+
+        resp = open_url(url,
+                        headers=header,
+                        method='GET',
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=3000)
+
+        if resp.code != 200:
+            logger.debug("Get of Virtual IO Server failed. Respsonse code: %d", resp.code)
+            return None
+        response = xml_strip_namespace(resp.read())
+        return response
+
     def deleteLogicalPartition(self, partition_uuid):
         url = "https://{0}/rest/api/uom/LogicalPartition/{1}".format(self.hmc_ip, partition_uuid)
         header = {'X-API-Session': self.session,
@@ -425,26 +471,55 @@ class HmcRestClient:
                  force_basic_auth=True,
                  timeout=60)
 
-    def updatePartitionTemplate(self, uuid, template_xml, config_dict=None):
-        if config_dict:
-            template_xml.xpath("//partitionId")[0].text = config_dict['lpar_id']
-            template_xml.xpath("//partitionName")[0].text = config_dict['vm_name']
+    def updateProcMemSettingsToDom(self, template_xml, config_dict):
+        shared_config_tag = None
+        template_xml.xpath("//partitionId")[0].text = config_dict['lpar_id']
+        template_xml.xpath("//partitionName")[0].text = config_dict['vm_name']
 
+        # shared processor configuration
+        if config_dict['proc_unit']:
+            shared_payload = '''<sharedProcessorConfiguration kxe="false" kb="CUD" schemaVersion="V1_0">
+                <Metadata>
+                    <Atom/>
+                </Metadata>
+                <sharedProcessorPoolId kxe="false" kb="CUD">0</sharedProcessorPoolId>
+                <uncappedWeight kxe="false" kb="CUD">128</uncappedWeight>
+                <minProcessingUnits kb="CUD" kxe="false">0.1</minProcessingUnits>
+                <desiredProcessingUnits kxe="false" kb="CUD">{0}</desiredProcessingUnits>
+                <maxProcessingUnits kb="CUD" kxe="false">{0}</maxProcessingUnits>
+                <minVirtualProcessors kb="CUD" kxe="false">1</minVirtualProcessors>
+                <desiredVirtualProcessors kxe="false" kb="CUD">{1}</desiredVirtualProcessors>
+                <maxVirtualProcessors kxe="false" kb="CUD">{1}</maxVirtualProcessors>
+                </sharedProcessorConfiguration>'''.format(config_dict['proc_unit'], config_dict['proc'])
+
+            shared_config_tag = template_xml.xpath("//sharedProcessorConfiguration")[0]
+            if shared_config_tag:
+                shared_config_tag.getparent().remove(shared_config_tag)
+            sharingMode_tag = template_xml.xpath("//sharingMode")[0]
+            sharingMode_tag.addnext(etree.XML(shared_payload))
+
+            dedi_tag = template_xml.xpath("//dedicatedProcessorConfiguration")[0]
+            if dedi_tag:
+                dedi_tag.getparent().remove(dedi_tag)
+
+            template_xml.xpath("//currHasDedicatedProcessors")[0].text = 'false'
+            template_xml.xpath("//currSharingMode")[0].text = 'uncapped'
+        else:
             template_xml.xpath("//minProcessors")[0].text = '1'
             template_xml.xpath("//desiredProcessors")[0].text = config_dict['proc']
             template_xml.xpath("//maxProcessors")[0].text = config_dict['proc']
 
-            template_xml.xpath("//currMinMemory")[0].text = config_dict['mem']
-            template_xml.xpath("//currMemory")[0].text = config_dict['mem']
-            template_xml.xpath("//currMaxMemory")[0].text = config_dict['mem']
+        template_xml.xpath("//currMinMemory")[0].text = config_dict['mem']
+        template_xml.xpath("//currMemory")[0].text = config_dict['mem']
+        template_xml.xpath("//currMaxMemory")[0].text = config_dict['mem']
 
+    def updatePartitionTemplate(self, uuid, template_xml):
         templateUrl = "https://{0}/rest/api/templates/PartitionTemplate/{1}".format(self.hmc_ip, uuid)
         header = {'X-API-Session': self.session,
                   'Content-Type': 'application/vnd.ibm.powervm.templates+xml;type=PartitionTemplate'}
 
         partiton_template_xmlstr = etree.tostring(template_xml)
         partiton_template_xmlstr = partiton_template_xmlstr.decode("utf-8").replace("PartitionTemplate", LPAR_TEMPLATE_NS, 1)
-        logger.debug(partiton_template_xmlstr)
 
         resp = open_url(templateUrl,
                         headers=header,
@@ -592,7 +667,7 @@ class HmcRestClient:
 
         jobID = checkjob_resp.xpath('//JobID')[0].text
 
-        return self.fetchJobStatus(jobID, template=True, ignoreSearch=True)
+        return self.fetchJobStatus(jobID, template=True)
 
     def deployPartitionTemplate(self, draft_uuid, cec_uuid):
 
@@ -618,7 +693,7 @@ class HmcRestClient:
 
         deploy_resp = xml_strip_namespace(resp)
         jobID = deploy_resp.xpath('//JobID')[0].text
-        return self.fetchJobStatus(jobID, template=True, ignoreSearch=True)
+        return self.fetchJobStatus(jobID, template=True)
 
     def transformPartitionTemplate(self, draft_uuid, cec_uuid):
 
@@ -644,4 +719,217 @@ class HmcRestClient:
 
         transform_resp = xml_strip_namespace(resp)
         jobID = transform_resp.xpath('//JobID')[0].text
-        return self.fetchJobStatus(jobID, template=True, ignoreSearch=True)
+        return self.fetchJobStatus(jobID, template=True)
+
+    def poweroffPartition(self, vm_uuid, operation, immediate='false'):
+        url = "https://{0}/rest/api/uom/LogicalPartition/{1}/do/PowerOff".format(self.hmc_ip, vm_uuid)
+        header = _jobHeader(self.session)
+
+        reqdOperation = {'OperationName': 'PowerOff',
+                         'GroupName': 'LogicalPartition',
+                         'ProgressType': 'DISCRETE'}
+
+        jobParams = {'immediate': immediate,
+                     'restart': 'false',
+                     'operation': operation}
+
+        payload = _job_RequestPayload(reqdOperation, jobParams)
+
+        resp = open_url(url,
+                        headers=header,
+                        data=payload,
+                        method='PUT',
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=30).read()
+
+        shutdown_resp = xml_strip_namespace(resp)
+        jobID = shutdown_resp.xpath('//JobID')[0].text
+        return self.fetchJobStatus(jobID, timeout_counter=40)
+
+    def poweronPartition(self, vm_uuid, prof_uuid, keylock, iIPLsource, os_type):
+        url = "https://{0}/rest/api/uom/LogicalPartition/{1}/do/PowerOn".format(self.hmc_ip, vm_uuid)
+        header = _jobHeader(self.session)
+
+        reqdOperation = {'OperationName': 'PowerOn',
+                         'GroupName': 'LogicalPartition',
+                         'ProgressType': 'DISCRETE'}
+
+        jobParams = {'force': 'false',
+                     'novsi': 'true',
+                     'bootmode': 'norm'}
+
+        if prof_uuid:
+            jobParams.update({'LogicalPartitionProfile': prof_uuid})
+
+        if keylock:
+            if keylock == 'normal':
+                keylock = 'norm'
+            jobParams.update({'keylock': keylock})
+
+        if os_type == 'OS400' and iIPLsource:
+            jobParams.update({'iIPLsource': iIPLsource})
+
+        payload = _job_RequestPayload(reqdOperation, jobParams)
+
+        resp = open_url(url,
+                        headers=header,
+                        data=payload,
+                        method='PUT',
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=30).read()
+
+        activate_resp = xml_strip_namespace(resp)
+        jobID = activate_resp.xpath('//JobID')[0].text
+        return self.fetchJobStatus(jobID, timeout_counter=40)
+
+    def getPartitionProfiles(self, vm_uuid):
+        url = "https://{0}/rest/api/uom/LogicalPartition/{1}/LogicalPartitionProfile".format(self.hmc_ip, vm_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': 'application/vnd.ibm.powervm.uom+xml; type=LogicalPartitionProfile'}
+
+        response = open_url(url,
+                            headers=header,
+                            method='GET',
+                            validate_certs=False,
+                            force_basic_auth=True,
+                            timeout=60)
+
+        if response.code == 204:
+            return None
+
+        lparProfiles_root = xml_strip_namespace(response.read())
+        lparProfiles = lparProfiles_root.xpath('//LogicalPartitionProfile')
+        return lparProfiles
+
+    def add_vscsi_payload(self, lpar_template_dom, pv_tup):
+
+        payload = ''
+        pv_tup_list_slice = pv_tup[:2]
+        for pv_name, vios_name, pv_obj in pv_tup_list_slice:
+            payload += '''
+            <VirtualSCSIClientAdapter schemaVersion="V1_0">
+                    <Metadata>
+                            <Atom/>
+                    </Metadata>
+                    <name kb="CUD" kxe="false"></name>
+                    <associatedLogicalUnits kb="CUD" kxe="false" schemaVersion="V1_0">
+                            <Metadata>
+                                    <Atom/>
+                            </Metadata>
+                    </associatedLogicalUnits>
+                    <associatedPhysicalVolume kb="CUD" kxe="false" schemaVersion="V1_0">
+                            <Metadata>
+                                    <Atom/>
+                            </Metadata>
+                            <PhysicalVolume schemaVersion="V1_0">
+                                    <Metadata>
+                                            <Atom/>
+                                    </Metadata>
+                                    <name kb="CUD" kxe="false">{0}</name>
+                            </PhysicalVolume>
+                    </associatedPhysicalVolume>
+                    <connectingPartitionName kxe="false" kb="CUD">{1}</connectingPartitionName>
+                    <AssociatedTargetDevices kb="CUD" kxe="false" schemaVersion="V1_0">
+                            <Metadata>
+                                    <Atom/>
+                            </Metadata>
+                    </AssociatedTargetDevices>
+                    <associatedVirtualOpticalMedia kb="CUD" kxe="false" schemaVersion="V1_0">
+                            <Metadata>
+                                    <Atom/>
+                            </Metadata>
+                    </associatedVirtualOpticalMedia>
+            </VirtualSCSIClientAdapter>'''.format(pv_name, vios_name)
+
+        vscsi_client_payload = '''
+        <virtualSCSIClientAdapters kxe="false" kb="CUD" schemaVersion="V1_0">
+        <Metadata>
+                <Atom/>
+        </Metadata>
+        {0}
+        </virtualSCSIClientAdapters>'''.format(payload)
+        suspendEnableTag = lpar_template_dom.xpath("//suspendEnable")[0]
+        suspendEnableTag.addprevious(etree.XML(vscsi_client_payload))
+
+    def getFreePhyVolume(self, vios_uuid):
+        logger.debug(vios_uuid)
+        url = "https://{0}/rest/api/uom/VirtualIOServer/{1}/do/GetFreePhysicalVolumes".format(self.hmc_ip, vios_uuid)
+        header = _jobHeader(self.session)
+
+        reqdOperation = {'OperationName': 'GetFreePhysicalVolumes',
+                         'GroupName': 'VirtualIOServer',
+                         'ProgressType': 'DISCRETE'}
+        jobParams = {}
+
+        payload = _job_RequestPayload(reqdOperation, jobParams, "V1_3_0")
+
+        resp = open_url(url,
+                        headers=header,
+                        data=payload,
+                        method='PUT',
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=30).read()
+
+        resp = xml_strip_namespace(resp)
+        jobID = resp.xpath('//JobID')[0].text
+
+        pv_resp = self.fetchJobStatus(jobID)
+        logger.debug("Free Physical Volume job response")
+        logger.debug(pv_resp)
+        pv_xml = pv_resp.xpath("//Results//ParameterName[text()='result']//following-sibling::ParameterValue")[0].text
+        pv_xml = pv_xml.encode()
+        resp = xml_strip_namespace(pv_xml)
+        list_pv_elem = resp.xpath("//PhysicalVolume")
+
+        disk_dict = {}
+        for each in list_pv_elem:
+            disk_dict.update({each.xpath("VolumeUniqueID")[0].text: each})
+        return list_pv_elem
+
+    def getVirtualNetworksQuick(self, system_uuid):
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/VirtualNetwork/quick/All".format(self.hmc_ip, system_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': '*/*'}
+        resp = open_url(url,
+                        headers=header,
+                        method='GET',
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=60)
+        if resp.code != 200:
+            logger.debug("Get of Logical Partitions failed. Respsonse code: %d", resp.code)
+            return None
+        response = resp.read()
+        vnw_quick_list = json.loads(response)
+        return vnw_quick_list
+
+    def updateVirtualNWSettingsToDom(self, template_xml, config_dict):
+        vnw_payload = '''
+        <clientNetworkAdapters kb="CUD" kxe="false" schemaVersion="V1_0">
+            <Metadata>
+                <Atom/>
+            </Metadata>
+            <ClientNetworkAdapter schemaVersion="V1_0">
+                <Metadata>
+                    <Atom/>
+                </Metadata>
+                <clientVirtualNetworks kb="CUD" kxe="false" schemaVersion="V1_0">
+                    <Metadata>
+                        <Atom/>
+                    </Metadata>
+                    <ClientVirtualNetwork schemaVersion="V1_0">
+                        <Metadata>
+                            <Atom/>
+                        </Metadata>
+                        <name kxe="false" kb="CUD">{0}</name>
+                        <uuid kb="CUD" kxe="false">{1}</uuid>
+                    </ClientVirtualNetwork>
+                </clientVirtualNetworks>
+            </ClientNetworkAdapter>
+        </clientNetworkAdapters>'''.format(config_dict['nw_name'], config_dict['nw_uuid'])
+
+        client_nw_adapter_tag = template_xml.xpath("//ioConfiguration")[0]
+        client_nw_adapter_tag.addnext(etree.XML(vnw_payload))

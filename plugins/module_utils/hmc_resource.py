@@ -230,3 +230,14 @@ class Hmc():
         avail_list = list(set(supp_id_list) - set(existing_lpar_list))
         result_list = sorted(avail_list)
         return result_list[0]
+
+    def deletePartition(self, cecName, lparName, deleteAssociatedViosCfg=True, deleteVdisks=False):
+        rmsyscfgCmd = self.CMD['RMSYSCFG'] + \
+            self.OPT['RMSYSCFG']['-R']['LPAR'] + \
+            self.OPT['RMSYSCFG']['-M'] + cecName + \
+            self.OPT['RMSYSCFG']['-N'] + lparName
+        if deleteAssociatedViosCfg:
+            rmsyscfgCmd += self.OPT['RMSYSCFG']['VIOSCFG']
+        if deleteVdisks:
+            rmsyscfgCmd += self.OPT['RMSYSCFG']['VDISKS']
+        self.hmcconn.execute(rmsyscfgCmd)

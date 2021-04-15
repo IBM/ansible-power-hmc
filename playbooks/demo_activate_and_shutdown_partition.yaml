@@ -1,5 +1,5 @@
 ---
-- name: HMC create partition
+- name: HMC build management
   hosts: hmcs
   collections:
       - ibm.power_hmc
@@ -16,18 +16,21 @@
                 3566
 
   tasks:
-  - name: Create logical partition
+  - name: activate logical partition
     powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth: "{{ curr_hmc_auth }}"
-      system_name: zepp31fp 
+      system_name: f5a1
       vm_name: test123
-      proc: 2
-      mem: 2048
-      os_type: aix
-      state: present
+      prof_name: default_profile
+      action: poweron
     register: testout
 
-  - name: Stdout the created logical partition
-    debug:
-        msg: '{{ testout }}'
+  - name: shutdown logical partition
+    powervm_lpar_instance:
+      hmc_host: '{{ inventory_hostname }}'
+      hmc_auth: "{{ curr_hmc_auth }}"
+      system_name: f5a1
+      vm_name: test123
+      action: shutdown
+      
