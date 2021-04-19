@@ -705,6 +705,13 @@ def remove_partition(module, params):
     hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(hmc_conn)
 
+    # As this feature is supported only from 930 release
+    hmc_version = hmc.listHMCVersion()
+    sp_level = int(hmc_version['SERVICEPACK'])
+    if sp_level < 930:
+        retainViosCfg = False
+        deleteVdisks = False
+
     try:
         hmc.deletePartition(system_name, vm_name, not(retainViosCfg), deleteVdisks)
     except HmcError as del_lpar_error:
