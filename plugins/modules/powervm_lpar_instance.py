@@ -21,7 +21,8 @@ author:
     - Navinakumar Kandakur (@nkandak1)
 short_description: Create, Delete, Shutdown and Activate an AIX/Linux or IBMi partition
 notes:
-    - Currently the storage configuration supports only the addition of physical volume from VCSI backed volume through VIOS
+    - The storage configuration supports only the addition of physical volume from VCSI backed volume through VIOS
+    - The network configuration currently will not support SRIOV or VNIC related configurations
 description:
     - "Creates AIX/Linux or IBMi partition with specified configuration details on mentioned system"
     - "Or Deletes specified AIX/Linux or IBMi partition on specified system"
@@ -126,7 +127,9 @@ options:
                 type: str
     virt_network_name:
         description:
-            - Virtual Network Configuration of the Partition
+            - Virtual Network Name to be attached to the partition
+            - This implicitly adds a Virtual Ethernet Adapter with givem virtual network to the partition
+            - Make sure provided Virtual Network has been attached to an active Network Bridge for external network communication
         type: str
     retain_vios_cfg:
         description:
@@ -704,6 +707,13 @@ def remove_partition(module, params):
 
     hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(hmc_conn)
+
+    # As this feature is supported only from 930 release
+    hmc_version = hmc.listHMCVersion()
+    sp_level = int(hmc_version['SERVICEPACK'])
+    if sp_level < 930:
+        retainViosCfg = False
+        deleteVdisks = False
 
     try:
         hmc.deletePartition(system_name, vm_name, not(retainViosCfg), deleteVdisks)

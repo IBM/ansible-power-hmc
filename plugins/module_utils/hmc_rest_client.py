@@ -189,7 +189,7 @@ class HmcRestClient:
                         data=_logonPayload(self.username, self.password),
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=30)
+                        timeout=300)
         logger.debug(resp.code)
 
         response = resp.read()
@@ -208,7 +208,7 @@ class HmcRestClient:
                  method='DELETE',
                  validate_certs=False,
                  force_basic_auth=True,
-                 timeout=30)
+                 timeout=300)
 
     def fetchJobStatus(self, jobId, template=False, timeout_counter=0):
 
@@ -229,7 +229,7 @@ class HmcRestClient:
                             method='GET',
                             validate_certs=False,
                             force_basic_auth=True,
-                            timeout=30).read()
+                            timeout=300).read()
             doc = xml_strip_namespace(resp)
 
             jobStatus = doc.xpath('//Status')[0].text
@@ -277,7 +277,7 @@ class HmcRestClient:
                             method='GET',
                             validate_certs=False,
                             force_basic_auth=True,
-                            timeout=60)
+                            timeout=300)
         if response.code == 204:
             return None, None
 
@@ -295,7 +295,7 @@ class HmcRestClient:
                             method='GET',
                             validate_certs=False,
                             force_basic_auth=True,
-                            timeout=300)
+                            timeout=3600)
 
         if response.code == 204:
             return None, None
@@ -312,7 +312,7 @@ class HmcRestClient:
                         method='GET',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=60)
+                        timeout=300)
         if resp.code != 200:
             logger.debug("Get of Managed Systems failed. Respsonse code: %d", resp.code)
             return None
@@ -345,7 +345,7 @@ class HmcRestClient:
                         method='GET',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=60)
+                        timeout=300)
         if resp.code != 200:
             logger.debug("Get of Logical Partition failed. Respsonse code: %d", resp.code)
             return None, None
@@ -366,7 +366,7 @@ class HmcRestClient:
                         method='GET',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=3000)
+                        timeout=3600)
         if resp.code != 200:
             logger.debug("Get of Logical Partitions failed. Respsonse code: %d", resp.code)
             return None
@@ -382,7 +382,7 @@ class HmcRestClient:
                         method='GET',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=60)
+                        timeout=300)
         if resp.code != 200:
             logger.debug("Get of Logical Partitions failed. Respsonse code: %d", resp.code)
             return None
@@ -398,7 +398,7 @@ class HmcRestClient:
                         method='GET',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=60)
+                        timeout=300)
         if resp.code != 200:
             logger.debug("Get of Logical Partition failed. Respsonse code: %d", resp.code)
             return None
@@ -414,7 +414,7 @@ class HmcRestClient:
                         method='GET',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=3000)
+                        timeout=3600)
         if resp.code != 200:
             logger.debug("Get of Virtual IO Servers failed. Respsonse code: %d", resp.code)
             return None
@@ -430,7 +430,7 @@ class HmcRestClient:
                         method='GET',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=60)
+                        timeout=300)
         if resp.code != 200:
             logger.debug("Get of Virtual IO Servers failed. Respsonse code: %d", resp.code)
             return None
@@ -451,7 +451,7 @@ class HmcRestClient:
                         method='GET',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=3000)
+                        timeout=3600)
 
         if resp.code != 200:
             logger.debug("Get of Virtual IO Server failed. Respsonse code: %d", resp.code)
@@ -469,7 +469,7 @@ class HmcRestClient:
                  method='DELETE',
                  validate_certs=False,
                  force_basic_auth=True,
-                 timeout=60)
+                 timeout=300)
 
     def updateProcMemSettingsToDom(self, template_xml, config_dict):
         shared_config_tag = None
@@ -527,7 +527,7 @@ class HmcRestClient:
                         method='POST',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=30).read()
+                        timeout=300).read()
         logger.debug(resp.decode("utf-8"))
 
     def quickGetPartition(self, lpar_uuid):
@@ -538,7 +538,7 @@ class HmcRestClient:
                         method='GET',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=60)
+                        timeout=300)
 
         lpar_quick_dom = resp.read()
         lpar_dict = json.loads(lpar_quick_dom)
@@ -553,7 +553,7 @@ class HmcRestClient:
                         method='GET',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=60)
+                        timeout=300)
         if resp.code == 200:
             response = resp.read()
         else:
@@ -581,7 +581,7 @@ class HmcRestClient:
                         method='GET',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=30)
+                        timeout=300)
         if resp.code == 200:
             response = resp.read()
         else:
@@ -610,7 +610,7 @@ class HmcRestClient:
                         method='PUT',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=30)
+                        timeout=300)
         # This is to handle the case of unauthorized access, instead of getting error http code seems to be 200
         response = resp.read()
         response_dom = xml_strip_namespace(response)
@@ -636,7 +636,7 @@ class HmcRestClient:
                  method='DELETE',
                  validate_certs=False,
                  force_basic_auth=True,
-                 timeout=30)
+                 timeout=300)
 
     def checkPartitionTemplate(self, template_name, cec_uuid):
         header = _jobHeader(self.session)
@@ -661,7 +661,7 @@ class HmcRestClient:
                         method='PUT',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=30).read()
+                        timeout=300).read()
 
         checkjob_resp = xml_strip_namespace(resp)
 
@@ -689,7 +689,7 @@ class HmcRestClient:
                         method='PUT',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=30).read()
+                        timeout=300).read()
 
         deploy_resp = xml_strip_namespace(resp)
         jobID = deploy_resp.xpath('//JobID')[0].text
@@ -715,7 +715,7 @@ class HmcRestClient:
                         method='PUT',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=30).read()
+                        timeout=300).read()
 
         transform_resp = xml_strip_namespace(resp)
         jobID = transform_resp.xpath('//JobID')[0].text
@@ -741,7 +741,7 @@ class HmcRestClient:
                         method='PUT',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=30).read()
+                        timeout=300).read()
 
         shutdown_resp = xml_strip_namespace(resp)
         jobID = shutdown_resp.xpath('//JobID')[0].text
@@ -778,7 +778,7 @@ class HmcRestClient:
                         method='PUT',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=30).read()
+                        timeout=300).read()
 
         activate_resp = xml_strip_namespace(resp)
         jobID = activate_resp.xpath('//JobID')[0].text
@@ -794,7 +794,7 @@ class HmcRestClient:
                             method='GET',
                             validate_certs=False,
                             force_basic_auth=True,
-                            timeout=60)
+                            timeout=300)
 
         if response.code == 204:
             return None
@@ -871,7 +871,7 @@ class HmcRestClient:
                         method='PUT',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=30).read()
+                        timeout=300).read()
 
         resp = xml_strip_namespace(resp)
         jobID = resp.xpath('//JobID')[0].text
@@ -898,7 +898,7 @@ class HmcRestClient:
                         method='GET',
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=60)
+                        timeout=300)
         if resp.code != 200:
             logger.debug("Get of Logical Partitions failed. Respsonse code: %d", resp.code)
             return None
