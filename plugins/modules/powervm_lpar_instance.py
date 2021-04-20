@@ -128,7 +128,7 @@ options:
     virt_network_name:
         description:
             - Virtual Network Name to be attached to the partition
-            - This implicitly adds a Virtual Ethernet Adapter with givem virtual network to the partition
+            - This implicitly adds a Virtual Ethernet Adapter with given virtual network to the partition
             - Make sure provided Virtual Network has been attached to an active Network Bridge for external network communication
         type: str
     retain_vios_cfg:
@@ -157,7 +157,7 @@ options:
 '''
 
 EXAMPLES = '''
-- name: Create an IBMi logical partition instance
+- name: Create an IBMi logical partition instance with shared proc, volume_cong's vios_name and volume_name values
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -166,11 +166,15 @@ EXAMPLES = '''
       system_name: <system_name>
       vm_name: <vm_name>
       proc: 4
+      proc_unit: 4
       mem: 20480
+      volume_config:
+         vios_name: <viosname>
+         volume_name: <volumename>
       os_type: ibmi
       state: present
 
-- name: Create an AIX/Linux logical partition instance with default proc and mem values
+- name: Create an AIX/Linux logical partition instance with default proc, mem, virt_network_name and  volume_config's volumes_size values
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -178,10 +182,13 @@ EXAMPLES = '''
          password: '{{ hmc_password }}'
       system_name: <system_name>
       vm_name: <vm_name>
+      volume_config:
+         volume_size: <size>
+      virt_network_name: <virtual_nw_name>
       os_type: aix_linux
       state: present
 
-- name: Delete a logical partition instance
+- name: Delete a logical partition instance with retain_vios_cfg and delete_vdisk options
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -189,6 +196,8 @@ EXAMPLES = '''
          password: '{{ hmc_password }}'
       system_name: <system_name>
       vm_name: <vm_name>
+      retain_vios_cfg: True
+      delete_vdisks: True
       state: absent
 
 - name: Shutdown a logical partition
@@ -714,9 +723,11 @@ def remove_partition(module, params):
     if sp_level < 930:
         retainViosCfg = False
         deleteVdisks = False
+    else:
+        retainViosCfg = not(retainViosCfg)
 
     try:
-        hmc.deletePartition(system_name, vm_name, not(retainViosCfg), deleteVdisks)
+        hmc.deletePartition(system_name, vm_name, retainViosCfg, deleteVdisks)
     except HmcError as del_lpar_error:
         error_msg = parse_error_response(del_lpar_error)
         if 'HSCL8012' in error_msg:
