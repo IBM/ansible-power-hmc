@@ -61,7 +61,25 @@ The following gif demonstrates the creation of an aix lpar instance and deletion
 .. figure:: ../images/demo_create_partition.gif
    :alt:
 
+Create and Activate lpar instance
+"""""""""""""""""""""""""""""""""
 
+The following gif demonstartes the creation of an aix lpar with shared proc, storage and network config
+And activating it with default profile and kelock config.
+
+.. figure:: ../images/demo_create_and_activate_partition.gif
+   :alt:
+
+Delete multiple lpar instances
+""""""""""""""""""""""""""""""
+
+The following gif demonstrates the taking lpar instance names as input from inventory file
+and deleting them with associated vdisk config.
+
+.. figure:: ../images/demo_delete_multiple_partitions.gif
+   :alt:
+
+   
 powervm_inventory
 -----------------
 
