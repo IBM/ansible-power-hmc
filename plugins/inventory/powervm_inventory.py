@@ -12,6 +12,7 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions impor
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import parse_error_response
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import HmcRestClient
 from ansible.config.manager import ensure_type
+from ansible.template import Templar
 
 from ansible.utils.display import Display
 display = Display()
@@ -238,6 +239,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         super().__init__()
 
         self.group_prefix = 'power_hmc_'
+        self.template_handle = None
 
     def verify_file(self, path):
         """
@@ -255,6 +257,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         """
         super().parse(inventory, loader, path, cache)
 
+        self.template_handle = Templar(loader=loader)
         self._configure(path)
         self._populate_from_systems(self.get_lpars_by_system())
 
@@ -315,6 +318,10 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
     def get_lpars_by_system(self):
         systems = {}
+
+        if self.template_handle.is_template(self.get_option('hmc_hosts')):
+            self.hmc_hosts = self.template_handle.template(variable=self.get_option('hmc_hosts'))
+
         for hmc_host in self.hmc_hosts:
             try:
                 rest_conn = HmcRestClient(str(hmc_host), str(self.hmc_hosts[hmc_host]["user"]), str(self.hmc_hosts[hmc_host]["password"]))

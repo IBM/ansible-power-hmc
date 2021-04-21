@@ -92,7 +92,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Authors:
 - Anil Vijayan <anilvijayan@in.ibm.com>
-- Hemanth Kalthireddy <hkalthir@in.ibm.com>
+- Navinakumar Kandakur <nkandak1@in.ibm.com>
 
 [coc]: https://help.github.com/en/github/building-a-strong-community/adding-a-code-of-conduct-to-your-project
 [issues]: https://github.com/IBM/ansible-power-hmc/issues/new
