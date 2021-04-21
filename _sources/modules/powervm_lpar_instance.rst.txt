@@ -111,22 +111,28 @@ Parameters
 
     Give implicit preference to redundancy in case if the identified/provided disk visible to two VIOSes
 
+    User need to provide either *volume_name* and *vios_name* or *volume_size* to identify the physical volume.
+
 
     volume_name (optional, str, None)
       Physical volume name visible through VIOS. This option is mutually exclusive with *volume_size*
-
-
-    volume_size (optional, int, None)
-      Physical volume size in MB
 
 
     vios_name (optional, str, None)
       VIOS name to which mentioned *volume_name* is present. This option is mutually exclusive with *volume_size*
 
 
+    volume_size (optional, int, None)
+      Physical volume size in MB
+
+
 
   virt_network_name (optional, str, None)
-    Virtual Network Configuration of the Partition
+    Virtual Network Name to be attached to the partition
+
+    This implicitly adds a Virtual Ethernet Adapter with given virtual network to the partition
+
+    Make sure provided Virtual Network has been attached to an active Network Bridge for external network communication
 
 
   retain_vios_cfg (optional, bool, None)
@@ -162,7 +168,8 @@ Notes
 -----
 
 .. note::
-   - Currently the storage configuration supports only the addition of physical volume from VCSI backed volume through VIOS
+   - The storage configuration supports only the addition of physical volume from VCSI backed volume through VIOS
+   - The network configuration currently will not support SRIOV or VNIC related configurations
 
 
 
@@ -173,7 +180,7 @@ Examples
 .. code-block:: yaml+jinja
 
     
-    - name: Create an IBMi logical partition instance
+    - name: Create an IBMi logical partition instance with shared proc, volume_cong's vios_name and volume_name values
       powervm_lpar_instance:
           hmc_host: '{{ inventory_hostname }}'
           hmc_auth:
@@ -182,11 +189,15 @@ Examples
           system_name: <system_name>
           vm_name: <vm_name>
           proc: 4
+          proc_unit: 4
           mem: 20480
+          volume_config:
+             vios_name: <viosname>
+             volume_name: <volumename>
           os_type: ibmi
           state: present
 
-    - name: Create an AIX/Linux logical partition instance with default proc and mem values
+    - name: Create an AIX/Linux logical partition instance with default proc, mem, virt_network_name and  volume_config's volumes_size values
       powervm_lpar_instance:
           hmc_host: '{{ inventory_hostname }}'
           hmc_auth:
@@ -194,10 +205,13 @@ Examples
              password: '{{ hmc_password }}'
           system_name: <system_name>
           vm_name: <vm_name>
+          volume_config:
+             volume_size: <size>
+          virt_network_name: <virtual_nw_name>
           os_type: aix_linux
           state: present
 
-    - name: Delete a logical partition instance
+    - name: Delete a logical partition instance with retain_vios_cfg and delete_vdisk options
       powervm_lpar_instance:
           hmc_host: '{{ inventory_hostname }}'
           hmc_auth:
@@ -205,6 +219,8 @@ Examples
              password: '{{ hmc_password }}'
           system_name: <system_name>
           vm_name: <vm_name>
+          retain_vios_cfg: True
+          delete_vdisks: True
           state: absent
 
     - name: Shutdown a logical partition

@@ -107,12 +107,12 @@
 <li class="toctree-l3"><a class="reference internal" href="#deactivate-modify-and-activate">Deactivate, Modify and Activate</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#powervm-lpar-instance">powervm_lpar_instance</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#create-and-delete-lpar-instance">Create and Delete lpar instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#powervm-inventory">powervm_inventory</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#deletion-of-multiple-inactive-partitions-using-dynamic-inventory-plugin">Deletion of multiple inactive partitions using dynamic inventory plugin</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#powervm-inventory">powervm_inventory</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#collects-the-inventory-of-all-aix-and-vios-instances">Collects the inventory of all AIX and VIOS instances</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#powervm-lpar-instance">powervm_lpar_instance</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#create-and-activate-lpar-instance">Create and Activate lpar instance</a></li>
 </ul>
 </li>
 </ul>
@@ -241,23 +241,24 @@ policy then modify and activate it.</p>
 </div>
 </div>
 </div>
-<div class="section" id="powervm-lpar-instance">
-<h2>powervm_lpar_instance<a class="headerlink" href="#powervm-lpar-instance" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="create-and-delete-lpar-instance">
-<h3>Create and Delete lpar instance<a class="headerlink" href="#create-and-delete-lpar-instance" title="Permalink to this headline">¶</a></h3>
-<p>The following gif demonstrates the creation of an aix lpar instance and deletion of it.</p>
-<div class="figure align-default">
-<img alt="" src="_images/demo_create_partition.gif" />
-</div>
-</div>
-</div>
 <div class="section" id="powervm-inventory">
 <h2>powervm_inventory<a class="headerlink" href="#powervm-inventory" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="collects-the-inventory-of-all-aix-and-vios-instances">
-<h3>Collects the inventory of all AIX and VIOS instances<a class="headerlink" href="#collects-the-inventory-of-all-aix-and-vios-instances" title="Permalink to this headline">¶</a></h3>
-<p>The following gif demonstrates how to list the lpar instances using dynamic inventory plugin</p>
+<div class="section" id="deletion-of-multiple-inactive-partitions-using-dynamic-inventory-plugin">
+<h3>Deletion of multiple inactive partitions using dynamic inventory plugin<a class="headerlink" href="#deletion-of-multiple-inactive-partitions-using-dynamic-inventory-plugin" title="Permalink to this headline">¶</a></h3>
+<p>The following demo illustrates the usage of dynamic inventory plugin for the deletion of multiple partitions.
+It uses dynamic inventory plugin to collect the inventory and use it as input to delete multiple partition in iteration. Here each delete task will take care of removing the VIOS disk mapping and vdisk associated with the partition as well.</p>
 <div class="figure align-default">
 <img alt="" src="_images/demo_powervm_inventory.gif" />
+</div>
+</div>
+</div>
+<div class="section" id="powervm-lpar-instance">
+<h2>powervm_lpar_instance<a class="headerlink" href="#powervm-lpar-instance" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="create-and-activate-lpar-instance">
+<h3>Create and Activate lpar instance<a class="headerlink" href="#create-and-activate-lpar-instance" title="Permalink to this headline">¶</a></h3>
+<p>The following demo illustrate the use case of creating a partition with memory and shared processor settings along with storage and network configurations. Once created, it activates the partition with default profile.</p>
+<div class="figure align-default">
+<img alt="" src="_images/demo_create_and_activate_partition.gif" />
 </div>
 </div>
 </div>
