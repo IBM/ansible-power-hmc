@@ -109,6 +109,7 @@ options:
             - Storage volume configurations of partition
             - Attaches the virtual SCSI backing physical volume provided by the Virtual IO Server Partition
             - Give implicit preference to redundancy in case if the identified/provided disk visible to two VIOSes
+            - User need to provide either I(volume_name) and I(vios_name) or I(volume_size) to identify the physical volume.
         type: dict
         suboptions:
             volume_name:
@@ -116,15 +117,15 @@ options:
                     - Physical volume name visible through VIOS.
                       This option is mutually exclusive with I(volume_size)
                 type: str
-            volume_size:
-                description:
-                    - Physical volume size in MB
-                type: int
             vios_name:
                 description:
                     - VIOS name to which mentioned I(volume_name) is present.
                       This option is mutually exclusive with I(volume_size)
                 type: str
+            volume_size:
+                description:
+                    - Physical volume size in MB
+                type: int
     virt_network_name:
         description:
             - Virtual Network Name to be attached to the partition
