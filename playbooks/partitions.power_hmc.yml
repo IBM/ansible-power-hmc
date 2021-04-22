@@ -12,4 +12,3 @@ hmc_hosts:
 filter:
     PartitionState: 'not running'
 identify_unknown_by: PartitionName
-
