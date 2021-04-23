@@ -111,7 +111,7 @@ options:
             - Attaches Physical Volume via Virtual SCSI
             - Redundant paths created by default, if the specified/identified physical volume is visible in more than one VIOS.
             - User needs to provide either I(volume_size) or both I(volume_name) and I(vios_name). If I(volume_size) is provided,
-              available physical volume matching the specified size would be attached.
+              available physical volume matching or greater than specified size would be attached.
         type: dict
         suboptions:
             volume_name:
