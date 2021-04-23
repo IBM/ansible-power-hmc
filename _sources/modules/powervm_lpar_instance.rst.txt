@@ -107,11 +107,11 @@ Parameters
   volume_config (optional, dict, None)
     Storage volume configurations of partition
 
-    Attaches the virtual SCSI backing physical volume provided by the Virtual IO Server Partition
+    Attaches Physical Volume via Virtual SCSI
 
-    Give implicit preference to redundancy in case if the identified/provided disk visible to two VIOSes
+    Redundant paths created by default, if the specified/identified physical volume is visible in more than one VIOS.
 
-    User need to provide either *volume_name* and *vios_name* or *volume_size* to identify the physical volume.
+    User needs to provide either *volume_size* or both *volume_name* and *vios_name*. If *volume_size* is provided, available physical volume matching or greater than specified size would be attached.
 
 
     volume_name (optional, str, None)
@@ -158,7 +158,7 @@ Parameters
   action (optional, str, None)
     ``shutdown`` shutdown a partition of specified *vm_name* on specified *system_name*
 
-    ``poweron`` poweron a partition of specified *vm_name* with spefified *prof_name*, *keylock*, *iIPLsource* on specified *system_name*
+    ``poweron`` poweron a partition of specified *vm_name* with specified *prof_name*, *keylock*, *iIPLsource* on specified *system_name*
 
 
 
@@ -168,8 +168,9 @@ Notes
 -----
 
 .. note::
-   - The storage configuration supports only the addition of physical volume from VCSI backed volume through VIOS
+   - The storage configuration supports only the addition of physical volume from VSCSI backed volume through VIOS
    - The network configuration currently will not support SRIOV or VNIC related configurations
+   - *retain_vios_cfg* and *delete_vdisks* options will only be supported from HMC release level on or above V9 R1 M930
 
 
 

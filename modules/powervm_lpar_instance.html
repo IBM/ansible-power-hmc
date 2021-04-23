@@ -267,9 +267,9 @@
 <p>If this option provided to AIX/Linux type partition, operation gives a warning and then ignores this option and proceed with operation.</p>
 </dd>
 <dt>volume_config (optional, dict, None)</dt><dd><p>Storage volume configurations of partition</p>
-<p>Attaches the virtual SCSI backing physical volume provided by the Virtual IO Server Partition</p>
-<p>Give implicit preference to redundancy in case if the identified/provided disk visible to two VIOSes</p>
-<p>User need to provide either <em>volume_name</em> and <em>vios_name</em> or <em>volume_size</em> to identify the physical volume.</p>
+<p>Attaches Physical Volume via Virtual SCSI</p>
+<p>Redundant paths created by default, if the specified/identified physical volume is visible in more than one VIOS.</p>
+<p>User needs to provide either <em>volume_size</em> or both <em>volume_name</em> and <em>vios_name</em>. If <em>volume_size</em> is provided, available physical volume matching or greater than specified size would be attached.</p>
 <dl class="simple">
 <dt>volume_name (optional, str, None)</dt><dd><p>Physical volume name visible through VIOS. This option is mutually exclusive with <em>volume_size</em></p>
 </dd>
@@ -294,7 +294,7 @@
 <p><code class="docutils literal notranslate"><span class="pre">absent</span></code> deletes a partition of specified <em>vm_name</em> on specified <em>system_name</em></p>
 </dd>
 <dt>action (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">shutdown</span></code> shutdown a partition of specified <em>vm_name</em> on specified <em>system_name</em></p>
-<p><code class="docutils literal notranslate"><span class="pre">poweron</span></code> poweron a partition of specified <em>vm_name</em> with spefified <em>prof_name</em>, <em>keylock</em>, <em>iIPLsource</em> on specified <em>system_name</em></p>
+<p><code class="docutils literal notranslate"><span class="pre">poweron</span></code> poweron a partition of specified <em>vm_name</em> with specified <em>prof_name</em>, <em>keylock</em>, <em>iIPLsource</em> on specified <em>system_name</em></p>
 </dd>
 </dl>
 </div></blockquote>
@@ -304,8 +304,9 @@
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ul class="simple">
-<li><p>The storage configuration supports only the addition of physical volume from VCSI backed volume through VIOS</p></li>
+<li><p>The storage configuration supports only the addition of physical volume from VSCSI backed volume through VIOS</p></li>
 <li><p>The network configuration currently will not support SRIOV or VNIC related configurations</p></li>
+<li><p><em>retain_vios_cfg</em> and <em>delete_vdisks</em> options will only be supported from HMC release level on or above V9 R1 M930</p></li>
 </ul>
 </div>
 </div>
