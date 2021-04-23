@@ -1,0 +1,47 @@
+---
+- name: HMC create and activate logical partition
+  hosts: hmcs
+  collections:
+      - ibm.power_hmc
+  connection: local
+  vars:
+    curr_hmc_auth:
+      username: hscroot 
+      password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          34656335616165343966323739633761653065346138623233633764353636373063313736373563
+          6130373162376464666634363734303164396364656535350a663661636663323434386466383634
+          63323432303833643864396130393133346666336661346432356433353035663038643833373332
+          3664333762656138640a306539363765343261383363346532643639383938656434333564323139
+          6365
+
+  tasks:
+  - name: Create logical partition with mem, shared proc, storage and network config
+    powervm_lpar_instance:
+      hmc_host: '{{ inventory_hostname }}'
+      hmc_auth: "{{ curr_hmc_auth }}"
+      system_name: zepp31fp 
+      vm_name: test
+      proc: 2
+      proc_unit: 2
+      mem: 2048
+      os_type: aix
+      volume_config:
+        vios_name: zepp31-vios1
+        volume_name: hdisk4
+      virt_network_name: VLAN1-ETHERNET0
+      state: present
+    register: testout
+
+  - name: Stdout the created logical partition
+    debug:
+        msg: '{{ testout }}'
+
+  - name: Activate logical partition with default profile and keylock config
+    powervm_lpar_instance:
+      hmc_host: '{{ inventory_hostname }}'
+      hmc_auth: "{{ curr_hmc_auth }}"
+      system_name: zepp31fp
+      vm_name: test
+      keylock: normal
+      action: poweron

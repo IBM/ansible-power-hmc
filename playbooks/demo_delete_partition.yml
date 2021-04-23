@@ -1,6 +1,6 @@
 ---
 - name: HMC delete partition
-  hosts: hmcs
+  hosts: unknowns
   collections:
       - ibm.power_hmc
   connection: local
@@ -8,19 +8,20 @@
     curr_hmc_auth:
       username: hscroot
       password: !vault |
-                $ANSIBLE_VAULT;1.1;AES256
-                63333364316262646163393034636564353461333237323833663064666339643965353138653535
-                3565376565666532326532663462323966353631396538340a383936626439363830393361373361
-                61363663363064366366366136623262386366623361636638616464326539343931316462346232
-                3830656631393734630a343331333133616662356335343064353239326162653839343733616364
-                3566
+          $ANSIBLE_VAULT;1.1;AES256
+          34656335616165343966323739633761653065346138623233633764353636373063313736373563
+          6130373162376464666634363734303164396364656535350a663661636663323434386466383634
+          63323432303833643864396130393133346666336661346432356433353035663038643833373332
+          3664333762656138640a306539363765343261383363346532643639383938656434333564323139
+          6365
 
   tasks:
-  - name: Delete logical partition
+  - name: Delete logical partition along with VIOS disk mapping and associated vdisk
     powervm_lpar_instance:
-      hmc_host: '{{ inventory_hostname }}'
+      hmc_host: <hmcip>
       hmc_auth: "{{ curr_hmc_auth }}"
-      system_name: sys1
-      vm_name: testlpar3
+      system_name: <systemName>
+      vm_name: '{{ inventory_hostname }}'
+      retain_vios_cfg: False
       delete_vdisks: True
       state: absent

@@ -21,8 +21,9 @@ author:
     - Navinakumar Kandakur (@nkandak1)
 short_description: Create, Delete, Shutdown and Activate an AIX/Linux or IBMi partition
 notes:
-    - The storage configuration supports only the addition of physical volume from VCSI backed volume through VIOS
+    - The storage configuration supports only the addition of physical volume from VSCSI backed volume through VIOS
     - The network configuration currently will not support SRIOV or VNIC related configurations
+    - I(retain_vios_cfg) and I(delete_vdisks) options will only be supported from HMC release level on or above V9 R1 M930
 description:
     - "Creates AIX/Linux or IBMi partition with specified configuration details on mentioned system"
     - "Or Deletes specified AIX/Linux or IBMi partition on specified system"
@@ -107,9 +108,10 @@ options:
     volume_config:
         description:
             - Storage volume configurations of partition
-            - Attaches the virtual SCSI backing physical volume provided by the Virtual IO Server Partition
-            - Give implicit preference to redundancy in case if the identified/provided disk visible to two VIOSes
-            - User need to provide either I(volume_name) and I(vios_name) or I(volume_size) to identify the physical volume.
+            - Attaches Physical Volume via Virtual SCSI
+            - Redundant paths created by default, if the specified/identified physical volume is visible in more than one VIOS.
+            - User needs to provide either I(volume_size) or both I(volume_name) and I(vios_name). If I(volume_size) is provided,
+              available physical volume matching or greater than specified size would be attached.
         type: dict
         suboptions:
             volume_name:
@@ -152,7 +154,7 @@ options:
     action:
         description:
             - C(shutdown) shutdown a partition of specified I(vm_name) on specified I(system_name)
-            - C(poweron) poweron a partition of specified I(vm_name) with spefified I(prof_name), I(keylock), I(iIPLsource) on specified I(system_name)
+            - C(poweron) poweron a partition of specified I(vm_name) with specified I(prof_name), I(keylock), I(iIPLsource) on specified I(system_name)
         type: str
         choices: ['poweron', 'shutdown']
 '''
@@ -722,6 +724,9 @@ def remove_partition(module, params):
     hmc_version = hmc.listHMCVersion()
     sp_level = int(hmc_version['SERVICEPACK'])
     if sp_level < 930:
+        if retainViosCfg or deleteVdisks:
+            warn_msg = "retain_vios_cfg and delete_vdisks options are not supported on HMC release level below V9 R1 M930"
+            module.warn(warn_msg)
         retainViosCfg = False
         deleteVdisks = False
     else:
