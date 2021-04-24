@@ -36,7 +36,7 @@ This repository contains some example best practices for open source repositorie
 
 ### Platforms
 
-- HMC V9R1
+- HMC V9R1 or later
 - HMC V8R8.7.0
 
 ### Ansible
