@@ -51,19 +51,20 @@ class Hmc():
         pattern = re.compile(r"(\d) received")
         report = ("No response", "Partial Response", "Alive")
         cmd = "ping -c 2 " + i_host.strip()
-        proc = subprocess.Popen(cmd, shell=True, executable="/bin/bash",
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                )
 
-        stdout_value, stderr_value = proc.communicate()
-        if isinstance(stdout_value, bytes):
-            stdout_value = stdout_value.decode('ascii')
-
-        igot = re.findall(pattern, stdout_value)
         result = 'No response'
-        if igot:
-            result = report[int(igot[0])]
+        with subprocess.Popen(cmd, shell=True, executable="/bin/bash",
+                              stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE) as proc:
+
+            stdout_value, stderr_value = proc.communicate()
+            if isinstance(stdout_value, bytes):
+                stdout_value = stdout_value.decode('ascii')
+
+            igot = re.findall(pattern, stdout_value)
+            if igot:
+                result = report[int(igot[0])]
+
         return result
 
     def checkHmcUpandRunning(self, rebootStarted=False, timeoutInMin=12):
