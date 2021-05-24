@@ -255,7 +255,6 @@ class Hmc():
             self.OPT['MKSYSCFG']['-R']['LPAR'] + \
             self.OPT['MKSYSCFG']['-M'] + cecName
         mksyscfgCmd += self.cmdClass.i_a_ConfigBuilder('MKSYSCFG', '-I', lpar_config)
-        logger.debug("mksyscfgCmd: " + mksyscfgCmd)
         self.hmcconn.execute(mksyscfgCmd)
 
     def applyProfileToPartition(self, cecName, lparName, profile_name):
@@ -265,5 +264,4 @@ class Hmc():
             self.OPT['CHSYSCFG']['-N'] + profile_name + \
             self.OPT['CHSYSCFG']['-P'] + lparName + \
             self.OPT['CHSYSCFG']['-O']['APPLY']
-        logger.debug("chsyscfgCmd: " + chsyscfgCmd)
         self.hmcconn.execute(chsyscfgCmd)

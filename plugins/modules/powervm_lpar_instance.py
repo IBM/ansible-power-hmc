@@ -139,10 +139,12 @@ options:
                 description:
                     - Virtual Network Name to be attached to the partition.
                       This parameter is mandatory with I(virt_network_config)
+                type: str
             slot_number:
                 description:
                     - Virtual slot number of a partition on which virtual network to be attached.
                       This paramter is optional, if user doesn't pass, it chooses next available.
+                type: int
     all_resources:
         description:
             - Create a partition withh all the resources available in the managed system.
@@ -1100,7 +1102,7 @@ def run_module():
         state=dict(type='str',
                    choices=['present', 'absent', 'facts']),
         action=dict(type='str',
-                    choices=['shutdown', 'poweron', 'apply'])
+                    choices=['shutdown', 'poweron'])
     )
 
     module = AnsibleModule(
