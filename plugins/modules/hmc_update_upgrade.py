@@ -489,7 +489,7 @@ def run_module():
                       no_log=True,
                       options=dict(
                           username=dict(required=True, type='str'),
-                          password=dict(type='str'),
+                          password=dict(type='str', no_log=True),
                       )
                       ),
         build_config=dict(type='dict',
