@@ -29,7 +29,8 @@
       volume_config:
         vios_name: zepp31-vios1
         volume_name: hdisk4
-      virt_network_name: VLAN1-ETHERNET0
+      virt_network_config:
+        network_name: VLAN1-ETHERNET0
       state: present
     register: testout
 
