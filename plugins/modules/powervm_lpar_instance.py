@@ -986,9 +986,12 @@ def poweron_partition(module, params):
 
 
 def partition_details(module, params):
+    changed = False
     rest_conn = None
     system_uuid = None
     server_dom = None
+    partition_prop = None
+    lpar_uuid = None
     validate_parameters(params)
     hmc_host = params['hmc_host']
     hmc_user = params['hmc_auth']['username']
@@ -1004,40 +1007,39 @@ def partition_details(module, params):
 
     try:
         system_uuid, server_dom = rest_conn.getManagedSystem(system_name)
-    except Exception as error:
+        if not system_uuid:
+            module.fail_json(msg="Given system is not present")
+        ms_state = server_dom.xpath("//DetailedState")[0].text
+        if ms_state != 'None':
+            module.fail_json(msg="Given system is in " + ms_state + " state")
+
+        lpar_response = rest_conn.getLogicalPartitionsQuick(system_uuid)
+        if lpar_response is not None:
+            lpar_quick_list = json.loads(lpar_response)
+            for eachLpar in lpar_quick_list:
+                if eachLpar['PartitionName'] == vm_name:
+                    partition_prop = eachLpar
+                    lpar_uuid = eachLpar['UUID']
+                    changed = True
+                    break
+        else:
+            module.fail_json(msg="There are no Logical Partitions present on the system")
+
+        if not lpar_uuid:
+            module.fail_json(msg="Given Logical Partition is not present on the system")
+
+    except (Exception, HmcError) as error:
+        error_msg = parse_error_response(error)
+        logger.debug("Line number: %d exception: %s", sys.exc_info()[2].tb_lineno, repr(error))
+        module.fail_json(msg=error_msg)
+    finally:
         try:
             rest_conn.logoff()
-        except Exception:
-            logger.debug("Logoff error")
-        error_msg = parse_error_response(error)
-        module.fail_json(msg=error_msg)
-    if not system_uuid:
-        module.fail_json(msg="Given system is not present")
+        except Exception as logoff_error:
+            error_msg = parse_error_response(logoff_error)
+            module.warn(error_msg)
 
-    try:
-        partition_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, vm_name)
-    except Exception as error:
-        try:
-            rest_conn.logoff()
-        except Exception:
-            logger.debug("Logoff error")
-        error_msg = parse_error_response(error)
-        module.fail_json(msg=error_msg)
-
-    if partition_dom:
-        try:
-            partition_prop = rest_conn.quickGetPartition(partition_uuid)
-            partition_prop['AssociatedManagedSystem'] = system_name
-        except Exception as error:
-            try:
-                rest_conn.logoff()
-            except Exception:
-                logger.debug("Logoff error")
-            error_msg = parse_error_response(error)
-            module.fail_json(msg=error_msg)
-        return False, partition_prop, None
-    else:
-        return False, None, None
+    return changed, partition_prop, None
 
 
 def perform_task(module):
