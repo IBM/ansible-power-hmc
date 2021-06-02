@@ -136,7 +136,8 @@ options:
         type: str
     physical_io:
         description:
-            - List of Physical IO adapters to be added to the partition
+            - Physical IO adapter to be added to the partition
+            - An illustrative pattern for IO location code is XXXXX.XXX.XXXXXXX-P1-T1 or P1-T1
         type: list
     retain_vios_cfg:
         description:
@@ -640,10 +641,6 @@ def create_partition(module, params):
         # Add physical IO adapter
         if physical_io:
             logger.debug("input code %s"%physical_io)
-            for each_io in physical_io:
-                dash_count = each_io.count('-')
-                if dash_count not in [1,2]:
-                    raise Error("Physical IO parameter format is invalid. Valid format is XXXXX.XXX.XXXXXXX-P1-T1 or P1-T1")
             add_physical_io(rest_conn, server_dom, temporary_temp_dom, physical_io)
 
         rest_conn.updateProcMemSettingsToDom(temporary_temp_dom, config_dict)
