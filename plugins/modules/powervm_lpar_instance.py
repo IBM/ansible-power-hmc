@@ -139,6 +139,7 @@ options:
             - Physical IO adapter to be added to the partition
             - An illustrative pattern for IO location code is XXXXX.XXX.XXXXXXX-P1-T1 or P1-T1
         type: list
+        elements: str
     retain_vios_cfg:
         description:
             - Do not remove the VIOS configuration like server adapters, storage mappings associated with the partition when deleting the partition
@@ -268,7 +269,7 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions impor
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import parse_error_response
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import HmcRestClient
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import add_taggedIO_details
-from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import add_physical_io 
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import add_physical_io
 from random import randint
 from collections import OrderedDict
 try:
@@ -583,7 +584,6 @@ def create_partition(module, params):
     if not system_uuid:
         module.fail_json(msg="Given system is not present")
 
-
     try:
         partition_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, vm_name)
     except Exception as error:
@@ -640,7 +640,6 @@ def create_partition(module, params):
 
         # Add physical IO adapter
         if physical_io:
-            logger.debug("input code %s"%physical_io)
             add_physical_io(rest_conn, server_dom, temporary_temp_dom, physical_io)
 
         rest_conn.updateProcMemSettingsToDom(temporary_temp_dom, config_dict)
@@ -947,7 +946,7 @@ def run_module():
                       no_log=True,
                       options=dict(
                           username=dict(required=True, type='str'),
-                          password=dict(type='str'),
+                          password=dict(type='str', no_log=True),
                       )
                       ),
         system_name=dict(type='str', required=True),
@@ -964,7 +963,7 @@ def run_module():
                            )
                            ),
         virt_network_name=dict(type='str'),
-        physical_io=dict(type='list'),
+        physical_io=dict(type='list', elements='str'),
         prof_name=dict(type='str'),
         keylock=dict(type='str', choices=['manual', 'normal']),
         iIPLsource=dict(type='str', choices=['a', 'b', 'c', 'd']),

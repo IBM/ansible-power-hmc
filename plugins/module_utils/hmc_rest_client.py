@@ -168,11 +168,11 @@ def add_taggedIO_details(lpar_template_dom):
 
 def lookup_physical_io(rest_conn, server_dom, drcname):
     physical_io_list = server_dom.xpath("//AssociatedSystemIOConfiguration/IOAdapters/IOAdapterChoice")
-    drcname_occurence = server_dom.xpath("//AssociatedSystemIOConfiguration/IOAdapters//DeviceName[contains(text(),'"+drcname+"')]")
+    drcname_occurence = server_dom.xpath("//AssociatedSystemIOConfiguration/IOAdapters//DeviceName[contains(text(),'" + drcname + "')]")
     if len(drcname_occurence) > 1:
         ignore_occurence = False
         for each in drcname_occurence:
-            #End Charater matching, handles the case where P1-C1 and P1-C12 should not be considered same
+            # End Charater matching, handles the case where P1-C1 and P1-C12 should not be considered same
             if each.text[-1] == drcname[-1] and len(each.text.split('-')[-1]) == len(drcname.split('-')[-1]):
                 logger.debug("End Charater matching")
                 ignore_occurence = True
@@ -198,7 +198,7 @@ def add_physical_io(rest_conn, server_dom, lpar_template_dom, drcnames):
 
         drc_index = io_adapter_dom.xpath("//AdapterID")[0].text
         location_code = io_adapter_dom.xpath("//DynamicReconfigurationConnectorName")[0].text
-        logger.debug("Location_code %s"%location_code)
+        logger.debug("Location_code %s", location_code)
 
         profileioslot_payload += '''<ProfileIOSlot schemaVersion="V1_0">
                         <Metadata>
