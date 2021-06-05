@@ -134,6 +134,12 @@ options:
             - This implicitly adds a Virtual Ethernet Adapter with given virtual network to the partition
             - Make sure provided Virtual Network has been attached to an active Network Bridge for external network communication
         type: str
+    physical_io:
+        description:
+            - Physical IO adapter to be added to the partition
+            - An illustrative pattern for IO location code is XXXXX.XXX.XXXXXXX-P1-T1 or P1-T1
+        type: list
+        elements: str
     retain_vios_cfg:
         description:
             - Do not remove the VIOS configuration like server adapters, storage mappings associated with the partition when deleting the partition
@@ -263,6 +269,7 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions impor
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import parse_error_response
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import HmcRestClient
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import add_taggedIO_details
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import add_physical_io
 from random import randint
 from collections import OrderedDict
 try:
@@ -551,6 +558,7 @@ def create_partition(module, params):
     proc_unit = params['proc_unit']
     os_type = params['os_type']
     virt_network_name = params['virt_network_name']
+    physical_io = params['physical_io']
     vios_name = None
     temp_template_name = "ansible_powervm_create_{0}".format(str(randint(1000, 9999)))
     temp_copied = False
@@ -629,6 +637,10 @@ def create_partition(module, params):
         config_dict['mem'] = mem
         if os_type == 'ibmi':
             add_taggedIO_details(temporary_temp_dom)
+
+        # Add physical IO adapter
+        if physical_io:
+            add_physical_io(rest_conn, server_dom, temporary_temp_dom, physical_io)
 
         rest_conn.updateProcMemSettingsToDom(temporary_temp_dom, config_dict)
         if params['virt_network_name']:
@@ -934,7 +946,7 @@ def run_module():
                       no_log=True,
                       options=dict(
                           username=dict(required=True, type='str'),
-                          password=dict(type='str'),
+                          password=dict(type='str', no_log=True),
                       )
                       ),
         system_name=dict(type='str', required=True),
@@ -951,6 +963,7 @@ def run_module():
                            )
                            ),
         virt_network_name=dict(type='str'),
+        physical_io=dict(type='list', elements='str'),
         prof_name=dict(type='str'),
         keylock=dict(type='str', choices=['manual', 'normal']),
         iIPLsource=dict(type='str', choices=['a', 'b', 'c', 'd']),
