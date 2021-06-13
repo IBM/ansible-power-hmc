@@ -369,16 +369,10 @@ def validate_sub_dict(sub_key, params):
         if len(list3) >= 1 and set(list3) != set(together):
             raise ParameterError("Missing parameters %s" % (', '.join(set(together) - set(list3))))
 
-    if len(mandatory_list) >= 1:
-        list4 = []
-        for each in mandatory_list:
-            if each not in params:
-                list4.append(each)
-        if list4:
-            if len(list4) == 1:
-                raise ParameterError("mandatory parameter '%s' is missing" % (list4[0]))
-            else:
-                raise ParameterError("mandatory parameters '%s' are missing" % (','.join(list4)))
+    if mandatory_list:
+        list4 = set(mandatory_list).issubset(set(params.keys()))
+        if not list4:
+            raise ParameterError("one or more mandatory parameter/s '%s' is missing" % (mandatory_list))
 
 
 def validate_parameters(params):
@@ -701,6 +695,7 @@ def create_partition(module, params):
         if os_type == 'ibmi':
             add_taggedIO_details(temporary_temp_dom)
 
+        rest_conn.updateLparNameAndIDToDom(temporary_temp_dom, config_dict)
         rest_conn.updateProcMemSettingsToDom(temporary_temp_dom, config_dict)
         # Virtual Network Configuration settings
         if params['virt_network_config']:

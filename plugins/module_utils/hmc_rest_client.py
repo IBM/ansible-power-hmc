@@ -471,8 +471,7 @@ class HmcRestClient:
                  force_basic_auth=True,
                  timeout=300)
 
-    def updateProcMemSettingsToDom(self, template_xml, config_dict):
-        shared_config_tag = None
+    def updateLparNameAndIDToDom(self, template_xml, config_dict):
         if 'lpar_id' in config_dict:
             template_xml.xpath("//partitionId")[0].text = config_dict['lpar_id']
         else:
@@ -481,6 +480,8 @@ class HmcRestClient:
         template_xml.xpath("//currMaxVirtualIOSlots")[0].text = config_dict['max_virtual_slots']
         template_xml.xpath("//partitionName")[0].text = config_dict['vm_name']
 
+    def updateProcMemSettingsToDom(self, template_xml, config_dict):
+        shared_config_tag = None
         # shared processor configuration
         if config_dict['proc_unit']:
             shared_payload = '''<sharedProcessorConfiguration kxe="false" kb="CUD" schemaVersion="V1_0">
