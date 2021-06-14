@@ -154,7 +154,7 @@ options:
     max_virtual_slots:
         description:
             - Maximum virtual slots configuration of the partition.
-            - if user doesn't pass, it create partition with I(max_virtual_slots) 20.
+            - if user doesn't pass, it create partition with I(max_virtual_slots) 20 as default.
         type: int
     retain_vios_cfg:
         description:
@@ -1014,6 +1014,7 @@ def partition_details(module, params):
             for eachLpar in lpar_quick_list:
                 if eachLpar['PartitionName'] == vm_name:
                     partition_prop = eachLpar
+                    partition_prop['AssociatedManagedSystem'] = system_name
                     lpar_uuid = eachLpar['UUID']
                     changed = True
                     break
