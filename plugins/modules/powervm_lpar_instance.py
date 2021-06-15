@@ -128,12 +128,34 @@ options:
                 description:
                     - Physical volume size in MB
                 type: int
-    virt_network_name:
+    virt_network_config:
         description:
-            - Virtual Network Name to be attached to the partition
+            - Virtual Network configuration of the partition
             - This implicitly adds a Virtual Ethernet Adapter with given virtual network to the partition
             - Make sure provided Virtual Network has been attached to an active Network Bridge for external network communication
-        type: str
+        type: dict
+        suboptions:
+            network_name:
+                description:
+                    - Virtual Network Name to be attached to the partition.
+                      This parameter is mandatory with I(virt_network_config)
+                type: str
+            slot_number:
+                description:
+                    - Virtual slot number of a partition on which virtual network to be attached.
+                      This paramter is optional, if user doesn't pass, it chooses next available.
+                type: int
+    all_resources:
+        description:
+            - Create a partition withh all the resources available in the managed system.
+            - When we choose this as true, make sure that all partitions are in shutdown state, if any exist in managed system.
+            - Default is false
+        type: bool
+    max_virtual_slots:
+        description:
+            - Maximum virtual slots configuration of the partition.
+            - if user doesn't pass, it create partition with I(max_virtual_slots) 20 as default.
+        type: int
     retain_vios_cfg:
         description:
             - Do not remove the VIOS configuration like server adapters, storage mappings associated with the partition when deleting the partition
@@ -149,8 +171,9 @@ options:
         description:
             - C(present) creates a partition of specifed I(os_type), I(vm_name), I(proc) and I(memory) on specified I(system_name)
             - C(absent) deletes a partition of specified I(vm_name) on specified I(system_name)
+            - C(facts) fetches a details of specified I(vm_name) on specified I(system_name)
         type: str
-        choices: ['present', 'absent']
+        choices: ['present', 'absent', 'facts']
     action:
         description:
             - C(shutdown) shutdown a partition of specified I(vm_name) on specified I(system_name)
@@ -177,7 +200,7 @@ EXAMPLES = '''
       os_type: ibmi
       state: present
 
-- name: Create an AIX/Linux logical partition instance with default proc, mem, virt_network_name and  volume_config's volumes_size values
+- name: Create an AIX/Linux logical partition instance with default proc, mem, virt_network_config and  volume_config's volumes_size values
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -187,7 +210,9 @@ EXAMPLES = '''
       vm_name: <vm_name>
       volume_config:
          volume_size: <size>
-      virt_network_name: <virtual_nw_name>
+      virt_network_config:
+         network_name: <virtual_nw_name>
+         slot_number: <slot no>
       os_type: aix_linux
       state: present
 
@@ -312,6 +337,7 @@ def validate_proc_mem(system_dom, proc, mem, proc_units=None):
 def validate_sub_dict(sub_key, params):
     mutually_exclusive_list = []
     together = []
+    mandatory_list = []
 
     for each in params.copy():
         if not params[each] or params[each] == '':
@@ -325,15 +351,28 @@ def validate_sub_dict(sub_key, params):
         together = ['volume_name', 'vios_name']
         mutually_exclusive_list = [('volume_name', 'vios_name'), ('volume_size',)]
 
-    list1 = [each for each in options if each in mutually_exclusive_list[0]]
-    list2 = [each for each in options if each in mutually_exclusive_list[1]]
-    if list1 and list2:
-        raise ParameterError("Parameters: '%s' and '%s' are  mutually exclusive" %
-                             (', '.join(mutually_exclusive_list[0]), ', '.join(mutually_exclusive_list[1])))
+    if 'virt_network_config' == sub_key:
+        options = params.keys()
+        mandatory_list = ['network_name']
+        if len(options) < 1:
+            raise ParameterError("mandatory parameter '%s' is missing" % (mandatory_list[0]))
 
-    list3 = [each for each in options if each in together]
-    if len(list3) >= 1 and set(list3) != set(together):
-        raise ParameterError("Missing parameters %s" % (', '.join(set(together) - set(list3))))
+    if len(mutually_exclusive_list) > 1:
+        list1 = [each for each in options if each in mutually_exclusive_list[0]]
+        list2 = [each for each in options if each in mutually_exclusive_list[1]]
+        if list1 and list2:
+            raise ParameterError("Parameters: '%s' and '%s' are  mutually exclusive" %
+                                 (', '.join(mutually_exclusive_list[0]), ', '.join(mutually_exclusive_list[1])))
+
+    if len(together) > 1:
+        list3 = [each for each in options if each in together]
+        if len(list3) >= 1 and set(list3) != set(together):
+            raise ParameterError("Missing parameters %s" % (', '.join(set(together) - set(list3))))
+
+    if mandatory_list:
+        list4 = set(mandatory_list).issubset(set(params.keys()))
+        if not list4:
+            raise ParameterError("one or more mandatory parameter/s '%s' is missing" % (mandatory_list))
 
 
 def validate_parameters(params):
@@ -349,14 +388,16 @@ def validate_parameters(params):
         unsupportedList = ['prof_name', 'keylock', 'iIPLsource', 'retain_vios_cfg', 'delete_vdisks']
     elif opr == 'poweron':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
-        unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'volume_config', 'virt_network_name', 'retain_vios_cfg', 'delete_vdisks']
+        unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'volume_config', 'virt_network_config', 'retain_vios_cfg', 'delete_vdisks',
+                           'all_resources', 'max_virtual_slots']
     elif opr == 'absent':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
-        unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_name']
+        unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
+                           'all_resources', 'max_virtual_slots']
     else:
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
-        unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_name',
-                           'retain_vios_cfg', 'delete_vdisks']
+        unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
+                           'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots']
 
     collate = []
     for eachMandatory in mandatoryList:
@@ -381,6 +422,9 @@ def validate_parameters(params):
 
     if params['volume_config']:
         validate_sub_dict('volume_config', params['volume_config'])
+
+    if params['virt_network_config']:
+        validate_sub_dict('virt_network_config', params['virt_network_config'])
 
 
 def fetchAllInUsePhyVolumes(rest_conn, vios_uuid):
@@ -550,11 +594,14 @@ def create_partition(module, params):
     mem = str(params['mem'] or 2048)
     proc_unit = params['proc_unit']
     os_type = params['os_type']
-    virt_network_name = params['virt_network_name']
+    all_resources = params['all_resources']
+    max_virtual_slots = str(params['max_virtual_slots'] or 20)
     vios_name = None
     temp_template_name = "ansible_powervm_create_{0}".format(str(randint(1000, 9999)))
     temp_copied = False
     nw_uuid = None
+    virt_network_name = None
+    virtual_slot_number = None
     cli_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(cli_conn)
 
@@ -599,6 +646,19 @@ def create_partition(module, params):
             module.fail_json(msg=error_msg)
         return False, partition_prop, None
 
+    if all_resources:
+        try:
+            hmc.createPartitionWithAllResources(system_name, vm_name, os_type)
+            try:
+                hmc.applyProfileToPartition(system_name, vm_name, "default_profile")
+            except HmcError as apply_profile_error:
+                hmc.deletePartition(system_name, vm_name, False, False)
+                return False, repr(apply_profile_error), None
+        except HmcError as crt_lpar_error:
+            return False, repr(crt_lpar_error), None
+
+        return True, None, None
+
     validate_proc_mem(server_dom, int(proc), int(mem))
 
     try:
@@ -609,36 +669,51 @@ def create_partition(module, params):
         rest_conn.copyPartitionTemplate(reference_template, temp_template_name)
         temp_copied = True
         max_lpars = server_dom.xpath("//MaximumPartitions")[0].text
-        next_lpar_id = hmc.getNextPartitionID(system_name, max_lpars)
-        logger.debug("Next Partiion ID: %s", str(next_lpar_id))
         logger.debug("CEC uuid: %s", system_uuid)
 
         temporary_temp_dom = rest_conn.getPartitionTemplate(name=temp_template_name)
         temp_uuid = temporary_temp_dom.xpath("//AtomID")[0].text
+
         # On servers that do not support the IBM i partitions with native I/O capability
         if os_type == 'ibmi' and \
                 server_dom.xpath("//IBMiNativeIOCapable") and \
                 server_dom.xpath("//IBMiNativeIOCapable")[0].text == 'false':
             srrTag = temporary_temp_dom.xpath("//SimplifiedRemoteRestartEnable")[0]
             srrTag.addnext(etree.XML('<isRestrictedIOPartition kb="CUD" kxe="false">true</isRestrictedIOPartition>'))
-
-        config_dict = {'lpar_id': str(next_lpar_id)}
+        config_dict = {}
+        hmc_version = hmc.listHMCVersion()
+        sp_level = int(hmc_version['SERVICEPACK'])
+        if sp_level < 951:
+            next_lpar_id = hmc.getNextPartitionID(system_name, max_lpars)
+            logger.debug("Next Partiion ID: %s", str(next_lpar_id))
+            config_dict['lpar_id'] = str(next_lpar_id)
         config_dict['vm_name'] = vm_name
         config_dict['proc'] = proc
         config_dict['proc_unit'] = str(proc_unit) if proc_unit else None
         config_dict['mem'] = mem
+        config_dict['max_virtual_slots'] = max_virtual_slots
         if os_type == 'ibmi':
             add_taggedIO_details(temporary_temp_dom)
 
+        rest_conn.updateLparNameAndIDToDom(temporary_temp_dom, config_dict)
         rest_conn.updateProcMemSettingsToDom(temporary_temp_dom, config_dict)
-        if params['virt_network_name']:
+        # Virtual Network Configuration settings
+        if params['virt_network_config']:
+            if 'network_name' in params['virt_network_config'] and params['virt_network_config']['network_name']:
+                virt_network_name = params['virt_network_config']['network_name']
+            if 'slot_number' in params['virt_network_config'] and params['virt_network_config']['slot_number']:
+                virtual_slot_number = int(params['virt_network_config']['slot_number'])
+                if virtual_slot_number > int(max_virtual_slots):
+                    raise Error("Virtual slot number: {0} is greater than max virtual slots allowed in a partition".format(virtual_slot_number))
+
+        if virt_network_name:
             vnw_response = rest_conn.getVirtualNetworksQuick(system_uuid)
             if vnw_response:
                 for nw in vnw_response:
                     nw_name = nw['NetworkName']
                     if nw_name == virt_network_name:
                         nw_uuid = nw['UUID']
-                        nw_dict = {'nw_name': nw_name, 'nw_uuid': nw_uuid}
+                        nw_dict = {'nw_name': nw_name, 'nw_uuid': nw_uuid, 'virtual_slot_number': virtual_slot_number}
                         rest_conn.updateVirtualNWSettingsToDom(temporary_temp_dom, nw_dict)
                         break
                 if not nw_uuid:
@@ -654,7 +729,7 @@ def create_partition(module, params):
         draft_template_dom = rest_conn.getPartitionTemplate(uuid=draft_uuid)
         if not draft_template_dom:
             module.fail_json(msg="Not able to fetch template for partition deploy")
-
+        # Volume configuration settings
         if params['volume_config']:
             if 'vios_name' in params['volume_config'] and params['volume_config']['vios_name']:
                 vios_name = params['volume_config']['vios_name']
@@ -905,13 +980,72 @@ def poweron_partition(module, params):
     return changed, None, None
 
 
+def partition_details(module, params):
+    changed = False
+    rest_conn = None
+    system_uuid = None
+    server_dom = None
+    partition_prop = None
+    lpar_uuid = None
+    validate_parameters(params)
+    hmc_host = params['hmc_host']
+    hmc_user = params['hmc_auth']['username']
+    password = params['hmc_auth']['password']
+    system_name = params['system_name']
+    vm_name = params['vm_name']
+
+    try:
+        rest_conn = HmcRestClient(hmc_host, hmc_user, password)
+    except Exception as error:
+        error_msg = parse_error_response(error)
+        module.fail_json(msg=error_msg)
+
+    try:
+        system_uuid, server_dom = rest_conn.getManagedSystem(system_name)
+        if not system_uuid:
+            module.fail_json(msg="Given system is not present")
+        ms_state = server_dom.xpath("//DetailedState")[0].text
+        if ms_state != 'None':
+            module.fail_json(msg="Given system is in " + ms_state + " state")
+
+        lpar_response = rest_conn.getLogicalPartitionsQuick(system_uuid)
+        if lpar_response is not None:
+            lpar_quick_list = json.loads(lpar_response)
+            for eachLpar in lpar_quick_list:
+                if eachLpar['PartitionName'] == vm_name:
+                    partition_prop = eachLpar
+                    partition_prop['AssociatedManagedSystem'] = system_name
+                    lpar_uuid = eachLpar['UUID']
+                    changed = True
+                    break
+        else:
+            module.fail_json(msg="There are no Logical Partitions present on the system")
+
+        if not lpar_uuid:
+            module.fail_json(msg="Given Logical Partition is not present on the system")
+
+    except (Exception, HmcError) as error:
+        error_msg = parse_error_response(error)
+        logger.debug("Line number: %d exception: %s", sys.exc_info()[2].tb_lineno, repr(error))
+        module.fail_json(msg=error_msg)
+    finally:
+        try:
+            rest_conn.logoff()
+        except Exception as logoff_error:
+            error_msg = parse_error_response(logoff_error)
+            module.warn(error_msg)
+
+    return changed, partition_prop, None
+
+
 def perform_task(module):
     params = module.params
     actions = {
         "present": create_partition,
         "absent": remove_partition,
+        "facts": partition_details,
         "shutdown": poweroff_partition,
-        "poweron": poweron_partition
+        "poweron": poweron_partition,
     }
 
     oper = 'state'
@@ -934,7 +1068,7 @@ def run_module():
                       no_log=True,
                       options=dict(
                           username=dict(required=True, type='str'),
-                          password=dict(type='str'),
+                          password=dict(type='str', no_log=True),
                       )
                       ),
         system_name=dict(type='str', required=True),
@@ -950,14 +1084,21 @@ def run_module():
                                volume_size=dict(type='int'),
                            )
                            ),
-        virt_network_name=dict(type='str'),
+        virt_network_config=dict(type='dict',
+                                 options=dict(
+                                     network_name=dict(type='str'),
+                                     slot_number=dict(type='int'),
+                                 )
+                                 ),
         prof_name=dict(type='str'),
+        all_resources=dict(type='bool'),
+        max_virtual_slots=dict(type='int'),
         keylock=dict(type='str', choices=['manual', 'normal']),
         iIPLsource=dict(type='str', choices=['a', 'b', 'c', 'd']),
         retain_vios_cfg=dict(type='bool'),
         delete_vdisks=dict(type='bool'),
         state=dict(type='str',
-                   choices=['present', 'absent']),
+                   choices=['present', 'absent', 'facts']),
         action=dict(type='str',
                     choices=['shutdown', 'poweron'])
     )
@@ -968,6 +1109,7 @@ def run_module():
         required_one_of=[('state', 'action')],
         required_if=[['state', 'absent', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
                      ['state', 'present', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']],
+                     ['state', 'facts', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
                      ['action', 'shutdown', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
                      ['action', 'poweron', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']]
                      ],

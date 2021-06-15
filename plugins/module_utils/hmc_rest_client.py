@@ -471,11 +471,17 @@ class HmcRestClient:
                  force_basic_auth=True,
                  timeout=300)
 
-    def updateProcMemSettingsToDom(self, template_xml, config_dict):
-        shared_config_tag = None
-        template_xml.xpath("//partitionId")[0].text = config_dict['lpar_id']
+    def updateLparNameAndIDToDom(self, template_xml, config_dict):
+        if 'lpar_id' in config_dict:
+            template_xml.xpath("//partitionId")[0].text = config_dict['lpar_id']
+        else:
+            lpar_id_tag = template_xml.xpath("//partitionId")[0]
+            lpar_id_tag.getparent().remove(lpar_id_tag)
+        template_xml.xpath("//currMaxVirtualIOSlots")[0].text = config_dict['max_virtual_slots']
         template_xml.xpath("//partitionName")[0].text = config_dict['vm_name']
 
+    def updateProcMemSettingsToDom(self, template_xml, config_dict):
+        shared_config_tag = None
         # shared processor configuration
         if config_dict['proc_unit']:
             shared_payload = '''<sharedProcessorConfiguration kxe="false" kb="CUD" schemaVersion="V1_0">
@@ -907,6 +913,11 @@ class HmcRestClient:
         return vnw_quick_list
 
     def updateVirtualNWSettingsToDom(self, template_xml, config_dict):
+        vsn_payload = ''
+        if config_dict['virtual_slot_number'] is not None:
+            vsn_payload = '''
+            <VirtualSlotNumber kb="CUD" kxe="false">{0}</VirtualSlotNumber>'''.format(config_dict['virtual_slot_number'])
+
         vnw_payload = '''
         <clientNetworkAdapters kb="CUD" kxe="false" schemaVersion="V1_0">
             <Metadata>
@@ -916,6 +927,7 @@ class HmcRestClient:
                 <Metadata>
                     <Atom/>
                 </Metadata>
+                {2}
                 <clientVirtualNetworks kb="CUD" kxe="false" schemaVersion="V1_0">
                     <Metadata>
                         <Atom/>
@@ -929,7 +941,8 @@ class HmcRestClient:
                     </ClientVirtualNetwork>
                 </clientVirtualNetworks>
             </ClientNetworkAdapter>
-        </clientNetworkAdapters>'''.format(config_dict['nw_name'], config_dict['nw_uuid'])
+        </clientNetworkAdapters>'''.format(config_dict['nw_name'], config_dict['nw_uuid'], vsn_payload)
 
+        vnw_payload_xml = etree.XML(vnw_payload)
         client_nw_adapter_tag = template_xml.xpath("//ioConfiguration")[0]
-        client_nw_adapter_tag.addnext(etree.XML(vnw_payload))
+        client_nw_adapter_tag.addnext(vnw_payload_xml)

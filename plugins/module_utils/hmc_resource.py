@@ -242,3 +242,26 @@ class Hmc():
         if deleteVdisks:
             rmsyscfgCmd += self.OPT['RMSYSCFG']['VDISKS']
         self.hmcconn.execute(rmsyscfgCmd)
+
+    def createPartitionWithAllResources(self, cecName, lparName, osType):
+        lpar_config = {}
+        profile_name = 'default_profile'
+        if osType in ['aix', 'linux', 'aix_linux']:
+            lpar_config = {'name': lparName, 'lpar_env': 'aixlinux', 'all_resources': '1', 'profile_name': profile_name}
+        elif osType == 'ibmi':
+            lpar_config = {'name': lparName, 'lpar_env': 'os400', 'all_resources': '1', 'profile_name': profile_name, 'console_slot': '1'}
+        lpar_config = self.cmdClass.convertKeysToUpper(lpar_config)
+        mksyscfgCmd = self.CMD['MKSYSCFG'] + \
+            self.OPT['MKSYSCFG']['-R']['LPAR'] + \
+            self.OPT['MKSYSCFG']['-M'] + cecName
+        mksyscfgCmd += self.cmdClass.i_a_ConfigBuilder('MKSYSCFG', '-I', lpar_config)
+        self.hmcconn.execute(mksyscfgCmd)
+
+    def applyProfileToPartition(self, cecName, lparName, profile_name):
+        chsyscfgCmd = self.CMD['CHSYSCFG'] + \
+            self.OPT['CHSYSCFG']['-R']['LPAR'] + \
+            self.OPT['CHSYSCFG']['-M'] + cecName + \
+            self.OPT['CHSYSCFG']['-N'] + profile_name + \
+            self.OPT['CHSYSCFG']['-P'] + lparName + \
+            self.OPT['CHSYSCFG']['-O']['APPLY']
+        self.hmcconn.execute(chsyscfgCmd)
