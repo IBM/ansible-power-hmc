@@ -156,6 +156,12 @@ options:
             - Maximum virtual slots configuration of the partition.
             - if user doesn't pass, it create partition with I(max_virtual_slots) 20 as default.
         type: int
+    physical_io:
+        description:
+            - Physical IO adapter to be added to the partition
+            - An illustrative pattern for IO location code is XXXXX.XXX.XXXXXXX-P1-T1 or P1-T1
+        type: list
+        elements: str
     retain_vios_cfg:
         description:
             - Do not remove the VIOS configuration like server adapters, storage mappings associated with the partition when deleting the partition
@@ -288,6 +294,7 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions impor
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import parse_error_response
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import HmcRestClient
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import add_taggedIO_details
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import add_physical_io
 from random import randint
 from collections import OrderedDict
 try:
@@ -596,6 +603,7 @@ def create_partition(module, params):
     os_type = params['os_type']
     all_resources = params['all_resources']
     max_virtual_slots = str(params['max_virtual_slots'] or 20)
+    physical_io = params['physical_io']
     vios_name = None
     temp_template_name = "ansible_powervm_create_{0}".format(str(randint(1000, 9999)))
     temp_copied = False
@@ -696,6 +704,10 @@ def create_partition(module, params):
             add_taggedIO_details(temporary_temp_dom)
 
         rest_conn.updateLparNameAndIDToDom(temporary_temp_dom, config_dict)
+        # Add physical IO adapter
+        if physical_io:
+            add_physical_io(rest_conn, server_dom, temporary_temp_dom, physical_io)
+
         rest_conn.updateProcMemSettingsToDom(temporary_temp_dom, config_dict)
         # Virtual Network Configuration settings
         if params['virt_network_config']:
@@ -1090,6 +1102,7 @@ def run_module():
                                      slot_number=dict(type='int'),
                                  )
                                  ),
+        physical_io=dict(type='list', elements='str'),
         prof_name=dict(type='str'),
         all_resources=dict(type='bool'),
         max_virtual_slots=dict(type='int'),

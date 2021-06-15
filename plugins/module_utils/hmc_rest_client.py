@@ -166,6 +166,60 @@ def add_taggedIO_details(lpar_template_dom):
     ioConfigurationTag.addnext(etree.XML(taggedIO_payload))
 
 
+def lookup_physical_io(rest_conn, server_dom, drcname):
+    physical_io_list = server_dom.xpath("//AssociatedSystemIOConfiguration/IOAdapters/IOAdapterChoice")
+    drcname_occurences = server_dom.xpath("//AssociatedSystemIOConfiguration/IOAdapters//DeviceName[contains(text(),'" + drcname + "')]")
+    if len(drcname_occurences) > 1:
+        occurence = 0
+        for each in drcname_occurences:
+            # End Charater matching, handles the case where P1-C1 and P1-C12 should not be considered same
+            if each.text.endswith(drcname):
+                logger.debug("End Charaters matching")
+                occurence += 1
+                drcname = each.text
+
+        if occurence > 1:
+            raise Error("Given location code matching with adapters from multiple drawer")
+        elif occurence == 0:
+            return None
+
+    for each in physical_io_list:
+        if drcname in each.xpath("IOAdapter/DeviceName")[0].text:
+            return etree.ElementTree(each)
+
+    return None
+
+
+def add_physical_io(rest_conn, server_dom, lpar_template_dom, drcnames):
+    profileioslot_payload = ''
+    for drcname in drcnames:
+        # find the physical io adpater details from managed system dom
+        io_adapter_dom = lookup_physical_io(rest_conn, server_dom, drcname)
+        if not io_adapter_dom:
+            raise Error("Not able to find the matching IO Adapter on the Server")
+
+        drc_index = io_adapter_dom.xpath("//AdapterID")[0].text
+        location_code = io_adapter_dom.xpath("//DynamicReconfigurationConnectorName")[0].text
+        logger.debug("Location_code %s", location_code)
+
+        profileioslot_payload += '''<ProfileIOSlot schemaVersion="V1_6_0">
+                        <Metadata>
+                            <Atom/>
+                        </Metadata>
+                        <drcIndex kxe="false" kb="CUD">{0}</drcIndex>
+                        <locationCode kb="CUD" kxe="false">{1}</locationCode>
+                    </ProfileIOSlot>'''.format(drc_index, location_code)
+
+    profileioslots_payload = '''<profileIOSlots kxe="false" kb="CUD" schemaVersion="V1_6_0">
+                    <Metadata>
+                        <Atom/>
+                    </Metadata>
+                    {0}
+                  </profileIOSlots>'''.format(profileioslot_payload)
+    ioConfigurationTag = lpar_template_dom.xpath("//ioConfiguration/Metadata")[0]
+    ioConfigurationTag.addnext(etree.XML(profileioslots_payload))
+
+
 class HmcRestClient:
 
     def __init__(self, hmc_ip, username, password):
@@ -526,6 +580,7 @@ class HmcRestClient:
 
         partiton_template_xmlstr = etree.tostring(template_xml)
         partiton_template_xmlstr = partiton_template_xmlstr.decode("utf-8").replace("PartitionTemplate", LPAR_TEMPLATE_NS, 1)
+        logger.debug(partiton_template_xmlstr)
 
         resp = open_url(templateUrl,
                         headers=header,
