@@ -168,8 +168,9 @@ def add_taggedIO_details(lpar_template_dom):
 
 def lookup_physical_io(rest_conn, server_dom, drcname):
     physical_io_list = server_dom.xpath("//AssociatedSystemIOConfiguration/IOSlots/IOSlot")
-    drcname_occurences = server_dom.xpath("//AssociatedSystemIOConfiguration/IOSlots/" +
-                                          "IOSlot/RelatedIOAdapter/IOAdapter/DynamicReconfigurationConnectorName[contains(text(),'" + drcname + "')]")
+    drcname_occurences = server_dom.xpath("//AssociatedSystemIOConfiguration/IOSlots/"
+                                          + "IOSlot/RelatedIOAdapter/IOAdapter/"
+                                          + "DynamicReconfigurationConnectorName[contains(text(),'" + drcname + "')]")
     if len(drcname_occurences) > 1:
         occurence = 0
         for each in drcname_occurences:
