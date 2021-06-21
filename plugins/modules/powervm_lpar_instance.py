@@ -344,7 +344,6 @@ def validate_proc_mem(system_dom, proc, mem, proc_units=None):
 def validate_sub_dict(sub_key, params):
     mutually_exclusive_list = []
     together = []
-    mandatory_list = []
 
     for each in params.copy():
         if not params[each] or params[each] == '':
@@ -358,28 +357,17 @@ def validate_sub_dict(sub_key, params):
         together = ['volume_name', 'vios_name']
         mutually_exclusive_list = [('volume_name', 'vios_name'), ('volume_size',)]
 
-    if 'virt_network_config' == sub_key:
-        options = params.keys()
-        mandatory_list = ['network_name']
-        if len(options) < 1:
-            raise ParameterError("mandatory parameter '%s' is missing" % (mandatory_list[0]))
-
-    if len(mutually_exclusive_list) > 1:
+    if mutually_exclusive_list:
         list1 = [each for each in options if each in mutually_exclusive_list[0]]
         list2 = [each for each in options if each in mutually_exclusive_list[1]]
         if list1 and list2:
             raise ParameterError("Parameters: '%s' and '%s' are  mutually exclusive" %
                                  (', '.join(mutually_exclusive_list[0]), ', '.join(mutually_exclusive_list[1])))
 
-    if len(together) > 1:
+    if together:
         list3 = [each for each in options if each in together]
         if len(list3) >= 1 and set(list3) != set(together):
             raise ParameterError("Missing parameters %s" % (', '.join(set(together) - set(list3))))
-
-    if mandatory_list:
-        list4 = set(mandatory_list).issubset(set(params.keys()))
-        if not list4:
-            raise ParameterError("one or more mandatory parameter/s '%s' is missing" % (mandatory_list))
 
 
 def validate_parameters(params):
@@ -389,7 +377,7 @@ def validate_parameters(params):
         opr = params['state']
     else:
         opr = params['action']
-
+    
     if opr == 'present':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']
         unsupportedList = ['prof_name', 'keylock', 'iIPLsource', 'retain_vios_cfg', 'delete_vdisks']
@@ -429,9 +417,6 @@ def validate_parameters(params):
 
     if params['volume_config']:
         validate_sub_dict('volume_config', params['volume_config'])
-
-    if params['virt_network_config']:
-        validate_sub_dict('virt_network_config', params['virt_network_config'])
 
 
 def fetchAllInUsePhyVolumes(rest_conn, vios_uuid):
@@ -1063,7 +1048,6 @@ def perform_task(module):
     oper = 'state'
     if params['state'] is None:
         oper = 'action'
-
     try:
         return actions[params[oper]](module, params)
     except (ParameterError, HmcError, Error) as error:
@@ -1098,7 +1082,7 @@ def run_module():
                            ),
         virt_network_config=dict(type='dict',
                                  options=dict(
-                                     network_name=dict(type='str'),
+                                     network_name=dict(type='str', required=True),
                                      slot_number=dict(type='int'),
                                  )
                                  ),
@@ -1120,9 +1104,9 @@ def run_module():
         argument_spec=module_args,
         mutually_exclusive=[('state', 'action')],
         required_one_of=[('state', 'action')],
-        required_if=[['state', 'absent', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
+        required_if=[['state', 'facts', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
+                     ['state', 'absent', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
                      ['state', 'present', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']],
-                     ['state', 'facts', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
                      ['action', 'shutdown', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
                      ['action', 'poweron', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']]
                      ],

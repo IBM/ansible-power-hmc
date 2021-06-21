@@ -27,7 +27,8 @@ class HmcCommandStack():
                'LSSYSCFG': 'lssyscfg',
                'RMSYSCFG': 'rmsyscfg',
                'MKSYSCFG': 'mksyscfg',
-               'CHSYSCFG': 'chsyscfg'}
+               'CHSYSCFG': 'chsyscfg',
+               'CHSYSSTATE': 'chsysstate'}
 
     HMC_CMD_OPT = {'LSHMC': {'-N': ' -n ',
                              '-v': ' -v ',
@@ -233,7 +234,35 @@ class HmcCommandStack():
                                        'IPL_SOURCE': 'ipl_source', 'VIRTUAL_SERIAL_NUM': 'virtual_serial_num',
                                        'VTPM_VERSION': 'vtpm_version',
                                        'VTPM_ENCRYPTION': 'vtpm_encryption'}
-                                }
+                                },
+                   'CHSYSSTATE': {'-R': {'LPAR': ' -r lpar', 'SYS': ' -r sys', 'SYSPROF': ' -r sysprof'},
+                                  '-M': ' -m ',
+                                  '-O': {'ON': ' -o on ', 'ONSTANDBY': ' -o onstandby ', 'ONSTARTPOLICY': ' -o onstartpolicy ',
+                                         'ONSYSPROF': ' -o onsysprof ', 'ONHWDISK': ' -o onhwdisc ', 'OFF': ' -o off ',
+                                         'REBUILD': ' -o rebuild ', 'RECOVER': ' -o recover ', 'SPFAILOVER': ' -o spfailover ',
+                                         'CHKEY': ' -o chkey ', 'SHUTDOWN': ' -o shutdown ', 'OSSHUTDOWN': ' -o osshutdown ',
+                                         'DUMPRESTART': ' -o dumprestart ', 'RETRYDUMP': ' -o retrydump ', 'DSTON': ' -o dston ',
+                                         'REMOTEDSTOFF': ' -o remotedstoff ', 'REMOTEDSTON': ' -o remotedston ',
+                                         'CONSOLESERVICE': ' -o consoleservice ', 'IOPRESET': ' -o iopreset ', 'IOPDUMP': ' -o iopdump ',
+                                         'UNOWNEDIOOFF': ' -o unownediooff '},
+                                  '-F': ' -f ',
+                                  '-K': {'MANUAL': ' -k manual ', 'NORM': ' -k norm '},
+                                  '-B': {'NORM': ' -b norm ', 'DIAG_DEFAULT': ' -b dd ', 'DIAG_STORED': ' -b ds ', 'OK': ' -b of ', 'SMS': ' -b sms '},
+                                  '--IMMED': ' --immed ',
+                                  '-I': {'A': ' -i a ', 'B': ' -i b ', 'C': ' -i c ', 'D': ' -i d '},
+                                  '--RESTART': ' --restart ',
+                                  '-N': ' -n ',
+                                  '--ID': ' --id ',
+                                  '--IP': ' --ip ',
+                                  '--GATEWAY': ' --gateway ',
+                                  '--SERVERIP': ' --serverip ',
+                                  '--SERVERDIR': ' --serverdir ',
+                                  '--SPEED': {'AUTO': ' --speed auto ', '1': ' --speed 1 ', '10': ' --speed 10 ', '100': ' --speed 100 ',
+                                              '1000': ' --speed 1000 '},
+                                  '--DUPLEX': {'AUTO': ' --duplex auto ', 'HALF': ' --duplex half ', 'FULL': ' --duplex full '},
+                                  '--MTU': {'1500': ' --mtu 1500 ', '9000': ' --mtu 9000'},
+                                  '--VLAN': ' --vlan '
+                                  }
                    }
 
     def filterBuilder(self, cmdKey, configOptionsDict):

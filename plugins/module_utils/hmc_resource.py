@@ -265,3 +265,26 @@ class Hmc():
             self.OPT['CHSYSCFG']['-P'] + lparName + \
             self.OPT['CHSYSCFG']['-O']['APPLY']
         self.hmcconn.execute(chsyscfgCmd)
+
+    def managedSystemShutdown(self, cecName):
+        chsysstateCmd = self.CMD['CHSYSSTATE'] + \
+            self.OPT['CHSYSSTATE']['-R']['SYS'] + \
+            self.OPT['CHSYSSTATE']['-M'] + cecName +\
+            self.OPT['CHSYSSTATE']['-O']['OFF']
+        self.hmcconn.execute(chsysstateCmd)
+
+    def managedSystemPowerON(self, cecName):
+        chsysstateCmd = self.CMD['CHSYSSTATE'] + \
+            self.OPT['CHSYSSTATE']['-R']['SYS'] + \
+            self.OPT['CHSYSSTATE']['-M'] + cecName +\
+            self.OPT['CHSYSSTATE']['-O']['ON']
+        self.hmcconn.execute(chsysstateCmd)
+
+    def getManagedSystemDetails(self, cecName, attri):
+        lssyscfgCmd = self.CMD['LSSYSCFG'] + \
+            self.OPT['LSSYSCFG']['-R']['SYS'] + \
+            self.OPT['LSSYSCFG']['-M'] + cecName + \
+            self.OPT['LSSYSCFG']['-F'] + attri
+        result = self.hmcconn.execute(lssyscfgCmd)
+        result = result.strip()
+        return result
