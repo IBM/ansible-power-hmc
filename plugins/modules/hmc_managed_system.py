@@ -173,7 +173,7 @@ def run_module():
                       )
                       ),
         system_name=dict(type='str', required=True),
-        action=dict(type='str', choices=['poweron', 'poweroff']),
+        action=dict(type='str', required=True, choices=['poweron', 'poweroff']),
     )
 
     module = AnsibleModule(

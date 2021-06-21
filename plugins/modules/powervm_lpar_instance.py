@@ -139,6 +139,7 @@ options:
                 description:
                     - Virtual Network Name to be attached to the partition.
                       This parameter is mandatory with I(virt_network_config)
+                required: true
                 type: str
             slot_number:
                 description:
@@ -377,7 +378,7 @@ def validate_parameters(params):
         opr = params['state']
     else:
         opr = params['action']
-    
+
     if opr == 'present':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']
         unsupportedList = ['prof_name', 'keylock', 'iIPLsource', 'retain_vios_cfg', 'delete_vdisks']

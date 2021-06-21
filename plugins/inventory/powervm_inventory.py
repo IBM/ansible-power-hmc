@@ -345,7 +345,6 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             display.warning(msg=msg)
             logger.warning(msg)
 
-
     def get_lpars_by_system(self):
         systems = {}
 
