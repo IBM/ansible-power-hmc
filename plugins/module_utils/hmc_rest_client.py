@@ -205,7 +205,7 @@ def add_physical_io(rest_conn, server_dom, lpar_template_dom, drcnames):
         location_code = io_adapter_dom.xpath("//IOAdapter/DynamicReconfigurationConnectorName")[0].text
         logger.debug("Location_code %s", location_code)
 
-        profileioslot_payload += '''<ProfileIOSlot schemaVersion="V1_6_0">
+        profileioslot_payload += '''<ProfileIOSlot schemaVersion="V1_0">
                         <Metadata>
                             <Atom/>
                         </Metadata>
@@ -213,7 +213,7 @@ def add_physical_io(rest_conn, server_dom, lpar_template_dom, drcnames):
                         <locationCode kb="CUD" kxe="false">{1}</locationCode>
                     </ProfileIOSlot>'''.format(drc_index, location_code)
 
-    profileioslots_payload = '''<profileIOSlots kxe="false" kb="CUD" schemaVersion="V1_6_0">
+    profileioslots_payload = '''<profileIOSlots kxe="false" kb="CUD" schemaVersion="V1_0">
                     <Metadata>
                         <Atom/>
                     </Metadata>
