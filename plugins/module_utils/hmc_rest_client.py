@@ -373,6 +373,22 @@ class HmcRestClient:
         response = resp.read()
         return response
 
+    def getManagedSystemQuick(self, system_uuid):
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/quick".format(self.hmc_ip, system_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': '*/*'}
+        resp = open_url(url,
+                        headers=header,
+                        method='GET',
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=300)
+        if resp.code != 200:
+            logger.debug("Get of Logical Partition failed. Respsonse code: %d", resp.code)
+            return None
+        response = resp.read()
+        return response
+
     def getLogicalPartition(self, system_uuid, partition_name):
         lpar_uuid = None
         lpar_quick_list = []

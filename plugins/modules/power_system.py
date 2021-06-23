@@ -53,9 +53,12 @@ options:
             - C(poweroff) poweroff a specified I(system_name)
             - C(poweron) poweron a specified I(system_name)
         type: str
-        required: true
         choices: ['poweron', 'poweroff']
-
+    state:
+        description:
+            - C(facts) fetches destails of specified I(system_name)
+        type: str
+        choices: ['facts']
 '''
 
 EXAMPLES = '''
@@ -87,12 +90,16 @@ system_info:
 '''
 
 import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc.log"
+LOG_FILENAME = "/tmp/ansible_power_hmc_navin.log"
 logger = logging.getLogger(__name__)
+import sys
+import json
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_resource import Hmc
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import parse_error_response
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import HmcRestClient
 
 
 def init_logger():
@@ -144,15 +151,54 @@ def powerOffManagedSys(module, params):
     return True, None, None
 
 
+def fetchManagedSysDetails(module, params):
+    hmc_host = params['hmc_host']
+    hmc_user = params['hmc_auth']['username']
+    password = params['hmc_auth']['password']
+    system_name = params['system_name']
+    system_prop = None
+    system_uuid = None
+    changed = False
+
+    try:
+        rest_conn = HmcRestClient(hmc_host, hmc_user, password)
+    except Exception as error:
+        error_msg = parse_error_response(error)
+        module.fail_json(msg=error_msg)
+
+    try:
+        system_uuid, server_dom = rest_conn.getManagedSystem(system_name)
+        if not system_uuid:
+            module.fail_json(msg="Given system is not present")
+        else:
+            sys_resp = rest_conn.getManagedSystemQuick(system_uuid)
+            system_prop = json.loads(sys_resp)
+            changed = True
+    except (Exception, HmcError) as error:
+        error_msg = parse_error_response(error)
+        logger.debug("Line number: %d exception: %s", sys.exc_info()[2].tb_lineno, repr(error))
+        module.fail_json(msg=error_msg)
+    finally:
+        try:
+            rest_conn.logoff()
+        except Exception as logoff_error:
+            error_msg = parse_error_response(logoff_error)
+            module.warn(error_msg)
+
+    return changed, system_prop, None
+
+
 def perform_task(module):
 
     params = module.params
     actions = {
         "poweron": powerOnManagedSys,
         "poweroff": powerOffManagedSys,
+        "facts": fetchManagedSysDetails,
     }
     oper = 'action'
-
+    if params['action'] is None:
+        oper = 'state'
     try:
         return actions[params[oper]](module, params)
     except Exception as error:
@@ -173,12 +219,15 @@ def run_module():
                       )
                       ),
         system_name=dict(type='str', required=True),
-        action=dict(type='str', required=True, choices=['poweron', 'poweroff']),
+        action=dict(type='str', choices=['poweron', 'poweroff']),
+        state=dict(type='str', choices=['facts']),
     )
 
     module = AnsibleModule(
         argument_spec=module_args,
-        required_if=[['action', 'poweron', ['hmc_host', 'hmc_auth', 'system_name']],
+        required_one_of=[('state', 'action')],
+        required_if=[['state', 'facts', ['hmc_host', 'hmc_auth', 'system_name']],
+                     ['action', 'poweron', ['hmc_host', 'hmc_auth', 'system_name']],
                      ['action', 'poweroff', ['hmc_host', 'hmc_auth', 'system_name']],
                      ],
     )
