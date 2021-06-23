@@ -167,8 +167,10 @@ def add_taggedIO_details(lpar_template_dom):
 
 
 def lookup_physical_io(rest_conn, server_dom, drcname):
-    physical_io_list = server_dom.xpath("//AssociatedSystemIOConfiguration/IOAdapters/IOAdapterChoice")
-    drcname_occurences = server_dom.xpath("//AssociatedSystemIOConfiguration/IOAdapters//DeviceName[contains(text(),'" + drcname + "')]")
+    physical_io_list = server_dom.xpath("//AssociatedSystemIOConfiguration/IOSlots/IOSlot")
+    drcname_occurences = server_dom.xpath("//AssociatedSystemIOConfiguration/IOSlots/"
+                                          + "IOSlot/RelatedIOAdapter/IOAdapter/"
+                                          + "DynamicReconfigurationConnectorName[contains(text(),'" + drcname + "')]")
     if len(drcname_occurences) > 1:
         occurence = 0
         for each in drcname_occurences:
@@ -184,8 +186,9 @@ def lookup_physical_io(rest_conn, server_dom, drcname):
             return None
 
     for each in physical_io_list:
-        if drcname in each.xpath("IOAdapter/DeviceName")[0].text:
-            return etree.ElementTree(each)
+        each_eletree = etree.ElementTree(each)
+        if drcname in each_eletree.xpath("//RelatedIOAdapter/IOAdapter/DynamicReconfigurationConnectorName")[0].text:
+            return each_eletree
 
     return None
 
@@ -198,11 +201,11 @@ def add_physical_io(rest_conn, server_dom, lpar_template_dom, drcnames):
         if not io_adapter_dom:
             raise Error("Not able to find the matching IO Adapter on the Server")
 
-        drc_index = io_adapter_dom.xpath("//AdapterID")[0].text
-        location_code = io_adapter_dom.xpath("//DynamicReconfigurationConnectorName")[0].text
+        drc_index = io_adapter_dom.xpath("//IOAdapter/AdapterID")[0].text
+        location_code = io_adapter_dom.xpath("//IOAdapter/DynamicReconfigurationConnectorName")[0].text
         logger.debug("Location_code %s", location_code)
 
-        profileioslot_payload += '''<ProfileIOSlot schemaVersion="V1_6_0">
+        profileioslot_payload += '''<ProfileIOSlot schemaVersion="V1_0">
                         <Metadata>
                             <Atom/>
                         </Metadata>
@@ -210,7 +213,7 @@ def add_physical_io(rest_conn, server_dom, lpar_template_dom, drcnames):
                         <locationCode kb="CUD" kxe="false">{1}</locationCode>
                     </ProfileIOSlot>'''.format(drc_index, location_code)
 
-    profileioslots_payload = '''<profileIOSlots kxe="false" kb="CUD" schemaVersion="V1_6_0">
+    profileioslots_payload = '''<profileIOSlots kxe="false" kb="CUD" schemaVersion="V1_0">
                     <Metadata>
                         <Atom/>
                     </Metadata>
