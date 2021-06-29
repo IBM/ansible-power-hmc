@@ -288,3 +288,25 @@ class Hmc():
         result = self.hmcconn.execute(lssyscfgCmd)
         result = result.strip()
         return result
+
+    def checkManagedSysState(self, cecName, expectedState, timeoutInMin=12):
+        POLL_INTERVAL_IN_SEC = 30
+        WAIT_UNTIL_IN_SEC = timeoutInMin * 60
+
+        # Polling logic to make sure CEC state changed as expectedState
+        waited = 0
+        stateSuccess = False
+        while waited < WAIT_UNTIL_IN_SEC:
+            cec_state = self.getManagedSystemDetails(cecName, 'state')
+            if expectedState == cec_state:
+                logger.debug(cec_state)
+                stateSuccess = True
+                break
+            else:
+                logger.debug(cec_state)
+                waited += POLL_INTERVAL_IN_SEC
+
+            # waiting for 30 seconds
+            time.sleep(POLL_INTERVAL_IN_SEC)
+
+        return stateSuccess

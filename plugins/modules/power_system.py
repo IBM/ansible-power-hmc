@@ -114,6 +114,7 @@ def powerOnManagedSys(module, params):
     hmc_user = params['hmc_auth']['username']
     password = params['hmc_auth']['password']
     system_name = params['system_name']
+    changed = False
 
     hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(hmc_conn)
@@ -121,13 +122,18 @@ def powerOnManagedSys(module, params):
     try:
         system_state = hmc.getManagedSystemDetails(system_name, 'state')
         if system_state != 'Power Off':
-            return False, None, None
+            changed = False
         else:
             hmc.managedSystemPowerON(system_name)
+            if hmc.checkManagedSysState(system_name, 'Operating'):
+                changed = True
+            else:
+                changed = False
+
     except HmcError as on_system_error:
         return False, repr(on_system_error), None
 
-    return True, None, None
+    return changed, None, None
 
 
 def powerOffManagedSys(module, params):
@@ -135,6 +141,7 @@ def powerOffManagedSys(module, params):
     hmc_user = params['hmc_auth']['username']
     password = params['hmc_auth']['password']
     system_name = params['system_name']
+    changed = False
 
     hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(hmc_conn)
@@ -142,13 +149,17 @@ def powerOffManagedSys(module, params):
     try:
         system_state = hmc.getManagedSystemDetails(system_name, 'state')
         if system_state == 'Power Off':
-            return False, None, None
+            changed = False
         else:
             hmc.managedSystemShutdown(system_name)
+            if hmc.checkManagedSysState(system_name, 'Power Off'):
+                changed = True
+            else:
+                changed = False
     except HmcError as on_system_error:
         return False, repr(on_system_error), None
 
-    return True, None, None
+    return changed, None, None
 
 
 def fetchManagedSysDetails(module, params):
@@ -173,7 +184,6 @@ def fetchManagedSysDetails(module, params):
         else:
             sys_resp = rest_conn.getManagedSystemQuick(system_uuid)
             system_prop = json.loads(sys_resp)
-            changed = True
     except (Exception, HmcError) as error:
         error_msg = parse_error_response(error)
         logger.debug("Line number: %d exception: %s", sys.exc_info()[2].tb_lineno, repr(error))
@@ -225,6 +235,7 @@ def run_module():
 
     module = AnsibleModule(
         argument_spec=module_args,
+        mutually_exclusive=[('state', 'action')],
         required_one_of=[('state', 'action')],
         required_if=[['state', 'facts', ['hmc_host', 'hmc_auth', 'system_name']],
                      ['action', 'poweron', ['hmc_host', 'hmc_auth', 'system_name']],
