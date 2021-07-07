@@ -303,9 +303,13 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                         if partition_type == 'OS400' and self.identify_ibmi_by.lower() != 'omit':
                             value_for_ibmi = self.get_value_for_ibmi_lpar(lpar)
                             ibmi_state = lpar['PartitionState']
+                            lpar_name = self.get_lpar_name(lpar)
                             if value_for_ibmi and ibmi_state == 'running':
                                 self.inventory.add_group('IBMi_Running')
                                 self.inventory.add_host(value_for_ibmi, 'IBMi_Running')
+                                self._set_composite_vars(self.compose, lpar, lpar_name, strict=True)
+                                self._add_host_to_composed_groups(self.groups, lpar, lpar_name, strict=True)
+                                self._add_host_to_keyed_groups(self.keyed_groups, lpar, lpar_name, strict=True)
                             elif value_for_ibmi and ibmi_state != 'running':
                                 self.inventory.add_group('IBMi_unknown')
                                 self.inventory.add_host(value_for_ibmi, 'IBMi_unknown')
