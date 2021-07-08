@@ -38,6 +38,8 @@ DOCUMENTATION = '''
         - Torin Reilly (@torinreilly)
         - Michael Cohoon (@mtcohoon)
         - Ozzie Rodriguez
+        - Anil Vijayan
+        - Navinakumar Kandakur (@nkandak1)
     plugin_type: inventory
     version_added: "1.1.0"
     requirements:
@@ -129,7 +131,7 @@ DOCUMENTATION = '''
             description:
                 - Allows you to include partitions unable to be automatically detected
                   as a valid Ansible target.
-                - By default, partitions without ip's are ommited from the inventory.
+                - By default, Aix/Linux partitions without ip's and IBMi partitions in not running state are ommited from the inventory.
                   This is not be the case in the event you have lpar_name set for ansible_host_type.
                   If not, omitted partitions will be added to a group called "unknown"
                   and will can be identified by any LPAR property of your choosing
@@ -138,17 +140,6 @@ DOCUMENTATION = '''
                   targetting groups that include them. To avoid this, you can specify a host pattern
                   in a playbooks such as `targetgroup:!unknown`.
                   This will your playbook to run against all known hosts in your target group.
-            default: omit
-            type: str
-        identify_ibmi_by:
-            description:
-                - Allows you to include IBMi partitions.
-                - By default, IBMi partitions are ommited from the inventory.
-                  This is not the case in the event identify_ibmi_by set with lpar properties.
-                  If not, omitted IBMi running partitions will be added to group called "IBMi_running"
-                  and IBMi non running partitions will be added to group caled "IBMi_unknown"
-                  and will can be identified by LPAR property of your choosing
-                  (PartitionName or UUID are cmmon identifiers).
             default: omit
             type: str
 '''
@@ -274,7 +265,6 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
     def _populate_from_systems(self, systems):
         invalid_identify_unknown_by = False
-        invalid_identify_ibmi_by = False
         # Ensure there is a system defined to an HMC
         if not systems:
             raise HmcError("There are no systems defined to any valid HMCs provided or no valid connections were established.")
@@ -300,21 +290,16 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                         # cannot be added as a valid Ansible host.
                         partition_type = self.get_lpar_os_type(lpar)
 
-                        if partition_type == 'OS400' and self.identify_ibmi_by.lower() != 'omit':
-                            value_for_ibmi = self.get_value_for_ibmi_lpar(lpar)
-                            ibmi_state = lpar['PartitionState']
+                        if partition_type == 'OS400' and lpar['PartitionState'] == 'running' and self.ansible_display_name == "lpar_name":
                             lpar_name = self.get_lpar_name(lpar)
-                            if value_for_ibmi and ibmi_state == 'running':
-                                self.inventory.add_group('IBMi_Running')
-                                self.inventory.add_host(value_for_ibmi, 'IBMi_Running')
-                                self._set_composite_vars(self.compose, lpar, lpar_name, strict=True)
-                                self._add_host_to_composed_groups(self.groups, lpar, lpar_name, strict=True)
-                                self._add_host_to_keyed_groups(self.keyed_groups, lpar, lpar_name, strict=True)
-                            elif value_for_ibmi and ibmi_state != 'running':
-                                self.inventory.add_group('IBMi_unknown')
-                                self.inventory.add_host(value_for_ibmi, 'IBMi_unknown')
+                            if self.group_by_managed_system:
+                                self.inventory.add_group(system)
+                                self.inventory.add_host(lpar_name, system)
                             else:
-                                invalid_identify_ibmi_by = True
+                                self.inventory.add_host(lpar_name)
+                            self._set_composite_vars(self.compose, lpar, lpar_name, strict=True)
+                            self._add_host_to_composed_groups(self.groups, lpar, lpar_name, strict=True)
+                            self._add_host_to_keyed_groups(self.keyed_groups, lpar, lpar_name, strict=True)
                         elif self.identify_unknown_by.lower() != 'omit':
                             value_for_unknown = self.get_value_for_unknown_lpar(lpar)
                             if value_for_unknown:
@@ -342,10 +327,6 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         # Warn the user if the property they are using to use to identify partitions is invalid in some circumstances
         if invalid_identify_unknown_by:
             msg = ("Could not find property %s for some or all unknown partitions, as a result they will not be included." % self.identify_unknown_by)
-            display.warning(msg=msg)
-            logger.warning(msg)
-        if invalid_identify_ibmi_by:
-            msg = ("Could not find property %s for some or all ibmi partitions, as a result they will not be included." % self.identify_ibmi_by)
             display.warning(msg=msg)
             logger.warning(msg)
 
@@ -437,7 +418,6 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             advanced_fields=dict(type='bool', value=config.get("advanced_fields", False)),
             group_by_managed_system=dict(type='bool', value=config.get("group_by_managed_system", True)),
             identify_unknown_by=dict(type='str', value=config.get("identify_unknown_by", "omit")),
-            identify_ibmi_by=dict(type='str', value=config.get("identify_ibmi_by", "omit")),
         )
 
         self.validate_and_set_args(args)
@@ -495,10 +475,6 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
     def get_value_for_unknown_lpar(self, lpar):
         if self.identify_unknown_by in lpar:
             return lpar[self.identify_unknown_by]
-
-    def get_value_for_ibmi_lpar(self, lpar):
-        if self.identify_ibmi_by in lpar:
-            return lpar[self.identify_ibmi_by]
 
     def get_lpar_os_type(self, lpar):
         return lpar["PartitionType"]

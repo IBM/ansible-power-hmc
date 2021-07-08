@@ -84,7 +84,7 @@ EXAMPLES = '''
 
 RETURN = '''
 system_info:
-    description: Respective policy information
+    description: Respective System information
     type: dict
     returned: always
 '''
@@ -125,7 +125,7 @@ def powerOnManagedSys(module, params):
             changed = False
         else:
             hmc.managedSystemPowerON(system_name)
-            if hmc.checkManagedSysState(system_name, 'Operating'):
+            if hmc.checkManagedSysState(system_name, ['Operating', 'Standby']):
                 changed = True
             else:
                 changed = False
@@ -152,7 +152,7 @@ def powerOffManagedSys(module, params):
             changed = False
         else:
             hmc.managedSystemShutdown(system_name)
-            if hmc.checkManagedSysState(system_name, 'Power Off'):
+            if hmc.checkManagedSysState(system_name, ['Power Off']):
                 changed = True
             else:
                 changed = False

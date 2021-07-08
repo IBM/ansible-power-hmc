@@ -280,16 +280,18 @@ class Hmc():
             self.OPT['CHSYSSTATE']['-O']['ON']
         self.hmcconn.execute(chsysstateCmd)
 
-    def getManagedSystemDetails(self, cecName, attri):
+    def getManagedSystemDetails(self, cecName, attri=None):
         lssyscfgCmd = self.CMD['LSSYSCFG'] + \
             self.OPT['LSSYSCFG']['-R']['SYS'] + \
-            self.OPT['LSSYSCFG']['-M'] + cecName + \
-            self.OPT['LSSYSCFG']['-F'] + attri
+            self.OPT['LSSYSCFG']['-M'] + cecName
+        if attri:
+            lssyscfgCmd += self.OPT['LSSYSCFG']['-F'] + attri
+
         result = self.hmcconn.execute(lssyscfgCmd)
         result = result.strip()
         return result
 
-    def checkManagedSysState(self, cecName, expectedState, timeoutInMin=12):
+    def checkManagedSysState(self, cecName, expectedStates, timeoutInMin=12):
         POLL_INTERVAL_IN_SEC = 30
         WAIT_UNTIL_IN_SEC = timeoutInMin * 60
 
@@ -298,7 +300,7 @@ class Hmc():
         stateSuccess = False
         while waited < WAIT_UNTIL_IN_SEC:
             cec_state = self.getManagedSystemDetails(cecName, 'state')
-            if expectedState == cec_state:
+            if cec_state in expectedStates:
                 logger.debug(cec_state)
                 stateSuccess = True
                 break
