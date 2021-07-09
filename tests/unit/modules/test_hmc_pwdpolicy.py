@@ -11,73 +11,80 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions impor
 hmc_auth = {'username': 'hscroot', 'password': 'password_value'}
 policy_config = {'min_pwage': "int", 'pwage': "pwage", 'min_length': "min_value"}
 test_data = [
-    # policy_name is mentioned
+    # All Facts related Testdata
+    # Unsupported Parameter policy_name is mentioned for state: facts
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'facts', 'policy_type': 'policy_type', 'policy_name': 'policy_name',
       'policy_config': None}, "ParameterError: not supporting policy_name option"),
-    # policy_config is mentioned
+    # Unsupported Parameter policy_config is mentioned for state: facts
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'facts', 'policy_type': 'policy_type', 'policy_name': None,
       'policy_config': 'policy_config'}, "ParameterError: not supporting policy_config option"),
-    # policy_type  is not mentioned
+    # Mandatory Parameter policy_type  is not mentioned for state: facts
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'facts', 'policy_type': None, 'policy_name': None, 'policy_config': None},
      "state is facts but all of the following are missing: policy_type"),
-    # hmc_host is not mentioned
+    # Mandatory Parameter hmc_host is not mentioned for state: facts
     ({'hmc_host': None, 'hmc_auth': hmc_auth, 'state': 'facts', 'policy_type': 'policy_type', 'policy_name': None, 'policy_config': None},
      "missing required arguments: hmc_host"),
-    # hmc_auth is not mentioned
+    # Mandatory Parameter hmc_auth is not mentioned for state facts
     ({'hmc_host': "0.0.0.0", 'hmc_auth': {'username': None, 'password': None}, 'state': 'facts', 'policy_type': 'policy_type',
       'policy_name': None, 'policy_config': None}, "missing required arguments: hmc_auth")]
 test_data1 = [
-    # Ensure that password policy exists in hmc
-    # policy_type is mentioned
+    # All PasswordPolicy Creation TestData
+    # policy_type is mentioned for state: present
     ({'hmc_host': "0.0.0.0", 'policy_type': 'policies', 'hmc_auth': hmc_auth, 'state': 'present', 'policy_name': 'policy_name',
       'policy_config': 'policy_config'}, "ParameterError: not supporting policy_type option"),
-    # hmc_host is not mentioned
-    ({'hmc_host': None, 'hmc_auth': hmc_auth, 'state': 'facts', 'policy_type': None, 'policy_name': None, 'policy_config': None},
+    # Mandatory Parameter hmc_host is not mentioned for state: present
+    ({'hmc_host': None, 'hmc_auth': hmc_auth, 'state': 'present', 'policy_type': None, 'policy_name': None, 'policy_config': None},
      "missing required arguments: hmc_host"),
-    # hmc_auth is not mentioned
-    ({'hmc_host': "0.0.0.0", 'hmc_auth': {'username': None, 'password': None}, 'state': 'facts', 'policy_type': None, 'policy_name': None,
+    # Mandatory Parameter hmc_auth is not mentioned for state: present
+    ({'hmc_host': "0.0.0.0", 'hmc_auth': {'username': None, 'password': None}, 'state': 'present', 'policy_type': None, 'policy_name': None,
       'policy_config': None}, "missing required arguments: hmc_auth")]
 test_data2 = [
-    # Delete Password Policy
-    # policy_config is  mentioned
+    # All Delete Password Policy TestData
+    # Unsupported Parameter policy_config is  mentioned for state: absent
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'absent', 'policy_type': None, 'policy_name': None,
       'policy_config': policy_config}, "ParameterError: not supporting policy_config option"),
-    # policy_type is mentioned
+    # Mandatory Parameter policy_type is mentioned as None for state: absent
     ({'hmc_host': "0.0.0.0", 'policy_type': None, 'hmc_auth': hmc_auth, 'state': 'absent', 'policy_name': None, 'policy_config': None},
      "Parameter Error: given policy does not exist"),
-    # policy_type is mentioned
+    # Unsupported Parameter policy_type is mentioned for state: absent
     ({'hmc_host': "0.0.0.0", 'policy_type': 'policies', 'hmc_auth': hmc_auth, 'state': 'absent', 'policy_name': 'policy_name'},
-     "ParameterError: not supporting policy_type option")]
+     "ParameterError: not supporting policy_type option"),
+    # Unsupported state is mentioned
+    ({'hmc_host': "0.0.0.0", 'policy_type': None, 'policy_config': None, 'hmc_auth': hmc_auth, 'state': 'unittest', 'policy_name': 'policy_name'},
+     "value of state must be one of: present, modified, absent, facts, activated, deactivated, got: unittest")]
 
 test_data3 = [
-    # policy_type is mentioned
+    # All Activate Password Policy TestData
+    # Unsupported Parameter policy_type is mentioned for state: activated
     ({'hmc_host': "0.0.0.0", 'policy_type': 'policies', 'hmc_auth': hmc_auth, 'state': 'activated', 'policy_name': 'policy_name'},
      "ParameterError: not supporting policy_type option"),
-    # policy_config is  mentioned
+    # Unsupported Parameter policy_config is  mentioned for state: activated
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'activated', 'policy_type': None, 'policy_name': None,
       'policy_config': policy_config}, "ParameterError: not supporting policy_config option"),
-    # policy_name is not mentioned
-    ({'hmc_host': "0.0.0.0", 'policy_type': None, 'hmc_auth': hmc_auth, 'state': 'activated', 'policy_name': None, 'policy_config': None},
+    # Mandatory Parameter policy_name is not mentioned for state: activated
+    ({'hmc_host': "0.0.0.0", 'policiy_type': None, 'hmc_auth': hmc_auth, 'state': 'activated', 'policy_name': None, 'policy_config': None, 'policy_type': None},
      "ParameterError: given policy does not exist")]
 
 test_data4 = [
-    # policy_type is mentioned
+    # All Deactivated Password Policy TestData
+    # Unsupported Parameter policy_type is mentioned for state: deactivated
     ({'hmc_host': "0.0.0.0", 'policy_type': 'policies', 'hmc_auth': hmc_auth, 'state': 'deactivated', 'policy_name': 'policy_name'},
      "ParameterError: not supporting policy_type option"),
-    # policy_config is  mentioned
+    # Unsupported Parameter policy_config is  mentioned for state: deactivated
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'deactivated', 'policy_type': None, 'policy_name': None,
       'policy_config': policy_config}, "ParameterError: not supporting policy_config option"),
-    # policy_name is  mentioned
+    # Unsupported Parameter policy_name is  mentioned for state: deactivated
     ({'hmc_host': "0.0.0.0", 'policy_type': None, 'hmc_auth': hmc_auth, 'state': 'deactivated', 'policy_name': 'policy_name',
       'policy_config': None}, "ParameterError: not supporting policy_name option")]
 test_data5 = [
-    # policy_type is mentioned
+    # All Modify Password Policy Testdata
+    # Unsupported Parameter policy_type is mentioned for state: modified
     ({'hmc_host': "0.0.0.0", 'policy_type': 'policies', 'hmc_auth': hmc_auth, 'state': 'modified', 'policy_name': 'policy_name',
       'policy_config': policy_config}, "ParameterError: not supporting policy_type option"),
-    # when policy_nam is not mentioned
+    # Mandatory Parameter policy_name is not mentioned for state: modified
     ({'hmc_host': "0.0.0.0", 'policy_type': None, 'hmc_auth': hmc_auth, 'state': 'modified', 'policy_name': None,
       'policy_config': policy_config}, "ParameterError: given policy does not exist"),
-    # when policy_name is not mentioned
+    # Mandatory Parameter policy_config is not mentioned for state: modified
     ({'hmc_host': "0.0.0.0", 'policy_type': None, 'hmc_auth': hmc_auth, 'state': 'modified', 'policy_name': 'policy_name',
       'policy_config': {'min_pwage': None, 'pwage': None, 'min_length': None}}, "ParameterError: given policy does not exist")]
 
