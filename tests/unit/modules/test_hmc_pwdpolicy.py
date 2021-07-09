@@ -35,6 +35,9 @@ test_data1 = [
     # Mandatory Parameter hmc_host is not mentioned for state: present
     ({'hmc_host': None, 'hmc_auth': hmc_auth, 'state': 'present', 'policy_type': None, 'policy_name': None, 'policy_config': None},
      "missing required arguments: hmc_host"),
+    # Unsupported state is mentioned
+    ({'hmc_host': "0.0.0.0", 'policy_type': None, 'policy_config': None, 'hmc_auth': hmc_auth, 'state': 'unittest', 'policy_name': 'policy_name'},
+     "value of state must be one of: present, modified, absent, facts, activated, deactivated, got: unittest"),
     # Mandatory Parameter hmc_auth is not mentioned for state: present
     ({'hmc_host': "0.0.0.0", 'hmc_auth': {'username': None, 'password': None}, 'state': 'present', 'policy_type': None, 'policy_name': None,
       'policy_config': None}, "missing required arguments: hmc_auth")]
