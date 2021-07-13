@@ -291,15 +291,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                         partition_type = self.get_lpar_os_type(lpar)
 
                         if partition_type == 'OS400' and lpar['PartitionState'] == 'running' and self.ansible_display_name == "lpar_name":
-                            lpar_name = self.get_lpar_name(lpar)
-                            if self.group_by_managed_system:
-                                self.inventory.add_group(system)
-                                self.inventory.add_host(lpar_name, system)
-                            else:
-                                self.inventory.add_host(lpar_name)
-                            self._set_composite_vars(self.compose, lpar, lpar_name, strict=True)
-                            self._add_host_to_composed_groups(self.groups, lpar, lpar_name, strict=True)
-                            self._add_host_to_keyed_groups(self.keyed_groups, lpar, lpar_name, strict=True)
+                            entry_name = self.get_lpar_name(lpar)
+                            hostname = entry_name
                         elif self.identify_unknown_by.lower() != 'omit':
                             value_for_unknown = self.get_value_for_unknown_lpar(lpar)
                             if value_for_unknown:
@@ -307,7 +300,9 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                                 self.inventory.add_host(value_for_unknown, 'unknowns')
                             else:
                                 invalid_identify_unknown_by = True
-                        continue
+                            continue
+                        else:
+                            continue
 
                     # A valid IP address was found for this LPAR
                     if self.group_by_managed_system:
