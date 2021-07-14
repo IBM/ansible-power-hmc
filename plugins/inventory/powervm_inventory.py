@@ -38,6 +38,8 @@ DOCUMENTATION = '''
         - Torin Reilly (@torinreilly)
         - Michael Cohoon (@mtcohoon)
         - Ozzie Rodriguez
+        - Anil Vijayan
+        - Navinakumar Kandakur (@nkandak1)
     plugin_type: inventory
     version_added: "1.1.0"
     requirements:
@@ -129,7 +131,7 @@ DOCUMENTATION = '''
             description:
                 - Allows you to include partitions unable to be automatically detected
                   as a valid Ansible target.
-                - By default, partitions without ip's are ommited from the inventory.
+                - By default, Aix/Linux partitions without ip's and IBMi partitions in not running state are ommited from the inventory.
                   This is not be the case in the event you have lpar_name set for ansible_host_type.
                   If not, omitted partitions will be added to a group called "unknown"
                   and will can be identified by any LPAR property of your choosing
@@ -286,14 +288,21 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                     except LparFieldNotFoundError:
                         # If the IP address was missing, this LPAR is 'unknown' and
                         # cannot be added as a valid Ansible host.
-                        if self.identify_unknown_by.lower() != 'omit':
+                        partition_type = self.get_lpar_os_type(lpar)
+
+                        if partition_type == 'OS400' and lpar['PartitionState'] == 'running' and self.ansible_display_name == "lpar_name":
+                            entry_name = self.get_lpar_name(lpar)
+                            hostname = entry_name
+                        elif self.identify_unknown_by.lower() != 'omit':
                             value_for_unknown = self.get_value_for_unknown_lpar(lpar)
                             if value_for_unknown:
                                 self.inventory.add_group('unknowns')
                                 self.inventory.add_host(value_for_unknown, 'unknowns')
                             else:
                                 invalid_identify_unknown_by = True
-                        continue
+                            continue
+                        else:
+                            continue
 
                     # A valid IP address was found for this LPAR
                     if self.group_by_managed_system:
@@ -462,6 +471,9 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         if self.identify_unknown_by in lpar:
             return lpar[self.identify_unknown_by]
 
+    def get_lpar_os_type(self, lpar):
+        return lpar["PartitionType"]
+
     def get_tag_text(self, e):
         lpar_data = {}
         for child in e:
@@ -476,11 +488,9 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         if "ResourceMonitoringIPAddress" in lpar and lpar["ResourceMonitoringIPAddress"] in self.exclude_ip:
             # LPAR excluded due to IP address
             return True
-
         if "PartitionName" in lpar and lpar["PartitionName"] in self.exclude_lpar:
             # LPAR excluded due to partinion name
             return True
-
         return False
 
     def matches_filters(self, lpar):

@@ -265,3 +265,50 @@ class Hmc():
             self.OPT['CHSYSCFG']['-P'] + lparName + \
             self.OPT['CHSYSCFG']['-O']['APPLY']
         self.hmcconn.execute(chsyscfgCmd)
+
+    def managedSystemShutdown(self, cecName):
+        chsysstateCmd = self.CMD['CHSYSSTATE'] + \
+            self.OPT['CHSYSSTATE']['-R']['SYS'] + \
+            self.OPT['CHSYSSTATE']['-M'] + cecName +\
+            self.OPT['CHSYSSTATE']['-O']['OFF']
+        self.hmcconn.execute(chsysstateCmd)
+
+    def managedSystemPowerON(self, cecName):
+        chsysstateCmd = self.CMD['CHSYSSTATE'] + \
+            self.OPT['CHSYSSTATE']['-R']['SYS'] + \
+            self.OPT['CHSYSSTATE']['-M'] + cecName +\
+            self.OPT['CHSYSSTATE']['-O']['ON']
+        self.hmcconn.execute(chsysstateCmd)
+
+    def getManagedSystemDetails(self, cecName, attri=None):
+        lssyscfgCmd = self.CMD['LSSYSCFG'] + \
+            self.OPT['LSSYSCFG']['-R']['SYS'] + \
+            self.OPT['LSSYSCFG']['-M'] + cecName
+        if attri:
+            lssyscfgCmd += self.OPT['LSSYSCFG']['-F'] + attri
+
+        result = self.hmcconn.execute(lssyscfgCmd)
+        result = result.strip()
+        return result
+
+    def checkManagedSysState(self, cecName, expectedStates, timeoutInMin=12):
+        POLL_INTERVAL_IN_SEC = 30
+        WAIT_UNTIL_IN_SEC = timeoutInMin * 60
+
+        # Polling logic to make sure CEC state changed as expectedState
+        waited = 0
+        stateSuccess = False
+        while waited < WAIT_UNTIL_IN_SEC:
+            cec_state = self.getManagedSystemDetails(cecName, 'state')
+            if cec_state in expectedStates:
+                logger.debug(cec_state)
+                stateSuccess = True
+                break
+            else:
+                logger.debug(cec_state)
+                waited += POLL_INTERVAL_IN_SEC
+
+            # waiting for 30 seconds
+            time.sleep(POLL_INTERVAL_IN_SEC)
+
+        return stateSuccess
