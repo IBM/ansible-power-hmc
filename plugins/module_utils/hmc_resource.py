@@ -312,3 +312,23 @@ class Hmc():
             time.sleep(POLL_INTERVAL_IN_SEC)
 
         return stateSuccess
+
+    def configureSystemGeneralSettings(self, cecName, sysConfig):
+        sysConfig = self.cmdClass.convertKeysToUpper(sysConfig)
+        chsyscfgCmd = self.CMD['CHSYSCFG'] + \
+            self.OPT['CHSYSCFG']['-R']['SYS'] + \
+            self.OPT['CHSYSCFG']['-M'] + cecName
+        chsyscfgCmd += self.cmdClass.i_a_ConfigBuilder('CHSYSCFG', '-I', sysConfig)
+        logger.debug(chsyscfgCmd)
+        self.hmcconn.execute(chsyscfgCmd)
+
+    def configureSystemMemorySettings(self, cecName, sysConfig, oper):
+        oper = oper.upper()
+        sysConfig = self.cmdClass.convertKeysToUpper(sysConfig)
+        chhwresCmd = self.CMD['CHHWRES'] + \
+            self.OPT['CHHWRES']['-R']['MEM'] + \
+            self.OPT['CHHWRES']['-M'] + cecName + \
+            self.OPT['CHHWRES']['-O'][oper]
+        chhwresCmd += self.cmdClass.i_a_ConfigBuilder('CHHWRES', '-A', sysConfig)
+        logger.debug(chhwresCmd)
+        self.hmcconn.execute(chhwresCmd)
