@@ -51,7 +51,7 @@ options:
     new_name:
         description:
             - The new name to be configured on specified I(system_name)
-            - This option works with modify_syscfg state
+            - This option works with I(modify_syscfg) state
         type: str
     power_off_policy:
         description:
@@ -71,18 +71,18 @@ options:
         description:
             - Configures the number of pages of huge page memory that is requested by the managed system.
             - You can change this value only when the managed system is powered off.
-            - This option works with I(modify_hwres)
+            - This option works with I(modify_hwres) state
         type: int
     mem_mirroring_mode:
         description:
             - Configures the memory mirroring mode memory settings on specified I(system_name) for the next system power-on or system restart
-            - This option works with I(modify_hwres)
+            - This option works with I(modify_hwres) state
         type: str
         choices: ['none', 'sys_firmware_only']
     pend_mem_region_size:
         description:
             - Configures the memory region size system memory setting on specified I(system_name)
-            - This option works with I(modify_hwres)
+            - This option works with I(modify_hwres) state
         type: str
         choices: ['auto', '16', '32', '64', '128', '256']
     action:

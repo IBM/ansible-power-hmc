@@ -310,7 +310,7 @@ class HmcCommandStack():
                                       'DEDUP_TABLE_RATIO': 'dedup_table_ratio', 'NEW_NAME': 'new_name',
                                       'MAX_POOL_PROC_UNITS': 'max_pool_proc_units', 'RESERVED_POOL_PROC_UNITS': 'reserved_pool_proc_units',
                                       'SWITCH_MODE': 'switch_mode', 'IS_TRUNK': 'is_trunk', 'IEEE_VIRTUAL_ETH': 'ieee_virtual_eth',
-                                      'TRUNK_PRIORITY': 'trunk_priority', 'NEW_NAME': 'new_name', 'ADDL_VLAN_IDS': 'addl_vlan_ids',
+                                      'TRUNK_PRIORITY': 'trunk_priority', 'ADDL_VLAN_IDS': 'addl_vlan_ids',
                                       'VSWITCH': 'vswitch', 'SLOT_ID': 'slot_id', 'CONN_SPEED': 'conn_speed', 'PHYS_PORT_ID': 'phys_port_id',
                                       'MAX_ETH_LOGICAL_PORTS': 'max_eth_logical_ports', 'MAX_LOGICAL_PORTS_OPTION': 'max_logical_ports_option',
                                       'MAX_RECV_PACKET_SIZE': 'max_recv_packet_size', 'PHYS_PORT_LABEL': 'phys_port_label',
