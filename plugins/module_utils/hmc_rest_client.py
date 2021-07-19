@@ -1020,3 +1020,51 @@ class HmcRestClient:
         vnw_payload_xml = etree.XML(vnw_payload)
         client_nw_adapter_tag = template_xml.xpath("//ioConfiguration")[0]
         client_nw_adapter_tag.addnext(vnw_payload_xml)
+
+    def vios_fetch_fcports_info(self, viosuuid):
+        vios_dom = self.getVirtualIOServer(viosuuid)
+        phys_fc_ports = vios_dom.xpath("//PhysicalFibreChannelPort")
+        fc_ports = []
+        available_ports = None
+        for each in phys_fc_ports:
+            # check if <AvailablePorts> is present for respective fc adapter
+            available_ports = each.xpath("AvailablePorts")
+            if not available_ports:
+                logger.debug("Skipping since not NPIV capable")
+                continue
+            fcport = {}
+            fcport['LocationCode'] = each.xpath("LocationCode")[0].text
+            fcport['PortName'] = each.xpath("PortName")[0].text
+            fc_ports.append(fcport)
+        return fc_ports
+
+    def updateFCSettingsToDom(self, lpar_template_dom, config_list):
+        fc_client_adapter = None
+        fc_clients = ''
+        for fc in config_list:
+            fc_client_adapter = '''<VirtualFibreChannelClientAdapter schemaVersion="V1_0">
+                <Metadata>
+                    <Atom/>
+                </Metadata>
+                <locationCode kb="CUD" kxe="false">{0}</locationCode>
+                <connectingPartitionName kb="CUD" kxe="false">{1}</connectingPartitionName>
+                <portName kb="CUD" kxe="false">{2}</portName>
+            </VirtualFibreChannelClientAdapter>'''.format(fc['LocationCode'], fc['viosname'], fc['PortName'])
+
+            fc_client_adpt_dom = etree.XML(fc_client_adapter)
+            if 'wwpn_pair' in fc:
+                wwpn_str = ' '.join(fc['wwpn_pair'].split(':'))
+                wwpn_xml = '<wwpns kb="CUD" kxe="false">{0}</wwpns>'.format(wwpn_str)
+                fc_client_adpt_dom.xpath("//locationCode")[0].addnext(etree.XML(wwpn_xml))
+
+            fc_clients += ET.tostring(fc_client_adpt_dom).decode("utf-8")
+
+        virtualFibreChannelClientAdapters = '''<virtualFibreChannelClientAdapters kb="CUD" kxe="false" schemaVersion="V1_0">
+            <Metadata>
+                <Atom/>
+            </Metadata>
+            {0}
+            </virtualFibreChannelClientAdapters>'''.format(fc_clients)
+
+        suspendEnableTag = lpar_template_dom.xpath("//suspendEnable")[0]
+        suspendEnableTag.addprevious(etree.XML(virtualFibreChannelClientAdapters))
