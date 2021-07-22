@@ -285,9 +285,23 @@ class Hmc():
             self.OPT['LSSYSCFG']['-R']['SYS'] + \
             self.OPT['LSSYSCFG']['-M'] + cecName
         if attri:
-            lssyscfgCmd += self.OPT['LSSYSCFG']['-F'] + attri
+            attr_str = ",".join(attri)
+            lssyscfgCmd += self.OPT['LSSYSCFG']['-F'] + attr_str
 
         result = self.hmcconn.execute(lssyscfgCmd)
+        result = result.strip()
+        return result
+
+    def getManagedSystemResourceDetails(self, system_name, resource, level, attr=None):
+        lshwresCmd = self.CMD['LSHWRES'] + \
+            self.OPT['LSHWRES']['-R'] + resource + \
+            self.OPT['LSHWRES']['-M'] + system_name + \
+            self.OPT['LSHWRES']['--LEVEL'] + level
+        if attr:
+            attr_str = ",".join(attr)
+            lshwresCmd += self.OPT['LSHWRES']['-F'] + attr_str
+        logger.debug(lshwresCmd)
+        result = self.hmcconn.execute(lshwresCmd)
         result = result.strip()
         return result
 
@@ -299,7 +313,7 @@ class Hmc():
         waited = 0
         stateSuccess = False
         while waited < WAIT_UNTIL_IN_SEC:
-            cec_state = self.getManagedSystemDetails(cecName, 'state')
+            cec_state = self.getManagedSystemDetails(cecName, ['state'])
             if cec_state in expectedStates:
                 logger.debug(cec_state)
                 stateSuccess = True

@@ -129,7 +129,7 @@ system_info:
 '''
 
 import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc_navin.log"
+LOG_FILENAME = "/tmp/ansible_power_hmc.log"
 logger = logging.getLogger(__name__)
 import sys
 import json
@@ -151,7 +151,6 @@ def init_logger():
 
 def build_dict(params):
     config_dict = {}
-    logger.debug(config_dict)
     for key, value in params.items():
         if key in ['state', 'hmc_host', 'hmc_auth', 'system_name']:
             continue
@@ -216,7 +215,7 @@ def powerOnManagedSys(module, params):
     hmc = Hmc(hmc_conn)
 
     try:
-        system_state = hmc.getManagedSystemDetails(system_name, 'state')
+        system_state = hmc.getManagedSystemDetails(system_name, ['state'])
         if system_state != 'Power Off':
             changed = False
         else:
@@ -243,7 +242,7 @@ def powerOffManagedSys(module, params):
     hmc = Hmc(hmc_conn)
 
     try:
-        system_state = hmc.getManagedSystemDetails(system_name, 'state')
+        system_state = hmc.getManagedSystemDetails(system_name, ['state'])
         if system_state == 'Power Off':
             changed = False
         else:
@@ -265,16 +264,23 @@ def modifySystemConfiguration(module, params):
     system_name = params['system_name']
     changed = False
     validate_parameters(params)
+    attr_ls = ['name', 'power_off_policy', 'power_on_lpar_start_policy']
+    attr_ch_key = ['new_name', 'power_off_policy', 'power_on_lpar_start_policy']
     sett_dict = build_dict(params)
     if not sett_dict:
-        module.fail_json(msg="Atlest one of the System change configuration should to be provided")
+        module.fail_json(msg="Atleast one of the System change configuration should to be provided")
 
     hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(hmc_conn)
 
     try:
-        hmc.configureSystemGeneralSettings(system_name, sett_dict)
-        changed = True
+        res = hmc.getManagedSystemDetails(system_name, attr_ls)
+        attr_ch_val = res.split(",")
+        logger.debug(attr_ch_val)
+        attr_dict = dict(zip(attr_ch_key, attr_ch_val))
+        if not sett_dict.items() <= attr_dict.items():
+            hmc.configureSystemGeneralSettings(system_name, sett_dict)
+            changed = True
     except HmcError as on_system_error:
         return changed, repr(on_system_error), None
 
@@ -289,16 +295,24 @@ def modifySystemHardwareResources(module, params):
     changed = False
     validate_parameters(params)
     sett_dict = build_dict(params)
+    attr_ls = list(sett_dict.keys())
     if not sett_dict:
-        module.fail_json(msg="At lest one of the System Hardware Resources should to be provided")
+        module.fail_json(msg="Atleast one of the System Hardware Resources should to be provided")
 
     hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(hmc_conn)
 
     try:
-        hmc.configureSystemMemorySettings(system_name, sett_dict, 's')
-        changed = True
+        res = hmc.getManagedSystemResourceDetails(system_name, 'mem', 'sys', attr_ls)
+        attr_ch_val = res.split(",")
+        attr_dict = dict(zip(attr_ls, attr_ch_val))
+        if not sett_dict.items() <= attr_dict.items():
+            hmc.configureSystemMemorySettings(system_name, sett_dict, 's')
+            changed = True
     except HmcError as on_system_error:
+        if "The invalid attribute is mem_mirroring_mode" in repr(on_system_error):
+            on_system_error = "HSCLA97C The operation failed. Please ensure that the platform is memory mirror capable."
+        logger.debug(on_system_error)
         return changed, repr(on_system_error), None
 
     return changed, None, None

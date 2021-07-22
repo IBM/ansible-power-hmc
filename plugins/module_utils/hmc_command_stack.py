@@ -29,7 +29,8 @@ class HmcCommandStack():
                'MKSYSCFG': 'mksyscfg',
                'CHSYSCFG': 'chsyscfg',
                'CHSYSSTATE': 'chsysstate',
-               'CHHWRES': 'chhwres'}
+               'CHHWRES': 'chhwres',
+               'LSHWRES': 'lshwres'}
 
     HMC_CMD_OPT = {'LSHMC': {'-N': ' -n ',
                              '-v': ' -v ',
@@ -150,6 +151,10 @@ class HmcCommandStack():
                    'LSSYSCFG': {'-R': {'LPAR': ' -r lpar', 'SYS': ' -r sys', 'PROF': ' -r prof', 'SYSPROF': ' -r sysprof'},
                                 '-M': ' -m ',
                                 '-F': ' -F '},
+                   'LSHWRES': {'-R': ' -r ',
+                               '-M': ' -m ',
+                               '--LEVEL': ' --level ',
+                               '-F': ' -F '},
                    'RMSYSCFG': {'-R': {'LPAR': ' -r lpar'},
                                 '-M': ' -m ',
                                 '-N': ' -n ',
