@@ -149,7 +149,8 @@ options:
                 type: int
     npiv_config:
         description:
-            - 
+            - N-Port ID Virtualization also known as Virtual Fibre of the partition
+            - User can provide two fc port configurations and mapping will be created with VIOS implicitly
         type: list
         elements: dict
         suboptions:
@@ -608,6 +609,8 @@ def wwpn_pair_is_valid(wwpn):
 def fetch_fc_config(rest_conn, system_uuid, fc_config_list):
     vios_response = rest_conn.getVirtualIOServersQuick(system_uuid)
     fcports_identified = []
+    if len(fc_config_list) > 2:
+        raise Error("More than two fc ports are not supported")
     for each_fc in fc_config_list:
         vios = None
         if vios_response:
@@ -618,8 +621,8 @@ def fetch_fc_config(rest_conn, system_uuid, fc_config_list):
 
         if each_fc['fc_port'] is not None:
             vios_fcports = rest_conn.vios_fetch_fcports_info(vios[0]['UUID'])
-            port_identified = [v_fcPort for v_fcPort in vios_fcports if v_fcPort['LocationCode'] == each_fc['fc_port'] or
-                               v_fcPort['PortName'] == each_fc['fc_port']]
+            port_identified = [v_fcPort for v_fcPort in vios_fcports if v_fcPort['LocationCode'] == each_fc['fc_port']
+                               or v_fcPort['PortName'] == each_fc['fc_port']]
             if port_identified:
                 port_identified[0].update({'viosname': each_fc['vios_name']})
                 if each_fc['wwpn_pair'] is not None and wwpn_pair_is_valid(each_fc['wwpn_pair']):
@@ -657,6 +660,7 @@ def create_partition(module, params):
     nw_uuid = None
     virt_network_name = None
     virtual_slot_number = None
+    fcports_config = None
     cli_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(cli_conn)
 
@@ -715,6 +719,9 @@ def create_partition(module, params):
         return True, None, None
 
     validate_proc_mem(server_dom, int(proc), int(mem))
+
+    if params['npiv_config']:
+        fcports_config = fetch_fc_config(rest_conn, system_uuid, params['npiv_config'])
 
     try:
         if os_type in ['aix', 'linux', 'aix_linux']:
@@ -819,8 +826,7 @@ def create_partition(module, params):
             else:
                 module.fail_json(msg="Unable to identify free physical volume")
 
-        if params['npiv_config']:
-            fcports_config = fetch_fc_config(rest_conn, system_uuid, params['npiv_config'])
+        if fcports_config:
             rest_conn.updateFCSettingsToDom(draft_template_dom, fcports_config)
             rest_conn.updatePartitionTemplate(draft_uuid, draft_template_dom)
 
@@ -1201,7 +1207,7 @@ def run_module():
         ),
     )
 
-    if module._verbosity >= 1:
+    if module._verbosity >= 5:
         init_logger()
 
     changed, info, warning = perform_task(module)
