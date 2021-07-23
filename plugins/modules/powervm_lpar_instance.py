@@ -5,7 +5,6 @@
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
-import string
 
 
 ANSIBLE_METADATA = {
@@ -149,7 +148,7 @@ options:
                 type: int
     npiv_config:
         description:
-            - N-Port ID Virtualization also known as Virtual Fibre of the partition
+            - To configure N-Port ID Virtualization also known as Virtual Fibre of the partition
             - User can provide two fc port configurations and mapping will be created with VIOS implicitly
         type: list
         elements: dict
@@ -158,15 +157,20 @@ options:
                 description:
                     - The name of the vios in which fc port available
                     - This option is mandatory
+                required: true
+                type: str
             fc_port:
                 description:
                     - The port to be used for npiv. User can specify either port name or fully qualified location code
                     - This option is mandatory
+                required: true
+                type: str
             wwpn_pair:
                 description:
                     - The WWPN pair value to be configuired with client FC adapter.
                     - Both the WWPN value should be separated with colon delimiter
                     - Optional, if not provided the value will be auto assigned
+                type: str
     all_resources:
         description:
             - Create a partition withh all the resources available in the managed system.
@@ -307,6 +311,7 @@ partition_info:
 
 import sys
 import json
+import string
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_resource import Hmc
