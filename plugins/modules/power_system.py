@@ -51,12 +51,12 @@ options:
     new_name:
         description:
             - The new name to be configured on specified I(system_name)
-            - This option works with I(modify_syscfg) state
+            - This option works with I(modify_syscfg) action
         type: str
     power_off_policy:
         description:
             - power off policy to be configured on specified I(system_name)
-            - This option works with I(modify_syscfg) state
+            - This option works with I(modify_syscfg) action
             - Configuring this option with '1' will power off Managed System after all partitions are shut down
             - And Configuring this option with '0' will not power off Managed System after all partitions are shut down
         type: int
@@ -64,40 +64,41 @@ options:
     power_on_lpar_start_policy:
         description:
             - power on partition start policy to be configured on specified I(system_name) for the next system restart
-            - This option works with I(modify_syscfg) state
+            - This option works with I(modify_syscfg) action
         type: str
         choices: ['autostart', 'userinit', 'autorecovery']
     requested_num_sys_huge_pages:
         description:
-            - Configures the number of pages of huge page memory that is requested by the managed system.
+            - Configures the number of pages of huge page memory.
             - You can change this value only when the managed system is powered off.
-            - This option works with I(modify_hwres) state
+            - This option works with I(modify_hwres) action
         type: int
     mem_mirroring_mode:
         description:
-            - Configures the memory mirroring mode memory settings on specified I(system_name) for the next system power-on or system restart
-            - This option works with I(modify_hwres) state
+            - Configures the memory mirroring mode on specified I(system_name) for the next system power-on or system restart
+            - This option works with I(modify_hwres) action
         type: str
         choices: ['none', 'sys_firmware_only']
     pend_mem_region_size:
         description:
-            - Configures the memory region size system memory setting on specified I(system_name)
-            - This option works with I(modify_hwres) state
+            - Configures the memory region size setting on specified I(system_name)
+            - choices are in MB
+            - This option works with I(modify_hwres) action
         type: str
         choices: ['auto', '16', '32', '64', '128', '256']
     action:
         description:
             - C(poweroff) poweroff a specified I(system_name)
             - C(poweron) poweron a specified I(system_name)
-        type: str
-        choices: ['poweron', 'poweroff']
-    state:
-        description:
-            - C(facts) fetches destails of specified I(system_name)
             - C(modify_syscfg) Makes system configurations of specified I(system_name)
             - C(modify_hwres) Makes hardware resource configurations of specified I(system_name)
         type: str
-        choices: ['facts', 'modify_syscfg', 'modify_hwres']
+        choices: ['poweron', 'poweroff', 'modify_syscfg', 'modify_hwres']
+    state:
+        description:
+            - C(facts) fetches destails of specified I(system_name)
+        type: str
+        choices: ['facts']
 '''
 
 EXAMPLES = '''
@@ -133,6 +134,7 @@ LOG_FILENAME = "/tmp/ansible_power_hmc.log"
 logger = logging.getLogger(__name__)
 import sys
 import json
+import re
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_resource import Hmc
@@ -152,7 +154,7 @@ def init_logger():
 def build_dict(params):
     config_dict = {}
     for key, value in params.items():
-        if key in ['state', 'hmc_host', 'hmc_auth', 'system_name']:
+        if key in ['action', 'hmc_host', 'hmc_auth', 'system_name']:
             continue
         if value is None:
             continue
@@ -264,8 +266,6 @@ def modifySystemConfiguration(module, params):
     system_name = params['system_name']
     changed = False
     validate_parameters(params)
-    attr_ls = ['name', 'power_off_policy', 'power_on_lpar_start_policy']
-    attr_ch_key = ['new_name', 'power_off_policy', 'power_on_lpar_start_policy']
     sett_dict = build_dict(params)
     if not sett_dict:
         module.fail_json(msg="Atleast one of the System change configuration should to be provided")
@@ -274,12 +274,12 @@ def modifySystemConfiguration(module, params):
     hmc = Hmc(hmc_conn)
 
     try:
-        res = hmc.getManagedSystemDetails(system_name, attr_ls)
-        attr_ch_val = res.split(",")
-        logger.debug(attr_ch_val)
-        attr_dict = dict(zip(attr_ch_key, attr_ch_val))
+        res = hmc.getManagedSystemDetails(system_name)
+        li = re.findall(r'\".+?\"|\w+\=\w+', res)
+        attr_dict = {each.split('=')[0]: each.split('=')[1] for each in li}
+        attr_dict['new_name'] = attr_dict.pop('name')
         if not sett_dict.items() <= attr_dict.items():
-            hmc.configureSystemGeneralSettings(system_name, sett_dict)
+            hmc.confSysGenSettings(system_name, sett_dict)
             changed = True
     except HmcError as on_system_error:
         return changed, repr(on_system_error), None
@@ -303,11 +303,11 @@ def modifySystemHardwareResources(module, params):
     hmc = Hmc(hmc_conn)
 
     try:
-        res = hmc.getManagedSystemResourceDetails(system_name, 'mem', 'sys', attr_ls)
+        res = hmc.getManagedSystemHwres(system_name, 'mem', 'sys', attr_ls)
         attr_ch_val = res.split(",")
         attr_dict = dict(zip(attr_ls, attr_ch_val))
         if not sett_dict.items() <= attr_dict.items():
-            hmc.configureSystemMemorySettings(system_name, sett_dict, 's')
+            hmc.confSysMem(system_name, sett_dict, 's')
             changed = True
     except HmcError as on_system_error:
         if "The invalid attribute is mem_mirroring_mode" in repr(on_system_error):
@@ -388,13 +388,13 @@ def run_module():
                       ),
         system_name=dict(type='str', required=True),
         new_name=dict(type='str'),
-        power_off_policy=dict(type='int', choices=[0, 1]),
+        power_off_policy=dict(type='int', choices=[1, 0]),
         power_on_lpar_start_policy=dict(type='str', choices=['autostart', 'userinit', 'autorecovery']),
         requested_num_sys_huge_pages=dict(type='int'),
         mem_mirroring_mode=dict(type='str', choices=['none', 'sys_firmware_only']),
         pend_mem_region_size=dict(type='str', choices=['auto', '16', '32', '64', '128', '256']),
-        action=dict(type='str', choices=['poweron', 'poweroff']),
-        state=dict(type='str', choices=['facts', 'modify_syscfg', 'modify_hwres']),
+        action=dict(type='str', choices=['poweron', 'poweroff', 'modify_syscfg', 'modify_hwres']),
+        state=dict(type='str', choices=['facts']),
     )
 
     module = AnsibleModule(
@@ -404,8 +404,8 @@ def run_module():
         required_if=[['state', 'facts', ['hmc_host', 'hmc_auth', 'system_name']],
                      ['action', 'poweron', ['hmc_host', 'hmc_auth', 'system_name']],
                      ['action', 'poweroff', ['hmc_host', 'hmc_auth', 'system_name']],
-                     ['state', 'modify_syscfg', ['hmc_host', 'hmc_auth', 'system_name']],
-                     ['state', 'modify_hwres', ['hmc_host', 'hmc_auth', 'system_name']]
+                     ['action', 'modify_syscfg', ['hmc_host', 'hmc_auth', 'system_name']],
+                     ['action', 'modify_hwres', ['hmc_host', 'hmc_auth', 'system_name']]
                      ],
     )
 

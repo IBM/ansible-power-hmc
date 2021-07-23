@@ -292,7 +292,7 @@ class Hmc():
         result = result.strip()
         return result
 
-    def getManagedSystemResourceDetails(self, system_name, resource, level, attr=None):
+    def getManagedSystemHwres(self, system_name, resource, level, attr=None):
         lshwresCmd = self.CMD['LSHWRES'] + \
             self.OPT['LSHWRES']['-R'] + resource + \
             self.OPT['LSHWRES']['-M'] + system_name + \
@@ -327,7 +327,7 @@ class Hmc():
 
         return stateSuccess
 
-    def configureSystemGeneralSettings(self, cecName, sysConfig):
+    def confSysGenSettings(self, cecName, sysConfig):
         sysConfig = self.cmdClass.convertKeysToUpper(sysConfig)
         chsyscfgCmd = self.CMD['CHSYSCFG'] + \
             self.OPT['CHSYSCFG']['-R']['SYS'] + \
@@ -336,7 +336,7 @@ class Hmc():
         logger.debug(chsyscfgCmd)
         self.hmcconn.execute(chsyscfgCmd)
 
-    def configureSystemMemorySettings(self, cecName, sysConfig, oper):
+    def confSysMem(self, cecName, sysConfig, oper):
         oper = oper.upper()
         sysConfig = self.cmdClass.convertKeysToUpper(sysConfig)
         chhwresCmd = self.CMD['CHHWRES'] + \
