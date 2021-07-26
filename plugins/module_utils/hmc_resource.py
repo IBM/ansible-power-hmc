@@ -280,30 +280,24 @@ class Hmc():
             self.OPT['CHSYSSTATE']['-O']['ON']
         self.hmcconn.execute(chsysstateCmd)
 
-    def getManagedSystemDetails(self, cecName, attri=None):
+    def getManagedSystemDetails(self, cecName):
         lssyscfgCmd = self.CMD['LSSYSCFG'] + \
             self.OPT['LSSYSCFG']['-R']['SYS'] + \
             self.OPT['LSSYSCFG']['-M'] + cecName
-        if attri:
-            attr_str = ",".join(attri)
-            lssyscfgCmd += self.OPT['LSSYSCFG']['-F'] + attr_str
-
         result = self.hmcconn.execute(lssyscfgCmd)
-        result = result.strip()
-        return result
+        res_dict = self.cmdClass.parseCSV(result)
+        res = dict((k.lower(), v) for k, v in res_dict.items())
+        return res
 
-    def getManagedSystemHwres(self, system_name, resource, level, attr=None):
+    def getManagedSystemHwres(self, system_name, resource, level):
         lshwresCmd = self.CMD['LSHWRES'] + \
             self.OPT['LSHWRES']['-R'] + resource + \
             self.OPT['LSHWRES']['-M'] + system_name + \
             self.OPT['LSHWRES']['--LEVEL'] + level
-        if attr:
-            attr_str = ",".join(attr)
-            lshwresCmd += self.OPT['LSHWRES']['-F'] + attr_str
-        logger.debug(lshwresCmd)
         result = self.hmcconn.execute(lshwresCmd)
-        result = result.strip()
-        return result
+        res_dict = self.cmdClass.parseCSV(result)
+        res = dict((k.lower(), v) for k, v in res_dict.items())
+        return res
 
     def checkManagedSysState(self, cecName, expectedStates, timeoutInMin=12):
         POLL_INTERVAL_IN_SEC = 30
@@ -313,7 +307,8 @@ class Hmc():
         waited = 0
         stateSuccess = False
         while waited < WAIT_UNTIL_IN_SEC:
-            cec_state = self.getManagedSystemDetails(cecName, ['state'])
+            res = self.getManagedSystemDetails(cecName)
+            cec_state = res.get('state')
             if cec_state in expectedStates:
                 logger.debug(cec_state)
                 stateSuccess = True

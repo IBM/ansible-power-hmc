@@ -413,7 +413,7 @@ class HmcCommandStack():
                     dict.update({key.upper(): value})
 
             except ValueError as errMsg:
-                if "too many values to unpack" in errMsg:
+                if "too many values to unpack" in repr(errMsg):
                     if ': ' in each:
                         temp = each.split('=')
                         valueHasColonDelim = True

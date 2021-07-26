@@ -130,11 +130,10 @@ system_info:
 '''
 
 import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc.log"
+LOG_FILENAME = "/tmp/ansible_power_hmc_navin.log"
 logger = logging.getLogger(__name__)
 import sys
 import json
-import re
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_resource import Hmc
@@ -217,7 +216,8 @@ def powerOnManagedSys(module, params):
     hmc = Hmc(hmc_conn)
 
     try:
-        system_state = hmc.getManagedSystemDetails(system_name, ['state'])
+        res = hmc.getManagedSystemDetails(system_name)
+        system_state = res.get('state')
         if system_state != 'Power Off':
             changed = False
         else:
@@ -244,7 +244,8 @@ def powerOffManagedSys(module, params):
     hmc = Hmc(hmc_conn)
 
     try:
-        system_state = hmc.getManagedSystemDetails(system_name, ['state'])
+        res = hmc.getManagedSystemDetails(system_name)
+        system_state = res.get('state')
         if system_state == 'Power Off':
             changed = False
         else:
@@ -274,9 +275,7 @@ def modifySystemConfiguration(module, params):
     hmc = Hmc(hmc_conn)
 
     try:
-        res = hmc.getManagedSystemDetails(system_name)
-        li = re.findall(r'\".+?\"|\w+\=\w+', res)
-        attr_dict = {each.split('=')[0]: each.split('=')[1] for each in li}
+        attr_dict = hmc.getManagedSystemDetails(system_name)
         attr_dict['new_name'] = attr_dict.pop('name')
         if not sett_dict.items() <= attr_dict.items():
             hmc.confSysGenSettings(system_name, sett_dict)
@@ -295,7 +294,6 @@ def modifySystemHardwareResources(module, params):
     changed = False
     validate_parameters(params)
     sett_dict = build_dict(params)
-    attr_ls = list(sett_dict.keys())
     if not sett_dict:
         module.fail_json(msg="Atleast one of the System Hardware Resources should to be provided")
 
@@ -303,16 +301,14 @@ def modifySystemHardwareResources(module, params):
     hmc = Hmc(hmc_conn)
 
     try:
-        res = hmc.getManagedSystemHwres(system_name, 'mem', 'sys', attr_ls)
-        attr_ch_val = res.split(",")
-        attr_dict = dict(zip(attr_ls, attr_ch_val))
+        attr_dict = hmc.getManagedSystemHwres(system_name, 'mem', 'sys')
+        if 'curr_mem_mirroring_mode' in attr_dict.keys():
+            attr_dict['mem_mirroring_mode'] = attr_dict.pop('curr_mem_mirroring_mode')
+        attr_dict['pend_mem_region_size'] = attr_dict.pop('mem_region_size')
         if not sett_dict.items() <= attr_dict.items():
             hmc.confSysMem(system_name, sett_dict, 's')
             changed = True
     except HmcError as on_system_error:
-        if "The invalid attribute is mem_mirroring_mode" in repr(on_system_error):
-            on_system_error = "HSCLA97C The operation failed. Please ensure that the platform is memory mirror capable."
-        logger.debug(on_system_error)
         return changed, repr(on_system_error), None
 
     return changed, None, None
