@@ -48,12 +48,52 @@ options:
             - The name of the managed system.
         required: true
         type: str
+    new_name:
+        description:
+            - The new name to be configured on specified I(system_name)
+            - This option works with I(modify_syscfg) action
+        type: str
+    power_off_policy:
+        description:
+            - power off policy to be configured on specified I(system_name)
+            - This option works with I(modify_syscfg) action
+            - Configuring this option with '1' will power off Managed System after all partitions are shut down
+            - And Configuring this option with '0' will not power off Managed System after all partitions are shut down
+        type: int
+        choices: [1, 0]
+    power_on_lpar_start_policy:
+        description:
+            - power on partition start policy to be configured on specified I(system_name) for the next system restart
+            - This option works with I(modify_syscfg) action
+        type: str
+        choices: ['autostart', 'userinit', 'autorecovery']
+    requested_num_sys_huge_pages:
+        description:
+            - Configures the number of pages of huge page memory.
+            - You can change this value only when the managed system is powered off.
+            - This option works with I(modify_hwres) action
+        type: int
+    mem_mirroring_mode:
+        description:
+            - Configures the memory mirroring mode on specified I(system_name) for the next system power-on or system restart
+            - This option works with I(modify_hwres) action
+        type: str
+        choices: ['none', 'sys_firmware_only']
+    pend_mem_region_size:
+        description:
+            - Configures the memory region size setting on specified I(system_name)
+            - choices are in MB
+            - This option works with I(modify_hwres) action
+        type: str
+        choices: ['auto', '16', '32', '64', '128', '256']
     action:
         description:
             - C(poweroff) poweroff a specified I(system_name)
             - C(poweron) poweron a specified I(system_name)
+            - C(modify_syscfg) Makes system configurations of specified I(system_name)
+            - C(modify_hwres) Makes hardware resource configurations of specified I(system_name)
         type: str
-        choices: ['poweron', 'poweroff']
+        choices: ['poweron', 'poweroff', 'modify_syscfg', 'modify_hwres']
     state:
         description:
             - C(facts) fetches destails of specified I(system_name)
@@ -100,6 +140,7 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_resource import 
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import parse_error_response
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import HmcRestClient
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
 
 
 def init_logger():
@@ -109,18 +150,74 @@ def init_logger():
         level=logging.DEBUG)
 
 
+def build_dict(params):
+    config_dict = {}
+    for key, value in params.items():
+        if key in ['action', 'hmc_host', 'hmc_auth', 'system_name']:
+            continue
+        if value is None:
+            continue
+        elif isinstance(value, int):
+            config_dict[key] = str(value)
+        else:
+            config_dict[key] = value
+    return config_dict
+
+
+def validate_parameters(params):
+    '''Check that the input parameters satisfy the mutual exclusiveness of HMC'''
+    opr = None
+    if params['state'] is not None:
+        opr = params['state']
+    else:
+        opr = params['action']
+
+    if opr == 'modify_syscfg':
+        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name']
+        unsupportedList = ['requested_num_sys_huge_pages', 'mem_mirroring_mode', 'pend_mem_region_size']
+    elif opr == 'modify_hwres':
+        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name']
+        unsupportedList = ['new_name', 'power_off_policy', 'power_on_lpar_start_policy']
+    else:
+        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name']
+        unsupportedList = ['new_name', 'power_off_policy', 'power_on_lpar_start_policy', 'requested_num_sys_huge_pages',
+                           'mem_mirroring_mode', 'pend_mem_region_size']
+
+    collate = []
+    for eachMandatory in mandatoryList:
+        if not params[eachMandatory]:
+            collate.append(eachMandatory)
+    if collate:
+        if len(collate) == 1:
+            raise ParameterError("mandatory parameter '%s' is missing" % (collate[0]))
+        else:
+            raise ParameterError("mandatory parameters '%s' are missing" % (','.join(collate)))
+
+    collate = []
+    for eachUnsupported in unsupportedList:
+        if params[eachUnsupported]:
+            collate.append(eachUnsupported)
+
+    if collate:
+        if len(collate) == 1:
+            raise ParameterError("unsupported parameter: %s" % (collate[0]))
+        else:
+            raise ParameterError("unsupported parameters: %s" % (', '.join(collate)))
+
+
 def powerOnManagedSys(module, params):
     hmc_host = params['hmc_host']
     hmc_user = params['hmc_auth']['username']
     password = params['hmc_auth']['password']
     system_name = params['system_name']
     changed = False
-
+    validate_parameters(params)
     hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(hmc_conn)
 
     try:
-        system_state = hmc.getManagedSystemDetails(system_name, 'state')
+        res = hmc.getManagedSystemDetails(system_name)
+        system_state = res.get('state')
         if system_state != 'Power Off':
             changed = False
         else:
@@ -142,12 +239,13 @@ def powerOffManagedSys(module, params):
     password = params['hmc_auth']['password']
     system_name = params['system_name']
     changed = False
-
+    validate_parameters(params)
     hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(hmc_conn)
 
     try:
-        system_state = hmc.getManagedSystemDetails(system_name, 'state')
+        res = hmc.getManagedSystemDetails(system_name)
+        system_state = res.get('state')
         if system_state == 'Power Off':
             changed = False
         else:
@@ -162,6 +260,60 @@ def powerOffManagedSys(module, params):
     return changed, None, None
 
 
+def modifySystemConfiguration(module, params):
+    hmc_host = params['hmc_host']
+    hmc_user = params['hmc_auth']['username']
+    password = params['hmc_auth']['password']
+    system_name = params['system_name']
+    changed = False
+    validate_parameters(params)
+    sett_dict = build_dict(params)
+    if not sett_dict:
+        module.fail_json(msg="Atleast one of the System change configuration should to be provided")
+
+    hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
+    hmc = Hmc(hmc_conn)
+
+    try:
+        attr_dict = hmc.getManagedSystemDetails(system_name)
+        attr_dict['new_name'] = attr_dict.pop('name')
+        if not sett_dict.items() <= attr_dict.items():
+            hmc.confSysGenSettings(system_name, sett_dict)
+            changed = True
+    except HmcError as on_system_error:
+        return changed, repr(on_system_error), None
+
+    return changed, None, None
+
+
+def modifySystemHardwareResources(module, params):
+    hmc_host = params['hmc_host']
+    hmc_user = params['hmc_auth']['username']
+    password = params['hmc_auth']['password']
+    system_name = params['system_name']
+    changed = False
+    validate_parameters(params)
+    sett_dict = build_dict(params)
+    if not sett_dict:
+        module.fail_json(msg="Atleast one of the System Hardware Resources should to be provided")
+
+    hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
+    hmc = Hmc(hmc_conn)
+
+    try:
+        attr_dict = hmc.getManagedSystemHwres(system_name, 'mem', 'sys')
+        if 'curr_mem_mirroring_mode' in attr_dict.keys():
+            attr_dict['mem_mirroring_mode'] = attr_dict.pop('curr_mem_mirroring_mode')
+        attr_dict['pend_mem_region_size'] = attr_dict.pop('mem_region_size')
+        if not sett_dict.items() <= attr_dict.items():
+            hmc.confSysMem(system_name, sett_dict, 's')
+            changed = True
+    except HmcError as on_system_error:
+        return changed, repr(on_system_error), None
+
+    return changed, None, None
+
+
 def fetchManagedSysDetails(module, params):
     hmc_host = params['hmc_host']
     hmc_user = params['hmc_auth']['username']
@@ -170,7 +322,7 @@ def fetchManagedSysDetails(module, params):
     system_prop = None
     system_uuid = None
     changed = False
-
+    validate_parameters(params)
     try:
         rest_conn = HmcRestClient(hmc_host, hmc_user, password)
     except Exception as error:
@@ -205,6 +357,8 @@ def perform_task(module):
         "poweron": powerOnManagedSys,
         "poweroff": powerOffManagedSys,
         "facts": fetchManagedSysDetails,
+        "modify_syscfg": modifySystemConfiguration,
+        "modify_hwres": modifySystemHardwareResources
     }
     oper = 'action'
     if params['action'] is None:
@@ -229,7 +383,13 @@ def run_module():
                       )
                       ),
         system_name=dict(type='str', required=True),
-        action=dict(type='str', choices=['poweron', 'poweroff']),
+        new_name=dict(type='str'),
+        power_off_policy=dict(type='int', choices=[1, 0]),
+        power_on_lpar_start_policy=dict(type='str', choices=['autostart', 'userinit', 'autorecovery']),
+        requested_num_sys_huge_pages=dict(type='int'),
+        mem_mirroring_mode=dict(type='str', choices=['none', 'sys_firmware_only']),
+        pend_mem_region_size=dict(type='str', choices=['auto', '16', '32', '64', '128', '256']),
+        action=dict(type='str', choices=['poweron', 'poweroff', 'modify_syscfg', 'modify_hwres']),
         state=dict(type='str', choices=['facts']),
     )
 
@@ -240,6 +400,8 @@ def run_module():
         required_if=[['state', 'facts', ['hmc_host', 'hmc_auth', 'system_name']],
                      ['action', 'poweron', ['hmc_host', 'hmc_auth', 'system_name']],
                      ['action', 'poweroff', ['hmc_host', 'hmc_auth', 'system_name']],
+                     ['action', 'modify_syscfg', ['hmc_host', 'hmc_auth', 'system_name']],
+                     ['action', 'modify_hwres', ['hmc_host', 'hmc_auth', 'system_name']]
                      ],
     )
 

@@ -28,7 +28,9 @@ class HmcCommandStack():
                'RMSYSCFG': 'rmsyscfg',
                'MKSYSCFG': 'mksyscfg',
                'CHSYSCFG': 'chsyscfg',
-               'CHSYSSTATE': 'chsysstate'}
+               'CHSYSSTATE': 'chsysstate',
+               'CHHWRES': 'chhwres',
+               'LSHWRES': 'lshwres'}
 
     HMC_CMD_OPT = {'LSHMC': {'-N': ' -n ',
                              '-v': ' -v ',
@@ -149,6 +151,10 @@ class HmcCommandStack():
                    'LSSYSCFG': {'-R': {'LPAR': ' -r lpar', 'SYS': ' -r sys', 'PROF': ' -r prof', 'SYSPROF': ' -r sysprof'},
                                 '-M': ' -m ',
                                 '-F': ' -F '},
+                   'LSHWRES': {'-R': ' -r ',
+                               '-M': ' -m ',
+                               '--LEVEL': ' --level ',
+                               '-F': ' -F '},
                    'RMSYSCFG': {'-R': {'LPAR': ' -r lpar'},
                                 '-M': ' -m ',
                                 '-N': ' -n ',
@@ -203,7 +209,7 @@ class HmcCommandStack():
                                 '-N': ' -n ',
                                 '-O': {'SAVE': ' -o save'},
                                 '--FORCE': ' --force '},
-                   'CHSYSCFG': {'-R': {'LPAR': ' -r lpar', 'PROF': ' -r prof', 'SYSPROF': ' -r sysprof'},
+                   'CHSYSCFG': {'-R': {'LPAR': ' -r lpar', 'PROF': ' -r prof', 'SYSPROF': ' -r sysprof', 'SYS': ' -r sys'},
                                 '-M': ' -m ',
                                 '-N': ' -n ',
                                 '-P': ' -p ',
@@ -233,7 +239,8 @@ class HmcCommandStack():
                                        'LOAD_SOURCE_SLOT': 'load_source_slot', 'ALT_RESTART_DEVICE_SLOT': 'alt_restart_device_slot',
                                        'IPL_SOURCE': 'ipl_source', 'VIRTUAL_SERIAL_NUM': 'virtual_serial_num',
                                        'VTPM_VERSION': 'vtpm_version',
-                                       'VTPM_ENCRYPTION': 'vtpm_encryption'}
+                                       'VTPM_ENCRYPTION': 'vtpm_encryption', 'NEW_NAME': 'new_name',
+                                       'POWER_OFF_POLICY': 'power_off_policy', 'POWER_ON_LPAR_START_POLICY': 'power_on_lpar_start_policy'}
                                 },
                    'CHSYSSTATE': {'-R': {'LPAR': ' -r lpar', 'SYS': ' -r sys', 'SYSPROF': ' -r sysprof'},
                                   '-M': ' -m ',
@@ -262,7 +269,13 @@ class HmcCommandStack():
                                   '--DUPLEX': {'AUTO': ' --duplex auto ', 'HALF': ' --duplex half ', 'FULL': ' --duplex full '},
                                   '--MTU': {'1500': ' --mtu 1500 ', '9000': ' --mtu 9000'},
                                   '--VLAN': ' --vlan '
-                                  }
+                                  },
+                   'CHHWRES': {'-R': {'MEM': ' -r mem '},
+                               '-M': ' -m ',
+                               '-O': {'S': ' -o s '},
+                               '-A': {'REQUESTED_NUM_SYS_HUGE_PAGES': 'requested_num_sys_huge_pages',
+                                      'PEND_MEM_REGION_SIZE': 'pend_mem_region_size', 'MEM_MIRRORING_MODE': 'mem_mirroring_mode'},
+                               },
                    }
 
     def filterBuilder(self, cmdKey, configOptionsDict):
@@ -400,7 +413,7 @@ class HmcCommandStack():
                     dict.update({key.upper(): value})
 
             except ValueError as errMsg:
-                if "too many values to unpack" in errMsg:
+                if "too many values to unpack" in repr(errMsg):
                     if ': ' in each:
                         temp = each.split('=')
                         valueHasColonDelim = True

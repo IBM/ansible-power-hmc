@@ -280,16 +280,24 @@ class Hmc():
             self.OPT['CHSYSSTATE']['-O']['ON']
         self.hmcconn.execute(chsysstateCmd)
 
-    def getManagedSystemDetails(self, cecName, attri=None):
+    def getManagedSystemDetails(self, cecName):
         lssyscfgCmd = self.CMD['LSSYSCFG'] + \
             self.OPT['LSSYSCFG']['-R']['SYS'] + \
             self.OPT['LSSYSCFG']['-M'] + cecName
-        if attri:
-            lssyscfgCmd += self.OPT['LSSYSCFG']['-F'] + attri
-
         result = self.hmcconn.execute(lssyscfgCmd)
-        result = result.strip()
-        return result
+        res_dict = self.cmdClass.parseCSV(result)
+        res = dict((k.lower(), v) for k, v in res_dict.items())
+        return res
+
+    def getManagedSystemHwres(self, system_name, resource, level):
+        lshwresCmd = self.CMD['LSHWRES'] + \
+            self.OPT['LSHWRES']['-R'] + resource + \
+            self.OPT['LSHWRES']['-M'] + system_name + \
+            self.OPT['LSHWRES']['--LEVEL'] + level
+        result = self.hmcconn.execute(lshwresCmd)
+        res_dict = self.cmdClass.parseCSV(result)
+        res = dict((k.lower(), v) for k, v in res_dict.items())
+        return res
 
     def checkManagedSysState(self, cecName, expectedStates, timeoutInMin=12):
         POLL_INTERVAL_IN_SEC = 30
@@ -299,7 +307,8 @@ class Hmc():
         waited = 0
         stateSuccess = False
         while waited < WAIT_UNTIL_IN_SEC:
-            cec_state = self.getManagedSystemDetails(cecName, 'state')
+            res = self.getManagedSystemDetails(cecName)
+            cec_state = res.get('state')
             if cec_state in expectedStates:
                 logger.debug(cec_state)
                 stateSuccess = True
@@ -312,3 +321,23 @@ class Hmc():
             time.sleep(POLL_INTERVAL_IN_SEC)
 
         return stateSuccess
+
+    def confSysGenSettings(self, cecName, sysConfig):
+        sysConfig = self.cmdClass.convertKeysToUpper(sysConfig)
+        chsyscfgCmd = self.CMD['CHSYSCFG'] + \
+            self.OPT['CHSYSCFG']['-R']['SYS'] + \
+            self.OPT['CHSYSCFG']['-M'] + cecName
+        chsyscfgCmd += self.cmdClass.i_a_ConfigBuilder('CHSYSCFG', '-I', sysConfig)
+        logger.debug(chsyscfgCmd)
+        self.hmcconn.execute(chsyscfgCmd)
+
+    def confSysMem(self, cecName, sysConfig, oper):
+        oper = oper.upper()
+        sysConfig = self.cmdClass.convertKeysToUpper(sysConfig)
+        chhwresCmd = self.CMD['CHHWRES'] + \
+            self.OPT['CHHWRES']['-R']['MEM'] + \
+            self.OPT['CHHWRES']['-M'] + cecName + \
+            self.OPT['CHHWRES']['-O'][oper]
+        chhwresCmd += self.cmdClass.i_a_ConfigBuilder('CHHWRES', '-A', sysConfig)
+        logger.debug(chhwresCmd)
+        self.hmcconn.execute(chhwresCmd)
