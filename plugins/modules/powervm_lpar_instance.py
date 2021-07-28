@@ -168,7 +168,7 @@ options:
             wwpn_pair:
                 description:
                     - The WWPN pair value to be configuired with client FC adapter.
-                    - Both the WWPN value should be separated with colon delimiter
+                    - Both the WWPN value should be separated with semicolon delimiter
                     - Optional, if not provided the value will be auto assigned
                 type: str
     all_resources:
