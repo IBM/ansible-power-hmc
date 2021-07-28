@@ -312,7 +312,7 @@ partition_info:
 
 import sys
 import json
-import string
+import re
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_resource import Hmc
@@ -599,13 +599,14 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
 
 def wwpn_pair_is_valid(wwpn):
     # It is expected that wwpn input from the user should have a delimited ':'
-    wwpns = wwpn.split(":")
+    wwpns = wwpn.split(";")
+    wwpn_pattern = r"(([0-9a-fA-F]{16})$|((([0-9a-fA-F]{1,2}[:]){7})[0-9a-fA-F]{1,2})$|((([0-9a-fA-F]{1,2}[\-]){7})[0-9a-fA-F]{1,2})$)"
     if len(wwpns) == 2:
         for each in wwpns:
-            if not all(hc in string.hexdigits for hc in each):
+            if not re.match(wwpn_pattern, each):
                 raise Error("Given wwpn pair is not valid")
     else:
-        raise Error("WWPN pair with colon delimiter is expected")
+        raise Error("WWPN pair with semicolon delimiter is expected")
 
     return True
 
