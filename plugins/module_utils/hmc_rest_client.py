@@ -48,7 +48,7 @@ def parse_error_response(error):
             if error_msg_l:
                 error_msg = error_msg_l[0].text
                 if "Failed to unmarshal input payload" in error_msg:
-                    error_msg = "Current HMC version might not support some of input settings"
+                    error_msg = "Current HMC version might not support some of input settings or invalid input"
             else:
                 error_msg = "Unknown http error"
     else:
