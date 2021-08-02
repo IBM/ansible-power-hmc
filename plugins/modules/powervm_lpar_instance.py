@@ -615,8 +615,6 @@ def wwpn_pair_is_valid(wwpn):
 def fetch_fc_config(rest_conn, system_uuid, fc_config_list):
     vios_response = rest_conn.getVirtualIOServersQuick(system_uuid)
     fcports_identified = []
-    if len(fc_config_list) > 2:
-        raise Error("More than two fc ports are not supported")
     for each_fc in fc_config_list:
         vios = None
         if vios_response:
