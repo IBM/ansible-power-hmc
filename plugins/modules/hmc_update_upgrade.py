@@ -452,8 +452,8 @@ def update_hmc(module, params):
     # In case user opt for disk install, then image will be cleared from
     # local location once installed
     if locationType == 'disk':
-        otherConfig['-C'] = ""
         if not params['hmc_local_img']:
+            otherConfig['-C'] = ""
             otherConfig['-F'] = '/home/{0}/network_install/{1}'.format(hmc_user, iso_file)
 
     # this option to restart hmc after configuration
