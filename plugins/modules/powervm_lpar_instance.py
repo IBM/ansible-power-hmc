@@ -146,6 +146,31 @@ options:
                     - Virtual slot number of a partition on which virtual network to be attached.
                       This paramter is optional, if user doesn't pass, it chooses next available.
                 type: int
+    npiv_config:
+        description:
+            - To configure N-Port ID Virtualization also known as Virtual Fibre of the partition
+            - User can provide two fc port configurations and mapping will be created with VIOS implicitly
+        type: list
+        elements: dict
+        suboptions:
+            vios_name:
+                description:
+                    - The name of the vios in which fc port available
+                    - This option is mandatory
+                required: true
+                type: str
+            fc_port:
+                description:
+                    - The port to be used for npiv. User can specify either port name or fully qualified location code
+                    - This option is mandatory
+                required: true
+                type: str
+            wwpn_pair:
+                description:
+                    - The WWPN pair value to be configuired with client FC adapter.
+                    - Both the WWPN value should be separated with semicolon delimiter
+                    - Optional, if not provided the value will be auto assigned
+                type: str
     all_resources:
         description:
             - Create a partition withh all the resources available in the managed system.
@@ -286,6 +311,7 @@ partition_info:
 
 import sys
 import json
+import re
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_resource import Hmc
@@ -570,6 +596,47 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
     return None
 
 
+def wwpn_pair_is_valid(wwpn):
+    # It is expected that wwpn input from the user should have a delimited ':'
+    wwpns = wwpn.split(";")
+    wwpn_pattern = r"(([0-9a-fA-F]{16})$|((([0-9a-fA-F]{1,2}[:]){7})[0-9a-fA-F]{1,2})$|((([0-9a-fA-F]{1,2}[\-]){7})[0-9a-fA-F]{1,2})$)"
+    if len(wwpns) == 2:
+        for each in wwpns:
+            if not re.match(wwpn_pattern, each):
+                raise Error("Given wwpn pair is not valid")
+    else:
+        raise Error("WWPN pair with semicolon delimiter is expected")
+
+    return True
+
+
+# Validates and fetch fibre channel port information from VIOS
+def fetch_fc_config(rest_conn, system_uuid, fc_config_list):
+    vios_response = rest_conn.getVirtualIOServersQuick(system_uuid)
+    fcports_identified = []
+    for each_fc in fc_config_list:
+        vios = None
+        if vios_response:
+            vios_list = json.loads(vios_response)
+            vios = [vios for vios in vios_list if vios['PartitionName'] == each_fc['vios_name']]
+        if not vios:
+            raise Error("Requested vios: {0} for npiv is not available".format(each_fc['vios_name']))
+
+        if each_fc['fc_port'] is not None:
+            vios_fcports = rest_conn.vios_fetch_fcports_info(vios[0]['UUID'])
+            port_identified = [v_fcPort for v_fcPort in vios_fcports if v_fcPort['LocationCode'] == each_fc['fc_port']
+                               or v_fcPort['PortName'] == each_fc['fc_port']]
+            if port_identified:
+                port_identified[0].update({'viosname': each_fc['vios_name']})
+                if each_fc['wwpn_pair'] is not None and wwpn_pair_is_valid(each_fc['wwpn_pair']):
+                    port_identified[0].update({'wwpn_pair': each_fc['wwpn_pair']})
+                fcports_identified.append(port_identified[0])
+            else:
+                raise Error("Given fc port:{0} is either not NPIV capable or not available".format(each_fc['fc_port']))
+
+    return fcports_identified
+
+
 def create_partition(module, params):
     changed = False
     cli_conn = None
@@ -596,6 +663,7 @@ def create_partition(module, params):
     nw_uuid = None
     virt_network_name = None
     virtual_slot_number = None
+    fcports_config = None
     cli_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(cli_conn)
 
@@ -655,6 +723,9 @@ def create_partition(module, params):
 
     validate_proc_mem(server_dom, int(proc), int(mem))
 
+    if params['npiv_config']:
+        fcports_config = fetch_fc_config(rest_conn, system_uuid, params['npiv_config'])
+
     try:
         if os_type in ['aix', 'linux', 'aix_linux']:
             reference_template = "QuickStart_lpar_rpa_2"
@@ -686,10 +757,13 @@ def create_partition(module, params):
         config_dict['proc_unit'] = str(proc_unit) if proc_unit else None
         config_dict['mem'] = mem
         config_dict['max_virtual_slots'] = max_virtual_slots
+
+        # Tagged IO
         if os_type == 'ibmi':
             add_taggedIO_details(temporary_temp_dom)
 
         rest_conn.updateLparNameAndIDToDom(temporary_temp_dom, config_dict)
+
         # Add physical IO adapter
         if physical_io:
             add_physical_io(rest_conn, server_dom, temporary_temp_dom, physical_io)
@@ -727,6 +801,7 @@ def create_partition(module, params):
         draft_template_dom = rest_conn.getPartitionTemplate(uuid=draft_uuid)
         if not draft_template_dom:
             module.fail_json(msg="Not able to fetch template for partition deploy")
+
         # Volume configuration settings
         if params['volume_config']:
             if 'vios_name' in params['volume_config'] and params['volume_config']['vios_name']:
@@ -753,6 +828,10 @@ def create_partition(module, params):
                 rest_conn.updatePartitionTemplate(draft_uuid, draft_template_dom)
             else:
                 module.fail_json(msg="Unable to identify free physical volume")
+
+        if fcports_config:
+            rest_conn.updateFCSettingsToDom(draft_template_dom, fcports_config)
+            rest_conn.updatePartitionTemplate(draft_uuid, draft_template_dom)
 
         resp_dom = rest_conn.deployPartitionTemplate(draft_uuid, system_uuid)
         partition_uuid = resp_dom.xpath("//ParameterName[text()='PartitionUuid']/following-sibling::ParameterValue")[0].text
@@ -1057,6 +1136,10 @@ def perform_task(module):
 
 def run_module():
 
+    npiv_args = dict(vios_name=dict(type='str', required=True),
+                     fc_port=dict(type='str', required=True),
+                     wwpn_pair=dict(type='str')
+                     )
     # define available arguments/parameters a user can pass to the module
     module_args = dict(
         hmc_host=dict(type='str', required=True),
@@ -1087,6 +1170,10 @@ def run_module():
                                      slot_number=dict(type='int'),
                                  )
                                  ),
+        npiv_config=dict(type='list',
+                         elements='dict',
+                         options=npiv_args
+                         ),
         physical_io=dict(type='list', elements='str'),
         prof_name=dict(type='str'),
         all_resources=dict(type='bool'),
