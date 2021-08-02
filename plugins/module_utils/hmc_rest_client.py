@@ -1053,7 +1053,7 @@ class HmcRestClient:
 
             fc_client_adpt_dom = etree.XML(fc_client_adapter)
             if 'wwpn_pair' in fc:
-                wwpn_str = ' '.join(fc['wwpn_pair'].split(':'))
+                wwpn_str = ' '.join(fc['wwpn_pair'].split(';'))
                 wwpn_xml = '<wwpns kb="CUD" kxe="false">{0}</wwpns>'.format(wwpn_str)
                 fc_client_adpt_dom.xpath("//locationCode")[0].addnext(etree.XML(wwpn_xml))
 
