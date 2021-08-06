@@ -244,15 +244,13 @@ def remove_image_from_hmc(module, params):
     hmc_host = params['hmc_host']
     hmc_user = params['hmc_auth']['username']
     password = params['hmc_auth']['password']
-    hmc_local_img = params['hmc_local_img']
-    if not hmc_local_img:
-        list_on_hmc = 'sshpass -p {0} ssh {1}@{2} ls network_install'.format(password, hmc_user, hmc_host)
-        rc, out, err = module.run_command(list_on_hmc)
-        if rc == 0:
-            rm_install_path = 'sshpass -p {0} ssh {1}@{2} rm -rf network_install'.format(password, hmc_user, hmc_host)
-            rc1, out1, err1 = module.run_command(rm_install_path)
-            if rc1 != 0:
-                logger.debug("Removal of 'network_install' directory failed")
+    list_on_hmc = 'sshpass -p {0} ssh {1}@{2} ls network_install'.format(password, hmc_user, hmc_host)
+    rc, out, err = module.run_command(list_on_hmc)
+    if rc == 0:
+        rm_install_path = 'sshpass -p {0} ssh {1}@{2} rm -rf network_install'.format(password, hmc_user, hmc_host)
+        rc1, out1, err1 = module.run_command(rm_install_path)
+        if rc1 != 0:
+            logger.debug("Removal of 'network_install' directory failed")
 
 
 def check_image_in_hmc(module, params):
@@ -347,6 +345,7 @@ def upgrade_hmc(module, params):
     hmc_conn = None
     warning_msg = None
     isBootedUp = False
+    is_img_in_hmc = False
 
     if not params['build_config']:
         raise ParameterError("missing options on build_config")
@@ -359,8 +358,8 @@ def upgrade_hmc(module, params):
     locationType = params['build_config']['location_type']
 
     if locationType == 'disk':
-        params['hmc_local_img'] = check_image_in_hmc(module, params)
-        if not params['hmc_local_img']:
+        is_img_in_hmc = check_image_in_hmc(module, params)
+        if not is_img_in_hmc:
             image_copy_from_local_to_hmc(module, params)
 
     otherConfig = {}
@@ -375,10 +374,21 @@ def upgrade_hmc(module, params):
     if params['build_config']['hostname']:
         otherConfig['-H'] = params['build_config']['hostname']
     if params['build_config']['build_file']:
-        if locationType == 'disk' and not params['hmc_local_img']:
+        if locationType == 'disk' and not is_img_in_hmc:
             otherConfig['-D'] = '/home/{0}/network_install'.format(hmc_user)
         else:
             otherConfig['-D'] = params['build_config']['build_file']
+            imageFilesUpg = ['base.img', 'disk1.img', 'hmcnetworkfiles.sum', 'img2a', 'img3a']
+            list_cmd = "sshpass -p {0} ssh {1}@{2} ls {3}".format(password, hmc_user, hmc_host, params['build_config']['build_file'])
+            logger.debug(list_cmd)
+            rc, out, err = module.run_command(list_cmd)
+            if rc == 0:
+                logger.debug(out)
+                if not all(True if each in out else False for each in imageFilesUpg):
+                    raise ParameterError("local path mentioned does not contain valid network files")
+            else:
+                logger.debug(err)
+                raise ParameterError("not able to list files on mentioned local path")
 
     initial_version_details = hmc.listHMCVersion()
 
@@ -401,7 +411,7 @@ def upgrade_hmc(module, params):
         version_details = "FAILED: Hmc not responding after reboot"
 
     if not changed and locationType == 'disk':
-        if not params['hmc_local_img']:
+        if not is_img_in_hmc:
             remove_image_from_hmc(module, params)
 
     if isBootedUp and not changed:
@@ -418,6 +428,7 @@ def update_hmc(module, params):
     changed = False
     warning_msg = None
     isBootedUp = False
+    is_img_in_hmc = False
 
     if not params['build_config']:
         raise ParameterError("missing options on build_config")
@@ -431,8 +442,8 @@ def update_hmc(module, params):
     locationType = params['build_config']['location_type']
 
     if locationType == 'disk':
-        params['hmc_local_img'] = check_image_in_hmc(module, params)
-        if not params['hmc_local_img']:
+        is_img_in_hmc = check_image_in_hmc(module, params)
+        if not is_img_in_hmc:
             iso_file = image_copy_from_local_to_hmc(module, params)
 
     otherConfig = {}
@@ -452,7 +463,7 @@ def update_hmc(module, params):
     # In case user opt for disk install, then image will be cleared from
     # local location once installed
     if locationType == 'disk':
-        if not params['hmc_local_img']:
+        if not is_img_in_hmc:
             otherConfig['-C'] = ""
             otherConfig['-F'] = '/home/{0}/network_install/{1}'.format(hmc_user, iso_file)
 
@@ -464,7 +475,7 @@ def update_hmc(module, params):
     hmc.updateHMC(locationType, configDict=otherConfig)
     version_details = {}
 
-    if not params['hmc_local_img']:
+    if not is_img_in_hmc:
         remove_image_from_hmc(module, params)
 
     if hmc.checkHmcUpandRunning(timeoutInMin=HMC_REBOOT_TIMEOUT):
@@ -486,7 +497,6 @@ def update_hmc(module, params):
 def perform_task(module):
 
     params = module.params
-    params['hmc_local_img'] = False
     actions = {
         "updated": update_hmc,
         "facts": facts,
