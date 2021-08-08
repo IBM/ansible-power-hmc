@@ -168,7 +168,7 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions impor
 
 
 import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc.log"
+LOG_FILENAME = "/tmp/ansible_power_hmc_navin.log"
 logger = logging.getLogger(__name__)
 
 HMC_REBOOT_TIMEOUT = 60
@@ -376,7 +376,7 @@ def upgrade_hmc(module, params):
     if params['build_config']['build_file']:
         if locationType == 'disk' and not is_img_in_hmc:
             otherConfig['-D'] = '/home/{0}/network_install'.format(hmc_user)
-        else:
+        elif locationType == 'disk' and is_img_in_hmc:
             otherConfig['-D'] = params['build_config']['build_file']
             imageFilesUpg = ['base.img', 'disk1.img', 'hmcnetworkfiles.sum', 'img2a', 'img3a']
             list_cmd = "sshpass -p {0} ssh {1}@{2} ls {3}".format(password, hmc_user, hmc_host, params['build_config']['build_file'])
@@ -389,6 +389,8 @@ def upgrade_hmc(module, params):
             else:
                 logger.debug(err)
                 raise ParameterError("not able to list files on mentioned local path")
+        else:
+            otherConfig['-D'] = params['build_config']['build_file']
 
     initial_version_details = hmc.listHMCVersion()
 
@@ -445,6 +447,21 @@ def update_hmc(module, params):
         is_img_in_hmc = check_image_in_hmc(module, params)
         if not is_img_in_hmc:
             iso_file = image_copy_from_local_to_hmc(module, params)
+        else:
+            hmc_ls_cmd = "sshpass -p {0} ssh {1}@{2} ls {3}".format(password, hmc_user, hmc_host, params['build_config']['build_file'])
+            rc, out, err = module.run_command(hmc_ls_cmd)
+            if rc == 0:
+                files = out.split()
+                for fl in files:
+                    if '.iso' in fl:
+                         iso_file = fl
+                         break
+                logger.debug(iso_file)
+                if not iso_file:
+                    raise Error("Necessary files are missing in hmc")
+            else:
+                logger.debug(err)
+                raise Error("could not confirm the necessary image files in hmc")
 
     otherConfig = {}
     if params['build_config']['hostname']:
@@ -466,6 +483,8 @@ def update_hmc(module, params):
         if not is_img_in_hmc:
             otherConfig['-C'] = ""
             otherConfig['-F'] = '/home/{0}/network_install/{1}'.format(hmc_user, iso_file)
+        else:
+            otherConfig['-F'] = '/{0}/{1}'.format(params['build_config']['build_file'], iso_file)
 
     # this option to restart hmc after configuration
     otherConfig['-R'] = " "
