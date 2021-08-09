@@ -210,8 +210,9 @@ options:
         description:
             - C(shutdown) shutdown a partition of specified I(vm_name) on specified I(system_name)
             - C(poweron) poweron a partition of specified I(vm_name) with specified I(prof_name), I(keylock), I(iIPLsource) on specified I(system_name)
+            - C(restart) restart a partition of specified I(vm_name) on specified I(system_name)
         type: str
-        choices: ['poweron', 'shutdown']
+        choices: ['poweron', 'shutdown', 'restart']
 '''
 
 EXAMPLES = '''
@@ -908,6 +909,7 @@ def poweroff_partition(module, params):
     password = params['hmc_auth']['password']
     system_name = params['system_name']
     vm_name = params['vm_name']
+    operation = params['action']
 
     try:
         rest_conn = HmcRestClient(hmc_host, hmc_user, password)
@@ -943,8 +945,12 @@ def poweroff_partition(module, params):
             logger.debug("Given partition already in not activated state")
             return False, None, None
         else:
-            rest_conn.poweroffPartition(lpar_uuid, 'shutdown')
-            changed = True
+            if operation == 'restart':
+                rest_conn.poweroffPartition(lpar_uuid, 'shutdown', 'true')
+                changed = True
+            elif operation == 'shutdown':
+                rest_conn.poweroffPartition(lpar_uuid, 'shutdown')
+                changed = True
 
     except (Exception, HmcError) as error:
         error_msg = parse_error_response(error)
@@ -1123,6 +1129,7 @@ def perform_task(module):
         "facts": partition_details,
         "shutdown": poweroff_partition,
         "poweron": poweron_partition,
+        "restart": poweroff_partition,
     }
 
     oper = 'state'
@@ -1185,7 +1192,7 @@ def run_module():
         state=dict(type='str',
                    choices=['present', 'absent', 'facts']),
         action=dict(type='str',
-                    choices=['shutdown', 'poweron'])
+                    choices=['shutdown', 'poweron', 'restart'])
     )
 
     module = AnsibleModule(
@@ -1196,7 +1203,8 @@ def run_module():
                      ['state', 'absent', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
                      ['state', 'present', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']],
                      ['action', 'shutdown', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
-                     ['action', 'poweron', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']]
+                     ['action', 'poweron', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
+                     ['action', 'restart', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']]
                      ],
         required_by=dict(
             proc_unit=('proc', ),

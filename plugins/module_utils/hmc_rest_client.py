@@ -801,7 +801,7 @@ class HmcRestClient:
         jobID = transform_resp.xpath('//JobID')[0].text
         return self.fetchJobStatus(jobID, template=True)
 
-    def poweroffPartition(self, vm_uuid, operation, immediate='false'):
+    def poweroffPartition(self, vm_uuid, operation, restart='false', immediate='false'):
         url = "https://{0}/rest/api/uom/LogicalPartition/{1}/do/PowerOff".format(self.hmc_ip, vm_uuid)
         header = _jobHeader(self.session)
 
@@ -810,7 +810,7 @@ class HmcRestClient:
                          'ProgressType': 'DISCRETE'}
 
         jobParams = {'immediate': immediate,
-                     'restart': 'false',
+                     'restart': restart,
                      'operation': operation}
 
         payload = _job_RequestPayload(reqdOperation, jobParams)
