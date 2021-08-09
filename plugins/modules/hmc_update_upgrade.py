@@ -168,7 +168,7 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions impor
 
 
 import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc_navin.log"
+LOG_FILENAME = "/tmp/ansible_power_hmc.log"
 logger = logging.getLogger(__name__)
 
 HMC_REBOOT_TIMEOUT = 60
