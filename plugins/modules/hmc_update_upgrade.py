@@ -454,8 +454,8 @@ def update_hmc(module, params):
                 files = out.split()
                 for fl in files:
                     if '.iso' in fl:
-                         iso_file = fl
-                         break
+                        iso_file = fl
+                        break
                 logger.debug(iso_file)
                 if not iso_file:
                     raise Error("Necessary files are missing in hmc")
