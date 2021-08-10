@@ -104,7 +104,7 @@ options:
                       a remote FTP, SFTP, or NFS server.
                       During upgrade of hmc, this option represent the host path where the network install
                       image is kept.
-                      If I(location_type=disk) and ISO image is kept in Ansible controller node, 
+                      If I(location_type=disk) and ISO image is kept in Ansible controller node,
                       this option should be provided with the ansible control node path ISO file or network install image is kept.
                 type: str
     state:

@@ -112,7 +112,7 @@ DOCUMENTATION = '''
             type: str
         ansible_host_type:
             description: Determines if the ip address or the LPAR name will be used as
-              the "ansible_host" variable in playbooks. 
+              the "ansible_host" variable in playbooks.
               This is not valid for IBMi LPARs
             default: "ip"
             choices: [lpar_name, ip]
