@@ -17,14 +17,16 @@ DOCUMENTATION = '''
 module: hmc_update_upgrade
 author:
     - Anil Vijayan (@AnilVijayan)
+    - Navinakumar Kandakur (@nkandak1)
 short_description: Manages the update and upgrade of HMC
 notes:
     - Upgrade with I(location_type=disk) will not support for V8 R870 and V9 R1 M910 release of HMC
+    - Update with I(location_type=disk) and I(build_file) in HMC local path wont remove the file after update.
     - Module will not satisfy the idempotency requirement of Ansible, even though it partially confirms it.
       For instance if the module is tasked to update/upgrade the HMC to the same level, it will still
       go ahead with the operation and finally the changed state will be reported as false.
 description:
-    - Updates the HMC by installing a corrective service package located on an FTP/SFTP/NFS server or HMC hard disk.
+    - Updates the HMC by installing a corrective service package located on an FTP/SFTP/NFS server or Ansible Controller Node/HMC hard disk.
     - Upgrades the HMC by obtaining  the required  files  from a remote server or from the HMC hard disk. The files are transferred
       onto a special partition on the HMC hard disk. After the files have been transferred, HMC will boot from this partition
       and perform the upgrade.
@@ -63,6 +65,8 @@ options:
                     - The type of location which contains the corrective service ISO image
                       Valid values are C(disk) for the HMC hard disk, C(ftp) for an FTP site,
                       C(sftp) for a secure FTP (SFTP) site, C(nfs) for an NFS file system.
+                    - When the location type is set to C(disk), First it looks for the C(build_file) in HMC hard disk
+                      if it doesn't exist then it looks for C(build_file) in Ansible Controller node.
                 type: str
                 required: true
                 choices: ['disk', 'ftp', 'sftp', 'nfs']
@@ -96,12 +100,12 @@ options:
             build_file:
                 description:
                     - The name of the corrective service ISO image file.
-                      This  option  is required when the ISO image is located on the HMC hard disk,
+                      This  option  is required when the ISO image is located on the HMC/Ansible controller node hard disk,
                       a remote FTP, SFTP, or NFS server.
                       During upgrade of hmc, this option represent the host path where the network install
-                      image is kept, not the HMC local path.
-                      If I(location_type=disk), this option should be provided with the ansible control
-                      node path ISO file or network install image is kept.
+                      image is kept.
+                      If I(location_type=disk) and ISO image is kept in Ansible controller node, 
+                      this option should be provided with the ansible control node path ISO file or network install image is kept.
                 type: str
     state:
         description:

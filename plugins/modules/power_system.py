@@ -17,10 +17,13 @@ module: power_system
 author:
     - Anil Vijayan (@AnilVijayan)
     - Navinakumar Kandakur (@nkandak1)
-short_description: PowerOn, PowerOff a Managed system
+short_description: PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of a Managed system
 description:
     - "Poweron specified managed system"
     - "Poweroff specified managed system"
+    - "Modify System configuration of specified managed system with specified configuration details"
+    - "Modify hardware resource of specified managed system with specified hardware resource details"
+    - "Get the facts of the specified managed system"
 version_added: 1.0.0
 options:
     hmc_host:
@@ -76,6 +79,7 @@ options:
     mem_mirroring_mode:
         description:
             - Configures the memory mirroring mode on specified I(system_name) for the next system power-on or system restart
+            - You can use this option on only managed systems which supports memory mirroring.
             - This option works with I(modify_hwres) action
         type: str
         choices: ['none', 'sys_firmware_only']
@@ -119,6 +123,39 @@ EXAMPLES = '''
          password: '{{ hmc_password }}'
     system_name: sys_name
     action: poweron
+
+- name: modify managed system name, powerOn lpar start policy and powerOff policy
+  hmc_managed_system:
+    hmc_host: "{{ inventory_hostname }}"
+    hmc_auth:
+         username: '{{ ansible_user }}'
+         password: '{{ hmc_password }}'
+    system_name: sys_name
+    new_name: <System_name_to_be_changed>
+    power_off_policy: '1'
+    power_on_lpar_start_policy: autostart
+    action: modify_syscfg
+
+- name: modify managed system memory settings
+  hmc_managed_system:
+    hmc_host: "{{ inventory_hostname }}"
+    hmc_auth:
+         username: '{{ ansible_user }}'
+         password: '{{ hmc_password }}'
+    system_name: sys_name
+    requested_num_sys_huge_pages: <sys_huge_pages_to_be_set>
+    mem_mirroring_mode: sys_firmware_only
+    pend_mem_region_size: auto
+    action: modify_hwres
+
+- name: fetch the managed system details
+  hmc_managed_system:
+    hmc_host: "{{ inventory_hostname }}"
+    hmc_auth:
+         username: '{{ ansible_user }}'
+         password: '{{ hmc_password }}'
+    system_name: sys_name
+    state: facts
 
 '''
 
