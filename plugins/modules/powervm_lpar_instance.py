@@ -803,6 +803,11 @@ def create_partition(module, params):
         if not draft_template_dom:
             module.fail_json(msg="Not able to fetch template for partition deploy")
 
+        # FC configuration should always be above vscsi configuration, otherwise template leads to marshal error
+        if fcports_config:
+            rest_conn.updateFCSettingsToDom(draft_template_dom, fcports_config)
+            rest_conn.updatePartitionTemplate(draft_uuid, draft_template_dom)
+
         # Volume configuration settings
         if params['volume_config']:
             if 'vios_name' in params['volume_config'] and params['volume_config']['vios_name']:
@@ -829,10 +834,6 @@ def create_partition(module, params):
                 rest_conn.updatePartitionTemplate(draft_uuid, draft_template_dom)
             else:
                 module.fail_json(msg="Unable to identify free physical volume")
-
-        if fcports_config:
-            rest_conn.updateFCSettingsToDom(draft_template_dom, fcports_config)
-            rest_conn.updatePartitionTemplate(draft_uuid, draft_template_dom)
 
         resp_dom = rest_conn.deployPartitionTemplate(draft_uuid, system_uuid)
         partition_uuid = resp_dom.xpath("//ParameterName[text()='PartitionUuid']/following-sibling::ParameterValue")[0].text
