@@ -1086,7 +1086,6 @@ def poweron_partition(module, params):
 
 
 def partition_details(module, params):
-    changed = False
     rest_conn = None
     system_uuid = None
     server_dom = None
@@ -1121,7 +1120,6 @@ def partition_details(module, params):
                     partition_prop = eachLpar
                     partition_prop['AssociatedManagedSystem'] = system_name
                     lpar_uuid = eachLpar['UUID']
-                    changed = True
                     break
         else:
             module.fail_json(msg="There are no Logical Partitions present on the system")
@@ -1140,7 +1138,7 @@ def partition_details(module, params):
             error_msg = parse_error_response(logoff_error)
             module.warn(error_msg)
 
-    return changed, partition_prop, None
+    return False, partition_prop, None
 
 
 def perform_task(module):

@@ -825,7 +825,7 @@ class HmcRestClient:
 
         shutdown_resp = xml_strip_namespace(resp)
         jobID = shutdown_resp.xpath('//JobID')[0].text
-        return self.fetchJobStatus(jobID, timeout_counter=40)
+        return self.fetchJobStatus(jobID, timeout_counter=120)
 
     def poweronPartition(self, vm_uuid, prof_uuid, keylock, iIPLsource, os_type):
         url = "https://{0}/rest/api/uom/LogicalPartition/{1}/do/PowerOn".format(self.hmc_ip, vm_uuid)
