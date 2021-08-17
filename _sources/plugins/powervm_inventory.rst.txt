@@ -14,7 +14,7 @@ Synopsis
 
 This plugin utilizes HMC APIs to build a dynamic inventory of defined partitions (LPAR, VIOS). Inventory sources must be structured as *.power_hmc.yml or *.power_hmc.yaml.
 
-To create a usable Ansible host for a given LPAR, the ip or hostname of the LPAR must be exposed through the HMC in some way. Currently there are only two such sources supported by this plugin, either an RMC ip address or the name of the LPAR must be also a valid hostname.
+To create a usable Ansible host for a given LPAR, the ip or hostname of the LPAR must be exposed through the HMC in some way. Currently there are only two such sources supported by this plugin, either an RMC ip address(not valid for IBMi partition) or the name of the LPAR must be also a valid hostname.
 
 Valid LPAR/VIOS properties that can be used for groups, keyed groups, filters, unknown partition identification, and composite variables can be found in the HMC REST API documentation. By default, valid properties include those listed as "Quick Properties", but if `advanced_fields` are enabled you may be able to use more advanced properties of the partition. Further information about the APIs can be found in the `Knowledge Center <https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/LogicalPartition.htm>`_.
 
@@ -54,7 +54,7 @@ Parameters
 
 
   exclude_ip (optional, list, [])
-    A list of IP addresses to exclude from the inventory. This will be compared to the RMC ip address specified in the HMC. Currently, no hostname lookup is performed, so only ip addresses that match the RMC ip address specified in the HMC will be exlcuded.
+    A list of IP addresses to exclude from the inventory. This will be compared to the RMC ip address specified in the HMC. Currently, no hostname lookup is performed, so only ip addresses that match the RMC ip address specified in the HMC will be exlcuded. This is not valid for IBMi LPARs
 
 
   exclude_lpar (optional, list, [])
@@ -70,7 +70,7 @@ Parameters
 
 
   ansible_host_type (optional, str, ip)
-    Determines if the ip address or the LPAR name will be used as the "ansible_host" variable in playbooks.
+    Determines if the ip address or the LPAR name will be used as the "ansible_host" variable in playbooks. This is not valid for IBMi LPARs
 
 
   advanced_fields (optional, bool, False)
@@ -86,7 +86,7 @@ Parameters
   identify_unknown_by (optional, str, omit)
     Allows you to include partitions unable to be automatically detected as a valid Ansible target.
 
-    By default, partitions without ip's are ommited from the inventory. This is not be the case in the event you have lpar_name set for ansible_host_type. If not, omitted partitions will be added to a group called "unknown" and will can be identified by any LPAR property of your choosing (PartitionName or UUID are common identifiers).
+    By default, Aix/Linux partitions without ip's and IBMi partitions in not running state are ommited from the inventory. This is not be the case in the event you have lpar_name set for ansible_host_type. If not, omitted partitions will be added to a group called "unknown" and will can be identified by any LPAR property of your choosing (PartitionName or UUID are common identifiers).
 
     If you do not omit unknown partitions, you may run into issues targetting groups that include them. To avoid this, you can specify a host pattern in a playbooks such as `targetgroup:!unknown`. This will your playbook to run against all known hosts in your target group.
 
@@ -133,7 +133,7 @@ Examples
     filters:
         PartitionState: 'running'
 
-    # Generate an inventory including all running partitions and also create a group allowing us to target AIX 7.2 specifically
+    # Generate an inventory of all running partitions and create a separate group for AIX 7.2 and IBMi type of partitions
     plugin: ibm.power_hmc.powervm_inventory
     hmc_hosts:
       "hmc_host_name":
@@ -146,9 +146,10 @@ Examples
         PartitionState: 'running'
     groups:
         AIX_72: "'7.2' in OperatingSystemVersion"
+        IBMi: "'IBM' in OperatingSystemVersion"
 
     # Generate an inventory of running partitions and group them by PartitionType with a prefix of type_
-    # Groups will be created will resemble "type_Virtual_IO_Server", "type_AIX_Linux", etc.
+    # Groups will be created will resemble "type_Virtual_IO_Server", "type_AIX_Linux", "type_OS400", etc.
     # Additionally, include the following variables as host_vars for a given target host: CurrentMemory, OperatingSystemVersion, PartitionName
     plugin: ibm.power_hmc.powervm_inventory
     hmc_hosts:
@@ -203,4 +204,6 @@ Authors
 - Torin Reilly (@torinreilly)
 - Michael Cohoon (@mtcohoon)
 - Ozzie Rodriguez
+- Anil Vijayan
+- Navinakumar Kandakur (@nkandak1)
 

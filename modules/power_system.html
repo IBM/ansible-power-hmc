@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>hmc_pwdpolicy – Manages the list, create, change and remove password policies of HMC &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
+  <title>power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of a Managed system &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
   
 
   
@@ -43,8 +43,8 @@
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="hmc_update_upgrade – Manages the update and upgrade of HMC" href="hmc_update_upgrade.html" />
-    <link rel="prev" title="Modules" href="../modules.html" /> 
+    <link rel="next" title="powervm_lpar_instance – Create, Delete, Shutdown, Activate, Restart and facts of an AIX/Linux or IBMi partition" href="powervm_lpar_instance.html" />
+    <link rel="prev" title="hmc_update_upgrade – Manages the update and upgrade of HMC" href="hmc_update_upgrade.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -98,7 +98,9 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../modules.html">Modules</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../modules.html#module-reference">Module reference</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">hmc_pwdpolicy – Manages the list, create, change and remove password policies of HMC</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hmc_pwdpolicy.html">hmc_pwdpolicy – Manages the list, create, change and remove password policies of HMC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hmc_update_upgrade.html">hmc_update_upgrade – Manages the update and upgrade of HMC</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of a Managed system</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#synopsis">Synopsis</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#parameters">Parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
@@ -106,8 +108,6 @@
 <li class="toctree-l4"><a class="reference internal" href="#status">Status</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="hmc_update_upgrade.html">hmc_update_upgrade – Manages the update and upgrade of HMC</a></li>
-<li class="toctree-l3"><a class="reference internal" href="power_system.html">power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of a Managed system</a></li>
 <li class="toctree-l3"><a class="reference internal" href="powervm_lpar_instance.html">powervm_lpar_instance – Create, Delete, Shutdown, Activate, Restart and facts of an AIX/Linux or IBMi partition</a></li>
 </ul>
 </li>
@@ -179,14 +179,14 @@
         
           <li><a href="../modules.html">Modules</a> &raquo;</li>
         
-      <li>hmc_pwdpolicy – Manages the list, create, change and remove password policies of HMC</li>
+      <li>power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of a Managed system</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
           
             
-              <a href="https://github.com/IBM/ansible-power-hmc/blob/dev-collection/docs/source/modules/hmc_pwdpolicy.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/IBM/ansible-power-hmc/blob/dev-collection/docs/source/modules/power_system.rst" class="fa fa-github"> Edit on GitHub</a>
             
           
         
@@ -200,8 +200,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="hmc-pwdpolicy-manages-the-list-create-change-and-remove-password-policies-of-hmc">
-<span id="hmc-pwdpolicy-module"></span><h1>hmc_pwdpolicy – Manages the list, create, change and remove password policies of HMC<a class="headerlink" href="#hmc-pwdpolicy-manages-the-list-create-change-and-remove-password-policies-of-hmc" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="power-system-poweron-poweroff-modify-syscfg-modify-hwres-facts-of-a-managed-system">
+<span id="power-system-module"></span><h1>power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of a Managed system<a class="headerlink" href="#power-system-poweron-poweroff-modify-syscfg-modify-hwres-facts-of-a-managed-system" title="Permalink to this headline">¶</a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
 <li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
@@ -213,10 +213,11 @@
 </div>
 <div class="section" id="synopsis">
 <h2><a class="toc-backref" href="#id1">Synopsis</a><a class="headerlink" href="#synopsis" title="Permalink to this headline">¶</a></h2>
-<p>Lists Hardware Management Console password policy information by password policies or password policy status.</p>
-<p>Creates a password policy.</p>
-<p>Changes password policies on the Hardware Management Console to activate, deactivate or modify password policy.</p>
-<p>Removes a password policy from the Hardware Management Console.</p>
+<p>Poweron specified managed system</p>
+<p>Poweroff specified managed system</p>
+<p>Modify System configuration of specified managed system with specified configuration details</p>
+<p>Modify hardware resource of specified managed system with specified hardware resource details</p>
+<p>Get the facts of the specified managed system</p>
 </div>
 <div class="section" id="parameters">
 <h2><a class="toc-backref" href="#id2">Parameters</a><a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h2>
@@ -232,113 +233,99 @@
 </dd>
 </dl>
 </dd>
-<dt>policy_name (optional, str, None)</dt><dd><p>The name of the password policy.</p>
+<dt>system_name (True, str, None)</dt><dd><p>The name of the managed system.</p>
 </dd>
-<dt>policy_config (optional, dict, None)</dt><dd><p>Configuration parameters required for hmc password policies. This option is valid for state like <code class="docutils literal notranslate"><span class="pre">present</span></code>, <code class="docutils literal notranslate"><span class="pre">modified</span></code>.</p>
-<dl class="simple">
-<dt>pwage (optional, str, None)</dt><dd><p>The number of days that can elapse before a password expires and must be changed.  A value of 99999 indicates no password expiration.</p>
+<dt>new_name (optional, str, None)</dt><dd><p>The new name to be configured on specified <em>system_name</em></p>
+<p>This option works with <em>modify_syscfg</em> action</p>
 </dd>
-<dt>description (optional, str, None)</dt><dd><p>Description for the password policy.</p>
+<dt>power_off_policy (optional, int, None)</dt><dd><p>power off policy to be configured on specified <em>system_name</em></p>
+<p>This option works with <em>modify_syscfg</em> action</p>
+<p>Configuring this option with ‘1’ will power off Managed System after all partitions are shut down</p>
 </dd>
-<dt>min_pwage (optional, str, None)</dt><dd><p>The number of days that must elapse before a password can be changed.</p>
+<dt>power_on_lpar_start_policy (optional, str, None)</dt><dd><p>power on partition start policy to be configured on specified <em>system_name</em> for the next system restart</p>
+<p>This option works with <em>modify_syscfg</em> action</p>
 </dd>
-<dt>warn_pwage (optional, str, None)</dt><dd><p>The number of days prior to password expiration when a warning message will begin to be displayed.</p>
+<dt>requested_num_sys_huge_pages (optional, int, None)</dt><dd><p>Configures the number of pages of huge page memory.</p>
+<p>User can change this value only when the managed system is powered off.</p>
+<p>This option works with <em>modify_hwres</em> action</p>
 </dd>
-<dt>min_length (optional, str, None)</dt><dd><p>The minimum password length.</p>
+<dt>mem_mirroring_mode (optional, str, None)</dt><dd><p>Configures the memory mirroring mode on specified <em>system_name</em> for the next system power-on or system restart</p>
+<p>User can use this option on only managed systems which supports memory mirroring.</p>
+<p>This option works with <em>modify_hwres</em> action</p>
 </dd>
-<dt>hist_size (optional, str, None)</dt><dd><p>The number of times a password must be changed before a password can be reused. This value cannot exceed 50.</p>
+<dt>pend_mem_region_size (optional, str, None)</dt><dd><p>Configures the memory region size setting on specified <em>system_name</em></p>
+<p>choices are in MB</p>
+<p>This option works with <em>modify_hwres</em> action</p>
 </dd>
-<dt>min_digits (optional, str, None)</dt><dd><p>The minimum number of digits that a password must contain</p>
+<dt>action (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">poweroff</span></code> poweroff a specified <em>system_name</em></p>
+<p><code class="docutils literal notranslate"><span class="pre">poweron</span></code> poweron a specified <em>system_name</em></p>
+<p><code class="docutils literal notranslate"><span class="pre">modify_syscfg</span></code> Makes system configurations of specified <em>system_name</em></p>
+<p><code class="docutils literal notranslate"><span class="pre">modify_hwres</span></code> Makes hardware resource configurations of specified <em>system_name</em></p>
 </dd>
-<dt>min_uppercase_chars (optional, str, None)</dt><dd><p>The minimum number of uppercase characters that a password must contain.</p>
-</dd>
-<dt>min_lowercase_chars (optional, str, None)</dt><dd><p>The minimum number of lowercase characters that a password must contain.</p>
-</dd>
-<dt>min_special_chars (optional, str, None)</dt><dd><p>The minimum number of special characters that a password must contain. Special characters include symbols, punctuation, and white space characters.</p>
-</dd>
-<dt>new_name (optional, str, None)</dt><dd><p>The new name of the password policy. This option valid only when <em>state=modified</em>.</p>
-</dd>
-</dl>
-</dd>
-<dt>policy_type (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">policies</span></code> list all of the password policies on the HMC.</p>
-<p><code class="docutils literal notranslate"><span class="pre">status</span></code> list password policy status information.</p>
-</dd>
-<dt>state (True, str, None)</dt><dd><p>The desired password policy state of the target HMC.</p>
-<p><code class="docutils literal notranslate"><span class="pre">present</span></code> ensure the target HMC is having the mentioned password policy.</p>
-<p><code class="docutils literal notranslate"><span class="pre">modified</span></code> ensure the policy on target HMC password is modified.</p>
-<p><code class="docutils literal notranslate"><span class="pre">absent</span></code> ensure the policy on the target HMC password is removed.</p>
-<p><code class="docutils literal notranslate"><span class="pre">facts</span></code> does not change anything on the HMC and returns current policy status/settings of HMC.</p>
-<p><code class="docutils literal notranslate"><span class="pre">activated</span></code> ensure the policy on the target HMC password is activated.</p>
-<p><code class="docutils literal notranslate"><span class="pre">deactivated</span></code> ensure the password policy is deactivated on the target HMC.</p>
+<dt>state (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">facts</span></code> fetches destails of specified <em>system_name</em></p>
 </dd>
 </dl>
 </div></blockquote>
 </div>
 <div class="section" id="examples">
 <h2><a class="toc-backref" href="#id3">Examples</a><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">List the hmc password policy current status</span>
-  <span class="nt">hmc_pwdpolicy</span><span class="p">:</span>
+<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">poweroff managed system</span>
+  <span class="nt">hmc_managed_system</span><span class="p">:</span>
     <span class="nt">hmc_host</span><span class="p">:</span> <span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span>
     <span class="nt">hmc_auth</span><span class="p">:</span>
          <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
          <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
-    <span class="nt">policy_type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">status</span>
+    <span class="nt">system_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">sys_name</span>
+    <span class="nt">action</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">poweroff</span>
+
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">poweron managed system</span>
+  <span class="nt">hmc_managed_system</span><span class="p">:</span>
+    <span class="nt">hmc_host</span><span class="p">:</span> <span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span>
+    <span class="nt">hmc_auth</span><span class="p">:</span>
+         <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
+         <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
+    <span class="nt">system_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">sys_name</span>
+    <span class="nt">action</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">poweron</span>
+
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">modify managed system name, powerOn lpar start policy and powerOff policy</span>
+  <span class="nt">hmc_managed_system</span><span class="p">:</span>
+    <span class="nt">hmc_host</span><span class="p">:</span> <span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span>
+    <span class="nt">hmc_auth</span><span class="p">:</span>
+         <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
+         <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
+    <span class="nt">system_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">sys_name</span>
+    <span class="nt">new_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;System_name_to_be_changed&gt;</span>
+    <span class="nt">power_off_policy</span><span class="p">:</span> <span class="s">&#39;1&#39;</span>
+    <span class="nt">power_on_lpar_start_policy</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">autostart</span>
+    <span class="nt">action</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">modify_syscfg</span>
+
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">modify managed system memory settings</span>
+  <span class="nt">hmc_managed_system</span><span class="p">:</span>
+    <span class="nt">hmc_host</span><span class="p">:</span> <span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span>
+    <span class="nt">hmc_auth</span><span class="p">:</span>
+         <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
+         <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
+    <span class="nt">system_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">sys_name</span>
+    <span class="nt">requested_num_sys_huge_pages</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;sys_huge_pages_to_be_set&gt;</span>
+    <span class="nt">mem_mirroring_mode</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">sys_firmware_only</span>
+    <span class="nt">pend_mem_region_size</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">auto</span>
+    <span class="nt">action</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">modify_hwres</span>
+
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">fetch the managed system details</span>
+  <span class="nt">hmc_managed_system</span><span class="p">:</span>
+    <span class="nt">hmc_host</span><span class="p">:</span> <span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span>
+    <span class="nt">hmc_auth</span><span class="p">:</span>
+         <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
+         <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
+    <span class="nt">system_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">sys_name</span>
     <span class="nt">state</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">facts</span>
-
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">create the password policy</span>
-  <span class="nt">hmc_pwdpolicy</span><span class="p">:</span>
-    <span class="nt">hmc_host</span><span class="p">:</span> <span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span>
-    <span class="nt">hmc_auth</span><span class="p">:</span>
-         <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
-         <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
-    <span class="nt">policy_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">dummy</span>
-    <span class="nt">state</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">present</span>
-    <span class="nt">policy_config</span><span class="p">:</span>
-
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">update the password policy with new settings</span>
-  <span class="nt">hmc_pwdpolicy</span><span class="p">:</span>
-    <span class="nt">hmc_host</span><span class="p">:</span> <span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span>
-    <span class="nt">hmc_auth</span><span class="p">:</span>
-         <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
-         <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
-    <span class="nt">policy_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">dummy</span>
-    <span class="nt">policy_config</span><span class="p">:</span>
-       <span class="nt">pwage</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
-       <span class="nt">hist_size</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">12</span>
-    <span class="nt">state</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">modified</span>
-
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">activate the password policy</span>
-  <span class="nt">hmc_pwdpolicy</span><span class="p">:</span>
-    <span class="nt">hmc_host</span><span class="p">:</span> <span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span>
-    <span class="nt">hmc_auth</span><span class="p">:</span>
-         <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
-         <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
-    <span class="nt">policy_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">dummy</span>
-    <span class="nt">state</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">activated</span>
-
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">De-activate any active policy on HMC</span>
-  <span class="nt">hmc_pwdpolicy</span><span class="p">:</span>
-    <span class="nt">hmc_host</span><span class="p">:</span> <span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span>
-    <span class="nt">hmc_auth</span><span class="p">:</span>
-         <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
-         <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
-    <span class="nt">state</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">deactivated</span>
-
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">remove the password policy</span>
-  <span class="nt">hmc_pwdpolicy</span><span class="p">:</span>
-    <span class="nt">hmc_host</span><span class="p">:</span> <span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span>
-    <span class="nt">hmc_auth</span><span class="p">:</span>
-         <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
-         <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
-    <span class="nt">policy_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">dummy</span>
-    <span class="nt">state</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">absent</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="return-values">
 <h2><a class="toc-backref" href="#id4">Return Values</a><a class="headerlink" href="#return-values" title="Permalink to this headline">¶</a></h2>
 <dl class="simple">
-<dt>policy_info (always, dict, )</dt><dd><p>Respective policy information</p>
+<dt>system_info (always, dict, )</dt><dd><p>Respective System information</p>
 </dd>
 </dl>
 </div>
@@ -352,6 +339,7 @@
 <h3>Authors<a class="headerlink" href="#authors" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Anil Vijayan (&#64;AnilVijayan)</p></li>
+<li><p>Navinakumar Kandakur (&#64;nkandak1)</p></li>
 </ul>
 </div>
 </div>
@@ -363,8 +351,8 @@
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="hmc_update_upgrade.html" class="btn btn-neutral float-right" title="hmc_update_upgrade – Manages the update and upgrade of HMC" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="../modules.html" class="btn btn-neutral float-left" title="Modules" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="powervm_lpar_instance.html" class="btn btn-neutral float-right" title="powervm_lpar_instance – Create, Delete, Shutdown, Activate, Restart and facts of an AIX/Linux or IBMi partition" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="hmc_update_upgrade.html" class="btn btn-neutral float-left" title="hmc_update_upgrade – Manages the update and upgrade of HMC" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

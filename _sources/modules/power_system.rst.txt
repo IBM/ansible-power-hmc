@@ -1,0 +1,207 @@
+.. _power_system_module:
+
+
+power_system -- PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of a Managed system
+=========================================================================================
+
+.. contents::
+   :local:
+   :depth: 1
+
+
+Synopsis
+--------
+
+Poweron specified managed system
+
+Poweroff specified managed system
+
+Modify System configuration of specified managed system with specified configuration details
+
+Modify hardware resource of specified managed system with specified hardware resource details
+
+Get the facts of the specified managed system
+
+
+
+
+
+
+Parameters
+----------
+
+  hmc_host (True, str, None)
+    The ipaddress or hostname of HMC.
+
+
+  hmc_auth (True, dict, None)
+    Username and Password credential of HMC.
+
+
+    username (True, str, None)
+      Username of HMC to login.
+
+
+    password (optional, str, None)
+      Password of HMC.
+
+
+
+  system_name (True, str, None)
+    The name of the managed system.
+
+
+  new_name (optional, str, None)
+    The new name to be configured on specified *system_name*
+
+    This option works with *modify_syscfg* action
+
+
+  power_off_policy (optional, int, None)
+    power off policy to be configured on specified *system_name*
+
+    This option works with *modify_syscfg* action
+
+    Configuring this option with '1' will power off Managed System after all partitions are shut down
+
+
+  power_on_lpar_start_policy (optional, str, None)
+    power on partition start policy to be configured on specified *system_name* for the next system restart
+
+    This option works with *modify_syscfg* action
+
+
+  requested_num_sys_huge_pages (optional, int, None)
+    Configures the number of pages of huge page memory.
+
+    User can change this value only when the managed system is powered off.
+
+    This option works with *modify_hwres* action
+
+
+  mem_mirroring_mode (optional, str, None)
+    Configures the memory mirroring mode on specified *system_name* for the next system power-on or system restart
+
+    User can use this option on only managed systems which supports memory mirroring.
+
+    This option works with *modify_hwres* action
+
+
+  pend_mem_region_size (optional, str, None)
+    Configures the memory region size setting on specified *system_name*
+
+    choices are in MB
+
+    This option works with *modify_hwres* action
+
+
+  action (optional, str, None)
+    ``poweroff`` poweroff a specified *system_name*
+
+    ``poweron`` poweron a specified *system_name*
+
+    ``modify_syscfg`` Makes system configurations of specified *system_name*
+
+    ``modify_hwres`` Makes hardware resource configurations of specified *system_name*
+
+
+  state (optional, str, None)
+    ``facts`` fetches destails of specified *system_name*
+
+
+
+
+
+
+
+
+
+Examples
+--------
+
+.. code-block:: yaml+jinja
+
+    
+    - name: poweroff managed system
+      hmc_managed_system:
+        hmc_host: "{{ inventory_hostname }}"
+        hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+        system_name: sys_name
+        action: poweroff
+
+    - name: poweron managed system
+      hmc_managed_system:
+        hmc_host: "{{ inventory_hostname }}"
+        hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+        system_name: sys_name
+        action: poweron
+
+    - name: modify managed system name, powerOn lpar start policy and powerOff policy
+      hmc_managed_system:
+        hmc_host: "{{ inventory_hostname }}"
+        hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+        system_name: sys_name
+        new_name: <System_name_to_be_changed>
+        power_off_policy: '1'
+        power_on_lpar_start_policy: autostart
+        action: modify_syscfg
+
+    - name: modify managed system memory settings
+      hmc_managed_system:
+        hmc_host: "{{ inventory_hostname }}"
+        hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+        system_name: sys_name
+        requested_num_sys_huge_pages: <sys_huge_pages_to_be_set>
+        mem_mirroring_mode: sys_firmware_only
+        pend_mem_region_size: auto
+        action: modify_hwres
+
+    - name: fetch the managed system details
+      hmc_managed_system:
+        hmc_host: "{{ inventory_hostname }}"
+        hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+        system_name: sys_name
+        state: facts
+
+
+
+
+Return Values
+-------------
+
+system_info (always, dict, )
+  Respective System information
+
+
+
+
+
+Status
+------
+
+
+
+
+- This module is not guaranteed to have a backwards compatible interface. *[preview]*
+
+
+- This module is maintained by community.
+
+
+
+Authors
+~~~~~~~
+
+- Anil Vijayan (@AnilVijayan)
+- Navinakumar Kandakur (@nkandak1)
+

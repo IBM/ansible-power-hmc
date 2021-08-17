@@ -43,7 +43,7 @@
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="powervm_lpar_instance – Create, Delete, Shutdown and Activate an AIX/Linux or IBMi partition" href="powervm_lpar_instance.html" />
+    <link rel="next" title="power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of a Managed system" href="power_system.html" />
     <link rel="prev" title="hmc_pwdpolicy – Manages the list, create, change and remove password policies of HMC" href="hmc_pwdpolicy.html" /> 
 </head>
 
@@ -89,12 +89,12 @@
               
             
             
-              <p class="caption"><span class="caption-text">Getting Started</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
 </ul>
-<p class="caption"><span class="caption-text">References</span></p>
+<p class="caption" role="heading"><span class="caption-text">References</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../modules.html">Modules</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../modules.html#module-reference">Module reference</a><ul class="current">
@@ -109,7 +109,8 @@
 <li class="toctree-l4"><a class="reference internal" href="#status">Status</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="powervm_lpar_instance.html">powervm_lpar_instance – Create, Delete, Shutdown and Activate an AIX/Linux or IBMi partition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="power_system.html">power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of a Managed system</a></li>
+<li class="toctree-l3"><a class="reference internal" href="powervm_lpar_instance.html">powervm_lpar_instance – Create, Delete, Shutdown, Activate, Restart and facts of an AIX/Linux or IBMi partition</a></li>
 </ul>
 </li>
 </ul>
@@ -118,16 +119,16 @@
 <li class="toctree-l1"><a class="reference internal" href="../playbooks.html">Playbooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo.html">Demo</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Community Guides</span></p>
+<p class="caption" role="heading"><span class="caption-text">Community Guides</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../community_guides.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../community_guides.html#helpful-links">Helpful Links</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Requirements</span></p>
+<p class="caption" role="heading"><span class="caption-text">Requirements</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../requirements.html">Requirements</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Appendices</span></p>
+<p class="caption" role="heading"><span class="caption-text">Appendices</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Releases</a></li>
 </ul>
@@ -216,7 +217,7 @@
 </div>
 <div class="section" id="synopsis">
 <h2><a class="toc-backref" href="#id1">Synopsis</a><a class="headerlink" href="#synopsis" title="Permalink to this headline">¶</a></h2>
-<p>Updates the HMC by installing a corrective service package located on an FTP/SFTP/NFS server or HMC hard disk.</p>
+<p>Updates the HMC by installing a corrective service package located on an FTP/SFTP/NFS server/Ansible Controller Node/HMC hard disk.</p>
 <p>Upgrades the HMC by obtaining  the required  files  from a remote server or from the HMC hard disk. The files are transferred onto a special partition on the HMC hard disk. After the files have been transferred, HMC will boot from this partition and perform the upgrade.</p>
 </div>
 <div class="section" id="requirements">
@@ -241,8 +242,9 @@
 </dl>
 </dd>
 <dt>build_config (False, dict, None)</dt><dd><p>Configuration parameters required for hmc update/upgrade.</p>
-<dl class="simple">
+<dl>
 <dt>location_type (True, str, None)</dt><dd><p>The type of location which contains the corrective service ISO image Valid values are <code class="docutils literal notranslate"><span class="pre">disk</span></code> for the HMC hard disk, <code class="docutils literal notranslate"><span class="pre">ftp</span></code> for an FTP site, <code class="docutils literal notranslate"><span class="pre">sftp</span></code> for a secure FTP (SFTP) site, <code class="docutils literal notranslate"><span class="pre">nfs</span></code> for an NFS file system.</p>
+<p>When the location type is set to <code class="docutils literal notranslate"><span class="pre">disk</span></code>, First it looks for the <code class="docutils literal notranslate"><span class="pre">build_file</span></code> in HMC hard disk if it doesn’t exist then it looks for <code class="docutils literal notranslate"><span class="pre">build_file</span></code> in Ansible Controller node.</p>
 </dd>
 <dt>hostname (optional, str, None)</dt><dd><p>The host name or IP address of the remote server where the corrective service ISO image is located.</p>
 </dd>
@@ -254,7 +256,7 @@
 </dd>
 <dt>mount_location (optional, str, None)</dt><dd><p>The mount location defined on the NFS server where the corrective service ISO image is located. This option is valid only if <em>location_type=nfs</em>.</p>
 </dd>
-<dt>build_file (optional, str, None)</dt><dd><p>The name of the corrective service ISO image file. This  option  is required when the ISO image is located on the HMC hard disk, a remote FTP, SFTP, or NFS server. During upgrade of hmc, this option represent the host path where the network install image is kept, not the HMC local path. If <em>location_type=disk</em>, this option should be provided with the ansible control node path ISO file or network install image is kept.</p>
+<dt>build_file (optional, str, None)</dt><dd><p>The name of the corrective service ISO image file. This  option  is required when the ISO image is located on any of the following locations HMC hard disk, Ansible controller node filesystem, remote FTP, SFTP, or NFS server. During upgrade of hmc, this option represent the host path where the network install image is kept. If <em>location_type=disk</em> and ISO image is kept in Ansible controller node, this option should be provided with the ansible control node path ISO file or network install image is kept.</p>
 </dd>
 </dl>
 </dd>
@@ -272,6 +274,7 @@
 <p class="admonition-title">Note</p>
 <ul class="simple">
 <li><p>Upgrade with <em>location_type=disk</em> will not support for V8 R870 and V9 R1 M910 release of HMC</p></li>
+<li><p>Update with <em>location_type=disk</em> and <em>build_file</em> in HMC local path wont remove the file after update.</p></li>
 <li><p>Module will not satisfy the idempotency requirement of Ansible, even though it partially confirms it. For instance if the module is tasked to update/upgrade the HMC to the same level, it will still go ahead with the operation and finally the changed state will be reported as false.</p></li>
 </ul>
 </div>
@@ -332,6 +335,7 @@
 <h3>Authors<a class="headerlink" href="#authors" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Anil Vijayan (&#64;AnilVijayan)</p></li>
+<li><p>Navinakumar Kandakur (&#64;nkandak1)</p></li>
 </ul>
 </div>
 </div>
@@ -343,7 +347,7 @@
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="powervm_lpar_instance.html" class="btn btn-neutral float-right" title="powervm_lpar_instance – Create, Delete, Shutdown and Activate an AIX/Linux or IBMi partition" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="power_system.html" class="btn btn-neutral float-right" title="power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of a Managed system" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
         <a href="hmc_pwdpolicy.html" class="btn btn-neutral float-left" title="hmc_pwdpolicy – Manages the list, create, change and remove password policies of HMC" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
