@@ -19,20 +19,23 @@ module: powervm_lpar_instance
 author:
     - Anil Vijayan (@AnilVijayan)
     - Navinakumar Kandakur (@nkandak1)
-short_description: Create, Delete, Shutdown and Activate an AIX/Linux or IBMi partition
+short_description: Create, Delete, Shutdown, Activate, Restart and facts of an AIX/Linux or IBMi partition
 notes:
-    - The storage configuration supports only the addition of physical volume from VSCSI backed volume through VIOS
     - The network configuration currently will not support SRIOV or VNIC related configurations
     - I(retain_vios_cfg) and I(delete_vdisks) options will only be supported from HMC release level on or above V9 R1 M930
+    - Partition creation is not supported for resource role based user in HMC Version prior to 951.
 description:
     - "Creates AIX/Linux or IBMi partition with specified configuration details on mentioned system"
     - "Or Deletes specified AIX/Linux or IBMi partition on specified system"
     - "Or Shutdown specified AIX/Linux or IBMi partition on specified system"
     - "Or Poweron/Activate specified AIX/Linux or IBMi partition with provided configuration details on the mentioned system"
+    - "Or Restart specified AIX/Linux or IBMi partition on specified system"
+    - "Or facts of the specified AIX/Linux or IBMi partition of specified system"
 
 version_added: "1.1.0"
 requirements:
 - Python >= 3
+- lxml
 options:
     hmc_host:
         description:
@@ -91,11 +94,13 @@ options:
         description:
             - Partition profile needs to be used to activate
             - If user doesn't provide this option, current configureation of partition will be used for activation
+            - This option is valid only for poweron action
         type: str
     keylock:
         description:
             - The keylock position to set.
             - If user doesn't provide this option, current settings of this option in partition will be considered.
+            - This option is valid only for poweron action
         type: str
         choices: ['manual', 'normal']
     iIPLsource:
@@ -103,6 +108,7 @@ options:
             - The inital program load (IPL) source to use when activating an IBMi partition.
             - If user doesn't provide this option, current setting of this option in partition will be considered.
             - If this option provided to AIX/Linux type partition, operation gives a warning and then ignores this option and proceed with operation.
+            - This option is valid only for poweron action
         type: str
         choices: ['a','b','c','d']
     volume_config:
@@ -216,7 +222,8 @@ options:
 '''
 
 EXAMPLES = '''
-- name: Create an IBMi logical partition instance with shared proc, volume_cong's vios_name and volume_name values
+- name: Create an IBMi logical partition instance with shared proc, volume_cong's vios_name and volume_name values, PhysicaIO and
+        max_virtual_slots
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -230,10 +237,13 @@ EXAMPLES = '''
       volume_config:
          vios_name: <viosname>
          volume_name: <volumename>
+      physical_io: <io location code>
+      max_virtual_slots: 50
       os_type: ibmi
       state: present
 
-- name: Create an AIX/Linux logical partition instance with default proc, mem, virt_network_config and  volume_config's volumes_size values
+- name: Create an AIX/Linux logical partition instance with default proc, mem, virt_network_config, volume_config's volumes_size and
+        npiv_config
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -246,6 +256,10 @@ EXAMPLES = '''
       virt_network_config:
          network_name: <virtual_nw_name>
          slot_number: <slot no>
+      npiv_config:
+         vios_name: <viosname>
+         fc_port: <fc_poart_name/loc code>
+         wwpn_pair: <wwpn1;wwpn2>
       os_type: aix_linux
       state: present
 
@@ -293,6 +307,17 @@ EXAMPLES = '''
       keylock: 'norm'
       iIPLsource: 'd'
       action: poweron
+
+- name: Create a partition with All the resources
+  powervm_lpar_instance:
+      hmc_host: '{{ inventory_hostname }}'
+      hmc_auth:
+         username: '{{ ansible_user }}'
+         password: '{{ hmc_password }}'
+      system_name: <system_name>
+      vm_name: <vm_name>
+      all_resources: True
+      state: present
 
 '''
 
@@ -1065,7 +1090,6 @@ def poweron_partition(module, params):
 
 
 def partition_details(module, params):
-    changed = False
     rest_conn = None
     system_uuid = None
     server_dom = None
@@ -1100,7 +1124,6 @@ def partition_details(module, params):
                     partition_prop = eachLpar
                     partition_prop['AssociatedManagedSystem'] = system_name
                     lpar_uuid = eachLpar['UUID']
-                    changed = True
                     break
         else:
             module.fail_json(msg="There are no Logical Partitions present on the system")
@@ -1119,7 +1142,7 @@ def partition_details(module, params):
             error_msg = parse_error_response(logoff_error)
             module.warn(error_msg)
 
-    return changed, partition_prop, None
+    return False, partition_prop, None
 
 
 def perform_task(module):

@@ -52,7 +52,7 @@ DOCUMENTATION = '''
         - To create a usable Ansible host for a given LPAR, the ip or hostname
           of the LPAR must be exposed through the HMC in some way.
           Currently there are only two such sources supported by this plugin,
-          either an RMC ip address or the name of the LPAR must be also a valid hostname.
+          either an RMC ip address(not valid for IBMi partition) or the name of the LPAR must be also a valid hostname.
         - Valid LPAR/VIOS properties that can be used for groups, keyed groups, filters, unknown partition identification,
           and composite variables can be found in the HMC REST API documentation. By default, valid properties include those
           listed as "Quick Properties", but if `advanced_fields` are enabled you may be able to use more advanced properties of the
@@ -91,6 +91,7 @@ DOCUMENTATION = '''
               This will be compared to the RMC ip address specified in the HMC.
               Currently, no hostname lookup is performed, so only ip addresses
               that match the RMC ip address specified in the HMC will be exlcuded.
+              This is not valid for IBMi LPARs
             type: list
             default: []
         exclude_lpar:
@@ -112,6 +113,7 @@ DOCUMENTATION = '''
         ansible_host_type:
             description: Determines if the ip address or the LPAR name will be used as
               the "ansible_host" variable in playbooks.
+              This is not valid for IBMi LPARs
             default: "ip"
             choices: [lpar_name, ip]
             type: str
@@ -174,7 +176,7 @@ hmc_hosts:
 filters:
     PartitionState: 'running'
 
-# Generate an inventory including all running partitions and also create a group allowing us to target AIX 7.2 specifically
+# Generate an inventory of all running partitions and create a separate group for AIX 7.2 and IBMi type of partitions
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
   "hmc_host_name":
@@ -187,9 +189,10 @@ filters:
     PartitionState: 'running'
 groups:
     AIX_72: "'7.2' in OperatingSystemVersion"
+    IBMi: "'IBM' in OperatingSystemVersion"
 
 # Generate an inventory of running partitions and group them by PartitionType with a prefix of type_
-# Groups will be created will resemble "type_Virtual_IO_Server", "type_AIX_Linux", etc.
+# Groups will be created will resemble "type_Virtual_IO_Server", "type_AIX_Linux", "type_OS400", etc.
 # Additionally, include the following variables as host_vars for a given target host: CurrentMemory, OperatingSystemVersion, PartitionName
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
