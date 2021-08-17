@@ -10,6 +10,7 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions impor
 
 hmc_auth = {'username': 'hscroot', 'password': 'password_value'}
 volume_config = {'volume_size': 2048}
+virt_network_config = {'network_name': 'test'}
 test_data = [
     # ALL Create partition testdata
     # system name is missing
@@ -58,8 +59,9 @@ test_data1 = [
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'absent',
       'system_name': "systemname", 'vm_name': 'vmname', 'proc': '4', 'mem':
       '1024', 'os_type': 'aix_linux', 'proc_unit': '4', 'prof_name': 'default', 'keylock': 'manual', 'iIPLsource': 'a',
-      'volume_config': volume_config, 'virt_network_name': 'test_vn_name'},
-     "ParameterError: unsupported parameters: proc, mem, os_type, proc_unit, prof_name, keylock, iIPLsource, volume_config, virt_network_name")]
+      'volume_config': volume_config, 'virt_network_config': virt_network_config, 'all_resources': True, 'max_virtual_slots': 25},
+     "ParameterError: unsupported parameters: proc, mem, os_type, proc_unit, prof_name, keylock, iIPLsource, volume_config, virt_network_config,"
+     " all_resources, max_virtual_slots")]
 test_data2 = [
     # ALL Shutdown partition testdata
     # system_name value is missing
@@ -78,9 +80,10 @@ test_data2 = [
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'action': 'shutdown', 'state': None,
       'system_name': "systemname", 'vm_name': 'vmname', 'proc': '4', 'mem':
       '1024', 'os_type': 'aix_linux', 'proc_unit': '4', 'prof_name': 'default', 'keylock': 'manual', 'iIPLsource': 'a',
-      'volume_config': volume_config, 'virt_network_name': 'test_vn_name', 'retain_vios_cfg': True, 'delete_vdisks': True},
+      'volume_config': volume_config, 'virt_network_config': virt_network_config, 'retain_vios_cfg': True, 'delete_vdisks': True,
+      'all_resources': True, 'max_virtual_slots': 25},
      "ParameterError: unsupported parameters: proc, mem, os_type, proc_unit, prof_name, keylock, iIPLsource, volume_config,"
-     " virt_network_name, retain_vios_cfg, delete_vdisks")]
+     " virt_network_config, retain_vios_cfg, delete_vdisks, all_resources, max_virtual_slots")]
 test_data3 = [
     # ALL Activate partition testdata
     # system name is missing
@@ -98,9 +101,10 @@ test_data3 = [
     # unsupported parameter os_type,proc,mem
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': None, 'action': 'poweron',
       'system_name': "systemname", 'vm_name': 'vmname', 'proc': '4', 'mem':
-      '1024', 'os_type': 'aix_linux', 'proc_unit': '4', 'volume_config': volume_config, 'virt_network_name': 'test_vn_name',
-      'retain_vios_cfg': True, 'delete_vdisks': True},
-     "ParameterError: unsupported parameters: proc, mem, os_type, proc_unit, volume_config, virt_network_name, retain_vios_cfg, delete_vdisks")]
+      '1024', 'os_type': 'aix_linux', 'proc_unit': '4', 'volume_config': volume_config, 'virt_network_config': 'test_vn_name',
+      'retain_vios_cfg': True, 'delete_vdisks': True, 'all_resources': True, 'max_virtual_slots': 25},
+     "ParameterError: unsupported parameters: proc, mem, os_type, proc_unit, volume_config, virt_network_config, retain_vios_cfg, delete_vdisks,"
+     " all_resources, max_virtual_slots")]
 
 
 def common_mock_setup(mocker):
