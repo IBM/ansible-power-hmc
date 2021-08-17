@@ -61,7 +61,6 @@ options:
             - power off policy to be configured on specified I(system_name)
             - This option works with I(modify_syscfg) action
             - Configuring this option with '1' will power off Managed System after all partitions are shut down
-            - And Configuring this option with '0' will not power off Managed System after all partitions are shut down
         type: int
         choices: [1, 0]
     power_on_lpar_start_policy:
@@ -73,13 +72,13 @@ options:
     requested_num_sys_huge_pages:
         description:
             - Configures the number of pages of huge page memory.
-            - You can change this value only when the managed system is powered off.
+            - User can change this value only when the managed system is powered off.
             - This option works with I(modify_hwres) action
         type: int
     mem_mirroring_mode:
         description:
             - Configures the memory mirroring mode on specified I(system_name) for the next system power-on or system restart
-            - You can use this option on only managed systems which supports memory mirroring.
+            - User can use this option on only managed systems which supports memory mirroring.
             - This option works with I(modify_hwres) action
         type: str
         choices: ['none', 'sys_firmware_only']
