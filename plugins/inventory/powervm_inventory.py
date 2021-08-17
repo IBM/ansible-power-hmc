@@ -176,7 +176,7 @@ hmc_hosts:
 filters:
     PartitionState: 'running'
 
-# Generate an inventory including all running partitions and also create a group allowing us to target AIX 7.2 and IBMi specifically
+# Generate an inventory of all running partitions and create a separate group for AIX 7.2 and IBMi type of partitions
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
   "hmc_host_name":
