@@ -38,6 +38,8 @@ DOCUMENTATION = '''
         - Torin Reilly (@torinreilly)
         - Michael Cohoon (@mtcohoon)
         - Ozzie Rodriguez
+        - Anil Vijayan
+        - Navinakumar Kandakur (@nkandak1)
     plugin_type: inventory
     version_added: "1.1.0"
     requirements:
@@ -50,7 +52,7 @@ DOCUMENTATION = '''
         - To create a usable Ansible host for a given LPAR, the ip or hostname
           of the LPAR must be exposed through the HMC in some way.
           Currently there are only two such sources supported by this plugin,
-          either an RMC ip address or the name of the LPAR must be also a valid hostname.
+          either an RMC ip address(not valid for IBMi partition) or the name of the LPAR must be also a valid hostname.
         - Valid LPAR/VIOS properties that can be used for groups, keyed groups, filters, unknown partition identification,
           and composite variables can be found in the HMC REST API documentation. By default, valid properties include those
           listed as "Quick Properties", but if `advanced_fields` are enabled you may be able to use more advanced properties of the
@@ -89,6 +91,7 @@ DOCUMENTATION = '''
               This will be compared to the RMC ip address specified in the HMC.
               Currently, no hostname lookup is performed, so only ip addresses
               that match the RMC ip address specified in the HMC will be exlcuded.
+              This is not valid for IBMi LPARs
             type: list
             default: []
         exclude_lpar:
@@ -110,6 +113,7 @@ DOCUMENTATION = '''
         ansible_host_type:
             description: Determines if the ip address or the LPAR name will be used as
               the "ansible_host" variable in playbooks.
+              This is not valid for IBMi LPARs
             default: "ip"
             choices: [lpar_name, ip]
             type: str
@@ -129,7 +133,7 @@ DOCUMENTATION = '''
             description:
                 - Allows you to include partitions unable to be automatically detected
                   as a valid Ansible target.
-                - By default, partitions without ip's are ommited from the inventory.
+                - By default, Aix/Linux partitions without ip's and IBMi partitions in not running state are ommited from the inventory.
                   This is not be the case in the event you have lpar_name set for ansible_host_type.
                   If not, omitted partitions will be added to a group called "unknown"
                   and will can be identified by any LPAR property of your choosing
@@ -172,7 +176,7 @@ hmc_hosts:
 filters:
     PartitionState: 'running'
 
-# Generate an inventory including all running partitions and also create a group allowing us to target AIX 7.2 specifically
+# Generate an inventory of all running partitions and create a separate group for AIX 7.2 and IBMi type of partitions
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
   "hmc_host_name":
@@ -185,9 +189,10 @@ filters:
     PartitionState: 'running'
 groups:
     AIX_72: "'7.2' in OperatingSystemVersion"
+    IBMi: "'IBM' in OperatingSystemVersion"
 
 # Generate an inventory of running partitions and group them by PartitionType with a prefix of type_
-# Groups will be created will resemble "type_Virtual_IO_Server", "type_AIX_Linux", etc.
+# Groups will be created will resemble "type_Virtual_IO_Server", "type_AIX_Linux", "type_OS400", etc.
 # Additionally, include the following variables as host_vars for a given target host: CurrentMemory, OperatingSystemVersion, PartitionName
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
@@ -286,14 +291,21 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                     except LparFieldNotFoundError:
                         # If the IP address was missing, this LPAR is 'unknown' and
                         # cannot be added as a valid Ansible host.
-                        if self.identify_unknown_by.lower() != 'omit':
+                        partition_type = self.get_lpar_os_type(lpar)
+
+                        if partition_type == 'OS400' and lpar['PartitionState'] == 'running' and self.ansible_display_name == "lpar_name":
+                            entry_name = self.get_lpar_name(lpar)
+                            hostname = entry_name
+                        elif self.identify_unknown_by.lower() != 'omit':
                             value_for_unknown = self.get_value_for_unknown_lpar(lpar)
                             if value_for_unknown:
                                 self.inventory.add_group('unknowns')
                                 self.inventory.add_host(value_for_unknown, 'unknowns')
                             else:
                                 invalid_identify_unknown_by = True
-                        continue
+                            continue
+                        else:
+                            continue
 
                     # A valid IP address was found for this LPAR
                     if self.group_by_managed_system:
@@ -462,6 +474,9 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         if self.identify_unknown_by in lpar:
             return lpar[self.identify_unknown_by]
 
+    def get_lpar_os_type(self, lpar):
+        return lpar["PartitionType"]
+
     def get_tag_text(self, e):
         lpar_data = {}
         for child in e:
@@ -476,11 +491,9 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         if "ResourceMonitoringIPAddress" in lpar and lpar["ResourceMonitoringIPAddress"] in self.exclude_ip:
             # LPAR excluded due to IP address
             return True
-
         if "PartitionName" in lpar and lpar["PartitionName"] in self.exclude_lpar:
             # LPAR excluded due to partinion name
             return True
-
         return False
 
     def matches_filters(self, lpar):

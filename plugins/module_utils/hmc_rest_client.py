@@ -48,7 +48,7 @@ def parse_error_response(error):
             if error_msg_l:
                 error_msg = error_msg_l[0].text
                 if "Failed to unmarshal input payload" in error_msg:
-                    error_msg = "Current HMC version might not support some of input settings"
+                    error_msg = "Current HMC version might not support some of input settings or invalid input"
             else:
                 error_msg = "Unknown http error"
     else:
@@ -166,6 +166,63 @@ def add_taggedIO_details(lpar_template_dom):
     ioConfigurationTag.addnext(etree.XML(taggedIO_payload))
 
 
+def lookup_physical_io(rest_conn, server_dom, drcname):
+    physical_io_list = server_dom.xpath("//AssociatedSystemIOConfiguration/IOSlots/IOSlot")
+    drcname_occurences = server_dom.xpath("//AssociatedSystemIOConfiguration/IOSlots/"
+                                          + "IOSlot/RelatedIOAdapter/IOAdapter/"
+                                          + "DynamicReconfigurationConnectorName[contains(text(),'" + drcname + "')]")
+    if len(drcname_occurences) > 1:
+        occurence = 0
+        for each in drcname_occurences:
+            # End Charater matching, handles the case where P1-C1 and P1-C12 should not be considered same
+            if each.text.endswith(drcname):
+                logger.debug("End Charaters matching")
+                occurence += 1
+                drcname = each.text
+
+        if occurence > 1:
+            raise Error("Given location code matching with adapters from multiple drawer")
+        elif occurence == 0:
+            return None
+
+    for each in physical_io_list:
+        each_eletree = etree.ElementTree(each)
+        if drcname in each_eletree.xpath("//RelatedIOAdapter/IOAdapter/DynamicReconfigurationConnectorName")[0].text:
+            return each_eletree
+
+    return None
+
+
+def add_physical_io(rest_conn, server_dom, lpar_template_dom, drcnames):
+    profileioslot_payload = ''
+    for drcname in drcnames:
+        # find the physical io adpater details from managed system dom
+        io_adapter_dom = lookup_physical_io(rest_conn, server_dom, drcname)
+        if not io_adapter_dom:
+            raise Error("Not able to find the matching IO Adapter on the Server")
+
+        drc_index = io_adapter_dom.xpath("//IOAdapter/AdapterID")[0].text
+        location_code = io_adapter_dom.xpath("//IOAdapter/DynamicReconfigurationConnectorName")[0].text
+        logger.debug("Location_code %s", location_code)
+
+        profileioslot_payload += '''<ProfileIOSlot schemaVersion="V1_0">
+                        <Metadata>
+                            <Atom/>
+                        </Metadata>
+                        <drcIndex kxe="false" kb="CUD">{0}</drcIndex>
+                        <locationCode kb="CUD" kxe="false">{1}</locationCode>
+                    </ProfileIOSlot>'''.format(drc_index, location_code)
+
+    profileioslots_payload = '''<profileIOSlots kxe="false" kb="CUD" schemaVersion="V1_0">
+                    <Metadata>
+                        <Atom/>
+                    </Metadata>
+                    {0}
+                  </profileIOSlots>'''.format(profileioslot_payload)
+    ioConfigurationTag = lpar_template_dom.xpath("//ioConfiguration/Metadata")[0]
+    ioConfigurationTag.addnext(etree.XML(profileioslots_payload))
+
+
 class HmcRestClient:
 
     def __init__(self, hmc_ip, username, password):
@@ -210,7 +267,7 @@ class HmcRestClient:
                  force_basic_auth=True,
                  timeout=300)
 
-    def fetchJobStatus(self, jobId, template=False, timeout_counter=0):
+    def fetchJobStatus(self, jobId, template=False, timeout_in_min=30):
 
         if template:
             url = "https://{0}/rest/api/templates/jobs/{1}".format(self.hmc_ip, jobId)
@@ -221,6 +278,7 @@ class HmcRestClient:
         result = None
 
         jobStatus = ''
+        timeout_counter = 0
         while True:
             time.sleep(30)
             timeout_counter += 1
@@ -261,7 +319,7 @@ class HmcRestClient:
                     err_msg = err_msg_l[0].text
                 raise HmcError(err_msg)
 
-            if timeout_counter == 60:
+            if timeout_counter == timeout_in_min * 2:
                 job_name = doc.xpath("//OperationName")[0].text.strip()
                 logger.debug("%s job stuck in %s state. Timed out!!", job_name, jobStatus)
                 raise HmcError("Job: {0} timed out!!".format(job_name))
@@ -315,6 +373,22 @@ class HmcRestClient:
                         timeout=300)
         if resp.code != 200:
             logger.debug("Get of Managed Systems failed. Respsonse code: %d", resp.code)
+            return None
+        response = resp.read()
+        return response
+
+    def getManagedSystemQuick(self, system_uuid):
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/quick".format(self.hmc_ip, system_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': '*/*'}
+        resp = open_url(url,
+                        headers=header,
+                        method='GET',
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=300)
+        if resp.code != 200:
+            logger.debug("Get of Logical Partition failed. Respsonse code: %d", resp.code)
             return None
         response = resp.read()
         return response
@@ -471,11 +545,17 @@ class HmcRestClient:
                  force_basic_auth=True,
                  timeout=300)
 
-    def updateProcMemSettingsToDom(self, template_xml, config_dict):
-        shared_config_tag = None
-        template_xml.xpath("//partitionId")[0].text = config_dict['lpar_id']
+    def updateLparNameAndIDToDom(self, template_xml, config_dict):
+        if 'lpar_id' in config_dict:
+            template_xml.xpath("//partitionId")[0].text = config_dict['lpar_id']
+        else:
+            lpar_id_tag = template_xml.xpath("//partitionId")[0]
+            lpar_id_tag.getparent().remove(lpar_id_tag)
+        template_xml.xpath("//currMaxVirtualIOSlots")[0].text = config_dict['max_virtual_slots']
         template_xml.xpath("//partitionName")[0].text = config_dict['vm_name']
 
+    def updateProcMemSettingsToDom(self, template_xml, config_dict):
+        shared_config_tag = None
         # shared processor configuration
         if config_dict['proc_unit']:
             shared_payload = '''<sharedProcessorConfiguration kxe="false" kb="CUD" schemaVersion="V1_0">
@@ -520,6 +600,7 @@ class HmcRestClient:
 
         partiton_template_xmlstr = etree.tostring(template_xml)
         partiton_template_xmlstr = partiton_template_xmlstr.decode("utf-8").replace("PartitionTemplate", LPAR_TEMPLATE_NS, 1)
+        logger.debug(partiton_template_xmlstr)
 
         resp = open_url(templateUrl,
                         headers=header,
@@ -721,7 +802,7 @@ class HmcRestClient:
         jobID = transform_resp.xpath('//JobID')[0].text
         return self.fetchJobStatus(jobID, template=True)
 
-    def poweroffPartition(self, vm_uuid, operation, immediate='false'):
+    def poweroffPartition(self, vm_uuid, operation, restart='false', immediate='false'):
         url = "https://{0}/rest/api/uom/LogicalPartition/{1}/do/PowerOff".format(self.hmc_ip, vm_uuid)
         header = _jobHeader(self.session)
 
@@ -730,7 +811,7 @@ class HmcRestClient:
                          'ProgressType': 'DISCRETE'}
 
         jobParams = {'immediate': immediate,
-                     'restart': 'false',
+                     'restart': restart,
                      'operation': operation}
 
         payload = _job_RequestPayload(reqdOperation, jobParams)
@@ -745,7 +826,7 @@ class HmcRestClient:
 
         shutdown_resp = xml_strip_namespace(resp)
         jobID = shutdown_resp.xpath('//JobID')[0].text
-        return self.fetchJobStatus(jobID, timeout_counter=40)
+        return self.fetchJobStatus(jobID, timeout_in_min=10)
 
     def poweronPartition(self, vm_uuid, prof_uuid, keylock, iIPLsource, os_type):
         url = "https://{0}/rest/api/uom/LogicalPartition/{1}/do/PowerOn".format(self.hmc_ip, vm_uuid)
@@ -782,7 +863,7 @@ class HmcRestClient:
 
         activate_resp = xml_strip_namespace(resp)
         jobID = activate_resp.xpath('//JobID')[0].text
-        return self.fetchJobStatus(jobID, timeout_counter=40)
+        return self.fetchJobStatus(jobID, timeout_in_min=10)
 
     def getPartitionProfiles(self, vm_uuid):
         url = "https://{0}/rest/api/uom/LogicalPartition/{1}/LogicalPartitionProfile".format(self.hmc_ip, vm_uuid)
@@ -907,6 +988,11 @@ class HmcRestClient:
         return vnw_quick_list
 
     def updateVirtualNWSettingsToDom(self, template_xml, config_dict):
+        vsn_payload = ''
+        if config_dict['virtual_slot_number'] is not None:
+            vsn_payload = '''
+            <VirtualSlotNumber kb="CUD" kxe="false">{0}</VirtualSlotNumber>'''.format(config_dict['virtual_slot_number'])
+
         vnw_payload = '''
         <clientNetworkAdapters kb="CUD" kxe="false" schemaVersion="V1_0">
             <Metadata>
@@ -916,6 +1002,7 @@ class HmcRestClient:
                 <Metadata>
                     <Atom/>
                 </Metadata>
+                {2}
                 <clientVirtualNetworks kb="CUD" kxe="false" schemaVersion="V1_0">
                     <Metadata>
                         <Atom/>
@@ -929,7 +1016,56 @@ class HmcRestClient:
                     </ClientVirtualNetwork>
                 </clientVirtualNetworks>
             </ClientNetworkAdapter>
-        </clientNetworkAdapters>'''.format(config_dict['nw_name'], config_dict['nw_uuid'])
+        </clientNetworkAdapters>'''.format(config_dict['nw_name'], config_dict['nw_uuid'], vsn_payload)
 
+        vnw_payload_xml = etree.XML(vnw_payload)
         client_nw_adapter_tag = template_xml.xpath("//ioConfiguration")[0]
-        client_nw_adapter_tag.addnext(etree.XML(vnw_payload))
+        client_nw_adapter_tag.addnext(vnw_payload_xml)
+
+    def vios_fetch_fcports_info(self, viosuuid):
+        vios_dom = self.getVirtualIOServer(viosuuid)
+        phys_fc_ports = vios_dom.xpath("//PhysicalFibreChannelPort")
+        fc_ports = []
+        available_ports = None
+        for each in phys_fc_ports:
+            # check if <AvailablePorts> is present for respective fc adapter
+            available_ports = each.xpath("AvailablePorts")
+            if not available_ports:
+                logger.debug("Skipping since not NPIV capable")
+                continue
+            fcport = {}
+            fcport['LocationCode'] = each.xpath("LocationCode")[0].text
+            fcport['PortName'] = each.xpath("PortName")[0].text
+            fc_ports.append(fcport)
+        return fc_ports
+
+    def updateFCSettingsToDom(self, lpar_template_dom, config_list):
+        fc_client_adapter = None
+        fc_clients = ''
+        for fc in config_list:
+            fc_client_adapter = '''<VirtualFibreChannelClientAdapter schemaVersion="V1_0">
+                <Metadata>
+                    <Atom/>
+                </Metadata>
+                <locationCode kb="CUD" kxe="false">{0}</locationCode>
+                <connectingPartitionName kb="CUD" kxe="false">{1}</connectingPartitionName>
+                <portName kb="CUD" kxe="false">{2}</portName>
+            </VirtualFibreChannelClientAdapter>'''.format(fc['LocationCode'], fc['viosname'], fc['PortName'])
+
+            fc_client_adpt_dom = etree.XML(fc_client_adapter)
+            if 'wwpn_pair' in fc:
+                wwpn_str = ' '.join(fc['wwpn_pair'].split(';'))
+                wwpn_xml = '<wwpns kb="CUD" kxe="false">{0}</wwpns>'.format(wwpn_str)
+                fc_client_adpt_dom.xpath("//locationCode")[0].addnext(etree.XML(wwpn_xml))
+
+            fc_clients += ET.tostring(fc_client_adpt_dom).decode("utf-8")
+
+        virtualFibreChannelClientAdapters = '''<virtualFibreChannelClientAdapters kb="CUD" kxe="false" schemaVersion="V1_0">
+            <Metadata>
+                <Atom/>
+            </Metadata>
+            {0}
+            </virtualFibreChannelClientAdapters>'''.format(fc_clients)
+
+        suspendEnableTag = lpar_template_dom.xpath("//suspendEnable")[0]
+        suspendEnableTag.addprevious(etree.XML(virtualFibreChannelClientAdapters))

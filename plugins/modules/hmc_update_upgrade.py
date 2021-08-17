@@ -17,14 +17,16 @@ DOCUMENTATION = '''
 module: hmc_update_upgrade
 author:
     - Anil Vijayan (@AnilVijayan)
+    - Navinakumar Kandakur (@nkandak1)
 short_description: Manages the update and upgrade of HMC
 notes:
     - Upgrade with I(location_type=disk) will not support for V8 R870 and V9 R1 M910 release of HMC
+    - Update with I(location_type=disk) and I(build_file) in HMC local path wont remove the file after update.
     - Module will not satisfy the idempotency requirement of Ansible, even though it partially confirms it.
       For instance if the module is tasked to update/upgrade the HMC to the same level, it will still
       go ahead with the operation and finally the changed state will be reported as false.
 description:
-    - Updates the HMC by installing a corrective service package located on an FTP/SFTP/NFS server or HMC hard disk.
+    - Updates the HMC by installing a corrective service package located on an FTP/SFTP/NFS server/Ansible Controller Node/HMC hard disk.
     - Upgrades the HMC by obtaining  the required  files  from a remote server or from the HMC hard disk. The files are transferred
       onto a special partition on the HMC hard disk. After the files have been transferred, HMC will boot from this partition
       and perform the upgrade.
@@ -63,6 +65,8 @@ options:
                     - The type of location which contains the corrective service ISO image
                       Valid values are C(disk) for the HMC hard disk, C(ftp) for an FTP site,
                       C(sftp) for a secure FTP (SFTP) site, C(nfs) for an NFS file system.
+                    - When the location type is set to C(disk), First it looks for the C(build_file) in HMC hard disk
+                      if it doesn't exist then it looks for C(build_file) in Ansible Controller node.
                 type: str
                 required: true
                 choices: ['disk', 'ftp', 'sftp', 'nfs']
@@ -96,12 +100,12 @@ options:
             build_file:
                 description:
                     - The name of the corrective service ISO image file.
-                      This  option  is required when the ISO image is located on the HMC hard disk,
-                      a remote FTP, SFTP, or NFS server.
+                      This  option  is required when the ISO image is located on any of the following locations HMC hard disk,
+                      Ansible controller node filesystem, remote FTP, SFTP, or NFS server.
                       During upgrade of hmc, this option represent the host path where the network install
-                      image is kept, not the HMC local path.
-                      If I(location_type=disk), this option should be provided with the ansible control
-                      node path ISO file or network install image is kept.
+                      image is kept.
+                      If I(location_type=disk) and ISO image is kept in Ansible controller node,
+                      this option should be provided with the ansible control node path ISO file or network install image is kept.
                 type: str
     state:
         description:
@@ -253,6 +257,23 @@ def remove_image_from_hmc(module, params):
             logger.debug("Removal of 'network_install' directory failed")
 
 
+def check_image_in_hmc(module, params):
+    hmc_host = params['hmc_host']
+    hmc_user = params['hmc_auth']['username']
+    password = params['hmc_auth']['password']
+    local_path = params['build_config']['build_file']
+
+    # Check file exist on HMC
+    list_on_hmc = 'sshpass -p {0} ssh {1}@{2} ls {3}'.format(password, hmc_user, hmc_host, local_path)
+    logger.debug(list_on_hmc)
+    rc, out, err = module.run_command(list_on_hmc)
+    logger.debug(rc)
+    if rc == 0:
+        return True
+    else:
+        return False
+
+
 def image_copy_from_local_to_hmc(module, params):
     hmc_host = params['hmc_host']
     hmc_user = params['hmc_auth']['username']
@@ -328,6 +349,7 @@ def upgrade_hmc(module, params):
     hmc_conn = None
     warning_msg = None
     isBootedUp = False
+    is_img_in_hmc = False
 
     if not params['build_config']:
         raise ParameterError("missing options on build_config")
@@ -337,12 +359,12 @@ def upgrade_hmc(module, params):
 
     command_option_checker(params['build_config'])
 
-    hmc.saveUpgrade('disk')
-
     locationType = params['build_config']['location_type']
 
     if locationType == 'disk':
-        image_copy_from_local_to_hmc(module, params)
+        is_img_in_hmc = check_image_in_hmc(module, params)
+        if not is_img_in_hmc:
+            image_copy_from_local_to_hmc(module, params)
 
     otherConfig = {}
     if params['build_config']['userid']:
@@ -356,14 +378,29 @@ def upgrade_hmc(module, params):
     if params['build_config']['hostname']:
         otherConfig['-H'] = params['build_config']['hostname']
     if params['build_config']['build_file']:
-        if locationType == 'disk':
+        if locationType == 'disk' and not is_img_in_hmc:
             otherConfig['-D'] = '/home/{0}/network_install'.format(hmc_user)
+        elif locationType == 'disk' and is_img_in_hmc:
+            otherConfig['-D'] = params['build_config']['build_file']
+            imageFilesUpg = ['base.img', 'disk1.img', 'hmcnetworkfiles.sum', 'img2a', 'img3a']
+            list_cmd = "sshpass -p {0} ssh {1}@{2} ls {3}".format(password, hmc_user, hmc_host, params['build_config']['build_file'])
+            logger.debug(list_cmd)
+            rc, out, err = module.run_command(list_cmd)
+            if rc == 0:
+                logger.debug(out)
+                if not all(True if each in out else False for each in imageFilesUpg):
+                    raise ParameterError("local path mentioned does not contain valid network files")
+            else:
+                logger.debug(err)
+                raise ParameterError("not able to list files on mentioned local path")
         else:
             otherConfig['-D'] = params['build_config']['build_file']
 
     initial_version_details = hmc.listHMCVersion()
 
     hmc.getHMCUpgradeFiles(locationType, configDict=otherConfig)
+
+    hmc.saveUpgrade('disk')
 
     hmc.configAltDisk(True, 'upgrade')
 
@@ -380,7 +417,8 @@ def upgrade_hmc(module, params):
         version_details = "FAILED: Hmc not responding after reboot"
 
     if not changed and locationType == 'disk':
-        remove_image_from_hmc(module, params)
+        if not is_img_in_hmc:
+            remove_image_from_hmc(module, params)
 
     if isBootedUp and not changed:
         warning_msg = "WARNING: HMC upgrade completed, but the version remains same. "\
@@ -396,6 +434,7 @@ def update_hmc(module, params):
     changed = False
     warning_msg = None
     isBootedUp = False
+    is_img_in_hmc = False
 
     if not params['build_config']:
         raise ParameterError("missing options on build_config")
@@ -409,7 +448,24 @@ def update_hmc(module, params):
     locationType = params['build_config']['location_type']
 
     if locationType == 'disk':
-        iso_file = image_copy_from_local_to_hmc(module, params)
+        is_img_in_hmc = check_image_in_hmc(module, params)
+        if not is_img_in_hmc:
+            iso_file = image_copy_from_local_to_hmc(module, params)
+        else:
+            hmc_ls_cmd = "sshpass -p {0} ssh {1}@{2} ls {3}".format(password, hmc_user, hmc_host, params['build_config']['build_file'])
+            rc, out, err = module.run_command(hmc_ls_cmd)
+            if rc == 0:
+                files = out.split()
+                for fl in files:
+                    if '.iso' in fl:
+                        iso_file = fl
+                        break
+                logger.debug(iso_file)
+                if not iso_file:
+                    raise Error("Necessary files are missing in hmc")
+            else:
+                logger.debug(err)
+                raise Error("could not confirm the necessary image files in hmc")
 
     otherConfig = {}
     if params['build_config']['hostname']:
@@ -428,8 +484,11 @@ def update_hmc(module, params):
     # In case user opt for disk install, then image will be cleared from
     # local location once installed
     if locationType == 'disk':
-        otherConfig['-C'] = ""
-        otherConfig['-F'] = '/home/{0}/network_install/{1}'.format(hmc_user, iso_file)
+        if not is_img_in_hmc:
+            otherConfig['-C'] = ""
+            otherConfig['-F'] = '/home/{0}/network_install/{1}'.format(hmc_user, iso_file)
+        else:
+            otherConfig['-F'] = '/{0}/{1}'.format(params['build_config']['build_file'], iso_file)
 
     # this option to restart hmc after configuration
     otherConfig['-R'] = " "
@@ -439,7 +498,8 @@ def update_hmc(module, params):
     hmc.updateHMC(locationType, configDict=otherConfig)
     version_details = {}
 
-    remove_image_from_hmc(module, params)
+    if not is_img_in_hmc:
+        remove_image_from_hmc(module, params)
 
     if hmc.checkHmcUpandRunning(timeoutInMin=HMC_REBOOT_TIMEOUT):
         isBootedUp, version_details = Hmc.checkIfHMCFullyBootedUp(module, hmc_host, hmc_user, password)
@@ -489,7 +549,7 @@ def run_module():
                       no_log=True,
                       options=dict(
                           username=dict(required=True, type='str'),
-                          password=dict(type='str'),
+                          password=dict(type='str', no_log=True),
                       )
                       ),
         build_config=dict(type='dict',
