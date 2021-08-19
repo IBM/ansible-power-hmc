@@ -94,13 +94,13 @@ options:
         description:
             - Partition profile needs to be used to activate
             - If user doesn't provide this option, current configureation of partition will be used for activation
-            - This option is valid only for poweron action
+            - This option is valid only for C(poweron) action
         type: str
     keylock:
         description:
             - The keylock position to set.
             - If user doesn't provide this option, current settings of this option in partition will be considered.
-            - This option is valid only for poweron action
+            - This option is valid only for C(poweron) action
         type: str
         choices: ['manual', 'normal']
     iIPLsource:
@@ -108,7 +108,7 @@ options:
             - The inital program load (IPL) source to use when activating an IBMi partition.
             - If user doesn't provide this option, current setting of this option in partition will be considered.
             - If this option provided to AIX/Linux type partition, operation gives a warning and then ignores this option and proceed with operation.
-            - This option is valid only for poweron action
+            - This option is valid only for C(poweron) action
         type: str
         choices: ['a','b','c','d']
     volume_config:
@@ -179,7 +179,7 @@ options:
                 type: str
     all_resources:
         description:
-            - Create a partition withh all the resources available in the managed system.
+            - Creates a partition with all the resources available in the managed system.
             - When we choose this as true, make sure that all partitions are in shutdown state, if any exist in managed system.
             - Default is false
         type: bool
@@ -197,7 +197,7 @@ options:
     retain_vios_cfg:
         description:
             - Do not remove the VIOS configuration like server adapters, storage mappings associated with the partition when deleting the partition
-            - Applicable only for delete
+            - Applicable only for C(absent) state
             - Default is to remove the associated VIOS configuration when deleting the partition
         type: bool
     delete_vdisks:
@@ -222,7 +222,7 @@ options:
 '''
 
 EXAMPLES = '''
-- name: Create an IBMi logical partition instance with shared proc, volume_cong's vios_name and volume_name values, PhysicaIO and
+- name: Create an IBMi logical partition instance with shared proc, volume_config's vios_name and volume_name values, PhysicaIO and
         max_virtual_slots
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'

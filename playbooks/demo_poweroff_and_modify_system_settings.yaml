@@ -24,7 +24,7 @@
       state: facts
     register: testout
 
-  - name: Stdout the created logical partition
+  - name: Stdout the managed system details
     debug:
         msg: '{{ testout }}'
 
