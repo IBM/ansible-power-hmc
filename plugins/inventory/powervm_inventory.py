@@ -52,7 +52,7 @@ DOCUMENTATION = '''
         - To create a usable Ansible host for a given LPAR, the ip or hostname
           of the LPAR must be exposed through the HMC in some way.
           Currently there are only two such sources supported by this plugin,
-          either an RMC ip address(not valid for IBMi partition) or the name of the LPAR must be also a valid hostname.
+          either an RMC IP address(not valid for IBMi partition) or the name of the LPAR must be also a valid hostname.
         - Valid LPAR/VIOS properties that can be used for groups, keyed groups, filters, unknown partition identification,
           and composite variables can be found in the HMC REST API documentation. By default, valid properties include those
           listed as "Quick Properties", but if `advanced_fields` are enabled you may be able to use more advanced properties of the
@@ -88,9 +88,9 @@ DOCUMENTATION = '''
             default: []
         exclude_ip:
             description: A list of IP addresses to exclude from the inventory.
-              This will be compared to the RMC ip address specified in the HMC.
+              This will be compared to the RMC IP address specified in the HMC.
               Currently, no hostname lookup is performed, so only ip addresses
-              that match the RMC ip address specified in the HMC will be exlcuded.
+              that match the RMC IP address specified in the HMC will be excluded.
               This is not valid for IBMi LPARs
             type: list
             default: []
@@ -133,13 +133,13 @@ DOCUMENTATION = '''
             description:
                 - Allows you to include partitions unable to be automatically detected
                   as a valid Ansible target.
-                - By default, Aix/Linux partitions without ip's and IBMi partitions in not running state are ommited from the inventory.
+                - By default, Aix/Linux partitions without ip's and IBMi partitions in not running state are omitted from the inventory.
                   This is not be the case in the event you have lpar_name set for ansible_host_type.
                   If not, omitted partitions will be added to a group called "unknown"
                   and will can be identified by any LPAR property of your choosing
                   (PartitionName or UUID are common identifiers).
                 - If you do not omit unknown partitions, you may run into issues
-                  targetting groups that include them. To avoid this, you can specify a host pattern
+                  targeting groups that include them. To avoid this, you can specify a host pattern
                   in a playbooks such as `targetgroup:!unknown`.
                   This will your playbook to run against all known hosts in your target group.
             default: omit
@@ -147,7 +147,7 @@ DOCUMENTATION = '''
 '''
 
 EXAMPLES = '''
-# The most minimal example, targetting only a single HMC
+# The most minimal example, targeting only a single HMC
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
   "hmc_host_name":

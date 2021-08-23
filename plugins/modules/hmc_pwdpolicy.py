@@ -20,7 +20,7 @@ short_description: Manages the list, create, change and remove password policies
 description:
     - Lists Hardware Management Console password policy information by password policies or password policy status.
     - Creates a password policy.
-    - Changes password policies on the Hardware Management Console to activate, deactivate or modify password policy.
+    - Change password policies on the Hardware Management Console to activate, deactivate or modify password policy.
     - Removes a password policy from the Hardware Management Console.
 version_added: 1.0.0
 options:
@@ -106,7 +106,7 @@ options:
                 type: str
     policy_type:
         description:
-            - C(policies) list all of the password policies on the HMC.
+            - C(policies) list all the password policies on the HMC.
             - C(status) list password policy status information.
         type: str
         choices: ['policies', 'status']
