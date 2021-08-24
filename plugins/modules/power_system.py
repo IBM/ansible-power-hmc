@@ -99,7 +99,7 @@ options:
         choices: ['poweron', 'poweroff', 'modify_syscfg', 'modify_hwres']
     state:
         description:
-            - C(facts) fetches destails of specified I(system_name)
+            - C(facts) fetch details of specified I(system_name)
         type: str
         choices: ['facts']
 '''

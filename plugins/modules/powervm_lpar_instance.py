@@ -23,7 +23,7 @@ short_description: Create, Delete, Shutdown, Activate, Restart and facts of an A
 notes:
     - The network configuration currently will not support SRIOV or VNIC related configurations
     - I(retain_vios_cfg) and I(delete_vdisks) options will only be supported from HMC release level on or above V9 R1 M930
-    - Partition creation is not supported for resource role based user in HMC Version prior to 951.
+    - Partition creation is not supported for resource role-based user in HMC Version prior to 951.
 description:
     - "Creates AIX/Linux or IBMi partition with specified configuration details on mentioned system"
     - "Or Deletes specified AIX/Linux or IBMi partition on specified system"
@@ -50,7 +50,7 @@ options:
         suboptions:
             username:
                 description:
-                    - HMC user name
+                    - HMC username
                 required: true
                 type: str
             password:
@@ -93,22 +93,22 @@ options:
     prof_name:
         description:
             - Partition profile needs to be used to activate
-            - If user doesn't provide this option, current configureation of partition will be used for activation
-            - This option is valid only for poweron action
+            - If user doesn't provide this option, current configuration of partition will be used for activation
+            - This option is valid only for C(poweron) action
         type: str
     keylock:
         description:
             - The keylock position to set.
             - If user doesn't provide this option, current settings of this option in partition will be considered.
-            - This option is valid only for poweron action
+            - This option is valid only for C(poweron) action
         type: str
         choices: ['manual', 'normal']
     iIPLsource:
         description:
-            - The inital program load (IPL) source to use when activating an IBMi partition.
+            - The initial program load (IPL) source to use when activating an IBMi partition.
             - If user doesn't provide this option, current setting of this option in partition will be considered.
             - If this option provided to AIX/Linux type partition, operation gives a warning and then ignores this option and proceed with operation.
-            - This option is valid only for poweron action
+            - This option is valid only for C(poweron) action
         type: str
         choices: ['a','b','c','d']
     volume_config:
@@ -150,7 +150,7 @@ options:
             slot_number:
                 description:
                     - Virtual slot number of a partition on which virtual network to be attached.
-                      This paramter is optional, if user doesn't pass, it chooses next available.
+                      This parameter is optional, if user doesn't pass, it chooses next available.
                 type: int
     npiv_config:
         description:
@@ -173,20 +173,20 @@ options:
                 type: str
             wwpn_pair:
                 description:
-                    - The WWPN pair value to be configuired with client FC adapter.
+                    - The WWPN pair value to be configured with client FC adapter.
                     - Both the WWPN value should be separated with semicolon delimiter
                     - Optional, if not provided the value will be auto assigned
                 type: str
     all_resources:
         description:
-            - Create a partition withh all the resources available in the managed system.
+            - Creates a partition with all the resources available in the managed system.
             - When we choose this as true, make sure that all partitions are in shutdown state, if any exist in managed system.
             - Default is false
         type: bool
     max_virtual_slots:
         description:
             - Maximum virtual slots configuration of the partition.
-            - if user doesn't pass, it create partition with I(max_virtual_slots) 20 as default.
+            - If user doesn't pass, it creates partition with I(max_virtual_slots) 20 as default.
         type: int
     physical_io:
         description:
@@ -197,7 +197,7 @@ options:
     retain_vios_cfg:
         description:
             - Do not remove the VIOS configuration like server adapters, storage mappings associated with the partition when deleting the partition
-            - Applicable only for delete
+            - Applicable only for C(absent) state
             - Default is to remove the associated VIOS configuration when deleting the partition
         type: bool
     delete_vdisks:
@@ -207,9 +207,9 @@ options:
         type: bool
     state:
         description:
-            - C(present) creates a partition of specifed I(os_type), I(vm_name), I(proc) and I(memory) on specified I(system_name)
+            - C(present) creates a partition of specified I(os_type), I(vm_name), I(proc) and I(memory) on specified I(system_name)
             - C(absent) deletes a partition of specified I(vm_name) on specified I(system_name)
-            - C(facts) fetches a details of specified I(vm_name) on specified I(system_name)
+            - C(facts) fetch the details of specified I(vm_name) on specified I(system_name)
         type: str
         choices: ['present', 'absent', 'facts']
     action:
@@ -222,7 +222,7 @@ options:
 '''
 
 EXAMPLES = '''
-- name: Create an IBMi logical partition instance with shared proc, volume_cong's vios_name and volume_name values, PhysicaIO and
+- name: Create an IBMi logical partition instance with shared proc, volume_config's vios_name and volume_name values, PhysicaIO and
         max_virtual_slots
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
@@ -257,9 +257,9 @@ EXAMPLES = '''
          network_name: <virtual_nw_name>
          slot_number: <slot no>
       npiv_config:
-         vios_name: <viosname>
-         fc_port: <fc_poart_name/loc code>
-         wwpn_pair: <wwpn1;wwpn2>
+         - vios_name: <viosname>
+           fc_port: <fc_poart_name/loc code>
+           wwpn_pair: <wwpn1;wwpn2>
       os_type: aix_linux
       state: present
 
@@ -285,7 +285,7 @@ EXAMPLES = '''
       vm_name: <vm_name>
       action: shutdown
 
-- name: Activate a AIX/Linux logical partition with user defined profile_name
+- name: Activate an AIX/Linux logical partition with user defined profile_name
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
