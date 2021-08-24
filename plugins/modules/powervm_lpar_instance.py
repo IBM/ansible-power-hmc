@@ -257,9 +257,9 @@ EXAMPLES = '''
          network_name: <virtual_nw_name>
          slot_number: <slot no>
       npiv_config:
-         vios_name: <viosname>
-         fc_port: <fc_poart_name/loc code>
-         wwpn_pair: <wwpn1;wwpn2>
+         - vios_name: <viosname>
+           fc_port: <fc_poart_name/loc code>
+           wwpn_pair: <wwpn1;wwpn2>
       os_type: aix_linux
       state: present
 
