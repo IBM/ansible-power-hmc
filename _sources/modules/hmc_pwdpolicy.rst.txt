@@ -1,8 +1,8 @@
 .. _hmc_pwdpolicy_module:
 
 
-hmc_pwdpolicy -- Manages the list, create, change and remove password policies of HMC
-=====================================================================================
+hmc_pwdpolicy -- Manages the list, create, change and remove password policies of the HMC
+=========================================================================================
 
 .. contents::
    :local:
@@ -16,7 +16,7 @@ Lists Hardware Management Console password policy information by password polici
 
 Creates a password policy.
 
-Changes password policies on the Hardware Management Console to activate, deactivate or modify password policy.
+Change password policies on the Hardware Management Console to activate, deactivate or modify password policy.
 
 Removes a password policy from the Hardware Management Console.
 
@@ -29,19 +29,19 @@ Parameters
 ----------
 
   hmc_host (True, str, None)
-    The ipaddress or hostname of HMC.
+    The IPaddress or hostname of the HMC.
 
 
   hmc_auth (True, dict, None)
-    Username and Password credential of HMC.
+    Username and Password credential of the HMC.
 
 
     username (True, str, None)
-      Username of HMC to login.
+      Username of the HMC to login.
 
 
     password (optional, str, None)
-      Password of HMC.
+      Password of the HMC.
 
 
 
@@ -50,11 +50,11 @@ Parameters
 
 
   policy_config (optional, dict, None)
-    Configuration parameters required for hmc password policies. This option is valid for state like ``present``, ``modified``.
+    Configuration parameters required for the HMC password policies. This option is valid for state like ``present``, ``modified``.
 
 
     pwage (optional, str, None)
-      The number of days that can elapse before a password expires and must be changed.  A value of 99999 indicates no password expiration.
+      The number of days that can elapse before a password expires and must be changed. A value of 99999 indicates no password expiration.
 
 
     description (optional, str, None)
@@ -99,7 +99,7 @@ Parameters
 
 
   policy_type (optional, str, None)
-    ``policies`` list all of the password policies on the HMC.
+    ``policies`` list all the password policies on the HMC.
 
     ``status`` list password policy status information.
 
@@ -133,7 +133,7 @@ Examples
 .. code-block:: yaml+jinja
 
     
-    - name: List the hmc password policy current status
+    - name: List the HMC password policy current status
       hmc_pwdpolicy:
         hmc_host: "{{ inventory_hostname }}"
         hmc_auth:

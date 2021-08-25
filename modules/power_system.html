@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of a Managed system &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
+  <title>power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the Managed system &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
   
 
   
@@ -44,7 +44,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="powervm_lpar_instance – Create, Delete, Shutdown, Activate, Restart and facts of an AIX/Linux or IBMi partition" href="powervm_lpar_instance.html" />
-    <link rel="prev" title="hmc_update_upgrade – Manages the update and upgrade of HMC" href="hmc_update_upgrade.html" /> 
+    <link rel="prev" title="hmc_update_upgrade – Manages the update and upgrade of the HMC" href="hmc_update_upgrade.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -98,9 +98,9 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../modules.html">Modules</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../modules.html#module-reference">Module reference</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="hmc_pwdpolicy.html">hmc_pwdpolicy – Manages the list, create, change and remove password policies of HMC</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hmc_update_upgrade.html">hmc_update_upgrade – Manages the update and upgrade of HMC</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of a Managed system</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hmc_pwdpolicy.html">hmc_pwdpolicy – Manages the list, create, change and remove password policies of the HMC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hmc_update_upgrade.html">hmc_update_upgrade – Manages the update and upgrade of the HMC</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the Managed system</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#synopsis">Synopsis</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#parameters">Parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
@@ -179,7 +179,7 @@
         
           <li><a href="../modules.html">Modules</a> &raquo;</li>
         
-      <li>power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of a Managed system</li>
+      <li>power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the Managed system</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -200,8 +200,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="power-system-poweron-poweroff-modify-syscfg-modify-hwres-facts-of-a-managed-system">
-<span id="power-system-module"></span><h1>power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of a Managed system<a class="headerlink" href="#power-system-poweron-poweroff-modify-syscfg-modify-hwres-facts-of-a-managed-system" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="power-system-poweron-poweroff-modify-syscfg-modify-hwres-facts-of-the-managed-system">
+<span id="power-system-module"></span><h1>power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the Managed system<a class="headerlink" href="#power-system-poweron-poweroff-modify-syscfg-modify-hwres-facts-of-the-managed-system" title="Permalink to this headline">¶</a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
 <li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
@@ -215,54 +215,54 @@
 <h2><a class="toc-backref" href="#id1">Synopsis</a><a class="headerlink" href="#synopsis" title="Permalink to this headline">¶</a></h2>
 <p>Poweron specified managed system</p>
 <p>Poweroff specified managed system</p>
-<p>Modify System configuration of specified managed system with specified configuration details</p>
-<p>Modify hardware resource of specified managed system with specified hardware resource details</p>
+<p>Modify System configuration of the specified managed system with specified configuration details</p>
+<p>Modify hardware resource of the specified managed system with specified hardware resource details</p>
 <p>Get the facts of the specified managed system</p>
 </div>
 <div class="section" id="parameters">
 <h2><a class="toc-backref" href="#id2">Parameters</a><a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><dl>
-<dt>hmc_host (True, str, None)</dt><dd><p>The ipaddress or hostname of HMC.</p>
+<dt>hmc_host (True, str, None)</dt><dd><p>The IPaddress or hostname of the HMC.</p>
 </dd>
-<dt>hmc_auth (True, dict, None)</dt><dd><p>Username and Password credential of HMC.</p>
+<dt>hmc_auth (True, dict, None)</dt><dd><p>Username and Password credential of the HMC.</p>
 <dl class="simple">
-<dt>username (True, str, None)</dt><dd><p>Username of HMC to login.</p>
+<dt>username (True, str, None)</dt><dd><p>Username of the HMC to login.</p>
 </dd>
-<dt>password (optional, str, None)</dt><dd><p>Password of HMC.</p>
+<dt>password (optional, str, None)</dt><dd><p>Password of the HMC.</p>
 </dd>
 </dl>
 </dd>
 <dt>system_name (True, str, None)</dt><dd><p>The name of the managed system.</p>
 </dd>
-<dt>new_name (optional, str, None)</dt><dd><p>The new name to be configured on specified <em>system_name</em></p>
-<p>This option works with <em>modify_syscfg</em> action</p>
+<dt>new_name (optional, str, None)</dt><dd><p>The new name to be configured on specified <em>system_name</em>.</p>
+<p>This option works with <code class="docutils literal notranslate"><span class="pre">modify_syscfg</span></code> <em>action</em>.</p>
 </dd>
-<dt>power_off_policy (optional, int, None)</dt><dd><p>power off policy to be configured on specified <em>system_name</em></p>
-<p>This option works with <em>modify_syscfg</em> action</p>
-<p>Configuring this option with ‘1’ will power off Managed System after all partitions are shut down</p>
+<dt>power_off_policy (optional, int, None)</dt><dd><p>power off policy to be configured on specified <em>system_name</em>.</p>
+<p>This option works with <code class="docutils literal notranslate"><span class="pre">modify_syscfg</span></code> <em>action</em>.</p>
+<p>Configuring this option to ‘1’ will power off the Managed System after all partitions are shutdown.</p>
 </dd>
-<dt>power_on_lpar_start_policy (optional, str, None)</dt><dd><p>power on partition start policy to be configured on specified <em>system_name</em> for the next system restart</p>
-<p>This option works with <em>modify_syscfg</em> action</p>
+<dt>power_on_lpar_start_policy (optional, str, None)</dt><dd><p>power on partition start policy to be configured on specified <em>system_name</em> for the next system restart.</p>
+<p>This option works with <code class="docutils literal notranslate"><span class="pre">modify_syscfg</span></code> <em>action</em>.</p>
 </dd>
 <dt>requested_num_sys_huge_pages (optional, int, None)</dt><dd><p>Configures the number of pages of huge page memory.</p>
 <p>User can change this value only when the managed system is powered off.</p>
-<p>This option works with <em>modify_hwres</em> action</p>
+<p>This option works with <code class="docutils literal notranslate"><span class="pre">modify_hwres</span></code> <em>action</em>.</p>
 </dd>
-<dt>mem_mirroring_mode (optional, str, None)</dt><dd><p>Configures the memory mirroring mode on specified <em>system_name</em> for the next system power-on or system restart</p>
+<dt>mem_mirroring_mode (optional, str, None)</dt><dd><p>Configures the memory mirroring mode on specified <em>system_name</em> for the next system poweron or system restart.</p>
 <p>User can use this option on only managed systems which supports memory mirroring.</p>
-<p>This option works with <em>modify_hwres</em> action</p>
+<p>This option works with <code class="docutils literal notranslate"><span class="pre">modify_hwres</span></code> <em>action</em>.</p>
 </dd>
-<dt>pend_mem_region_size (optional, str, None)</dt><dd><p>Configures the memory region size setting on specified <em>system_name</em></p>
-<p>choices are in MB</p>
-<p>This option works with <em>modify_hwres</em> action</p>
+<dt>pend_mem_region_size (optional, str, None)</dt><dd><p>Configures the memory region size setting on specified <em>system_name</em>.</p>
+<p>choices are in MB.</p>
+<p>This option works with <code class="docutils literal notranslate"><span class="pre">modify_hwres</span></code> <em>action</em>.</p>
 </dd>
-<dt>action (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">poweroff</span></code> poweroff a specified <em>system_name</em></p>
-<p><code class="docutils literal notranslate"><span class="pre">poweron</span></code> poweron a specified <em>system_name</em></p>
-<p><code class="docutils literal notranslate"><span class="pre">modify_syscfg</span></code> Makes system configurations of specified <em>system_name</em></p>
-<p><code class="docutils literal notranslate"><span class="pre">modify_hwres</span></code> Makes hardware resource configurations of specified <em>system_name</em></p>
+<dt>action (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">poweroff</span></code> poweroff a specified <em>system_name</em>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">poweron</span></code> poweron a specified <em>system_name</em>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">modify_syscfg</span></code> Makes system configurations of specified <em>system_name</em>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">modify_hwres</span></code> Makes hardware resource configurations of specified <em>system_name</em>.</p>
 </dd>
-<dt>state (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">facts</span></code> fetches destails of specified <em>system_name</em></p>
+<dt>state (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">facts</span></code> fetch details of specified <em>system_name</em></p>
 </dd>
 </dl>
 </div></blockquote>
@@ -275,7 +275,7 @@
     <span class="nt">hmc_auth</span><span class="p">:</span>
          <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
          <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
-    <span class="nt">system_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">sys_name</span>
+    <span class="nt">system_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;managed_system_name&gt;</span>
     <span class="nt">action</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">poweroff</span>
 
 <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">poweron managed system</span>
@@ -284,7 +284,7 @@
     <span class="nt">hmc_auth</span><span class="p">:</span>
          <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
          <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
-    <span class="nt">system_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">sys_name</span>
+    <span class="nt">system_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;managed_sysystem_name&gt;</span>
     <span class="nt">action</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">poweron</span>
 
 <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">modify managed system name, powerOn lpar start policy and powerOff policy</span>
@@ -293,8 +293,8 @@
     <span class="nt">hmc_auth</span><span class="p">:</span>
          <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
          <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
-    <span class="nt">system_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">sys_name</span>
-    <span class="nt">new_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;System_name_to_be_changed&gt;</span>
+    <span class="nt">system_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;managed_system_name&gt;</span>
+    <span class="nt">new_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;system_name_to_be_changed&gt;</span>
     <span class="nt">power_off_policy</span><span class="p">:</span> <span class="s">&#39;1&#39;</span>
     <span class="nt">power_on_lpar_start_policy</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">autostart</span>
     <span class="nt">action</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">modify_syscfg</span>
@@ -305,7 +305,7 @@
     <span class="nt">hmc_auth</span><span class="p">:</span>
          <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
          <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
-    <span class="nt">system_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">sys_name</span>
+    <span class="nt">system_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;managed_system_name&gt;</span>
     <span class="nt">requested_num_sys_huge_pages</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;sys_huge_pages_to_be_set&gt;</span>
     <span class="nt">mem_mirroring_mode</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">sys_firmware_only</span>
     <span class="nt">pend_mem_region_size</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">auto</span>
@@ -317,7 +317,7 @@
     <span class="nt">hmc_auth</span><span class="p">:</span>
          <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
          <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
-    <span class="nt">system_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">sys_name</span>
+    <span class="nt">system_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;managed_system_name&gt;</span>
     <span class="nt">state</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">facts</span>
 </pre></div>
 </div>
@@ -352,7 +352,7 @@
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
         <a href="powervm_lpar_instance.html" class="btn btn-neutral float-right" title="powervm_lpar_instance – Create, Delete, Shutdown, Activate, Restart and facts of an AIX/Linux or IBMi partition" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="hmc_update_upgrade.html" class="btn btn-neutral float-left" title="hmc_update_upgrade – Manages the update and upgrade of HMC" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hmc_update_upgrade.html" class="btn btn-neutral float-left" title="hmc_update_upgrade – Manages the update and upgrade of the HMC" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

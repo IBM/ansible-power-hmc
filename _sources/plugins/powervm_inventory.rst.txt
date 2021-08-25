@@ -14,9 +14,9 @@ Synopsis
 
 This plugin utilizes HMC APIs to build a dynamic inventory of defined partitions (LPAR, VIOS). Inventory sources must be structured as *.power_hmc.yml or *.power_hmc.yaml.
 
-To create a usable Ansible host for a given LPAR, the ip or hostname of the LPAR must be exposed through the HMC in some way. Currently there are only two such sources supported by this plugin, either an RMC ip address(not valid for IBMi partition) or the name of the LPAR must be also a valid hostname.
+To create a usable Ansible host for a given LPAR, the IP or hostname of the LPAR must be exposed through the HMC in some way. Currently there are only two such sources supported by this plugin, either an RMC IP address(not valid for IBMi partition) or the name of the LPAR must be also a valid hostname.
 
-Valid LPAR/VIOS properties that can be used for groups, keyed groups, filters, unknown partition identification, and composite variables can be found in the HMC REST API documentation. By default, valid properties include those listed as "Quick Properties", but if `advanced_fields` are enabled you may be able to use more advanced properties of the partition. Further information about the APIs can be found in the `Knowledge Center <https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/LogicalPartition.htm>`_.
+Valid LPAR/VIOS properties that can be used for groups, keyed groups, filters, unknown partition identification, and composite variables can be found in the HMC REST API documentation. By default, valid properties include those listed as "Quick Properties", but if `advanced_fields` are enabled, you may be able to use more advanced properties of the partition. Further information about the APIs can be found in the `Knowledge Center <https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/LogicalPartition.htm>`_.
 
 If a property is used in the inventory source that is unique to a partition type, only partitions for which that property is defined may be included. Non-compatible partitions can be filtered out by `OperatingSystemVersion` or `PartitionType` as detailed in the second example.
 
@@ -54,7 +54,7 @@ Parameters
 
 
   exclude_ip (optional, list, [])
-    A list of IP addresses to exclude from the inventory. This will be compared to the RMC ip address specified in the HMC. Currently, no hostname lookup is performed, so only ip addresses that match the RMC ip address specified in the HMC will be exlcuded. This is not valid for IBMi LPARs
+    A list of IP addresses to exclude from the inventory. This will be compared to the RMC IP address specified in the HMC. Currently, no hostname lookup is performed, so only IP addresses that match the RMC IP address specified in the HMC will be excluded. This is not valid for IBMi LPARs
 
 
   exclude_lpar (optional, list, [])
@@ -66,7 +66,7 @@ Parameters
 
 
   ansible_display_name (optional, str, lpar_name)
-    By default, partitions names will be used as the name displayed by Ansible in output. If you wish this to display the ip address instead you may set this to "ip".
+    By default, partitions names will be used as the name displayed by Ansible in output. If you wish this to display the IP address instead you may set this to "ip".
 
 
   ansible_host_type (optional, str, ip)
@@ -86,9 +86,9 @@ Parameters
   identify_unknown_by (optional, str, omit)
     Allows you to include partitions unable to be automatically detected as a valid Ansible target.
 
-    By default, Aix/Linux partitions without ip's and IBMi partitions in not running state are ommited from the inventory. This is not be the case in the event you have lpar_name set for ansible_host_type. If not, omitted partitions will be added to a group called "unknown" and will can be identified by any LPAR property of your choosing (PartitionName or UUID are common identifiers).
+    By default, Aix/Linux partitions without IP's and IBMi partitions in not running state are omitted from the inventory. This is not be the case in the event you have lpar_name set for ansible_host_type. If not, omitted partitions will be added to a group called "unknown" and will can be identified by any LPAR property of your choosing (PartitionName or UUID are common identifiers).
 
-    If you do not omit unknown partitions, you may run into issues targetting groups that include them. To avoid this, you can specify a host pattern in a playbooks such as `targetgroup:!unknown`. This will your playbook to run against all known hosts in your target group.
+    If you do not omit unknown partitions, you may run into issues targeting groups that include them. To avoid this, you can specify a host pattern in a playbooks such as `targetgroup:!unknown`. This will your playbook to run against all known hosts in your target group.
 
 
 
@@ -104,20 +104,20 @@ Examples
 .. code-block:: yaml+jinja
 
     
-    # The most minimal example, targetting only a single HMC
+    # The most minimal example, targeting only a single HMC
     plugin: ibm.power_hmc.powervm_inventory
     hmc_hosts:
       "hmc_host_name":
-        user: user
-        password: password
+        user: <HMC_Username>
+        password: <HMC_Password>
 
     # Create an inventory consisting of only Virtual IO Servers.
     # This may be important if grouping by advanced_fields exclusive to VIOS.
     plugin: ibm.power_hmc.powervm_inventory
     hmc_hosts:
       "hmc_host_name":
-        user: user
-        password: password
+        user: <HMC_Username>
+        password: <HMC_Password>
     filters:
         PartitionType: 'Virtual IO Server'
 
@@ -125,11 +125,11 @@ Examples
     plugin: ibm.power_hmc.powervm_inventory
     hmc_hosts:
       "hmc_host_name":
-        user: user
-        password: password
+        user: <HMC1_Username>
+        password: <HMC1_Password>
       "hmc_host_name2":
-        user: user
-        password: password
+        user: <HMC2_Username>
+        password: <HMC2_Password>
     filters:
         PartitionState: 'running'
 
@@ -137,11 +137,11 @@ Examples
     plugin: ibm.power_hmc.powervm_inventory
     hmc_hosts:
       "hmc_host_name":
-        user: user
-        password: password
+        user: <HMC1_Username>
+        password: <HMC1_Password>
       "hmc_host_name2":
-        user: user
-        password: password
+        user: <HMC2_Username>
+        password: <HMC2_Password>
     filters:
         PartitionState: 'running'
     groups:
@@ -154,11 +154,11 @@ Examples
     plugin: ibm.power_hmc.powervm_inventory
     hmc_hosts:
       "hmc_host_name":
-        user: user
-        password: password
+        user: <HMC1_Username>
+        password: <HMC1_Password>
       "hmc_host_name2":
-        user: user
-        password: password
+        user: <HMC2_Username>
+        password: <HMC2_Password>
     filters:
         PartitionState: 'running'
     keyed_groups:
@@ -173,8 +173,8 @@ Examples
     plugin: ibm.power_hmc.powervm_inventory
     hmc_hosts:
       "hmc_host_name":
-        user: user
-        password: password
+        user: <HMC2_Username>
+        password: <HMC_Password>
     exclude_ip:
         - 10.0.0.44
         - 10.0.0.46

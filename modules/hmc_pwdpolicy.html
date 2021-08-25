@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>hmc_pwdpolicy – Manages the list, create, change and remove password policies of HMC &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
+  <title>hmc_pwdpolicy – Manages the list, create, change and remove password policies of the HMC &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
   
 
   
@@ -43,7 +43,7 @@
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="hmc_update_upgrade – Manages the update and upgrade of HMC" href="hmc_update_upgrade.html" />
+    <link rel="next" title="hmc_update_upgrade – Manages the update and upgrade of the HMC" href="hmc_update_upgrade.html" />
     <link rel="prev" title="Modules" href="../modules.html" /> 
 </head>
 
@@ -98,7 +98,7 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../modules.html">Modules</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../modules.html#module-reference">Module reference</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">hmc_pwdpolicy – Manages the list, create, change and remove password policies of HMC</a><ul>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">hmc_pwdpolicy – Manages the list, create, change and remove password policies of the HMC</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#synopsis">Synopsis</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#parameters">Parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
@@ -106,8 +106,8 @@
 <li class="toctree-l4"><a class="reference internal" href="#status">Status</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="hmc_update_upgrade.html">hmc_update_upgrade – Manages the update and upgrade of HMC</a></li>
-<li class="toctree-l3"><a class="reference internal" href="power_system.html">power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of a Managed system</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hmc_update_upgrade.html">hmc_update_upgrade – Manages the update and upgrade of the HMC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="power_system.html">power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the Managed system</a></li>
 <li class="toctree-l3"><a class="reference internal" href="powervm_lpar_instance.html">powervm_lpar_instance – Create, Delete, Shutdown, Activate, Restart and facts of an AIX/Linux or IBMi partition</a></li>
 </ul>
 </li>
@@ -179,7 +179,7 @@
         
           <li><a href="../modules.html">Modules</a> &raquo;</li>
         
-      <li>hmc_pwdpolicy – Manages the list, create, change and remove password policies of HMC</li>
+      <li>hmc_pwdpolicy – Manages the list, create, change and remove password policies of the HMC</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -200,8 +200,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="hmc-pwdpolicy-manages-the-list-create-change-and-remove-password-policies-of-hmc">
-<span id="hmc-pwdpolicy-module"></span><h1>hmc_pwdpolicy – Manages the list, create, change and remove password policies of HMC<a class="headerlink" href="#hmc-pwdpolicy-manages-the-list-create-change-and-remove-password-policies-of-hmc" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="hmc-pwdpolicy-manages-the-list-create-change-and-remove-password-policies-of-the-hmc">
+<span id="hmc-pwdpolicy-module"></span><h1>hmc_pwdpolicy – Manages the list, create, change and remove password policies of the HMC<a class="headerlink" href="#hmc-pwdpolicy-manages-the-list-create-change-and-remove-password-policies-of-the-hmc" title="Permalink to this headline">¶</a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
 <li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
@@ -215,28 +215,28 @@
 <h2><a class="toc-backref" href="#id1">Synopsis</a><a class="headerlink" href="#synopsis" title="Permalink to this headline">¶</a></h2>
 <p>Lists Hardware Management Console password policy information by password policies or password policy status.</p>
 <p>Creates a password policy.</p>
-<p>Changes password policies on the Hardware Management Console to activate, deactivate or modify password policy.</p>
+<p>Change password policies on the Hardware Management Console to activate, deactivate or modify password policy.</p>
 <p>Removes a password policy from the Hardware Management Console.</p>
 </div>
 <div class="section" id="parameters">
 <h2><a class="toc-backref" href="#id2">Parameters</a><a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><dl>
-<dt>hmc_host (True, str, None)</dt><dd><p>The ipaddress or hostname of HMC.</p>
+<dt>hmc_host (True, str, None)</dt><dd><p>The IPaddress or hostname of the HMC.</p>
 </dd>
-<dt>hmc_auth (True, dict, None)</dt><dd><p>Username and Password credential of HMC.</p>
+<dt>hmc_auth (True, dict, None)</dt><dd><p>Username and Password credential of the HMC.</p>
 <dl class="simple">
-<dt>username (True, str, None)</dt><dd><p>Username of HMC to login.</p>
+<dt>username (True, str, None)</dt><dd><p>Username of the HMC to login.</p>
 </dd>
-<dt>password (optional, str, None)</dt><dd><p>Password of HMC.</p>
+<dt>password (optional, str, None)</dt><dd><p>Password of the HMC.</p>
 </dd>
 </dl>
 </dd>
 <dt>policy_name (optional, str, None)</dt><dd><p>The name of the password policy.</p>
 </dd>
-<dt>policy_config (optional, dict, None)</dt><dd><p>Configuration parameters required for hmc password policies. This option is valid for state like <code class="docutils literal notranslate"><span class="pre">present</span></code>, <code class="docutils literal notranslate"><span class="pre">modified</span></code>.</p>
+<dt>policy_config (optional, dict, None)</dt><dd><p>Configuration parameters required for the HMC password policies. This option is valid for state like <code class="docutils literal notranslate"><span class="pre">present</span></code>, <code class="docutils literal notranslate"><span class="pre">modified</span></code>.</p>
 <dl class="simple">
-<dt>pwage (optional, str, None)</dt><dd><p>The number of days that can elapse before a password expires and must be changed.  A value of 99999 indicates no password expiration.</p>
+<dt>pwage (optional, str, None)</dt><dd><p>The number of days that can elapse before a password expires and must be changed. A value of 99999 indicates no password expiration.</p>
 </dd>
 <dt>description (optional, str, None)</dt><dd><p>Description for the password policy.</p>
 </dd>
@@ -260,7 +260,7 @@
 </dd>
 </dl>
 </dd>
-<dt>policy_type (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">policies</span></code> list all of the password policies on the HMC.</p>
+<dt>policy_type (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">policies</span></code> list all the password policies on the HMC.</p>
 <p><code class="docutils literal notranslate"><span class="pre">status</span></code> list password policy status information.</p>
 </dd>
 <dt>state (True, str, None)</dt><dd><p>The desired password policy state of the target HMC.</p>
@@ -276,7 +276,7 @@
 </div>
 <div class="section" id="examples">
 <h2><a class="toc-backref" href="#id3">Examples</a><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">List the hmc password policy current status</span>
+<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">List the HMC password policy current status</span>
   <span class="nt">hmc_pwdpolicy</span><span class="p">:</span>
     <span class="nt">hmc_host</span><span class="p">:</span> <span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span>
     <span class="nt">hmc_auth</span><span class="p">:</span>
@@ -363,7 +363,7 @@
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="hmc_update_upgrade.html" class="btn btn-neutral float-right" title="hmc_update_upgrade – Manages the update and upgrade of HMC" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="hmc_update_upgrade.html" class="btn btn-neutral float-right" title="hmc_update_upgrade – Manages the update and upgrade of the HMC" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
         <a href="../modules.html" class="btn btn-neutral float-left" title="Modules" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
