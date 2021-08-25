@@ -18,10 +18,10 @@ module: hmc_update_upgrade
 author:
     - Anil Vijayan (@AnilVijayan)
     - Navinakumar Kandakur (@nkandak1)
-short_description: Manages the update and upgrade of HMC
+short_description: Manages the update and upgrade of the HMC
 notes:
-    - Upgrade with I(location_type=disk) will not support for V8 R870 and V9 R1 M910 release of HMC
-    - Update with I(location_type=disk) and I(build_file) in HMC local path won't remove the file after update.
+    - Upgrade with I(location_type=disk) will not support for V8 R870 and V9 R1 M910 release of the HMC
+    - Update with I(location_type=disk) and I(build_file) in the HMC local path won't remove the file after update.
     - Module will not satisfy the idempotency requirement of Ansible, even though it partially confirms it.
       For instance, if the module is tasked to update/upgrade the HMC to the same level, it will still
       go ahead with the operation and finally the changed state will be reported as false.
@@ -36,27 +36,27 @@ requirements:
 options:
     hmc_host:
         description:
-            - The ipaddress or hostname of HMC.
+            - The IPaddress or hostname of the HMC.
         required: true
         type: str
     hmc_auth:
         description:
-            - Username and Password credential of HMC.
+            - Username and Password credential of the HMC.
         required: true
         type: dict
         suboptions:
             username:
                 description:
-                    - Username of HMC to login.
+                    - Username of the HMC to login.
                 required: true
                 type: str
             password:
                 description:
-                    - Password of HMC.
+                    - Password of the HMC.
                 type: str
     build_config:
         description:
-            - Configuration parameters required for hmc update/upgrade.
+            - Configuration parameters required for the HMC update/upgrade.
         required: false
         type: dict
         suboptions:
@@ -66,13 +66,13 @@ options:
                       Valid values are C(disk) for the HMC hard disk, C(ftp) for an FTP site,
                       C(sftp) for a secure FTP (SFTP) site, C(nfs) for an NFS file system.
                     - When the location type is set to C(disk), first it looks for the C(build_file) in HMC hard disk
-                      if it doesn't exist then it looks for C(build_file) in Ansible Controller node.
+                      if it doesn't exist then it looks for C(build_file) in the Ansible Controller node.
                 type: str
                 required: true
                 choices: ['disk', 'ftp', 'sftp', 'nfs']
             hostname:
                 description:
-                    - The host name or IP address of the remote server where the corrective
+                    - The hostname or IPaddress of the remote server where the corrective
                       service ISO image is located.
                 type: str
             userid:
@@ -102,14 +102,14 @@ options:
                     - The name of the corrective service ISO image file.
                       This  option  is required when the ISO image is located on any of the following locations HMC hard disk,
                       Ansible controller node filesystem, remote FTP, SFTP, or NFS server.
-                      During upgrade of hmc, this option represents the host path where the network install
+                      During upgrade of the HMC, this option represents the host path where the network install
                       image is kept.
-                      During update of hmc if I(location_type=disk) and ISO image is kept in Ansible controller node or HMC hard disk,
+                      During update of the HMC if I(location_type=disk) and ISO image is kept in Ansible controller node or HMC hard disk,
                       this option should be provided with the ansible control node path in which ISO file or network install image is kept.
                 type: str
     state:
         description:
-            - The desired build state of the target hmc.
+            - The desired build state of the target HMC.
             - C(facts) does not change anything on the HMC and returns current driver/build level of HMC.
             - C(updated) ensures the target HMC is updated with given corrective service ISO image.
             - C(upgraded) ensures the target HMC is upgraded with given upgrade files.
@@ -135,7 +135,7 @@ EXAMPLES = '''
          password: '{{ hmc_password }}'
       build_config:
           location_type: nfs
-          hostname: nfsserver01
+          hostname: <NFS_Server_IP/Hostname>
           build_file: /Images/HMC_Update_V9R1M941_x86.iso
           mount_location: /HMCImages
       state: updated
@@ -148,9 +148,9 @@ EXAMPLES = '''
          password: '{{ hmc_password }}'
       build_config:
           location_type: sftp
-          hostname: sftpserver01
-          userid: sftp_user
-          passwd: sftp_password
+          hostname: <SFTP_Server_IP/Hostname>
+          userid: <SFTP_Server_Username>
+          passwd: <SFTP_Server_Password>
           build_file: /Images/HMC_Update_V9R1M941_x86.iso
       state: updated
 
