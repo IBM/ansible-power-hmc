@@ -48,7 +48,7 @@ This repository contains some example best practices for open source repositorie
 ### Python
 
 - Requires Python 3
-
+- lxml
 ## Resources
 
 Documentation of modules is generated on [GitHub Pages][pages].

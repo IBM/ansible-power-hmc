@@ -17,34 +17,34 @@ module: power_system
 author:
     - Anil Vijayan (@AnilVijayan)
     - Navinakumar Kandakur (@nkandak1)
-short_description: PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of a Managed system
+short_description: PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the Managed system
 description:
     - "Poweron specified managed system"
     - "Poweroff specified managed system"
-    - "Modify System configuration of specified managed system with specified configuration details"
-    - "Modify hardware resource of specified managed system with specified hardware resource details"
+    - "Modify System configuration of the specified managed system with specified configuration details"
+    - "Modify hardware resource of the specified managed system with specified hardware resource details"
     - "Get the facts of the specified managed system"
 version_added: 1.0.0
 options:
     hmc_host:
         description:
-            - The ipaddress or hostname of HMC.
+            - The IPaddress or hostname of the HMC.
         required: true
         type: str
     hmc_auth:
         description:
-            - Username and Password credential of HMC.
+            - Username and Password credential of the HMC.
         required: true
         type: dict
         suboptions:
             username:
                 description:
-                    - Username of HMC to login.
+                    - Username of the HMC to login.
                 required: true
                 type: str
             password:
                 description:
-                    - Password of HMC.
+                    - Password of the HMC.
                 type: str
     system_name:
         description:
@@ -53,53 +53,53 @@ options:
         type: str
     new_name:
         description:
-            - The new name to be configured on specified I(system_name)
-            - This option works with I(modify_syscfg) action
+            - The new name to be configured on specified I(system_name).
+            - This option works with C(modify_syscfg) I(action).
         type: str
     power_off_policy:
         description:
-            - power off policy to be configured on specified I(system_name)
-            - This option works with I(modify_syscfg) action
-            - Configuring this option with '1' will power off Managed System after all partitions are shut down
+            - power off policy to be configured on specified I(system_name).
+            - This option works with C(modify_syscfg) I(action).
+            - Configuring this option to '1' will power off the Managed System after all partitions are shutdown.
         type: int
         choices: [1, 0]
     power_on_lpar_start_policy:
         description:
-            - power on partition start policy to be configured on specified I(system_name) for the next system restart
-            - This option works with I(modify_syscfg) action
+            - power on partition start policy to be configured on specified I(system_name) for the next system restart.
+            - This option works with C(modify_syscfg) I(action).
         type: str
         choices: ['autostart', 'userinit', 'autorecovery']
     requested_num_sys_huge_pages:
         description:
             - Configures the number of pages of huge page memory.
             - User can change this value only when the managed system is powered off.
-            - This option works with I(modify_hwres) action
+            - This option works with C(modify_hwres) I(action).
         type: int
     mem_mirroring_mode:
         description:
-            - Configures the memory mirroring mode on specified I(system_name) for the next system power-on or system restart
+            - Configures the memory mirroring mode on specified I(system_name) for the next system poweron or system restart.
             - User can use this option on only managed systems which supports memory mirroring.
-            - This option works with I(modify_hwres) action
+            - This option works with C(modify_hwres) I(action).
         type: str
         choices: ['none', 'sys_firmware_only']
     pend_mem_region_size:
         description:
-            - Configures the memory region size setting on specified I(system_name)
-            - choices are in MB
-            - This option works with I(modify_hwres) action
+            - Configures the memory region size setting on specified I(system_name).
+            - choices are in MB.
+            - This option works with C(modify_hwres) I(action).
         type: str
         choices: ['auto', '16', '32', '64', '128', '256']
     action:
         description:
-            - C(poweroff) poweroff a specified I(system_name)
-            - C(poweron) poweron a specified I(system_name)
-            - C(modify_syscfg) Makes system configurations of specified I(system_name)
-            - C(modify_hwres) Makes hardware resource configurations of specified I(system_name)
+            - C(poweroff) poweroff a specified I(system_name).
+            - C(poweron) poweron a specified I(system_name).
+            - C(modify_syscfg) Makes system configurations of specified I(system_name).
+            - C(modify_hwres) Makes hardware resource configurations of specified I(system_name).
         type: str
         choices: ['poweron', 'poweroff', 'modify_syscfg', 'modify_hwres']
     state:
         description:
-            - C(facts) fetches destails of specified I(system_name)
+            - C(facts) fetch details of specified I(system_name)
         type: str
         choices: ['facts']
 '''
@@ -111,7 +111,7 @@ EXAMPLES = '''
     hmc_auth:
          username: '{{ ansible_user }}'
          password: '{{ hmc_password }}'
-    system_name: sys_name
+    system_name: <managed_system_name>
     action: poweroff
 
 - name: poweron managed system
@@ -120,7 +120,7 @@ EXAMPLES = '''
     hmc_auth:
          username: '{{ ansible_user }}'
          password: '{{ hmc_password }}'
-    system_name: sys_name
+    system_name: <managed_sysystem_name>
     action: poweron
 
 - name: modify managed system name, powerOn lpar start policy and powerOff policy
@@ -129,8 +129,8 @@ EXAMPLES = '''
     hmc_auth:
          username: '{{ ansible_user }}'
          password: '{{ hmc_password }}'
-    system_name: sys_name
-    new_name: <System_name_to_be_changed>
+    system_name: <managed_system_name>
+    new_name: <system_name_to_be_changed>
     power_off_policy: '1'
     power_on_lpar_start_policy: autostart
     action: modify_syscfg
@@ -141,7 +141,7 @@ EXAMPLES = '''
     hmc_auth:
          username: '{{ ansible_user }}'
          password: '{{ hmc_password }}'
-    system_name: sys_name
+    system_name: <managed_system_name>
     requested_num_sys_huge_pages: <sys_huge_pages_to_be_set>
     mem_mirroring_mode: sys_firmware_only
     pend_mem_region_size: auto
@@ -153,7 +153,7 @@ EXAMPLES = '''
     hmc_auth:
          username: '{{ ansible_user }}'
          password: '{{ hmc_password }}'
-    system_name: sys_name
+    system_name: <managed_system_name>
     state: facts
 
 '''

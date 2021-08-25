@@ -6,7 +6,7 @@
   connection: local
   vars:
     curr_hmc_auth:
-      username: hscroot 
+      username: hscroot
       password: !vault |
           $ANSIBLE_VAULT;1.1;AES256
           34656335616165343966323739633761653065346138623233633764353636373063313736373563
@@ -20,7 +20,7 @@
     powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth: "{{ curr_hmc_auth }}"
-      system_name: zepp31fp 
+      system_name: zepp31fp
       vm_name: test
       proc: 2
       proc_unit: 2
@@ -34,8 +34,8 @@
         network_name: VLAN1-ETHERNET0
         slot_number: 49
       npiv_config:
-        vios_name: zepp31-vios1
-        fc_port: fc0
+        - vios_name: zepp31-vios1
+          fc_port: fc0
       state: present
     register: testout
 
