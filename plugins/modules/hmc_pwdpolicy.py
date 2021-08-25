@@ -16,7 +16,7 @@ DOCUMENTATION = '''
 module: hmc_pwdpolicy
 author:
     - Anil Vijayan (@AnilVijayan)
-short_description: Manages the list, create, change and remove password policies of HMC
+short_description: Manages the list, create, change and remove password policies of the HMC
 description:
     - Lists Hardware Management Console password policy information by password policies or password policy status.
     - Creates a password policy.
@@ -26,23 +26,23 @@ version_added: 1.0.0
 options:
     hmc_host:
         description:
-            - The ipaddress or hostname of HMC.
+            - The IPaddress or hostname of the HMC.
         required: true
         type: str
     hmc_auth:
         description:
-            - Username and Password credential of HMC.
+            - Username and Password credential of the HMC.
         required: true
         type: dict
         suboptions:
             username:
                 description:
-                    - Username of HMC to login.
+                    - Username of the HMC to login.
                 required: true
                 type: str
             password:
                 description:
-                    - Password of HMC.
+                    - Password of the HMC.
                 type: str
     policy_name:
         description:
@@ -50,14 +50,14 @@ options:
         type: str
     policy_config:
         description:
-            - Configuration parameters required for hmc password policies.
+            - Configuration parameters required for the HMC password policies.
               This option is valid for state like C(present), C(modified).
         type: dict
         suboptions:
             pwage:
                 description:
                     - The number of days that can elapse before a password
-                      expires and must be changed.  A value of 99999 indicates
+                      expires and must be changed. A value of 99999 indicates
                       no password expiration.
                 type: str
             description:
@@ -125,7 +125,7 @@ options:
 '''
 
 EXAMPLES = '''
-- name: List the hmc password policy current status
+- name: List the HMC password policy current status
   hmc_pwdpolicy:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:

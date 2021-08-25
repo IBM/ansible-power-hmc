@@ -21,16 +21,16 @@ author:
     - Navinakumar Kandakur (@nkandak1)
 short_description: Create, Delete, Shutdown, Activate, Restart and facts of an AIX/Linux or IBMi partition
 notes:
-    - The network configuration currently will not support SRIOV or VNIC related configurations
-    - I(retain_vios_cfg) and I(delete_vdisks) options will only be supported from HMC release level on or above V9 R1 M930
+    - The network configuration currently will not support SRIOV or VNIC related configurations.
+    - I(retain_vios_cfg) and I(delete_vdisks) options will only be supported from HMC release level on or above V9 R1 M930.
     - Partition creation is not supported for resource role-based user in HMC Version prior to 951.
 description:
-    - "Creates AIX/Linux or IBMi partition with specified configuration details on mentioned system"
-    - "Or Deletes specified AIX/Linux or IBMi partition on specified system"
-    - "Or Shutdown specified AIX/Linux or IBMi partition on specified system"
-    - "Or Poweron/Activate specified AIX/Linux or IBMi partition with provided configuration details on the mentioned system"
-    - "Or Restart specified AIX/Linux or IBMi partition on specified system"
-    - "Or facts of the specified AIX/Linux or IBMi partition of specified system"
+    - "Creates AIX/Linux or IBMi partition with specified configuration details on mentioned system".
+    - "Or Deletes specified AIX/Linux or IBMi partition on specified system".
+    - "Or Shutdown specified AIX/Linux or IBMi partition on specified system".
+    - "Or Poweron/Activate specified AIX/Linux or IBMi partition, with provided configuration details on the mentioned system".
+    - "Or Restart specified AIX/Linux or IBMi partition on specified system".
+    - "Or facts of the specified AIX/Linux or IBMi partition of specified system".
 
 version_added: "1.1.0"
 requirements:
@@ -39,12 +39,12 @@ requirements:
 options:
     hmc_host:
         description:
-            - The ipaddress or hostname of HMC
+            - IPaddress or hostname of the HMC
         required: true
         type: str
     hmc_auth:
         description:
-            - Username and Password credential of HMC
+            - Username and Password credential of the HMC
         required: true
         type: dict
         suboptions:
@@ -64,57 +64,57 @@ options:
         type: str
     vm_name:
         description:
-            - The name of the powervm partition to create/delete
+            - The name of the powervm partition to create/delete/poweron/shutdown/facts
         required: true
         type: str
     proc:
         description:
-            - The number of dedicated processors to create partition.
-            - If C(proc_unit) parameter is set, then this value will work as Virtual Processors for
-              shared processor setting
-            - Default value is 2. This will not work during shared processor setting
+            - The number of dedicated processors to create a partition.
+            - If C(proc_unit) parameter is set, then this value will work as virtual processors for
+              shared processor setting.
+            - Default value is 2. This will not work during shared processor setting.
         type: int
     proc_unit:
         description:
-            - The number of shared processing units to create partition.
+            - The number of shared processing units to create a partition.
         type: float
     mem:
         description:
-            - The value of dedicated memory value in megabytes to create partition.
+            - The value of dedicated memory value in megabytes to create a partition.
             - Default value is 2048 MB.
         type: int
     os_type:
         description:
-            - Type of logical partition to be created
-            - C(aix_linux) or C(linux) or C(aix) for AIX or Linux operating system
-            - C(ibmi) for IBMi operating system
+            - Type of logical partition to be created.
+            - C(aix_linux) or C(linux) or C(aix) for AIX or Linux operating system.
+            - C(ibmi) for IBMi operating system.
         type: str
         choices: ['aix','linux','aix_linux','ibmi']
     prof_name:
         description:
-            - Partition profile needs to be used to activate
-            - If user doesn't provide this option, current configuration of partition will be used for activation
-            - This option is valid only for C(poweron) action
+            - Partition profile to be used to activate a partition.
+            - If the user doesn't provide this option, the current configuration of partition will be used for activation.
+            - This option is valid only for C(poweron) I(action).
         type: str
     keylock:
         description:
-            - The keylock position to set.
-            - If user doesn't provide this option, current settings of this option in partition will be considered.
-            - This option is valid only for C(poweron) action
+            - The keylock position to be set while activating a partition.
+            - If the user doesn't provide this option, the current setting of this option in partition will be considered.
+            - This option is valid only for C(poweron) I(action).
         type: str
         choices: ['manual', 'normal']
     iIPLsource:
         description:
-            - The initial program load (IPL) source to use when activating an IBMi partition.
-            - If user doesn't provide this option, current setting of this option in partition will be considered.
-            - If this option provided to AIX/Linux type partition, operation gives a warning and then ignores this option and proceed with operation.
-            - This option is valid only for C(poweron) action
+            - The initial program load (IPL) source to be used while activating an IBMi partition.
+            - If the user doesn't provide this option, current setting of this option in the partition will be considered.
+            - If this option provided for AIX/Linux type partition, operation gives a warning and then ignores this option and proceed with the operation.
+            - This option is valid only for C(poweron) I(action)
         type: str
         choices: ['a','b','c','d']
     volume_config:
         description:
-            - Storage volume configurations of partition
-            - Attaches Physical Volume via Virtual SCSI
+            - Storage volume configurations of a partition.
+            - Attaches Physical Volume via Virtual SCSI.
             - Redundant paths created by default, if the specified/identified physical volume is visible in more than one VIOS.
             - User needs to provide either I(volume_size) or both I(volume_name) and I(vios_name). If I(volume_size) is provided,
               available physical volume matching or greater than specified size would be attached.
@@ -138,24 +138,24 @@ options:
         description:
             - Virtual Network configuration of the partition
             - This implicitly adds a Virtual Ethernet Adapter with given virtual network to the partition
-            - Make sure provided Virtual Network has been attached to an active Network Bridge for external network communication
+            - Make sure provided Virtual Network has been attached to an active Network Bridge for external network communication.
         type: dict
         suboptions:
             network_name:
                 description:
-                    - Virtual Network Name to be attached to the partition.
-                      This parameter is mandatory with I(virt_network_config)
+                    - Name of the Virtual Network to be attached to the partition.
+                    - This option is mandatory
                 required: true
                 type: str
             slot_number:
                 description:
                     - Virtual slot number of a partition on which virtual network to be attached.
-                      This parameter is optional, if user doesn't pass, it chooses next available.
+                    - Optional, if not provided, next available value will be assigned.
                 type: int
     npiv_config:
         description:
-            - To configure N-Port ID Virtualization also known as Virtual Fibre of the partition
-            - User can provide two fc port configurations and mapping will be created with VIOS implicitly
+            - To configure N-Port ID Virtualization is also known as Virtual Fibre of the partition
+            - User can provide two fc port configurations and mappings will be created with VIOS implicitly
         type: list
         elements: dict
         suboptions:
@@ -174,49 +174,49 @@ options:
             wwpn_pair:
                 description:
                     - The WWPN pair value to be configured with client FC adapter.
-                    - Both the WWPN value should be separated with semicolon delimiter
+                    - Both the WWPN value should be separated by semicolon delimiter
                     - Optional, if not provided the value will be auto assigned
                 type: str
     all_resources:
         description:
             - Creates a partition with all the resources available in the managed system.
-            - When we choose this as true, make sure that all partitions are in shutdown state, if any exist in managed system.
+            - When we choose this as true, make sure that all partitions are in a shutdown state, if any exist in the managed system.
             - Default is false
         type: bool
     max_virtual_slots:
         description:
-            - Maximum virtual slots configuration of the partition.
-            - If user doesn't pass, it creates partition with I(max_virtual_slots) 20 as default.
+            - Maximum virtual slot configuration of the partition.
+            - If the user doesn't provide, it creates partition with I(max_virtual_slots) 20 as default.
         type: int
     physical_io:
         description:
-            - Physical IO adapter to be added to the partition
-            - An illustrative pattern for IO location code is XXXXX.XXX.XXXXXXX-P1-T1 or P1-T1
+            - Physical IO adapter to be added to the partition.
+            - An illustrative pattern for IO location code is XXXXX.XXX.XXXXXXX-P1-T1 or P1-T1.
         type: list
         elements: str
     retain_vios_cfg:
         description:
-            - Do not remove the VIOS configuration like server adapters, storage mappings associated with the partition when deleting the partition
-            - Applicable only for C(absent) state
-            - Default is to remove the associated VIOS configuration when deleting the partition
+            - Do not remove the VIOS configuration like server adapters, storage mappings associated with the partition when deleting the partition.
+            - Applicable only for C(absent) state.
+            - Default is to remove the associated VIOS configuration when deleting the partition.
         type: bool
     delete_vdisks:
         description:
-            - Option to delete the Virtual Disks associated with the partition when deleting the partition
-            - Default is to not delete the virtual disks
+            - Option to delete the Virtual Disks associated with the partition when deleting the partition.
+            - Default is to not delete the virtual disks.
         type: bool
     state:
         description:
-            - C(present) creates a partition of specified I(os_type), I(vm_name), I(proc) and I(memory) on specified I(system_name)
-            - C(absent) deletes a partition of specified I(vm_name) on specified I(system_name)
-            - C(facts) fetch the details of specified I(vm_name) on specified I(system_name)
+            - C(present) creates a partition of the specified I(os_type), I(vm_name), I(proc) and I(memory) on specified I(system_name).
+            - C(absent) deletes a partition of the specified I(vm_name) on specified I(system_name).
+            - C(facts) fetch the details of the specified I(vm_name) on specified I(system_name).
         type: str
         choices: ['present', 'absent', 'facts']
     action:
         description:
-            - C(shutdown) shutdown a partition of specified I(vm_name) on specified I(system_name)
-            - C(poweron) poweron a partition of specified I(vm_name) with specified I(prof_name), I(keylock), I(iIPLsource) on specified I(system_name)
-            - C(restart) restart a partition of specified I(vm_name) on specified I(system_name)
+            - C(shutdown) shutdown a partition of the specified I(vm_name) on specified I(system_name).
+            - C(poweron) poweron a partition of the specified I(vm_name) with specified I(prof_name), I(keylock), I(iIPLsource) on specified I(system_name).
+            - C(restart) restart a partition of the specified I(vm_name) on specified I(system_name).
         type: str
         choices: ['poweron', 'shutdown', 'restart']
 '''
@@ -237,7 +237,7 @@ EXAMPLES = '''
       volume_config:
          vios_name: <viosname>
          volume_name: <volumename>
-      physical_io: <io location code>
+      physical_io: <IO_location_code>
       max_virtual_slots: 50
       os_type: ibmi
       state: present
@@ -252,13 +252,13 @@ EXAMPLES = '''
       system_name: <system_name>
       vm_name: <vm_name>
       volume_config:
-         volume_size: <size>
+         volume_size: <disk_size>
       virt_network_config:
          network_name: <virtual_nw_name>
-         slot_number: <slot no>
+         slot_number: <client_slot_no>
       npiv_config:
          - vios_name: <viosname>
-           fc_port: <fc_poart_name/loc code>
+           fc_port: <fc_port_name/loc_code>
            wwpn_pair: <wwpn1;wwpn2>
       os_type: aix_linux
       state: present
@@ -308,7 +308,7 @@ EXAMPLES = '''
       iIPLsource: 'd'
       action: poweron
 
-- name: Create a partition with All the resources
+- name: Create a partition with all resources
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
