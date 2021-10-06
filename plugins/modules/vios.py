@@ -73,6 +73,7 @@ EXAMPLES = '''
          username: '{{ ansible_user }}'
          password: '{{ hmc_password }}'
     system_name: <managed_system_name>
+    name: <vios_partition_name>
     state: present
 
 '''
@@ -127,6 +128,7 @@ def createVios(module, params):
     try:
         lpar_config = hmc.getPartitionConfig(system_name, name)
         if lpar_config:
+            logger.debug(lpar_config)
             return False, lpar_config, None
     except HmcError as list_error:
         if 'HSCL8012' in repr(list_error):
