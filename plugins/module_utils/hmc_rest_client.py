@@ -987,17 +987,14 @@ class HmcRestClient:
         vnw_quick_list = json.loads(response)
         return vnw_quick_list
 
-    def updateVirtualNWSettingsToDom(self, template_xml, config_dict):
-        vsn_payload = ''
-        if config_dict['virtual_slot_number'] is not None:
-            vsn_payload = '''
-            <VirtualSlotNumber kb="CUD" kxe="false">{0}</VirtualSlotNumber>'''.format(config_dict['virtual_slot_number'])
-
-        vnw_payload = '''
-        <clientNetworkAdapters kb="CUD" kxe="false" schemaVersion="V1_0">
-            <Metadata>
-                <Atom/>
-            </Metadata>
+    def updateVirtualNWSettingsToDom(self, template_xml, config_dict_list):
+        vn_payload = ''
+        for each_vn in config_dict_list:
+            vsn_payload = ''
+            if each_vn['virtual_slot_number'] is not None:
+                vsn_payload = '''
+                <VirtualSlotNumber kb="CUD" kxe="false">{0}</VirtualSlotNumber>'''.format(each_vn['virtual_slot_number'])
+            vn_payload += '''
             <ClientNetworkAdapter schemaVersion="V1_0">
                 <Metadata>
                     <Atom/>
@@ -1015,9 +1012,17 @@ class HmcRestClient:
                         <uuid kb="CUD" kxe="false">{1}</uuid>
                     </ClientVirtualNetwork>
                 </clientVirtualNetworks>
-            </ClientNetworkAdapter>
-        </clientNetworkAdapters>'''.format(config_dict['nw_name'], config_dict['nw_uuid'], vsn_payload)
+            </ClientNetworkAdapter>'''.format(each_vn['nw_name'], each_vn['nw_uuid'], vsn_payload)
 
+        vnw_payload = '''
+        <clientNetworkAdapters kb="CUD" kxe="false" schemaVersion="V1_0">
+            <Metadata>
+                <Atom/>
+            </Metadata>
+            {0}
+        </clientNetworkAdapters>'''.format(vn_payload)
+
+        logger.debug(vnw_payload)
         vnw_payload_xml = etree.XML(vnw_payload)
         client_nw_adapter_tag = template_xml.xpath("//ioConfiguration")[0]
         client_nw_adapter_tag.addnext(vnw_payload_xml)
@@ -1069,3 +1074,33 @@ class HmcRestClient:
 
         suspendEnableTag = lpar_template_dom.xpath("//suspendEnable")[0]
         suspendEnableTag.addprevious(etree.XML(virtualFibreChannelClientAdapters))
+
+    def getVirtualFiberChannelAdapters(self, partition_uuid):
+        url = "https://{0}/rest/api/uom/LogicalPartition/{1}/VirtualFibreChannelClientAdapter/".format(self.hmc_ip, partition_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': '*/*'}
+
+        response = open_url(url,
+                            headers=header,
+                            method='GET',
+                            validate_certs=False,
+                            force_basic_auth=True,
+                            timeout=300)
+
+        if response.code == 204:
+            return None
+
+        vfc_root = xml_strip_namespace(response.read())
+        vfc_adapters = vfc_root.xpath('//VirtualFibreChannelClientAdapter')
+        return vfc_adapters
+
+    def getVirtualFiberChannelAdaptersSpecificInfo(self, partition_uuid):
+        raw_vfc = self.getVirtualFiberChannelAdapters(partition_uuid)
+        vfcs = []
+        if raw_vfc:
+            for vfc in raw_vfc:
+                vfc_dict = {}
+                vfc_dict['LocationCode'] = vfc.xpath('//LocationCode')[0].text
+                vfc_dict['WWPNs'] = vfc.xpath('//WWPNs')[0].text
+                vfcs.append(vfc_dict)
+        return vfcs

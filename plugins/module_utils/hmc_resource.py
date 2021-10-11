@@ -341,3 +341,20 @@ class Hmc():
         chhwresCmd += self.cmdClass.i_a_ConfigBuilder('CHHWRES', '-A', sysConfig)
         logger.debug(chhwresCmd)
         self.hmcconn.execute(chhwresCmd)
+
+    def migratePartitions(self, opr, srcCEC, dstCEC, lparName=None, lparIP=None, lparID=None, aLL=False):
+        opr = opr.upper()
+        migrlparCmd = self.CMD['MIGRLPAR'] + \
+            self.OPT['MIGRLPAR']['-O'][opr] +\
+            self.OPT['MIGRLPAR']['-M'] + srcCEC + \
+            self.OPT['MIGRLPAR']['-T'] + dstCEC
+        if lparName:
+            migrlparCmd += self.OPT['MIGRLPAR']['-P'] + lparName
+        elif lparIP:
+            migrlparCmd += self.OPT['MIGRLPAR']['--IP'] + lparIP
+        elif lparID:
+            migrlparCmd += self.OPT['MIGRLPAR']['--ID'] + lparID
+        elif aLL:
+            migrlparCmd += self.OPT['MIGRLPAR']['--ALL']
+        logger.debug(migrlparCmd)
+        self.hmcconn.execute(migrlparCmd)

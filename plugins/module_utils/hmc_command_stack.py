@@ -30,7 +30,8 @@ class HmcCommandStack():
                'CHSYSCFG': 'chsyscfg',
                'CHSYSSTATE': 'chsysstate',
                'CHHWRES': 'chhwres',
-               'LSHWRES': 'lshwres'}
+               'LSHWRES': 'lshwres',
+               'MIGRLPAR': 'migrlpar'}
 
     HMC_CMD_OPT = {'LSHMC': {'-N': ' -n ',
                              '-v': ' -v ',
@@ -276,6 +277,13 @@ class HmcCommandStack():
                                '-A': {'REQUESTED_NUM_SYS_HUGE_PAGES': 'requested_num_sys_huge_pages',
                                       'PEND_MEM_REGION_SIZE': 'pend_mem_region_size', 'MEM_MIRRORING_MODE': 'mem_mirroring_mode'},
                                },
+                   'MIGRLPAR': {'-O': {'V': ' -o v', 'M': ' -o m', 'R': ' -o r'},
+                                '-M': ' -m ',
+                                '-T': ' -t ',
+                                '-P': ' -p ',
+                                '--IP': ' --ip ',
+                                '--ALL': '--all',
+                                '--ID': ' --id '},
                    }
 
     def filterBuilder(self, cmdKey, configOptionsDict):

@@ -59,9 +59,9 @@ test_data1 = [
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'absent',
       'system_name': "systemname", 'vm_name': 'vmname', 'proc': '4', 'mem':
       '1024', 'os_type': 'aix_linux', 'proc_unit': '4', 'prof_name': 'default', 'keylock': 'manual', 'iIPLsource': 'a',
-      'volume_config': volume_config, 'virt_network_config': virt_network_config, 'all_resources': True, 'max_virtual_slots': 25},
+      'volume_config': volume_config, 'virt_network_config': virt_network_config, 'all_resources': True, 'max_virtual_slots': 25, 'advanced_info': True},
      "ParameterError: unsupported parameters: proc, mem, os_type, proc_unit, prof_name, keylock, iIPLsource, volume_config, virt_network_config,"
-     " all_resources, max_virtual_slots")]
+     " all_resources, max_virtual_slots, advanced_info")]
 test_data2 = [
     # ALL Shutdown partition testdata
     # system_name value is missing
@@ -81,9 +81,9 @@ test_data2 = [
       'system_name': "systemname", 'vm_name': 'vmname', 'proc': '4', 'mem':
       '1024', 'os_type': 'aix_linux', 'proc_unit': '4', 'prof_name': 'default', 'keylock': 'manual', 'iIPLsource': 'a',
       'volume_config': volume_config, 'virt_network_config': virt_network_config, 'retain_vios_cfg': True, 'delete_vdisks': True,
-      'all_resources': True, 'max_virtual_slots': 25},
+      'all_resources': True, 'max_virtual_slots': 25, 'advanced_info': True},
      "ParameterError: unsupported parameters: proc, mem, os_type, proc_unit, prof_name, keylock, iIPLsource, volume_config,"
-     " virt_network_config, retain_vios_cfg, delete_vdisks, all_resources, max_virtual_slots")]
+     " virt_network_config, retain_vios_cfg, delete_vdisks, all_resources, max_virtual_slots, advanced_info")]
 test_data3 = [
     # ALL Activate partition testdata
     # system name is missing
@@ -102,9 +102,9 @@ test_data3 = [
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': None, 'action': 'poweron',
       'system_name': "systemname", 'vm_name': 'vmname', 'proc': '4', 'mem':
       '1024', 'os_type': 'aix_linux', 'proc_unit': '4', 'volume_config': volume_config, 'virt_network_config': 'test_vn_name',
-      'retain_vios_cfg': True, 'delete_vdisks': True, 'all_resources': True, 'max_virtual_slots': 25},
+      'retain_vios_cfg': True, 'delete_vdisks': True, 'all_resources': True, 'max_virtual_slots': 25, 'advanced_info': True},
      "ParameterError: unsupported parameters: proc, mem, os_type, proc_unit, volume_config, virt_network_config, retain_vios_cfg, delete_vdisks,"
-     " all_resources, max_virtual_slots")]
+     " all_resources, max_virtual_slots, advanced_info")]
 
 
 def common_mock_setup(mocker):

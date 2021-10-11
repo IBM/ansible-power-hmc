@@ -139,7 +139,8 @@ options:
             - Virtual Network configuration of the partition
             - This implicitly adds a Virtual Ethernet Adapter with given virtual network to the partition
             - Make sure provided Virtual Network has been attached to an active Network Bridge for external network communication.
-        type: dict
+        type: list
+        elements: dict
         suboptions:
             network_name:
                 description:
@@ -205,6 +206,12 @@ options:
             - Option to delete the Virtual Disks associated with the partition when deleting the partition.
             - Default is to not delete the virtual disks.
         type: bool
+    advanced_info:
+        description:
+            - Option to display advanced information of the logical partition.
+            - Default is false
+            - Currently we are showing only NPIV storage details
+        type: bool
     state:
         description:
             - C(present) creates a partition of the specified I(os_type), I(vm_name), I(proc) and I(memory) on specified I(system_name).
@@ -254,8 +261,8 @@ EXAMPLES = '''
       volume_config:
          volume_size: <disk_size>
       virt_network_config:
-         network_name: <virtual_nw_name>
-         slot_number: <client_slot_no>
+         - network_name: <virtual_nw_name>
+           slot_number: <client_slot_no>
       npiv_config:
          - vios_name: <viosname>
            fc_port: <fc_port_name/loc_code>
@@ -318,7 +325,6 @@ EXAMPLES = '''
       vm_name: <vm_name>
       all_resources: True
       state: present
-
 '''
 
 RETURN = '''
@@ -357,7 +363,7 @@ except ImportError:
 
 # Generic setting for log initializing and log rotation
 import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc.log"
+LOG_FILENAME = "/tmp/ansible_power_hmc_navin.log"
 logger = logging.getLogger(__name__)
 
 
@@ -433,19 +439,23 @@ def validate_parameters(params):
 
     if opr == 'present':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']
-        unsupportedList = ['prof_name', 'keylock', 'iIPLsource', 'retain_vios_cfg', 'delete_vdisks']
+        unsupportedList = ['prof_name', 'keylock', 'iIPLsource', 'retain_vios_cfg', 'delete_vdisks', 'advanced_info']
     elif opr == 'poweron':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'volume_config', 'virt_network_config', 'retain_vios_cfg', 'delete_vdisks',
-                           'all_resources', 'max_virtual_slots']
+                           'all_resources', 'max_virtual_slots', 'advanced_info']
     elif opr == 'absent':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
-                           'all_resources', 'max_virtual_slots']
-    else:
+                           'all_resources', 'max_virtual_slots', 'advanced_info']
+    elif opr == 'facts':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots']
+    else:
+        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
+        unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
+                           'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots', 'advanced_info']
 
     collate = []
     for eachMandatory in mandatoryList:
@@ -663,6 +673,30 @@ def fetch_fc_config(rest_conn, system_uuid, fc_config_list):
     return fcports_identified
 
 
+# Validates and fetch virtual network information
+def fecth_virt_networks(rest_conn, system_uuid, virt_nw_config_list, max_slot_no):
+    vnw_response = rest_conn.getVirtualNetworksQuick(system_uuid)
+    virt_nws_identified = []
+    if vnw_response:
+        for ud_nw in virt_nw_config_list:
+            nw_uuid = None
+            virtual_slot_number = None
+            for rr_nw in vnw_response:
+                if ud_nw['network_name'] == rr_nw['NetworkName']:
+                    if 'slot_number' in ud_nw and ud_nw['slot_number']:
+                        virtual_slot_number = int(ud_nw['slot_number'])
+                        if int(ud_nw['slot_number']) > int(max_slot_no):
+                            raise Error("Virtual slot number: {0} is greater than max virtual slots allowed in a partition".format(ud_nw['slot_number']))
+                    nw_uuid = rr_nw['UUID']
+                    nw_dict = {'nw_name': rr_nw['NetworkName'], 'nw_uuid': nw_uuid, 'virtual_slot_number': virtual_slot_number}
+                    virt_nws_identified.append(nw_dict)
+                    break
+            if not nw_uuid:
+                raise Error("Requested Virtual Network: {0} is not available".format(ud_nw['network_name']))
+
+    return virt_nws_identified
+
+
 def create_partition(module, params):
     changed = False
     cli_conn = None
@@ -686,9 +720,6 @@ def create_partition(module, params):
     vios_name = None
     temp_template_name = "ansible_powervm_create_{0}".format(str(randint(1000, 9999)))
     temp_copied = False
-    nw_uuid = None
-    virt_network_name = None
-    virtual_slot_number = None
     fcports_config = None
     cli_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(cli_conn)
@@ -795,30 +826,12 @@ def create_partition(module, params):
             add_physical_io(rest_conn, server_dom, temporary_temp_dom, physical_io)
 
         rest_conn.updateProcMemSettingsToDom(temporary_temp_dom, config_dict)
-        # Virtual Network Configuration settings
+
+        # Add Virtual Networks to partition
         if params['virt_network_config']:
-            if 'network_name' in params['virt_network_config'] and params['virt_network_config']['network_name']:
-                virt_network_name = params['virt_network_config']['network_name']
-            if 'slot_number' in params['virt_network_config'] and params['virt_network_config']['slot_number']:
-                virtual_slot_number = int(params['virt_network_config']['slot_number'])
-                if virtual_slot_number > int(max_virtual_slots):
-                    raise Error("Virtual slot number: {0} is greater than max virtual slots allowed in a partition".format(virtual_slot_number))
+            virt_nw_list = fecth_virt_networks(rest_conn, system_uuid, params['virt_network_config'], max_virtual_slots)
+            rest_conn.updateVirtualNWSettingsToDom(temporary_temp_dom, virt_nw_list)
 
-        if virt_network_name:
-            vnw_response = rest_conn.getVirtualNetworksQuick(system_uuid)
-            if vnw_response:
-                for nw in vnw_response:
-                    nw_name = nw['NetworkName']
-                    if nw_name == virt_network_name:
-                        nw_uuid = nw['UUID']
-                        nw_dict = {'nw_name': nw_name, 'nw_uuid': nw_uuid, 'virtual_slot_number': virtual_slot_number}
-                        rest_conn.updateVirtualNWSettingsToDom(temporary_temp_dom, nw_dict)
-                        break
-                if not nw_uuid:
-                    raise Error("Requested Virtual Network: {0} is not available".format(virt_network_name))
-
-            else:
-                raise Error("There are no Virtual Networks present in the system")
         rest_conn.updatePartitionTemplate(temp_uuid, temporary_temp_dom)
 
         resp = rest_conn.checkPartitionTemplate(temp_template_name, system_uuid)
@@ -1101,6 +1114,7 @@ def partition_details(module, params):
     password = params['hmc_auth']['password']
     system_name = params['system_name']
     vm_name = params['vm_name']
+    advanced_info = params['advanced_info']
 
     try:
         rest_conn = HmcRestClient(hmc_host, hmc_user, password)
@@ -1127,6 +1141,11 @@ def partition_details(module, params):
                     break
         else:
             module.fail_json(msg="There are no Logical Partitions present on the system")
+
+        if lpar_uuid and advanced_info:
+            vfc_adapter_details = rest_conn.getVirtualFiberChannelAdaptersSpecificInfo(lpar_uuid)
+            partition_prop['VirtualFiberChannelAdapters'] = vfc_adapter_details
+            logger.debug(vfc_adapter_details)
 
         if not lpar_uuid:
             module.fail_json(msg="Given Logical Partition is not present on the system")
@@ -1171,6 +1190,9 @@ def run_module():
                      fc_port=dict(type='str', required=True),
                      wwpn_pair=dict(type='str')
                      )
+    virt_network_args = dict(network_name=dict(type='str', required=True),
+                             slot_number=dict(type='int')
+                             )
     # define available arguments/parameters a user can pass to the module
     module_args = dict(
         hmc_host=dict(type='str', required=True),
@@ -1195,11 +1217,9 @@ def run_module():
                                volume_size=dict(type='int'),
                            )
                            ),
-        virt_network_config=dict(type='dict',
-                                 options=dict(
-                                     network_name=dict(type='str', required=True),
-                                     slot_number=dict(type='int'),
-                                 )
+        virt_network_config=dict(type='list',
+                                 elements='dict',
+                                 options=virt_network_args
                                  ),
         npiv_config=dict(type='list',
                          elements='dict',
@@ -1213,6 +1233,7 @@ def run_module():
         iIPLsource=dict(type='str', choices=['a', 'b', 'c', 'd']),
         retain_vios_cfg=dict(type='bool'),
         delete_vdisks=dict(type='bool'),
+        advanced_info=dict(type='bool'),
         state=dict(type='str',
                    choices=['present', 'absent', 'facts']),
         action=dict(type='str',
