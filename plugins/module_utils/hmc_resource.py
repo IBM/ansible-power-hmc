@@ -11,6 +11,7 @@ import subprocess
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_command_stack import HmcCommandStack
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
 
 import logging
 logger = logging.getLogger(__name__)
@@ -376,6 +377,10 @@ class Hmc():
         viosconfig = {'LPAR_ENV': 'vioserver'}
         viosconfig['NAME'] = name
         viosconfig.update(self._configMandatoryLparSettings(vios_config))
+
+        invalid_settings_keys = [key for key in vios_config.keys() if key not in self.OPT['MKSYSCFG']['-I']]
+        if invalid_settings_keys:
+            raise ParameterError("Invalid attributes: {}".format(','.join(invalid_settings_keys)))
 
         mksyscfg = self.CMD['MKSYSCFG'] +\
             self.OPT['MKSYSCFG']['-R']['LPAR'] +\

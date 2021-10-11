@@ -124,6 +124,7 @@ def createVios(module, params):
     name = params['name']
     hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(hmc_conn)
+    prof_name = None
 
     try:
         lpar_config = hmc.getPartitionConfig(system_name, name)
@@ -131,15 +132,15 @@ def createVios(module, params):
             logger.debug(lpar_config)
             return False, lpar_config, None
     except HmcError as list_error:
-        if 'HSCL8012' in repr(list_error):
-            pass
+        if 'HSCL8012' not in repr(list_error):
+            raise
 
     try:
         hmc.createVirtualIOServer(system_name, name, params['settings'])
 
-        prof_name = 'default'
-        if 'default_profile' in params['settings']:
-            prof_name = params['settings']['default_profile']
+        if params.get('settings'):
+            # Settings default_profile anme to 'default' in case user didnt provide
+            prof_name = params.get('settings').get('profile_name', 'default')
 
         lpar_config = hmc.getPartitionConfig(system_name, name, prof_name)
     except HmcError as vios_error:
