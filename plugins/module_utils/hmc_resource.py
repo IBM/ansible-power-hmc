@@ -378,7 +378,7 @@ class Hmc():
         viosconfig['NAME'] = name
         viosconfig.update(self._configMandatoryLparSettings(vios_config))
 
-        invalid_settings_keys = [key for key in vios_config.keys() if key not in self.OPT['MKSYSCFG']['-I']]
+        invalid_settings_keys = [key for key in viosconfig.keys() if key not in self.OPT['MKSYSCFG']['-I']]
         if invalid_settings_keys:
             raise ParameterError("Invalid attributes: {}".format(','.join(invalid_settings_keys)))
 
