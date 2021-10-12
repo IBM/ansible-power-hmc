@@ -187,7 +187,7 @@ def lookup_physical_io(rest_conn, server_dom, drcname):
 
     for each in physical_io_list:
         each_eletree = etree.ElementTree(each)
-        if drcname in each_eletree.xpath("//RelatedIOAdapter/IOAdapter/DynamicReconfigurationConnectorName")[0].text:
+        if drcname == each_eletree.xpath("//RelatedIOAdapter/IOAdapter/DynamicReconfigurationConnectorName")[0].text:
             return each_eletree
 
     return None
@@ -1098,9 +1098,19 @@ class HmcRestClient:
         raw_vfc = self.getVirtualFiberChannelAdapters(partition_uuid)
         vfcs = []
         if raw_vfc:
-            for vfc in raw_vfc:
+            for vfc1 in raw_vfc:
                 vfc_dict = {}
+                vfc = etree.ElementTree(vfc1)
                 vfc_dict['LocationCode'] = vfc.xpath('//LocationCode')[0].text
-                vfc_dict['WWPNs'] = vfc.xpath('//WWPNs')[0].text
+                vfc_dict['VirtualSlotNumber'] = vfc.xpath('//VirtualSlotNumber')[0].text
+                wwpn_len = len((vfc.xpath('//WWPNs')[0].text).split(' '))
+                wwpns = []
+                for i in range(wwpn_len):
+                    wwpn_dict = {}
+                    wwpn_dict['WWPN'] = vfc.xpath('//WWPN')[i].text
+                    wwpn_dict['WWPNStatus'] = vfc.xpath('//WWPNStatus')[i].text
+                    wwpn_dict['LoggedInBy'] = vfc.xpath('//LoggedInBy')[i].text
+                    wwpns.append(wwpn_dict)
+                vfc_dict['WWPNs'] = wwpns
                 vfcs.append(vfc_dict)
         return vfcs

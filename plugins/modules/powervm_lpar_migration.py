@@ -167,7 +167,6 @@ def logical_partition_migration(module, params):
 
     try:
         if vm_name:
-            logger.debug("******************************")
             hmc.migratePartitions(operation[0], src_system, dest_system, lparName=vm_name, lparIP=None, lparID=None, aLL=False)
         elif vm_ip:
             hmc.migratePartitions(operation[0], src_system, dest_system, lparName=None, lparIP=vm_ip, lparID=None, aLL=False)
@@ -178,7 +177,6 @@ def logical_partition_migration(module, params):
         else:
             module.fail_json(msg="Please provide one of the lpar details vm_name, vm_ip, vm_id, all_vm")
         changed = True
-        logger.debug("*************************")
     except HmcError as on_system_error:
         return changed, repr(on_system_error), None
 
