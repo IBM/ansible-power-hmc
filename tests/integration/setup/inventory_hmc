@@ -1,0 +1,5 @@
+[host]
+00.00.00.00
+
+[host:vars]
+ansible_user=hscroot

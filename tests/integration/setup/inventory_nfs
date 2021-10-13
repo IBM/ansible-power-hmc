@@ -1,0 +1,10 @@
+[host]
+00.00.00.00
+
+[host:vars]
+ansible_user=zxy
+ansible_password=abc123
+w3user=abc@in.ibm.com
+hmc_ip=00.00.00.00
+hmc_release=HMC910
+ansible_ssh_common_args='-o StrictHostKeyChecking=no'
