@@ -52,24 +52,32 @@ options:
     dest_system:
         description:
             - The name of the destination managed system.
+            - valid only for C(validate) and C(migrate) operation
         required: true
         type: str
     vm_name:
         description:
-            - Name of the partition to be migrated/validated/recovered.
-        type: str
-    vm_ip:
-        description:
-            - IP Address of the partition to be  migrated/validated/recovered.
+            - Name of the partition to be migrated/validated/recovered
         type: str
     vm_id:
         description:
-            - ID of the partition to be  migrated/validated/recovered.
+            - ID/s of the partition to be  migrated/validated/recovered
         type: str
-    all_vm:
+    vm_names:
         description:
-            - All the partitions of the I(src_system) to be migrated/validated/recovered.
-        type: str
+            - Name of the partition/s to be migrated/validated.
+            - To perform action on multiple partitions, provide partition names in list form
+        type: list
+    vm_ids:
+        description:
+            - ID/s of the partition to be  migrated/validated.
+            - To perform action on multiple partitions, provide partition ids in list form
+        type: list
+    all_vms:
+        description:
+            - All the partitions of the I(src_system) to be migrated.
+            - valid only for C(migrate) I(action)
+        type: bool
     action:
         description:
             - C(validate) validate a specified partition.
@@ -80,7 +88,7 @@ options:
 '''
 
 EXAMPLES = '''
-- name: validate specified vm_name migration
+- name: validate specified vm_namemigration
   powervm_lpar_migration:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
@@ -88,19 +96,10 @@ EXAMPLES = '''
          password: '{{ hmc_password }}'
     src_system: <managed_system_name>
     dest_system: <destination_managed_system>
-    vm_name: <lpar_name>
+    vm_names:
+         - <vm_name1>
+         - <vm_name2>
     action: validate
-
-- name: migrate specified vm_ip from cec1 to cec2
-  powervm_lpar_migration:
-    hmc_host: "{{ inventory_hostname }}"
-    hmc_auth:
-         username: '{{ ansible_user }}'
-         password: '{{ hmc_password }}'
-    src_system: <managed_system_name>
-    dest_system: <destination_managed_system>
-    vm_ip: <IP address of the lpar>
-    action: migrate
 
 - name: recover specifed vm_id
   powervm_lpar_migration:
@@ -109,8 +108,7 @@ EXAMPLES = '''
          username: '{{ ansible_user }}'
          password: '{{ hmc_password }}'
     src_system: <managed_system_name>
-    dest_system: <destination_system>
-    vm_id: <id of the vm to be recovered>
+    vm_id: <id1>
     action: recover
 
 - name: migrate all partitions of the cec
@@ -121,7 +119,7 @@ EXAMPLES = '''
          password: '{{ hmc_password }}'
     src_system: <managed_system_name>
     dest_system: <destination_system_name>
-    all_vm: true
+    all_vms: true
     action: migrate
 
 '''
@@ -140,6 +138,7 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_resource import Hmc
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
 
 
 def init_logger():
@@ -149,34 +148,82 @@ def init_logger():
         level=logging.DEBUG)
 
 
+def validate_parameters(params):
+    '''Check that the input parameters satisfy the mutual exclusiveness of HMC'''
+    opr = params['action']
+
+    if opr == 'recover':
+        mandatoryList = ['hmc_host', 'hmc_auth', 'src_system']
+        unsupportedList = ['dest_system', 'vm_names', 'vm_ids', 'all_vms']
+    elif opr == 'validate':
+        mandatoryList = ['hmc_host', 'hmc_auth', 'src_system', 'dest_system']
+        unsupportedList = ['all_vms']
+    else:
+        mandatoryList = ['hmc_host', 'hmc_auth', 'src_system', 'dest_system']
+        unsupportedList = []
+
+    collate = []
+    for eachMandatory in mandatoryList:
+        if not params[eachMandatory]:
+            collate.append(eachMandatory)
+    if collate:
+        if len(collate) == 1:
+            raise ParameterError("mandatory parameter '%s' is missing" % (collate[0]))
+        else:
+            raise ParameterError("mandatory parameters '%s' are missing" % (','.join(collate)))
+
+    collate = []
+    for eachUnsupported in unsupportedList:
+        if params[eachUnsupported]:
+            collate.append(eachUnsupported)
+
+    if collate:
+        if len(collate) == 1:
+            raise ParameterError("unsupported parameter: %s" % (collate[0]))
+        else:
+            raise ParameterError("unsupported parameters: %s" % (', '.join(collate)))
+
+
 def logical_partition_migration(module, params):
     hmc_host = params['hmc_host']
     hmc_user = params['hmc_auth']['username']
     password = params['hmc_auth']['password']
     src_system = params['src_system']
     dest_system = params['dest_system']
+    vm_names = params['vm_names']
     vm_name = params['vm_name']
-    vm_ip = params['vm_ip']
     vm_id = params['vm_id']
-    all_vm = params['all_vm']
+    vm_ids = params['vm_ids']
+    all_vms = params['all_vms']
     operation = params['action']
+    validate_parameters(params)
     changed = False
+    vm_name_s = False
+    vm_id_s = False
+
+    if vm_name:
+        vm_name_s = vm_name
+    elif vm_names:
+        vm_name_s = ",".join(vm_names)
+    elif vm_id:
+        vm_id_s = vm_id
+    elif vm_ids:
+        vm_id_s = ",".join(vm_ids)
 
     hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(hmc_conn)
 
     try:
-        if vm_name:
-            hmc.migratePartitions(operation[0], src_system, dest_system, lparName=vm_name, lparIP=None, lparID=None, aLL=False)
-        elif vm_ip:
-            hmc.migratePartitions(operation[0], src_system, dest_system, lparName=None, lparIP=vm_ip, lparID=None, aLL=False)
-        elif vm_id:
-            hmc.migratePartitions(operation[0], src_system, dest_system, lparName=None, lparIP=None, lparID=vm_id, aLL=False)
-        elif all_vm:
-            hmc.migratePartitions(operation[0], src_system, dest_system, lparName=None, lparIP=None, lparID=None, aLL=True)
+        if vm_name_s:
+            hmc.migratePartitions(operation[0], src_system, dest_system, lparNames=vm_name_s, lparIDs=None, aLL=False)
+        elif vm_id_s:
+            hmc.migratePartitions(operation[0], src_system, dest_system, lparNames=None, lparIDs=vm_id_s, aLL=False)
+        elif all_vms:
+            hmc.migratePartitions(operation[0], src_system, dest_system, lparNames=None, lparIDs=None, aLL=True)
         else:
-            module.fail_json(msg="Please provide one of the lpar details vm_name, vm_ip, vm_id, all_vm")
-        changed = True
+            module.fail_json(msg="Please provide one of the lpar details vm_names, vm_ids, all_vms")
+        if operation != 'validate':
+            changed = True
     except HmcError as on_system_error:
         return changed, repr(on_system_error), None
 
@@ -214,21 +261,22 @@ def run_module():
                       )
                       ),
         src_system=dict(type='str', required=True),
-        dest_system=dict(type='str', required=True),
+        dest_system=dict(type='str'),
         vm_name=dict(type='str'),
-        vm_ip=dict(type='str'),
-        vm_id=dict(type='int'),
-        all_vm=dict(type='boolean'),
+        vm_id=dict(type='str'),
+        vm_names=dict(type='list', elements='str'),
+        vm_ids=dict(type='list', elements='str'),
+        all_vms=dict(type='bool'),
         action=dict(type='str', choices=['validate', 'migrate', 'recover']),
     )
 
     module = AnsibleModule(
         argument_spec=module_args,
-        required_one_of=[('vm_name', 'vm_ip', 'vm_id', 'all_vm')],
-        mutually_exclusive=[('vm_name', 'vm_ip', 'vm_id', 'all_vm')],
+        required_one_of=[('vm_names', 'vm_ids', 'all_vms', 'vm_name', 'vm_id')],
+        mutually_exclusive=[('vm_names', 'vm_ids', 'all_vms', 'vm_name', 'vm_id')],
         required_if=[['action', 'validate', ['hmc_host', 'hmc_auth', 'src_system', 'dest_system']],
                      ['action', 'migrate', ['hmc_host', 'hmc_auth', 'src_system', 'dest_system']],
-                     ['action', 'recover', ['hmc_host', 'hmc_auth', 'src_system', 'dest_system']]
+                     ['action', 'recover', ['hmc_host', 'hmc_auth', 'src_system']]
                      ],
     )
 

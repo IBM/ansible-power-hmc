@@ -282,7 +282,7 @@ class HmcCommandStack():
                                 '-T': ' -t ',
                                 '-P': ' -p ',
                                 '--IP': ' --ip ',
-                                '--ALL': '--all',
+                                '--ALL': ' --all',
                                 '--ID': ' --id '},
                    }
 

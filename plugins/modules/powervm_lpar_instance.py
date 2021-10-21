@@ -356,6 +356,7 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client impo
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import add_physical_io
 from random import randint
 from collections import OrderedDict
+from decimal import Decimal
 try:
     from lxml import etree
 except ImportError:
@@ -374,24 +375,29 @@ def init_logger():
         level=logging.DEBUG)
 
 
-def validate_proc_mem(system_dom, proc, mem, proc_units=None):
+def validate_proc_mem(system_dom, proc, mem, proc_unit=None):
 
     curr_avail_proc_units = system_dom.xpath('//CurrentAvailableSystemProcessorUnits')[0].text
-    int_avail_proc = int(float(curr_avail_proc_units))
+    curr_avail_procs = float(curr_avail_proc_units)
+    int_avail_proc = int(curr_avail_procs)
 
-    if proc_units:
+    if proc_unit:
         min_proc_unit_per_virtproc = system_dom.xpath('//MinimumProcessorUnitsPerVirtualProcessor')[0].text
-        float_min_proc_unit_per_virtproc = float(min_proc_unit_per_virtproc)
-        if round(float(proc_units) % float_min_proc_unit_per_virtproc, 2) != float_min_proc_unit_per_virtproc:
-            raise HmcError("Input processor units: {0} must be a multiple of {1}".format(proc_units, min_proc_unit_per_virtproc))
+        if Decimal(str(proc_unit)) % Decimal(min_proc_unit_per_virtproc) != Decimal('0.0'):
+            raise HmcError("Input processor units: {0} must be a multiple of {1}".format(proc_unit, min_proc_unit_per_virtproc))
+        if proc_unit > curr_avail_procs:
+            raise HmcError("{0} Available system proc units is not enough for {1} shared CPUs. Provide value on or below {0}"
+                           .format(str(curr_avail_procs), str(proc_unit)))
+
+    else:
+        if proc > curr_avail_procs:
+            raise HmcError("{2} Available system proc units is not enough for {1} dedicated CPUs. Provide value on or below {0} CPUs"
+                           .format(str(int_avail_proc), str(proc), str(curr_avail_procs)))
 
     curr_avail_mem = system_dom.xpath('//CurrentAvailableSystemMemory')[0].text
     int_avail_mem = int(curr_avail_mem)
     curr_avail_lmb = system_dom.xpath('//CurrentLogicalMemoryBlockSize')[0].text
     lmb = int(curr_avail_lmb)
-
-    if proc > int_avail_proc:
-        raise HmcError("Available system proc units is not enough. Provide value on or below {0}".format(str(int_avail_proc)))
 
     if mem % lmb > 0:
         raise HmcError("Requested mem value not in mutiple of block size:{0}".format(curr_avail_lmb))
@@ -778,7 +784,7 @@ def create_partition(module, params):
 
         return True, None, None
 
-    validate_proc_mem(server_dom, int(proc), int(mem))
+    validate_proc_mem(server_dom, int(proc), int(mem), proc_unit)
 
     if params['npiv_config']:
         fcports_config = fetch_fc_config(rest_conn, system_uuid, params['npiv_config'])
