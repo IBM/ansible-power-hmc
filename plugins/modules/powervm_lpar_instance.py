@@ -376,16 +376,17 @@ def validate_proc_mem(system_dom, proc, mem, proc_unit=None):
 
     if proc_unit:
         min_proc_unit_per_virtproc = system_dom.xpath('//MinimumProcessorUnitsPerVirtualProcessor')[0].text
-        float_min_proc_unit_per_virtproc = float(min_proc_unit_per_virtproc)
-        if round(float(proc_unit) % float_min_proc_unit_per_virtproc, 2) != float_min_proc_unit_per_virtproc:
+        if Decimal(str(proc_unit)) % Decimal(min_proc_unit_per_virtproc) != Decimal('0.0'):
             raise HmcError("Input processor units: {0} must be a multiple of {1}".format(proc_unit, min_proc_unit_per_virtproc))
 
         if proc_unit > curr_avail_procs:
-            raise HmcError("{0} Available system proc units is not enough for {1} shared CPUs. Provide value on or below {0}".format(str(curr_avail_procs),str(proc_unit)))
+            raise HmcError("{0} Available system proc units is not enough for {1} shared CPUs. Provide value on or below {0}"
+                           .format(str(curr_avail_procs), str(proc_unit)))
 
-    else:
-        if proc > curr_avail_procs:
-            raise HmcError("{2} Available system proc units is not enough for {1} dedicated CPUs. Provide value on or below {0} CPUs".format(str(int_avail_proc),str(proc),str(curr_avail_procs)))
+else:
+    if proc > curr_avail_procs:
+        raise HmcError("{2} Available system proc units is not enough for {1} dedicated CPUs. Provide value on or below {0} CPUs"
+                       .format(str(int_avail_proc), str(proc), str(curr_avail_procs)))
 
     curr_avail_mem = system_dom.xpath('//CurrentAvailableSystemMemory')[0].text
     int_avail_mem = int(curr_avail_mem)
