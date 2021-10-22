@@ -11,6 +11,7 @@ import subprocess
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_command_stack import HmcCommandStack
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
 
 import logging
 logger = logging.getLogger(__name__)
@@ -357,3 +358,75 @@ class Hmc():
             migrlparCmd += self.OPT['MIGRLPAR']['--ALL']
         logger.debug(migrlparCmd)
         self.hmcconn.execute(migrlparCmd)
+
+    def _configMandatoryLparSettings(self, delta_config=None):
+        lparMandatConfig = {'PROFILE_NAME': 'default',
+                            'MIN_MEM': '2048',
+                            'DESIRED_MEM': '2048',
+                            'MAX_MEM': '2048',
+                            'MIN_PROCS': '2',
+                            'DESIRED_PROCS': '2',
+                            'MAX_PROCS': '4',
+                            'BOOT_MODE': 'norm',
+                            'PROC_MODE': 'ded',
+                            'SHARING_MODE': 'keep_idle_procs',
+                            'MAX_VIRTUAL_SLOTS': '20'}
+
+        if delta_config:
+            for eachKey in delta_config:
+                if 'proc_mode' == eachKey and delta_config['proc_mode'] == 'shared':
+                    if 'max_proc_units' not in delta_config:
+                        lparMandatConfig['MAX_PROC_UNITS'] = lparMandatConfig.get('DESIRED_PROC_UNITS') or '1.0'
+                    if 'min_proc_units' not in delta_config:
+                        lparMandatConfig['MIN_PROC_UNITS'] = '0.1'
+                    if 'desired_proc_units' not in delta_config:
+                        lparMandatConfig['DESIRED_PROC_UNITS'] = '0.5'
+                    if 'sharing_mode' not in delta_config:
+                        lparMandatConfig['SHARING_MODE'] = 'cap'
+
+                lparMandatConfig[eachKey.upper()] = delta_config[eachKey]
+
+        return lparMandatConfig
+
+    def createVirtualIOServer(self, system_name, name, vios_config=None):
+
+        viosconfig = {'LPAR_ENV': 'vioserver'}
+        viosconfig['NAME'] = name
+        viosconfig.update(self._configMandatoryLparSettings(vios_config))
+
+        invalid_settings_keys = [key for key in viosconfig.keys() if key not in self.OPT['MKSYSCFG']['-I']]
+        if invalid_settings_keys:
+            raise ParameterError("Invalid attributes: {}".format(','.join(invalid_settings_keys)))
+
+        mksyscfg = self.CMD['MKSYSCFG'] +\
+            self.OPT['MKSYSCFG']['-R']['LPAR'] +\
+            self.OPT['MKSYSCFG']['-M'] + system_name + \
+            self.cmdClass.i_a_ConfigBuilder('MKSYSCFG', '-I', viosconfig)
+
+        self.hmcconn.execute(mksyscfg)
+
+    def getPartitionConfig(self, system_name, name, prof=None):
+        filter_config = dict(LPAR_NAMES=name)
+        lssyscfg = self.CMD['LSSYSCFG'] +\
+            self.OPT['LSSYSCFG']['-R']['LPAR'] +\
+            self.OPT['LSSYSCFG']['-M'] + system_name +\
+            self.cmdClass.filterBuilder("LSSYSCFG", filter_config)
+
+        result = self.hmcconn.execute(lssyscfg)
+        res_dict = self.cmdClass.parseCSV(result)
+        res = dict((k.lower(), v) for k, v in res_dict.items())
+
+        if prof:
+            filter_config['PROFILE_NAMES'] = prof
+            logger.debug(filter_config)
+            lssyscfg_prof = self.CMD['LSSYSCFG'] +\
+                self.OPT['LSSYSCFG']['-R']['PROF'] +\
+                self.OPT['LSSYSCFG']['-M'] + system_name +\
+                self.cmdClass.filterBuilder("LSSYSCFG", filter_config)
+
+            result_prof = self.hmcconn.execute(lssyscfg_prof)
+            res_dict_prof = self.cmdClass.parseCSV(result_prof)
+            res_prof = dict((k.lower(), v) for k, v in res_dict_prof.items())
+            res.update({'profile_config': res_prof})
+
+        return res
