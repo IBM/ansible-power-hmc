@@ -19,9 +19,9 @@ author:
     - Navinakumar Kandakur (@nkandak1)
 short_description: validate, migrate, recover, of the LPAR
 description:
-    - "validate specified LPAR for migration"
-    - "migrate specified LPAR"
-    - "recover specified LPAR"
+    - "validate provided LPAR/s for migration"
+    - "migrate provided LPAR/s"
+    - "recover provided LPAR"
 version_added: 1.0.0
 options:
     hmc_host:
@@ -55,24 +55,18 @@ options:
             - valid only for C(validate) and C(migrate) operation
         required: true
         type: str
-    vm_name:
-        description:
-            - Name of the partition to be migrated/validated/recovered
-        type: str
-    vm_id:
-        description:
-            - ID/s of the partition to be  migrated/validated/recovered
-        type: str
     vm_names:
         description:
             - Name of the partition/s to be migrated/validated.
-            - To perform action on multiple partitions, provide partition names in list form
-        type: list
+            - To perform action on multiple partitions, provide command seperated partition names
+            - For C(recover) I(action) only one partition name is allowed
+        type: str
     vm_ids:
         description:
             - ID/s of the partition to be  migrated/validated.
-            - To perform action on multiple partitions, provide partition ids in list form
-        type: list
+            - To perform action on multiple partitions, provide comma seperated partition ids
+            - For C(recover) I(action) only one partition id is allowed
+        type: str
     all_vms:
         description:
             - All the partitions of the I(src_system) to be migrated.
@@ -96,9 +90,7 @@ EXAMPLES = '''
          password: '{{ hmc_password }}'
     src_system: <managed_system_name>
     dest_system: <destination_managed_system>
-    vm_names:
-         - <vm_name1>
-         - <vm_name2>
+    vm_names: <vm_name1>,<vm_name2>
     action: validate
 
 - name: recover specifed vm_id
@@ -108,7 +100,7 @@ EXAMPLES = '''
          username: '{{ ansible_user }}'
          password: '{{ hmc_password }}'
     src_system: <managed_system_name>
-    vm_id: <id1>
+    vm_ids: <id1>
     action: recover
 
 - name: migrate all partitions of the cec
@@ -154,7 +146,7 @@ def validate_parameters(params):
 
     if opr == 'recover':
         mandatoryList = ['hmc_host', 'hmc_auth', 'src_system']
-        unsupportedList = ['dest_system', 'vm_names', 'vm_ids', 'all_vms']
+        unsupportedList = ['dest_system', 'all_vms']
     elif opr == 'validate':
         mandatoryList = ['hmc_host', 'hmc_auth', 'src_system', 'dest_system']
         unsupportedList = ['all_vms']
@@ -191,33 +183,24 @@ def logical_partition_migration(module, params):
     src_system = params['src_system']
     dest_system = params['dest_system']
     vm_names = params['vm_names']
-    vm_name = params['vm_name']
-    vm_id = params['vm_id']
     vm_ids = params['vm_ids']
     all_vms = params['all_vms']
     operation = params['action']
     validate_parameters(params)
     changed = False
-    vm_name_s = False
-    vm_id_s = False
-
-    if vm_name:
-        vm_name_s = vm_name
-    elif vm_names:
-        vm_name_s = ",".join(vm_names)
-    elif vm_id:
-        vm_id_s = vm_id
-    elif vm_ids:
-        vm_id_s = ",".join(vm_ids)
 
     hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(hmc_conn)
 
     try:
-        if vm_name_s:
-            hmc.migratePartitions(operation[0], src_system, dest_system, lparNames=vm_name_s, lparIDs=None, aLL=False)
-        elif vm_id_s:
-            hmc.migratePartitions(operation[0], src_system, dest_system, lparNames=None, lparIDs=vm_id_s, aLL=False)
+        if vm_names:
+            if operation == 'recover' and len(vm_names.split(',')) > 1:
+                module.fail_json(msg="Please provide only one partition name for recover operation")
+            hmc.migratePartitions(operation[0], src_system, dest_system, lparNames=vm_names, lparIDs=None, aLL=False)
+        elif vm_ids:
+            if operation == 'recover' and len(vm_ids.split(',')) > 1:
+                module.fail_json(msg="Please provide only one partition id for recover operation")
+            hmc.migratePartitions(operation[0], src_system, dest_system, lparNames=None, lparIDs=vm_ids, aLL=False)
         elif all_vms:
             hmc.migratePartitions(operation[0], src_system, dest_system, lparNames=None, lparIDs=None, aLL=True)
         else:
@@ -262,18 +245,16 @@ def run_module():
                       ),
         src_system=dict(type='str', required=True),
         dest_system=dict(type='str'),
-        vm_name=dict(type='str'),
-        vm_id=dict(type='str'),
-        vm_names=dict(type='list', elements='str'),
-        vm_ids=dict(type='list', elements='str'),
+        vm_names=dict(type='str'),
+        vm_ids=dict(type='str'),
         all_vms=dict(type='bool'),
         action=dict(type='str', choices=['validate', 'migrate', 'recover']),
     )
 
     module = AnsibleModule(
         argument_spec=module_args,
-        required_one_of=[('vm_names', 'vm_ids', 'all_vms', 'vm_name', 'vm_id')],
-        mutually_exclusive=[('vm_names', 'vm_ids', 'all_vms', 'vm_name', 'vm_id')],
+        required_one_of=[('vm_names', 'vm_ids', 'all_vms')],
+        mutually_exclusive=[('vm_names', 'vm_ids', 'all_vms')],
         required_if=[['action', 'validate', ['hmc_host', 'hmc_auth', 'src_system', 'dest_system']],
                      ['action', 'migrate', ['hmc_host', 'hmc_auth', 'src_system', 'dest_system']],
                      ['action', 'recover', ['hmc_host', 'hmc_auth', 'src_system']]
