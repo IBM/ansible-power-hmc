@@ -15,7 +15,6 @@ DOCUMENTATION = '''
 ---
 module: powervm_lpar_migration
 author:
-    - Anil Vijayan (@AnilVijayan)
     - Navinakumar Kandakur (@nkandak1)
 short_description: validate, migrate, recover, of the LPAR
 description:
@@ -58,15 +57,15 @@ options:
     vm_names:
         description:
             - Name of the partition/s to be migrated/validated.
-            - To perform action on multiple partitions, provide command seperated partition names
+            - To perform action on multiple partitions, provide comma seperated partition names or in list form
             - For C(recover) I(action) only one partition name is allowed
-        type: str
+        type: list
     vm_ids:
         description:
             - ID/s of the partition to be  migrated/validated.
-            - To perform action on multiple partitions, provide comma seperated partition ids
+            - To perform action on multiple partitions, provide comma seperated partition ids or in list form
             - For C(recover) I(action) only one partition id is allowed
-        type: str
+        type: list
     all_vms:
         description:
             - All the partitions of the I(src_system) to be migrated.
@@ -90,7 +89,9 @@ EXAMPLES = '''
          password: '{{ hmc_password }}'
     src_system: <managed_system_name>
     dest_system: <destination_managed_system>
-    vm_names: <vm_name1>,<vm_name2>
+    vm_names:
+      - <vm_name1>
+      - <vm_name2>
     action: validate
 
 - name: recover specifed vm_id
@@ -100,7 +101,8 @@ EXAMPLES = '''
          username: '{{ ansible_user }}'
          password: '{{ hmc_password }}'
     src_system: <managed_system_name>
-    vm_ids: <id1>
+    vm_ids:
+      - <id1>
     action: recover
 
 - name: migrate all partitions of the cec
@@ -124,7 +126,7 @@ system_info:
 '''
 
 import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc_navin.log"
+LOG_FILENAME = "/tmp/ansible_power_hmc.log"
 logger = logging.getLogger(__name__)
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
@@ -194,13 +196,13 @@ def logical_partition_migration(module, params):
 
     try:
         if vm_names:
-            if operation == 'recover' and len(vm_names.split(',')) > 1:
+            if operation == 'recover' and len(vm_names) > 1:
                 module.fail_json(msg="Please provide only one partition name for recover operation")
-            hmc.migratePartitions(operation[0], src_system, dest_system, lparNames=vm_names, lparIDs=None, aLL=False)
+            hmc.migratePartitions(operation[0], src_system, dest_system, lparNames=",".join(vm_names), lparIDs=None, aLL=False)
         elif vm_ids:
-            if operation == 'recover' and len(vm_ids.split(',')) > 1:
+            if operation == 'recover' and len(vm_ids) > 1:
                 module.fail_json(msg="Please provide only one partition id for recover operation")
-            hmc.migratePartitions(operation[0], src_system, dest_system, lparNames=None, lparIDs=vm_ids, aLL=False)
+            hmc.migratePartitions(operation[0], src_system, dest_system, lparNames=None, lparIDs=",".join(vm_ids), aLL=False)
         elif all_vms:
             hmc.migratePartitions(operation[0], src_system, dest_system, lparNames=None, lparIDs=None, aLL=True)
         else:
@@ -227,7 +229,7 @@ def perform_task(module):
     try:
         return actions[params[oper]](module, params)
     except Exception as error:
-        return False, str(error), None
+        return False, repr(error), None
 
 
 def run_module():
@@ -245,8 +247,8 @@ def run_module():
                       ),
         src_system=dict(type='str', required=True),
         dest_system=dict(type='str'),
-        vm_names=dict(type='str'),
-        vm_ids=dict(type='str'),
+        vm_names=dict(type='list', elements='str'),
+        vm_ids=dict(type='list', elements='str'),
         all_vms=dict(type='bool'),
         action=dict(type='str', choices=['validate', 'migrate', 'recover']),
     )

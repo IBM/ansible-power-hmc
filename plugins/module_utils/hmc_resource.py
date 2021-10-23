@@ -356,7 +356,6 @@ class Hmc():
             migrlparCmd += self.OPT['MIGRLPAR']['--ID'] + lparIDs
         elif aLL:
             migrlparCmd += self.OPT['MIGRLPAR']['--ALL']
-        logger.debug(migrlparCmd)
         self.hmcconn.execute(migrlparCmd)
 
     def _configMandatoryLparSettings(self, delta_config=None):

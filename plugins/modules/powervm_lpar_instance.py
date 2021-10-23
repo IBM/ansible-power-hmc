@@ -209,8 +209,9 @@ options:
     advanced_info:
         description:
             - Option to display advanced information of the logical partition.
-            - Default is false
-            - Currently we are showing only NPIV storage details
+            - Applicable only for C(facts) state.
+            - Default is false.
+            - Currently we are showing only NPIV storage details.
         type: bool
     state:
         description:
@@ -364,7 +365,7 @@ except ImportError:
 
 # Generic setting for log initializing and log rotation
 import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc.log"
+LOG_FILENAME = "/tmp/ansible_power_hmc_navin.log"
 logger = logging.getLogger(__name__)
 
 
@@ -680,7 +681,7 @@ def fetch_fc_config(rest_conn, system_uuid, fc_config_list):
 
 
 # Validates and fetch virtual network information
-def fecth_virt_networks(rest_conn, system_uuid, virt_nw_config_list, max_slot_no):
+def fetch_virt_networks(rest_conn, system_uuid, virt_nw_config_list, max_slot_no):
     vnw_response = rest_conn.getVirtualNetworksQuick(system_uuid)
     virt_nws_identified = []
     if vnw_response:
@@ -699,7 +700,8 @@ def fecth_virt_networks(rest_conn, system_uuid, virt_nw_config_list, max_slot_no
                     break
             if not nw_uuid:
                 raise Error("Requested Virtual Network: {0} is not available".format(ud_nw['network_name']))
-
+    else:
+        raise Error("There are no Virtual Networks configured on the managed system")
     return virt_nws_identified
 
 
@@ -835,7 +837,7 @@ def create_partition(module, params):
 
         # Add Virtual Networks to partition
         if params['virt_network_config']:
-            virt_nw_list = fecth_virt_networks(rest_conn, system_uuid, params['virt_network_config'], max_virtual_slots)
+            virt_nw_list = fetch_virt_networks(rest_conn, system_uuid, params['virt_network_config'], max_virtual_slots)
             rest_conn.updateVirtualNWSettingsToDom(temporary_temp_dom, virt_nw_list)
 
         rest_conn.updatePartitionTemplate(temp_uuid, temporary_temp_dom)
@@ -1149,7 +1151,7 @@ def partition_details(module, params):
             module.fail_json(msg="There are no Logical Partitions present on the system")
 
         if lpar_uuid and advanced_info:
-            vfc_adapter_details = rest_conn.getVirtualFiberChannelAdaptersSpecificInfo(lpar_uuid)
+            vfc_adapter_details = rest_conn.getVirtualFiberChannelAdapters(lpar_uuid)
             partition_prop['VirtualFiberChannelAdapters'] = vfc_adapter_details
             logger.debug(vfc_adapter_details)
 

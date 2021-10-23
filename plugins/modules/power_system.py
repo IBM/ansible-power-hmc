@@ -402,7 +402,7 @@ def perform_task(module):
     try:
         return actions[params[oper]](module, params)
     except Exception as error:
-        return False, str(error), None
+        return False, repr(error), None
 
 
 def run_module():
