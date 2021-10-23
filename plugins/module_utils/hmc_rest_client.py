@@ -1024,6 +1024,13 @@ class HmcRestClient:
 
     def vios_fetch_fcports_info(self, viosuuid):
         vios_dom = self.getVirtualIOServer(viosuuid)
+        phys_fc_adapters = vios_dom.xpath("//VirtualFibreChannelMapping")
+        fc_adapters = {}
+        for adapter in phys_fc_adapters:
+            fc_port = adapter.find("Port")
+            if fc_port: 
+                location_code =  fc_port.find('LocationCode').text
+                fc_adapters[location_code] = adapter.find("ClientAdapter").find('WWPNs').text
         phys_fc_ports = vios_dom.xpath("//PhysicalFibreChannelPort")
         fc_ports = []
         available_ports = None
@@ -1036,6 +1043,9 @@ class HmcRestClient:
             fcport = {}
             fcport['LocationCode'] = each.xpath("LocationCode")[0].text
             fcport['PortName'] = each.xpath("PortName")[0].text
+            location_code = fcport['LocationCode'] 
+            if location_code in fc_adapters.keys():
+                fcport['wwpn_pair'] = fc_adapters[location_code]
             fc_ports.append(fcport)
         return fc_ports
 

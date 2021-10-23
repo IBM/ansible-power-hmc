@@ -637,7 +637,7 @@ def wwpn_pair_is_valid(wwpn):
 
 
 # Validates and fetch fibre channel port information from VIOS
-def fetch_fc_config(rest_conn, system_uuid, fc_config_list):
+def fetch_fc_config(rest_conn, system_uuid, fc_config_list, is_create=False):
     vios_response = rest_conn.getVirtualIOServersQuick(system_uuid)
     fcports_identified = []
     for each_fc in fc_config_list:
@@ -652,6 +652,9 @@ def fetch_fc_config(rest_conn, system_uuid, fc_config_list):
             vios_fcports = rest_conn.vios_fetch_fcports_info(vios[0]['UUID'])
             port_identified = [v_fcPort for v_fcPort in vios_fcports if v_fcPort['LocationCode'] == each_fc['fc_port']
                                or v_fcPort['PortName'] == each_fc['fc_port']]
+            if is_create:
+                port_identified[0].update({'wwpn_pair': None})
+
             if port_identified:
                 port_identified[0].update({'viosname': each_fc['vios_name']})
                 if each_fc['wwpn_pair'] is not None and wwpn_pair_is_valid(each_fc['wwpn_pair']):
@@ -750,7 +753,7 @@ def create_partition(module, params):
     validate_proc_mem(server_dom, int(proc), int(mem))
 
     if params['npiv_config']:
-        fcports_config = fetch_fc_config(rest_conn, system_uuid, params['npiv_config'])
+        fcports_config = fetch_fc_config(rest_conn, system_uuid, params['npiv_config'], True)
 
     try:
         if os_type in ['aix', 'linux', 'aix_linux']:
@@ -864,6 +867,7 @@ def create_partition(module, params):
         partition_uuid = resp_dom.xpath("//ParameterName[text()='PartitionUuid']/following-sibling::ParameterValue")[0].text
         partition_prop = rest_conn.quickGetPartition(partition_uuid)
         partition_prop['AssociatedManagedSystem'] = system_name
+        partition_prop['FCPortsConfig'] = fcports_config
         changed = True
     except Exception as error:
         error_msg = parse_error_response(error)
@@ -1123,6 +1127,9 @@ def partition_details(module, params):
                 if eachLpar['PartitionName'] == vm_name:
                     partition_prop = eachLpar
                     partition_prop['AssociatedManagedSystem'] = system_name
+                    if params['npiv_config']:
+                        fcports_config = fetch_fc_config(rest_conn, system_uuid, params['npiv_config'])
+                        partition_prop['FCPortsConfig'] = fcports_config
                     lpar_uuid = eachLpar['UUID']
                     break
         else:
