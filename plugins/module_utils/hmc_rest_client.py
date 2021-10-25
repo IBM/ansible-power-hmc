@@ -187,7 +187,7 @@ def lookup_physical_io(rest_conn, server_dom, drcname):
 
     for each in physical_io_list:
         each_eletree = etree.ElementTree(each)
-        if drcname in each_eletree.xpath("//RelatedIOAdapter/IOAdapter/DynamicReconfigurationConnectorName")[0].text:
+        if drcname == each_eletree.xpath("//RelatedIOAdapter/IOAdapter/DynamicReconfigurationConnectorName")[0].text:
             return each_eletree
 
     return None
