@@ -1,75 +1,35 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>Demo &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-
-  
-  
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-  
-
-  
-  
-
-  
-
-  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Contributing" href="community_guides.html" />
     <link rel="prev" title="Playbooks" href="playbooks.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="index.html" class="icon icon-home"> IBM Power Systems HMC
-          
-
-          
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -77,18 +37,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
@@ -139,186 +88,131 @@
 <li class="toctree-l1"><a class="reference internal" href="release_notes.html">Releases</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">IBM Power Systems HMC</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li>Demo</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
-            
               <a href="https://github.com/IBM/ansible-power-hmc/blob/dev-collection/docs/source/demo.rst" class="fa fa-github"> Edit on GitHub</a>
-            
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="demo">
-<h1>Demo<a class="headerlink" href="#demo" title="Permalink to this headline">¶</a></h1>
+             
+  <section id="demo">
+<h1>Demo<a class="headerlink" href="#demo" title="Permalink to this headline"></a></h1>
 <p>Following set of example scenarios demonstrate how to use the modules of the
 <strong>IBM Power Systems HMC collection</strong> content</p>
-<div class="section" id="hmc-update-upgrade">
-<h2>hmc_update_upgrade<a class="headerlink" href="#hmc-update-upgrade" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="update">
-<h3>Update<a class="headerlink" href="#update" title="Permalink to this headline">¶</a></h3>
+<section id="hmc-update-upgrade">
+<h2>hmc_update_upgrade<a class="headerlink" href="#hmc-update-upgrade" title="Permalink to this headline"></a></h2>
+<section id="update">
+<h3>Update<a class="headerlink" href="#update" title="Permalink to this headline"></a></h3>
 <p>The following gif demonstrates the update of a HMC from V9 R1 M910 to V9 R1 M941
 using disk source which takes the image from control node.</p>
-<div class="figure align-default">
+<figure class="align-default">
 <img alt="" src="_images/demo_hmc_update.gif" />
-</div>
-</div>
-<div class="section" id="upgrade">
-<h3>Upgrade<a class="headerlink" href="#upgrade" title="Permalink to this headline">¶</a></h3>
+</figure>
+</section>
+<section id="upgrade">
+<h3>Upgrade<a class="headerlink" href="#upgrade" title="Permalink to this headline"></a></h3>
 <p>The following gif demonstrates the upgrade of a HMC from V8 R870 to V9 R1 M910
 through NFS server.</p>
-<div class="figure align-default">
+<figure class="align-default">
 <img alt="" src="_images/demo_hmc_upgrade.gif" />
-</div>
-</div>
-</div>
-<div class="section" id="hmc-pwdpolicy">
-<h2>hmc_pwdpolicy<a class="headerlink" href="#hmc-pwdpolicy" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="create-and-activate">
-<h3>Create and Activate<a class="headerlink" href="#create-and-activate" title="Permalink to this headline">¶</a></h3>
+</figure>
+</section>
+</section>
+<section id="hmc-pwdpolicy">
+<h2>hmc_pwdpolicy<a class="headerlink" href="#hmc-pwdpolicy" title="Permalink to this headline"></a></h2>
+<section id="create-and-activate">
+<h3>Create and Activate<a class="headerlink" href="#create-and-activate" title="Permalink to this headline"></a></h3>
 <p>The following gif demonstrates the creating of HMC password policy and
 activating it.</p>
-<div class="figure align-default">
+<figure class="align-default">
 <img alt="" src="_images/demo_password_policy_create.gif" />
-</div>
-</div>
-<div class="section" id="deactivate-modify-and-activate">
-<h3>Deactivate, Modify and Activate<a class="headerlink" href="#deactivate-modify-and-activate" title="Permalink to this headline">¶</a></h3>
+</figure>
+</section>
+<section id="deactivate-modify-and-activate">
+<h3>Deactivate, Modify and Activate<a class="headerlink" href="#deactivate-modify-and-activate" title="Permalink to this headline"></a></h3>
 <p>The following gif demonstrates the deactivating the active HMC password
 policy then modify and activate it.</p>
-<div class="figure align-default">
+<figure class="align-default">
 <img alt="" src="_images/demo_password_policy_modify.gif" />
-</div>
-</div>
-</div>
-<div class="section" id="powervm-inventory">
-<h2>powervm_inventory<a class="headerlink" href="#powervm-inventory" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="deletion-of-multiple-inactive-partitions-using-dynamic-inventory-plugin">
-<h3>Deletion of multiple inactive partitions using dynamic inventory plugin<a class="headerlink" href="#deletion-of-multiple-inactive-partitions-using-dynamic-inventory-plugin" title="Permalink to this headline">¶</a></h3>
+</figure>
+</section>
+</section>
+<section id="powervm-inventory">
+<h2>powervm_inventory<a class="headerlink" href="#powervm-inventory" title="Permalink to this headline"></a></h2>
+<section id="deletion-of-multiple-inactive-partitions-using-dynamic-inventory-plugin">
+<h3>Deletion of multiple inactive partitions using dynamic inventory plugin<a class="headerlink" href="#deletion-of-multiple-inactive-partitions-using-dynamic-inventory-plugin" title="Permalink to this headline"></a></h3>
 <p>The following demo illustrates the usage of dynamic inventory plugin for the deletion of multiple partitions.
 It uses dynamic inventory plugin to collect the inventory and use it as input to delete multiple partition in iteration. Here each delete task will take care of removing the VIOS disk mapping and vdisk associated with the partition as well.</p>
-<div class="figure align-default">
+<figure class="align-default">
 <img alt="" src="_images/demo_powervm_inventory.gif" />
-</div>
-</div>
-</div>
-<div class="section" id="powervm-lpar-instance">
-<h2>powervm_lpar_instance<a class="headerlink" href="#powervm-lpar-instance" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="create-and-activate-lpar-instance">
-<h3>Create and Activate lpar instance<a class="headerlink" href="#create-and-activate-lpar-instance" title="Permalink to this headline">¶</a></h3>
+</figure>
+</section>
+</section>
+<section id="powervm-lpar-instance">
+<h2>powervm_lpar_instance<a class="headerlink" href="#powervm-lpar-instance" title="Permalink to this headline"></a></h2>
+<section id="create-and-activate-lpar-instance">
+<h3>Create and Activate lpar instance<a class="headerlink" href="#create-and-activate-lpar-instance" title="Permalink to this headline"></a></h3>
 <p>The following demo illustrate the use case of creating a partition with memory and shared processor settings along with storage and network configurations. Once created, it activates the partition with default profile.</p>
-<div class="figure align-default">
+<figure class="align-default">
 <img alt="" src="_images/demo_create_and_activate_partition.gif" />
-</div>
-</div>
-</div>
-<div class="section" id="power-system">
-<h2>power_system<a class="headerlink" href="#power-system" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="poweroff-modify-and-poweron-power-system">
-<h3>poweroff, modify and poweron power system<a class="headerlink" href="#poweroff-modify-and-poweron-power-system" title="Permalink to this headline">¶</a></h3>
+</figure>
+</section>
+</section>
+<section id="power-system">
+<h2>power_system<a class="headerlink" href="#power-system" title="Permalink to this headline"></a></h2>
+<section id="poweroff-modify-and-poweron-power-system">
+<h3>poweroff, modify and poweron power system<a class="headerlink" href="#poweroff-modify-and-poweron-power-system" title="Permalink to this headline"></a></h3>
 <p>The following demo illustrates the use case of listing down power system details and to modify configuration changes like name, poweroff policy, poweron lpar policy and then modify system resources like memory region size, system huge pages poweroff the power system, once modified poweron power system.</p>
-<div class="figure align-default">
+<figure class="align-default">
 <img alt="" src="_images/demo_poweroff_and_modify_system_settings.gif" />
-</div>
-</div>
-</div>
-</div>
+</figure>
+</section>
+</section>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="community_guides.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="playbooks.html" class="btn btn-neutral float-left" title="Playbooks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="community_guides.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2020, IBM.
+    <p>&#169; Copyright 2020, IBM.</p>
+  </div>
 
-    </p>
-  </div> 
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

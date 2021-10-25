@@ -1,75 +1,35 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>powervm_lpar_instance – Create, Delete, Shutdown, Activate, Restart and facts of an AIX/Linux or IBMi partition &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-
-  
-  
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
-  
-
-  
-  
-
-  
-
-  
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Plugins" href="../plugins.html" />
     <link rel="prev" title="power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the Managed system" href="power_system.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../index.html" class="icon icon-home"> IBM Power Systems HMC
-          
-
-          
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -77,18 +37,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
@@ -133,77 +82,33 @@
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Releases</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">IBM Power Systems HMC</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-        
           <li><a href="../modules.html">Modules</a> &raquo;</li>
-        
       <li>powervm_lpar_instance – Create, Delete, Shutdown, Activate, Restart and facts of an AIX/Linux or IBMi partition</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
-            
               <a href="https://github.com/IBM/ansible-power-hmc/blob/dev-collection/docs/source/modules/powervm_lpar_instance.rst" class="fa fa-github"> Edit on GitHub</a>
-            
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="powervm-lpar-instance-create-delete-shutdown-activate-restart-and-facts-of-an-aix-linux-or-ibmi-partition">
-<span id="powervm-lpar-instance-module"></span><h1>powervm_lpar_instance – Create, Delete, Shutdown, Activate, Restart and facts of an AIX/Linux or IBMi partition<a class="headerlink" href="#powervm-lpar-instance-create-delete-shutdown-activate-restart-and-facts-of-an-aix-linux-or-ibmi-partition" title="Permalink to this headline">¶</a></h1>
+             
+  <section id="powervm-lpar-instance-create-delete-shutdown-activate-restart-and-facts-of-an-aix-linux-or-ibmi-partition">
+<span id="powervm-lpar-instance-module"></span><h1>powervm_lpar_instance – Create, Delete, Shutdown, Activate, Restart and facts of an AIX/Linux or IBMi partition<a class="headerlink" href="#powervm-lpar-instance-create-delete-shutdown-activate-restart-and-facts-of-an-aix-linux-or-ibmi-partition" title="Permalink to this headline"></a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
 <li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
@@ -215,25 +120,25 @@
 <li><p><a class="reference internal" href="#status" id="id7">Status</a></p></li>
 </ul>
 </div>
-<div class="section" id="synopsis">
-<h2><a class="toc-backref" href="#id1">Synopsis</a><a class="headerlink" href="#synopsis" title="Permalink to this headline">¶</a></h2>
+<section id="synopsis">
+<h2><a class="toc-backref" href="#id1">Synopsis</a><a class="headerlink" href="#synopsis" title="Permalink to this headline"></a></h2>
 <p>Creates AIX/Linux or IBMi partition with specified configuration details on mentioned system</p>
 <p>Or Deletes specified AIX/Linux or IBMi partition on specified system</p>
 <p>Or Shutdown specified AIX/Linux or IBMi partition on specified system</p>
 <p>Or Poweron/Activate specified AIX/Linux or IBMi partition, with provided configuration details on the mentioned system</p>
 <p>Or Restart specified AIX/Linux or IBMi partition on specified system</p>
 <p>Or facts of the specified AIX/Linux or IBMi partition of specified system</p>
-</div>
-<div class="section" id="requirements">
-<h2><a class="toc-backref" href="#id2">Requirements</a><a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="requirements">
+<h2><a class="toc-backref" href="#id2">Requirements</a><a class="headerlink" href="#requirements" title="Permalink to this headline"></a></h2>
 <p>The below requirements are needed on the host that executes this module.</p>
 <ul class="simple">
 <li><p>Python &gt;= 3</p></li>
 <li><p>lxml</p></li>
 </ul>
-</div>
-<div class="section" id="parameters">
-<h2><a class="toc-backref" href="#id3">Parameters</a><a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="parameters">
+<h2><a class="toc-backref" href="#id3">Parameters</a><a class="headerlink" href="#parameters" title="Permalink to this headline"></a></h2>
 <blockquote>
 <div><dl>
 <dt>hmc_host (True, str, None)</dt><dd><p>IPaddress or hostname of the HMC</p>
@@ -343,9 +248,9 @@
 </dd>
 </dl>
 </div></blockquote>
-</div>
-<div class="section" id="notes">
-<h2><a class="toc-backref" href="#id4">Notes</a><a class="headerlink" href="#notes" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="notes">
+<h2><a class="toc-backref" href="#id4">Notes</a><a class="headerlink" href="#notes" title="Permalink to this headline"></a></h2>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ul class="simple">
@@ -354,9 +259,9 @@
 <li><p>Partition creation is not supported for resource role-based user in HMC Version prior to 951.</p></li>
 </ul>
 </div>
-</div>
-<div class="section" id="examples">
-<h2><a class="toc-backref" href="#id5">Examples</a><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="examples">
+<h2><a class="toc-backref" href="#id5">Examples</a><a class="headerlink" href="#examples" title="Permalink to this headline"></a></h2>
 <div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Create an IBMi logical partition instance with shared proc, volume_config&#39;s vios_name and volume_name values, PhysicaIO and</span>
         <span class="l l-Scalar l-Scalar-Plain">max_virtual_slots</span>
   <span class="nt">powervm_lpar_instance</span><span class="p">:</span>
@@ -455,68 +360,56 @@
       <span class="nt">state</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">present</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="return-values">
-<h2><a class="toc-backref" href="#id6">Return Values</a><a class="headerlink" href="#return-values" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="return-values">
+<h2><a class="toc-backref" href="#id6">Return Values</a><a class="headerlink" href="#return-values" title="Permalink to this headline"></a></h2>
 <dl class="simple">
 <dt>partition_info (on success for state C(present), dict, {‘AllocatedVirtualProcessors’: None, ‘AssociatedManagedSystem’: ‘&lt;system-name&gt;’, ‘CurrentMemory’: 1024, ‘CurrentProcessingUnits’: None, ‘CurrentProcessors’: 1, ‘Description’: None, ‘HasDedicatedProcessors’: ‘true’, ‘HasPhysicalIO’: ‘true’, ‘IsVirtualServiceAttentionLEDOn’: ‘false’, ‘LastActivatedProfile’: ‘default_profile’, ‘MemoryMode’: ‘Dedicated’, ‘MigrationState’: ‘Not_Migrating’, ‘OperatingSystemVersion’: ‘Unknown’, ‘PartitionID’: 11, ‘PartitionName’: ‘&lt;partition-name&gt;’, ‘PartitionState’: ‘not activated’, ‘PartitionType’: ‘AIX/Linux’, ‘PowerManagementMode’: None, ‘ProgressState’: None, ‘RMCState’: ‘inactive’, ‘ReferenceCode’: ‘’, ‘RemoteRestartState’: ‘Invalid’, ‘ResourceMonitoringIPAddress’: None, ‘SharingMode’: ‘sre idle proces’})</dt><dd><p>The configuration of the partition after creation</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="status">
-<h2><a class="toc-backref" href="#id7">Status</a><a class="headerlink" href="#status" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="status">
+<h2><a class="toc-backref" href="#id7">Status</a><a class="headerlink" href="#status" title="Permalink to this headline"></a></h2>
 <ul class="simple">
 <li><p>This module is not guaranteed to have a backwards compatible interface. <em>[preview]</em></p></li>
 <li><p>This module is maintained by community.</p></li>
 </ul>
-<div class="section" id="authors">
-<h3>Authors<a class="headerlink" href="#authors" title="Permalink to this headline">¶</a></h3>
+<section id="authors">
+<h3>Authors<a class="headerlink" href="#authors" title="Permalink to this headline"></a></h3>
 <ul class="simple">
 <li><p>Anil Vijayan (&#64;AnilVijayan)</p></li>
 <li><p>Navinakumar Kandakur (&#64;nkandak1)</p></li>
 </ul>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="../plugins.html" class="btn btn-neutral float-right" title="Plugins" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="power_system.html" class="btn btn-neutral float-left" title="power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the Managed system" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../plugins.html" class="btn btn-neutral float-right" title="Plugins" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2020, IBM.
+    <p>&#169; Copyright 2020, IBM.</p>
+  </div>
 
-    </p>
-  </div> 
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>
