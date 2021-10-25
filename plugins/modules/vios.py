@@ -91,6 +91,7 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_resource import Hmc
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
 
 
 def init_logger():
@@ -116,6 +117,20 @@ def fetchViosInfo(module, params):
         return False, None, None
 
 
+not_support_settings = ['lpar_env', 'os400_restricted_io_mode', 'console_slot', 'alt_restart_device_slot',
+                        'alt_console_slot', 'op_console_slot', 'load_source_slot', 'hsl_pool_id',
+                        'virtual_opti_pool_id', 'vnic_adapters', 'electronic_err_reporting', 'suspend_capable',
+                        'simplified_remote_restart_capable', 'remote_restart_capable', 'migration_disabled',
+                        'virtual_serial_num', 'min_num_huge_pages', 'desired_num_huge_pages', 'max_num_huge_pages']
+
+
+def validate_settings_param(settings):
+    anyPresent = [each for each in settings.keys() if each in not_support_settings]
+
+    if anyPresent:
+        raise ParameterError("Invalid parameters: %s" % (', '.join(anyPresent)))
+
+
 def createVios(module, params):
     hmc_host = params['hmc_host']
     hmc_user = params['hmc_auth']['username']
@@ -125,6 +140,8 @@ def createVios(module, params):
     hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(hmc_conn)
     prof_name = None
+
+    validate_settings_param(params['settings'])
 
     try:
         lpar_config = hmc.getPartitionConfig(system_name, name)
@@ -139,7 +156,7 @@ def createVios(module, params):
         hmc.createVirtualIOServer(system_name, name, params['settings'])
 
         if params.get('settings'):
-            # Settings default_profile anme to 'default' in case user didnt provide
+            # Settings default_profile name to 'default' in case user didnt provide
             prof_name = params.get('settings').get('profile_name', 'default')
 
         lpar_config = hmc.getPartitionConfig(system_name, name, prof_name)

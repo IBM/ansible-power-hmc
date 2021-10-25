@@ -347,10 +347,10 @@ class Hmc():
         lparMandatConfig = {'PROFILE_NAME': 'default',
                             'MIN_MEM': '2048',
                             'DESIRED_MEM': '2048',
-                            'MAX_MEM': '2048',
+                            'MAX_MEM': str(delta_config.get('desired_mem') or 4096),
                             'MIN_PROCS': '2',
                             'DESIRED_PROCS': '2',
-                            'MAX_PROCS': '4',
+                            'MAX_PROCS': str(delta_config.get('desired_procs') or 4),
                             'BOOT_MODE': 'norm',
                             'PROC_MODE': 'ded',
                             'SHARING_MODE': 'keep_idle_procs',
@@ -360,7 +360,7 @@ class Hmc():
             for eachKey in delta_config:
                 if 'proc_mode' == eachKey and delta_config['proc_mode'] == 'shared':
                     if 'max_proc_units' not in delta_config:
-                        lparMandatConfig['MAX_PROC_UNITS'] = lparMandatConfig.get('DESIRED_PROC_UNITS') or '1.0'
+                        lparMandatConfig['MAX_PROC_UNITS'] = str(delta_config.get('desired_proc_units') or '1.0')
                     if 'min_proc_units' not in delta_config:
                         lparMandatConfig['MIN_PROC_UNITS'] = '0.1'
                     if 'desired_proc_units' not in delta_config:
@@ -368,7 +368,7 @@ class Hmc():
                     if 'sharing_mode' not in delta_config:
                         lparMandatConfig['SHARING_MODE'] = 'cap'
 
-                lparMandatConfig[eachKey.upper()] = delta_config[eachKey]
+                lparMandatConfig[eachKey.upper()] = str(delta_config[eachKey])
 
         return lparMandatConfig
 
