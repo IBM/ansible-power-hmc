@@ -121,14 +121,15 @@ not_support_settings = ['lpar_env', 'os400_restricted_io_mode', 'console_slot', 
                         'alt_console_slot', 'op_console_slot', 'load_source_slot', 'hsl_pool_id',
                         'virtual_opti_pool_id', 'vnic_adapters', 'electronic_err_reporting', 'suspend_capable',
                         'simplified_remote_restart_capable', 'remote_restart_capable', 'migration_disabled',
-                        'virtual_serial_num', 'min_num_huge_pages', 'desired_num_huge_pages', 'max_num_huge_pages']
+                        'virtual_serial_num', 'min_num_huge_pages', 'desired_num_huge_pages', 'max_num_huge_pages',
+                        'name']
 
 
 def validate_settings_param(settings):
-    anyPresent = [each for each in settings.keys() if each in not_support_settings]
-
-    if anyPresent:
-        raise ParameterError("Invalid parameters: %s" % (', '.join(anyPresent)))
+    if settings:
+        anyPresent = [each for each in settings if each in not_support_settings]
+        if anyPresent:
+            raise ParameterError("Invalid parameters: %s" % (', '.join(anyPresent)))
 
 
 def createVios(module, params):
