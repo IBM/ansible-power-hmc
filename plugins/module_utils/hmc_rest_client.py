@@ -187,7 +187,7 @@ def lookup_physical_io(rest_conn, server_dom, drcname):
 
     for each in physical_io_list:
         each_eletree = etree.ElementTree(each)
-        if drcname in each_eletree.xpath("//RelatedIOAdapter/IOAdapter/DynamicReconfigurationConnectorName")[0].text:
+        if drcname == each_eletree.xpath("//RelatedIOAdapter/IOAdapter/DynamicReconfigurationConnectorName")[0].text:
             return each_eletree
 
     return None
@@ -987,17 +987,14 @@ class HmcRestClient:
         vnw_quick_list = json.loads(response)
         return vnw_quick_list
 
-    def updateVirtualNWSettingsToDom(self, template_xml, config_dict):
-        vsn_payload = ''
-        if config_dict['virtual_slot_number'] is not None:
-            vsn_payload = '''
-            <VirtualSlotNumber kb="CUD" kxe="false">{0}</VirtualSlotNumber>'''.format(config_dict['virtual_slot_number'])
-
-        vnw_payload = '''
-        <clientNetworkAdapters kb="CUD" kxe="false" schemaVersion="V1_0">
-            <Metadata>
-                <Atom/>
-            </Metadata>
+    def updateVirtualNWSettingsToDom(self, template_xml, config_dict_list):
+        vn_payload = ''
+        for each_vn in config_dict_list:
+            vsn_payload = ''
+            if each_vn['virtual_slot_number'] is not None:
+                vsn_payload = '''
+                <VirtualSlotNumber kb="CUD" kxe="false">{0}</VirtualSlotNumber>'''.format(each_vn['virtual_slot_number'])
+            vn_payload += '''
             <ClientNetworkAdapter schemaVersion="V1_0">
                 <Metadata>
                     <Atom/>
@@ -1015,8 +1012,15 @@ class HmcRestClient:
                         <uuid kb="CUD" kxe="false">{1}</uuid>
                     </ClientVirtualNetwork>
                 </clientVirtualNetworks>
-            </ClientNetworkAdapter>
-        </clientNetworkAdapters>'''.format(config_dict['nw_name'], config_dict['nw_uuid'], vsn_payload)
+            </ClientNetworkAdapter>'''.format(each_vn['nw_name'], each_vn['nw_uuid'], vsn_payload)
+
+        vnw_payload = '''
+        <clientNetworkAdapters kb="CUD" kxe="false" schemaVersion="V1_0">
+            <Metadata>
+                <Atom/>
+            </Metadata>
+            {0}
+        </clientNetworkAdapters>'''.format(vn_payload)
 
         vnw_payload_xml = etree.XML(vnw_payload)
         client_nw_adapter_tag = template_xml.xpath("//ioConfiguration")[0]
@@ -1069,3 +1073,42 @@ class HmcRestClient:
 
         suspendEnableTag = lpar_template_dom.xpath("//suspendEnable")[0]
         suspendEnableTag.addprevious(etree.XML(virtualFibreChannelClientAdapters))
+
+    def getXmlVirtualFiberChannelAdapters(self, partition_uuid):
+        url = "https://{0}/rest/api/uom/LogicalPartition/{1}/VirtualFibreChannelClientAdapter/".format(self.hmc_ip, partition_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': '*/*'}
+
+        response = open_url(url,
+                            headers=header,
+                            method='GET',
+                            validate_certs=False,
+                            force_basic_auth=True,
+                            timeout=300)
+
+        if response.code == 204:
+            return None
+
+        vfc_root = xml_strip_namespace(response.read())
+        vfc_adapters = vfc_root.xpath('//VirtualFibreChannelClientAdapter')
+        return vfc_adapters
+
+    def getVirtualFiberChannelAdapters(self, partition_uuid):
+        raw_vfc = self.getXmlVirtualFiberChannelAdapters(partition_uuid)
+        vfcs = []
+        for vfc1 in raw_vfc:
+            vfc_dict = {}
+            vfc = etree.ElementTree(vfc1)
+            vfc_dict['LocationCode'] = vfc.xpath('//LocationCode')[0].text
+            vfc_dict['VirtualSlotNumber'] = vfc.xpath('//VirtualSlotNumber')[0].text
+            wwpn_len = len((vfc.xpath('//WWPNs')[0].text).split(' '))
+            wwpns = []
+            for i in range(wwpn_len):
+                wwpn_dict = {}
+                wwpn_dict['WWPN'] = vfc.xpath('//WWPN')[i].text
+                wwpn_dict['WWPNStatus'] = vfc.xpath('//WWPNStatus')[i].text
+                wwpn_dict['LoggedInBy'] = vfc.xpath('//LoggedInBy')[i].text
+                wwpns.append(wwpn_dict)
+            vfc_dict['WWPNs'] = wwpns
+            vfcs.append(vfc_dict)
+        return vfcs

@@ -343,6 +343,21 @@ class Hmc():
         logger.debug(chhwresCmd)
         self.hmcconn.execute(chhwresCmd)
 
+    def migratePartitions(self, opr, srcCEC, dstCEC=None, lparNames=None, lparIDs=None, aLL=False):
+        opr = opr.upper()
+        migrlparCmd = self.CMD['MIGRLPAR'] + \
+            self.OPT['MIGRLPAR']['-O'][opr] +\
+            self.OPT['MIGRLPAR']['-M'] + srcCEC
+        if opr != 'R':
+            migrlparCmd += self.OPT['MIGRLPAR']['-T'] + dstCEC
+        if lparNames:
+            migrlparCmd += self.OPT['MIGRLPAR']['-P'] + lparNames
+        elif lparIDs:
+            migrlparCmd += self.OPT['MIGRLPAR']['--ID'] + lparIDs
+        elif aLL:
+            migrlparCmd += self.OPT['MIGRLPAR']['--ALL']
+        self.hmcconn.execute(migrlparCmd)
+
     def _configMandatoryLparSettings(self, delta_config=None):
         lparMandatConfig = {'PROFILE_NAME': 'default',
                             'MIN_MEM': '2048',
