@@ -114,11 +114,12 @@ options:
     volume_config:
         description:
             - Storage volume configurations of a partition.
-            - Attaches Physical Volume via Virtual SCSI.
+            - Attach Physical Volumes via Virtual SCSI.
             - Redundant paths created by default, if the specified/identified physical volume is visible in more than one VIOS.
             - User needs to provide either I(volume_size) or both I(volume_name) and I(vios_name). If I(volume_size) is provided,
               available physical volume matching or greater than specified size would be attached.
-        type: dict
+        type: list
+        elements: dict
         suboptions:
             volume_name:
                 description:
@@ -469,7 +470,8 @@ def validate_parameters(params):
             raise ParameterError("unsupported parameters: %s" % (', '.join(collate)))
 
     if params['volume_config']:
-        validate_sub_dict('volume_config', params['volume_config'])
+        for each_volume_config in params['volume_config']:
+            validate_sub_dict('volume_config', each_volume_config)
 
 
 def fetchAllInUsePhyVolumes(rest_conn, vios_uuid):
@@ -484,7 +486,7 @@ def fetchAllInUsePhyVolumes(rest_conn, vios_uuid):
     return pvid_in_use
 
 
-def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, vios_name=None):
+def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, vios_name=None, pvid_list=None):
     user_choice_vios = None
     user_choice_pvid = None
     vios_response = rest_conn.getVirtualIOServersQuick(system_uuid)
@@ -518,6 +520,11 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
         pvs_in_use += fetchAllInUsePhyVolumes(rest_conn, vios_uuid)
         logger.debug(len(pv_xml_list))
         for each in pv_xml_list:
+
+            #This condition is to avoid picking already picked UDID in case of mutiple volume config
+            if(pvid_list and each.xpath("UniqueDeviceID")[0].text in pvid_list):
+                continue
+
             if volume_size > 0 and int(each.xpath("VolumeCapacity")[0].text) >= volume_size:
                 logger.debug("Vios Name: %s", viosname)
                 logger.debug("Volume Name: %s", each.xpath("VolumeName")[0].text)
@@ -834,31 +841,39 @@ def create_partition(module, params):
             rest_conn.updatePartitionTemplate(draft_uuid, draft_template_dom)
 
         # Volume configuration settings
+        pvid_added = []
+        vscsi_clients_payload = '' 
         if params['volume_config']:
-            if 'vios_name' in params['volume_config'] and params['volume_config']['vios_name']:
-                vios_name = params['volume_config']['vios_name']
-                vios_response = rest_conn.getVirtualIOServersQuick(system_uuid)
+            for each_vol_config in params['volume_config']:
+                if 'vios_name' in each_vol_config and each_vol_config['vios_name']:
+                    vios_name = each_vol_config['vios_name']
+                    vios_response = rest_conn.getVirtualIOServersQuick(system_uuid)
 
-                if vios_response:
-                    vios_list = json.loads(vios_response)
-                    logger.debug(vios_list)
-                    vios = [vios for vios in vios_list if vios['PartitionName'] == vios_name]
-                    if not vios:
+                    if vios_response:
+                        vios_list = json.loads(vios_response)
+                        logger.debug(vios_list)
+                        vios = [vios for vios in vios_list if vios['PartitionName'] == vios_name]
+                        if not vios:
+                            raise Error("Requested vios: {0} is not available".format(vios_name))
+                    else:
                         raise Error("Requested vios: {0} is not available".format(vios_name))
+
+                    vol_tuple_list = identifyFreeVolume(rest_conn, system_uuid, volume_name=each_vol_config['volume_name'],
+                                                        vios_name=each_vol_config['vios_name'], pvid_list=pvid_added)
                 else:
-                    raise Error("Requested vios: {0} is not available".format(vios_name))
+                    vol_tuple_list = identifyFreeVolume(rest_conn, system_uuid, volume_size=each_vol_config['volume_size'],
+                                                        pvid_list=pvid_added)
 
-                vol_tuple_list = identifyFreeVolume(rest_conn, system_uuid, volume_name=params['volume_config']['volume_name'],
-                                                    vios_name=params['volume_config']['vios_name'])
-            else:
-                vol_tuple_list = identifyFreeVolume(rest_conn, system_uuid, volume_size=params['volume_config']['volume_size'])
+                logger.debug(vol_tuple_list)
+                if vol_tuple_list:
+                    pvid_added.append(vol_tuple_list[0][2].xpath('UniqueDeviceID')[0].text)
+                    vscsi_clients_payload += rest_conn.add_vscsi_payload(vol_tuple_list)
+                else:
+                    module.fail_json(msg="Unable to identify free physical volume")
 
-            logger.debug(vol_tuple_list)
-            if vol_tuple_list:
-                rest_conn.add_vscsi_payload(draft_template_dom, vol_tuple_list)
+            if vscsi_clients_payload:
+                rest_conn.add_vscsi(draft_template_dom, vscsi_clients_payload)
                 rest_conn.updatePartitionTemplate(draft_uuid, draft_template_dom)
-            else:
-                module.fail_json(msg="Unable to identify free physical volume")
 
         resp_dom = rest_conn.deployPartitionTemplate(draft_uuid, system_uuid)
         partition_uuid = resp_dom.xpath("//ParameterName[text()='PartitionUuid']/following-sibling::ParameterValue")[0].text
@@ -1171,6 +1186,10 @@ def run_module():
                      fc_port=dict(type='str', required=True),
                      wwpn_pair=dict(type='str')
                      )
+    pv_args = dict(volume_name=dict(type='str'),
+                   vios_name=dict(type='str'),
+                   volume_size=dict(type='int')
+                   )
     # define available arguments/parameters a user can pass to the module
     module_args = dict(
         hmc_host=dict(type='str', required=True),
@@ -1188,12 +1207,9 @@ def run_module():
         proc_unit=dict(type='float'),
         mem=dict(type='int'),
         os_type=dict(type='str', choices=['aix', 'linux', 'aix_linux', 'ibmi']),
-        volume_config=dict(type='dict',
-                           options=dict(
-                               volume_name=dict(type='str'),
-                               vios_name=dict(type='str'),
-                               volume_size=dict(type='int'),
-                           )
+        volume_config=dict(type='list',
+                           elements='dict',
+                           options=pv_args
                            ),
         virt_network_config=dict(type='dict',
                                  options=dict(

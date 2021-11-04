@@ -884,8 +884,7 @@ class HmcRestClient:
         lparProfiles = lparProfiles_root.xpath('//LogicalPartitionProfile')
         return lparProfiles
 
-    def add_vscsi_payload(self, lpar_template_dom, pv_tup):
-
+    def add_vscsi_payload(self, pv_tup):
         payload = ''
         pv_tup_list_slice = pv_tup[:2]
         for pv_name, vios_name, pv_obj in pv_tup_list_slice:
@@ -923,14 +922,16 @@ class HmcRestClient:
                             </Metadata>
                     </associatedVirtualOpticalMedia>
             </VirtualSCSIClientAdapter>'''.format(pv_name, vios_name)
+        return payload
 
+    def add_vscsi(self, lpar_template_dom, vscsi_clients):
         vscsi_client_payload = '''
         <virtualSCSIClientAdapters kxe="false" kb="CUD" schemaVersion="V1_0">
         <Metadata>
                 <Atom/>
         </Metadata>
         {0}
-        </virtualSCSIClientAdapters>'''.format(payload)
+        </virtualSCSIClientAdapters>'''.format(vscsi_clients)
         suspendEnableTag = lpar_template_dom.xpath("//suspendEnable")[0]
         suspendEnableTag.addprevious(etree.XML(vscsi_client_payload))
 
@@ -964,10 +965,6 @@ class HmcRestClient:
         pv_xml = pv_xml.encode()
         resp = xml_strip_namespace(pv_xml)
         list_pv_elem = resp.xpath("//PhysicalVolume")
-
-        disk_dict = {}
-        for each in list_pv_elem:
-            disk_dict.update({each.xpath("VolumeUniqueID")[0].text: each})
         return list_pv_elem
 
     def getVirtualNetworksQuick(self, system_uuid):
