@@ -117,18 +117,22 @@ def fetchViosInfo(module, params):
         return False, None, None
 
 
+# Collection of attributes not supported by vios partition
 not_support_settings = ['lpar_env', 'os400_restricted_io_mode', 'console_slot', 'alt_restart_device_slot',
                         'alt_console_slot', 'op_console_slot', 'load_source_slot', 'hsl_pool_id',
                         'virtual_opti_pool_id', 'vnic_adapters', 'electronic_err_reporting', 'suspend_capable',
                         'simplified_remote_restart_capable', 'remote_restart_capable', 'migration_disabled',
-                        'virtual_serial_num', 'min_num_huge_pages', 'desired_num_huge_pages', 'max_num_huge_pages']
+                        'virtual_serial_num', 'min_num_huge_pages', 'desired_num_huge_pages', 'max_num_huge_pages',
+                        'name', 'lpar_name', 'rs_device_name', 'powervm_mgmt_capable', 'primary_paging_vios_name',
+                        'primary_paging_vios_id', 'secondary_paging_vios_name', 'secondary_paging_vios_id',
+                        'primary_rs_vios_name', 'primary_rs_vios_id', 'secondary_rs_vios_name', 'secondary_rs_vios_id']
 
 
 def validate_settings_param(settings):
-    anyPresent = [each for each in settings.keys() if each in not_support_settings]
-
-    if anyPresent:
-        raise ParameterError("Invalid parameters: %s" % (', '.join(anyPresent)))
+    if settings:
+        anyPresent = [each for each in settings if each in not_support_settings]
+        if anyPresent:
+            raise ParameterError("Invalid parameters: %s" % (', '.join(anyPresent)))
 
 
 def createVios(module, params):
