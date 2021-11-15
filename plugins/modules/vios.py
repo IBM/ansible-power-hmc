@@ -62,19 +62,16 @@ options:
         description:
             - IP Address of the NIM Server
             - valid only for C(action) = I(install)
-        required: true
         type: str
     gateway:
         description:
             - VIOS gateway IP Address
             - valid only for C(action) = I(install)
-        required: true
         type: str
     viosIP:
         description:
             - IP Address to be configured to VIOS
             - valid only for C(action) = I(install)
-        required: true
         type: str
     prof_name:
         description:
@@ -98,7 +95,6 @@ options:
         description:
             - Subnetmask IP Address to be configured to VIOS
             - valid only for C(action) = I(install)
-        required: true
         type: str
     vlanID:
         description:
@@ -156,6 +152,7 @@ RETURN = '''
 vios_info:
     description: Respective VIOS information
     type: dict
+    returned: on success for action C(install)
 '''
 
 import logging
