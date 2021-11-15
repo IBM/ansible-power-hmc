@@ -31,7 +31,8 @@ class HmcCommandStack():
                'CHSYSSTATE': 'chsysstate',
                'CHHWRES': 'chhwres',
                'LSHWRES': 'lshwres',
-               'MIGRLPAR': 'migrlpar'}
+               'MIGRLPAR': 'migrlpar',
+               'LPAR_NETBOOT': 'lpar_netboot'}
 
     HMC_CMD_OPT = {'LSHMC': {'-N': ' -n ',
                              '-v': ' -v ',
@@ -288,6 +289,19 @@ class HmcCommandStack():
                                 '--IP': ' --ip ',
                                 '--ALL': ' --all',
                                 '--ID': ' --id '},
+                   'LPAR_NETBOOT': {'-A': ' -A',
+                                    '-M': ' -M',
+                                    '-D': ' -D',
+                                    '-N': ' -n',
+                                    '-T': ' -t ',
+                                    '-S': ' -S ',
+                                    '-G': ' -G ',
+                                    '-C': ' -C ',
+                                    '-F': ' -f',
+                                    '-L': ' -l ',
+                                    '-V': ' -V ',
+                                    '-Y': ' -Y ',
+                                    '-K': ' -K '},
                    }
 
     def filterBuilder(self, cmdKey, configOptionsDict):

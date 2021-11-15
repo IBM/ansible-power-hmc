@@ -429,3 +429,32 @@ class Hmc():
             res.update({'profile_config': res_prof})
 
         return res
+
+    def getVIOSPhysicalioDeviceStatus(self, nw_type, nimIP, gateway, lparIP, viosName, profName, systemName):
+        lpar_netboot = self.CMD['LPAR_NETBOOT'] +\
+            self.OPT['LPAR_NETBOOT']['-A'] +\
+            self.OPT['LPAR_NETBOOT']['-M'] +\
+            self.OPT['LPAR_NETBOOT']['-D'] +\
+            self.OPT['LPAR_NETBOOT']['-N'] +\
+            self.OPT['LPAR_NETBOOT']['-T'] + nw_type +\
+            self.OPT['LPAR_NETBOOT']['-S'] + nimIP +\
+            self.OPT['LPAR_NETBOOT']['-G'] + gateway +\
+            self.OPT['LPAR_NETBOOT']['-C'] + lparIP +\
+            " " + viosName + " " + profName + " " + systemName
+        result = self.hmcconn.execute(lpar_netboot)
+        return result
+
+    def installVIOSFromNIM(self, nw_type, loc_code, nimIP, gateway, lparIP, vlanID, vlanPrio, submask, viosName, profName, systemName):
+        lpar_netboot = self.CMD['LPAR_NETBOOT'] +\
+            self.OPT['LPAR_NETBOOT']['-F'] +\
+            self.OPT['LPAR_NETBOOT']['-D'] +\
+            self.OPT['LPAR_NETBOOT']['-T'] + nw_type +\
+            self.OPT['LPAR_NETBOOT']['-L'] + loc_code +\
+            self.OPT['LPAR_NETBOOT']['-S'] + nimIP +\
+            self.OPT['LPAR_NETBOOT']['-G'] + gateway +\
+            self.OPT['LPAR_NETBOOT']['-C'] + lparIP +\
+            self.OPT['LPAR_NETBOOT']['-V'] + vlanID +\
+            self.OPT['LPAR_NETBOOT']['-Y'] + vlanPrio +\
+            self.OPT['LPAR_NETBOOT']['-K'] + submask +\
+            " " + viosName + " " + profName + " " + systemName
+        self.hmcconn.execute(lpar_netboot)
