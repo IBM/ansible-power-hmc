@@ -62,19 +62,16 @@ options:
         description:
             - IP Address of the NIM Server
             - valid only for C(action) = I(install)
-        required: true
         type: str
     nim_gateway:
         description:
             - VIOS gateway IP Address
             - valid only for C(action) = I(install)
-        required: true
         type: str
     vios_IP:
         description:
             - IP Address to be configured to VIOS
             - valid only for C(action) = I(install)
-        required: true
         type: str
     prof_name:
         description:
@@ -92,23 +89,25 @@ options:
         description:
             - Subnetmask IP Address to be configured to VIOS
             - valid only for C(action) = I(install)
-        required: true
         type: str
     nim_vlanID:
         description:
             - Specifies the VLANID(0 to 4094) to use for tagging Ethernet frames during network install for virtual network communication
             - Default value is 0
             - valid only for C(action) = I(install)
+        type: str
     nim_vlanPriority:
         description:
             - Specifies the VLAN priority (0 to 7) to use for tagging Ethernet frames during network install for virtual network communication
             - Default value is 0
             - valid only for C(action) = I(install)
+        type: str
     timeout:
         description:
             - Max waiting time in mins for VIOS to bootup fully
             - Default value is 60 min
             - valid only for C(action) = I(install)
+        type: int
     state:
         description:
             - C(facts) fetch details of specified I(virtualioserver)
@@ -154,6 +153,7 @@ RETURN = '''
 vios_info:
     description: Respective VIOS information
     type: dict
+    returned: on success for action C(install)
 '''
 
 import logging
@@ -329,7 +329,7 @@ def installVios(module, params):
         rmc_state, vios_property, ref_code = checkForVIOSToBootUpFully(hmc, system_name, name, timeout)
         if rmc_state:
             changed = True
-        elif 'VIOS' in vios_property['os_version'] and ref_code in ['', 00]:
+        elif ref_code in ['', '00']:
             changed = True
             warn_msg = "VIOS installation was succeefull but RMC didnt come up, please check the HMC firewall and security"
         else:
