@@ -430,25 +430,41 @@ class Hmc():
 
         return res
 
-    def getVIOSPhysicalioDeviceStatus(self, nw_type, nimIP, gateway, lparIP, viosName, profName, systemName):
+    def _createIODetailsDict(self, result):
+        lns = result.strip('\n').split('\n')
+        res = []
+        for ln in lns:
+            di = {}
+            if not ln.lstrip().startswith('#'):
+                x = ln.split()
+                di['Type'] = x[0]
+                di['Location Code'] = x[1]
+                di['MAC Address'] = x[2]
+                di['Full Path Name'] = x[3]
+                di['Ping Result'] = x[4]
+                di['Device Type'] = x[5]
+                res.append(di)
+        return res
+
+    def fetchIODetailsForNetboot(self, nimIP, gateway, lparIP, viosName, profName, systemName):
         lpar_netboot = self.CMD['LPAR_NETBOOT'] +\
             self.OPT['LPAR_NETBOOT']['-A'] +\
             self.OPT['LPAR_NETBOOT']['-M'] +\
             self.OPT['LPAR_NETBOOT']['-D'] +\
             self.OPT['LPAR_NETBOOT']['-N'] +\
-            self.OPT['LPAR_NETBOOT']['-T'] + nw_type +\
+            self.OPT['LPAR_NETBOOT']['-T'] + "ent" +\
             self.OPT['LPAR_NETBOOT']['-S'] + nimIP +\
             self.OPT['LPAR_NETBOOT']['-G'] + gateway +\
             self.OPT['LPAR_NETBOOT']['-C'] + lparIP +\
             " " + viosName + " " + profName + " " + systemName
         result = self.hmcconn.execute(lpar_netboot)
-        return result
+        return self._createIODetailsDict(result)
 
-    def installVIOSFromNIM(self, nw_type, loc_code, nimIP, gateway, lparIP, vlanID, vlanPrio, submask, viosName, profName, systemName):
+    def installVIOSFromNIM(self, loc_code, nimIP, gateway, lparIP, vlanID, vlanPrio, submask, viosName, profName, systemName):
         lpar_netboot = self.CMD['LPAR_NETBOOT'] +\
             self.OPT['LPAR_NETBOOT']['-F'] +\
             self.OPT['LPAR_NETBOOT']['-D'] +\
-            self.OPT['LPAR_NETBOOT']['-T'] + nw_type +\
+            self.OPT['LPAR_NETBOOT']['-T'] + "ent" +\
             self.OPT['LPAR_NETBOOT']['-L'] + loc_code +\
             self.OPT['LPAR_NETBOOT']['-S'] + nimIP +\
             self.OPT['LPAR_NETBOOT']['-G'] + gateway +\
@@ -458,3 +474,22 @@ class Hmc():
             self.OPT['LPAR_NETBOOT']['-K'] + submask +\
             " " + viosName + " " + profName + " " + systemName
         self.hmcconn.execute(lpar_netboot)
+
+    def getPartitionRefcode(self, system_name, name):
+        filter_config = dict(LPAR_NAMES=name)
+        lsrefcode = self.CMD['LSREFCODE'] +\
+            self.OPT['LSREFCODE']['-R']['LPAR'] +\
+            self.OPT['LSREFCODE']['-M'] + system_name +\
+            self.cmdClass.filterBuilder("LSREFCODE", filter_config)
+        result = self.hmcconn.execute(lsrefcode)
+        res_dict = self.cmdClass.parseCSV(result)
+        res = dict((k.lower(), v) for k, v in res_dict.items())
+
+        return res
+
+    def runCommandOnVIOS(self, system_name, name, cmd):
+        viosvrcmd = self.CMD['VIOSVRCMD'] +\
+            self.OPT['VIOSVRCMD']['-M'] + system_name +\
+            self.OPT['VIOSVRCMD']['-P'] + name +\
+            self.OPT['VIOSVRCMD']['-C'] + '"' + cmd + '"'
+        self.hmcconn.execute(viosvrcmd)
