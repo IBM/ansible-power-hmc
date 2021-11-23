@@ -18,7 +18,7 @@ author:
     - Navinakumar Kandakur (@nkandak1)
 short_description: run an adhoc command on HMC
 description:
-    - "running HMC command"
+    - "Execute HMC command"
 version_added: 1.0.0
 options:
     hmc_host:
@@ -54,7 +54,7 @@ options:
 '''
 
 EXAMPLES = '''
-- name: validate specified vm_namemigration
+- name: validate specified vm_name migration
   powervm_lpar_migration:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:

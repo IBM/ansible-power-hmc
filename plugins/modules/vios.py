@@ -90,13 +90,13 @@ options:
             - Subnetmask IP Address to be configured to VIOS
             - valid only for C(action) = I(install)
         type: str
-    nim_vlanID:
+    nim_vlan_id:
         description:
             - Specifies the VLANID(0 to 4094) to use for tagging Ethernet frames during network install for virtual network communication
             - Default value is 0
             - valid only for C(action) = I(install)
         type: str
-    nim_vlanPriority:
+    nim_vlan_priority:
         description:
             - Specifies the VLAN priority (0 to 7) to use for tagging Ethernet frames during network install for virtual network communication
             - Default value is 0
@@ -105,6 +105,7 @@ options:
     timeout:
         description:
             - Max waiting time in mins for VIOS to bootup fully
+            - Min timeout should be more than 10 mins
             - Default value is 60 min
             - valid only for C(action) = I(install)
         type: int
@@ -187,10 +188,10 @@ def validate_parameters(params):
         unsupportedList = ['settings']
     elif opr == 'present':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'name']
-        unsupportedList = ['nim_IP', 'nim_gateway', 'vios_IP', 'nim_subnetmask', 'prof_name', 'location_code', 'nim_vlanID', 'nim_vlanPriority', 'timeout']
+        unsupportedList = ['nim_IP', 'nim_gateway', 'vios_IP', 'nim_subnetmask', 'prof_name', 'location_code', 'nim_vlan_id', 'nim_vlan_priority', 'timeout']
     else:
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'name']
-        unsupportedList = ['nim_IP', 'nim_gateway', 'vios_IP', 'nim_subnetmask', 'prof_name', 'location_code', 'nim_vlanID', 'nim_vlanPriority',
+        unsupportedList = ['nim_IP', 'nim_gateway', 'vios_IP', 'nim_subnetmask', 'prof_name', 'location_code', 'nim_vlan_id', 'nim_vlan_priority',
                            'timeout', 'settings']
 
     collate = []
@@ -222,7 +223,7 @@ def checkForVIOSToBootUpFully(hmc, system_name, name, timeoutInMin=60):
     rmcActive = False
     ref_code = None
     # wait for 10 mins before polling
-    time.sleep(60)
+    time.sleep(600)
     while waited < WAIT_UNTIL_IN_SEC:
         conf_dict = hmc.getPartitionConfig(system_name, name)
         if conf_dict['rmc_state'] == 'active':
@@ -300,8 +301,8 @@ def installVios(module, params):
     prof_name = params['prof_name'] or 'default_profile'
     location_code = params['location_code']
     nim_subnetmask = params['nim_subnetmask']
-    nim_vlanID = params['nim_vlanID'] or '0'
-    nim_vlanPriority = params['nim_vlanPriority'] or '0'
+    nim_vlan_id = params['nim_vlan_id'] or '0'
+    nim_vlan_priority = params['nim_vlan_priority'] or '0'
     timeout = params['timeout'] or 60
     validate_parameters(params)
     hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
@@ -314,7 +315,7 @@ def installVios(module, params):
         module.fail_json(msg="timeout should be more than 10mins")
     try:
         if location_code:
-            hmc.installVIOSFromNIM(location_code, nim_IP, nim_gateway, vios_IP, nim_vlanID, nim_vlanPriority, nim_subnetmask, name, prof_name, system_name)
+            hmc.installVIOSFromNIM(location_code, nim_IP, nim_gateway, vios_IP, nim_vlan_id, nim_vlan_priority, nim_subnetmask, name, prof_name, system_name)
         else:
             dvcdictlt = hmc.fetchIODetailsForNetboot(nim_IP, nim_gateway, vios_IP, name, prof_name, system_name)
             for dvcdict in dvcdictlt:
@@ -322,7 +323,8 @@ def installVios(module, params):
                     location_code = dvcdict['Location Code']
                     break
             if location_code:
-                hmc.installVIOSFromNIM(location_code, nim_IP, nim_gateway, vios_IP, nim_vlanID, nim_vlanPriority, nim_subnetmask, name, prof_name, system_name)
+                hmc.installVIOSFromNIM(location_code, nim_IP, nim_gateway, vios_IP, nim_vlan_id, nim_vlan_priority, nim_subnetmask,
+                                       name, prof_name, system_name)
             else:
                 module.fail_json(msg="None of adapters part of the profile is reachable through network. Please attach correct network adapter")
 
@@ -331,9 +333,9 @@ def installVios(module, params):
             changed = True
         elif ref_code in ['', '00']:
             changed = True
-            warn_msg = "VIOS installation was succeefull but RMC didnt come up, please check the HMC firewall and security"
+            warn_msg = "VIOS installation has been succefull but RMC didnt come up, please check the HMC firewall and security"
         else:
-            module.fail_json(msg="RMC state of the VIOS didn't come up even after waiting for" + timeout + "mins")
+            module.fail_json(msg="VIOS Installation failed even after waiting for " + timeout + " mins and the reference code is " + ref_code)
     except HmcError as install_error:
         return False, repr(install_error), None
 
@@ -356,7 +358,7 @@ def viosLicenseAccept(module, params):
             hmc.runCommandOnVIOS(system_name, name, 'license -accept')
             changed = True
         else:
-            module.fail_json(msg="Can't run accept license when VIOS RMC state is " + vios_config['rmc_state'])
+            module.fail_json(msg="Cannot accept the license since the RMC state is " + vios_config['rmc_state'])
     except HmcError as error:
         return False, repr(error), None
 
@@ -402,8 +404,8 @@ def run_module():
         prof_name=dict(type='str'),
         location_code=dict(type='str'),
         nim_subnetmask=dict(type='str'),
-        nim_vlanID=dict(type='str'),
-        nim_vlanPriority=dict(type='str'),
+        nim_vlan_id=dict(type='str'),
+        nim_vlan_priority=dict(type='str'),
         timeout=dict(type='int'),
         state=dict(type='str', choices=['facts', 'present']),
         action=dict(type='str', choices=['install', 'accept_license']),

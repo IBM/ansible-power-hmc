@@ -430,7 +430,7 @@ class Hmc():
 
         return res
 
-    def _createIODetailsDict(self, result):
+    def _parseIODetailsFromNetboot(self, result):
         lns = result.strip('\n').split('\n')
         res = []
         for ln in lns:
@@ -458,7 +458,7 @@ class Hmc():
             self.OPT['LPAR_NETBOOT']['-C'] + lparIP +\
             " " + viosName + " " + profName + " " + systemName
         result = self.hmcconn.execute(lpar_netboot)
-        return self._createIODetailsDict(result)
+        return self._parseIODetailsFromNetboot(result)
 
     def installVIOSFromNIM(self, loc_code, nimIP, gateway, lparIP, vlanID, vlanPrio, submask, viosName, profName, systemName):
         lpar_netboot = self.CMD['LPAR_NETBOOT'] +\
@@ -483,7 +483,7 @@ class Hmc():
             self.cmdClass.filterBuilder("LSREFCODE", filter_config)
         result = self.hmcconn.execute(lsrefcode)
         res_dict = self.cmdClass.parseCSV(result)
-        res = dict((k.lower(), v) for k, v in res_dict.items())
+        res = dict((k, v) for k, v in res_dict.items())
 
         return res
 
