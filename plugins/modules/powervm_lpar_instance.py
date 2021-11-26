@@ -671,6 +671,8 @@ def fetch_fc_config(rest_conn, system_uuid, fc_config_list):
             vios = [vios for vios in vios_list if vios['PartitionName'] == each_fc['vios_name']]
         if not vios:
             raise Error("Requested vios: {0} for npiv is not available".format(each_fc['vios_name']))
+        elif vios[0]['RMCState'] != 'active':
+            raise Error("Requested vios: {0} RMC state is {1} ".format(each_fc['vios_name'], vios[0]['RMCState']))
 
         if each_fc['fc_port'] is not None:
             vios_fcports = rest_conn.vios_fetch_fcports_info(vios[0]['UUID'])

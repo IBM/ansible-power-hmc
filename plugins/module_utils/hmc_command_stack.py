@@ -31,7 +31,10 @@ class HmcCommandStack():
                'CHSYSSTATE': 'chsysstate',
                'CHHWRES': 'chhwres',
                'LSHWRES': 'lshwres',
-               'MIGRLPAR': 'migrlpar'}
+               'MIGRLPAR': 'migrlpar',
+               'LPAR_NETBOOT': 'lpar_netboot',
+               'LSREFCODE': 'lsrefcode',
+               'VIOSVRCMD': 'viosvrcmd'}
 
     HMC_CMD_OPT = {'LSHMC': {'-N': ' -n ',
                              '-v': ' -v ',
@@ -288,6 +291,26 @@ class HmcCommandStack():
                                 '--IP': ' --ip ',
                                 '--ALL': ' --all',
                                 '--ID': ' --id '},
+                   'LPAR_NETBOOT': {'-A': ' -A',
+                                    '-M': ' -M',
+                                    '-D': ' -D',
+                                    '-N': ' -n',
+                                    '-T': ' -t ',
+                                    '-S': ' -S ',
+                                    '-G': ' -G ',
+                                    '-C': ' -C ',
+                                    '-F': ' -f',
+                                    '-L': ' -l ',
+                                    '-V': ' -V ',
+                                    '-Y': ' -Y ',
+                                    '-K': ' -K '},
+                   'LSREFCODE': {'-R': {'LPAR': ' -r lpar'},
+                                 '-M': ' -m ',
+                                 '-F': ' -F ',
+                                 '--FILTER': {'LPAR_NAMES': 'lpar_names'}},
+                   'VIOSVRCMD': {'-M': ' -m ',
+                                 '-P': ' -p ',
+                                 '-C': ' -c '},
                    }
 
     def filterBuilder(self, cmdKey, configOptionsDict):

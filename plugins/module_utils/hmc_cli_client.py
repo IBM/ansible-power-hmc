@@ -50,7 +50,13 @@ class HmcCliConnection:
             stderr = stderr.replace("\n", "").replace("\r", "").replace("\\", "")
             stdout = stdout.replace("\r", "").replace("..|", "\n").replace("../", "\n").replace("..-", "\n").replace("\\", "\n").replace("...", "")
             stdout = "".join(list(OrderedDict.fromkeys(stdout.split("\n"))))
-            errMsg = stdout if stdout not in (None, '') else stderr
+            errMsg = None
+            if stdout not in (None, '') and stderr:
+                errMsg = stdout + " ERROR MSG => " + stderr
+            elif stdout not in (None, ''):
+                errMsg = stdout
+            else:
+                errMsg = stderr
             if not errMsg:
                 raise HmcError(resolve_return_code(status_code))
             else:

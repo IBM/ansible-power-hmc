@@ -52,7 +52,6 @@ options:
         description:
             - The name of the destination managed system.
             - valid only for C(validate) and C(migrate) operation
-        required: true
         type: str
     vm_names:
         description:
@@ -60,12 +59,14 @@ options:
             - To perform action on multiple partitions, provide comma seperated partition names or in list form
             - For C(recover) I(action) only one partition name is allowed
         type: list
+        elements: str
     vm_ids:
         description:
             - ID/s of the partition to be  migrated/validated.
             - To perform action on multiple partitions, provide comma seperated partition ids or in list form
             - For C(recover) I(action) only one partition id is allowed
         type: list
+        elements: str
     all_vms:
         description:
             - All the partitions of the I(src_system) to be migrated.
