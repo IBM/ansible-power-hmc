@@ -378,10 +378,9 @@ def init_logger():
 
 
 def validate_proc_mem(system_dom, proc, mem, proc_unit=None):
-
     curr_avail_proc_units = system_dom.xpath('//CurrentAvailableSystemProcessorUnits')[0].text
     curr_avail_procs = float(curr_avail_proc_units)
-    int_avail_proc = int(curr_avail_procs)
+    int_avail_proc = int(float(curr_avail_proc_units))
 
     if proc_unit:
         min_proc_unit_per_virtproc = system_dom.xpath('//MinimumProcessorUnitsPerVirtualProcessor')[0].text
@@ -390,7 +389,6 @@ def validate_proc_mem(system_dom, proc, mem, proc_unit=None):
         if proc_unit > curr_avail_procs:
             raise HmcError("{0} Available system proc units is not enough for {1} shared CPUs. Provide value on or below {0}"
                            .format(str(curr_avail_procs), str(proc_unit)))
-
     else:
         if proc > curr_avail_procs:
             raise HmcError("{2} Available system proc units is not enough for {1} dedicated CPUs. Provide value on or below {0} CPUs"

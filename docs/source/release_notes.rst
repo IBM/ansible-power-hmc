@@ -59,3 +59,28 @@ Availability
 
 .. _GitHub v1.2.0:
    https://github.com/IBM/ansible-power-hmc/releases/download/v1.2.0/ibm-power_hmc-1.2.0.tar.gz
+
+
+Version 1.3.0
+-------------
+Notes
+  * powervm_lpar_instance: Support for storage configuration with NPIV (Virtual Fibre)
+  * powervm_lpar_instance: Support for physical IO adapter configuration
+  * powervm_lpar_instance: All(full) resource partition create support
+  * powervm_lpar_instance: Reboot of partition
+  * powervm_lpar_instance: Fetch partition info using 'fact' state
+  * powervm_lpar_instance: Added virtual slot param option during network configuration
+  * power_system: Power cycle of power servers
+  * power_system: System level config support for power servers
+  * hmc_update_upgrade: disk option to support update/upgrade from hmc local disk
+  * Enhanced dynamic inventory plugin to collect IBMi partition details
+
+Availability
+  * `Galaxy v1.3.0`_
+  * `GitHub v1.3.0`_
+
+.. _Galaxy v1.3.0:
+   https://galaxy.ansible.com/download/ibm-power_hmc-1.3.0.tar.gz
+
+.. _GitHub v1.3.0:
+   https://github.com/IBM/ansible-power-hmc/releases/download/v1.3.0/ibm-power_hmc-1.3.0.tar.gz
