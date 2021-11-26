@@ -7,3 +7,4 @@ plugins/modules/power_system.py pylint:consider-using-f-string
 plugins/modules/hmc_update_upgrade.py pylint:consider-using-f-string
 plugins/modules/vios.py pylint:consider-using-f-string
 plugins/modules/powervm_lpar_migration.py pylint:consider-using-f-string
+plugins/module_utils/hmc_resource.py pylint:consider-using-f-string
