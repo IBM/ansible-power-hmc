@@ -114,11 +114,12 @@ options:
     volume_config:
         description:
             - Storage volume configurations of a partition.
-            - Attaches Physical Volume via Virtual SCSI.
+            - Attach Physical Volumes via Virtual SCSI.
             - Redundant paths created by default, if the specified/identified physical volume is visible in more than one VIOS.
             - User needs to provide either I(volume_size) or both I(volume_name) and I(vios_name). If I(volume_size) is provided,
               available physical volume matching or greater than specified size would be attached.
-        type: dict
+        type: list
+        elements: dict
         suboptions:
             volume_name:
                 description:
@@ -139,7 +140,8 @@ options:
             - Virtual Network configuration of the partition
             - This implicitly adds a Virtual Ethernet Adapter with given virtual network to the partition
             - Make sure provided Virtual Network has been attached to an active Network Bridge for external network communication.
-        type: dict
+        type: list
+        elements: dict
         suboptions:
             network_name:
                 description:
@@ -205,6 +207,13 @@ options:
             - Option to delete the Virtual Disks associated with the partition when deleting the partition.
             - Default is to not delete the virtual disks.
         type: bool
+    advanced_info:
+        description:
+            - Option to display advanced information of the logical partition.
+            - Applicable only for C(facts) state.
+            - Default is false.
+            - Currently we are showing only NPIV storage details.
+        type: bool
     state:
         description:
             - C(present) creates a partition of the specified I(os_type), I(vm_name), I(proc) and I(memory) on specified I(system_name).
@@ -254,8 +263,8 @@ EXAMPLES = '''
       volume_config:
          volume_size: <disk_size>
       virt_network_config:
-         network_name: <virtual_nw_name>
-         slot_number: <client_slot_no>
+         - network_name: <virtual_nw_name>
+           slot_number: <client_slot_no>
       npiv_config:
          - vios_name: <viosname>
            fc_port: <fc_port_name/loc_code>
@@ -318,7 +327,6 @@ EXAMPLES = '''
       vm_name: <vm_name>
       all_resources: True
       state: present
-
 '''
 
 RETURN = '''
@@ -350,6 +358,7 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client impo
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import add_physical_io
 from random import randint
 from collections import OrderedDict
+from decimal import Decimal
 try:
     from lxml import etree
 except ImportError:
@@ -368,24 +377,29 @@ def init_logger():
         level=logging.DEBUG)
 
 
-def validate_proc_mem(system_dom, proc, mem, proc_units=None):
+def validate_proc_mem(system_dom, proc, mem, proc_unit=None):
 
     curr_avail_proc_units = system_dom.xpath('//CurrentAvailableSystemProcessorUnits')[0].text
-    int_avail_proc = int(float(curr_avail_proc_units))
+    curr_avail_procs = float(curr_avail_proc_units)
+    int_avail_proc = int(curr_avail_procs)
 
-    if proc_units:
+    if proc_unit:
         min_proc_unit_per_virtproc = system_dom.xpath('//MinimumProcessorUnitsPerVirtualProcessor')[0].text
-        float_min_proc_unit_per_virtproc = float(min_proc_unit_per_virtproc)
-        if round(float(proc_units) % float_min_proc_unit_per_virtproc, 2) != float_min_proc_unit_per_virtproc:
-            raise HmcError("Input processor units: {0} must be a multiple of {1}".format(proc_units, min_proc_unit_per_virtproc))
+        if Decimal(str(proc_unit)) % Decimal(min_proc_unit_per_virtproc) != Decimal('0.0'):
+            raise HmcError("Input processor units: {0} must be a multiple of {1}".format(proc_unit, min_proc_unit_per_virtproc))
+        if proc_unit > curr_avail_procs:
+            raise HmcError("{0} Available system proc units is not enough for {1} shared CPUs. Provide value on or below {0}"
+                           .format(str(curr_avail_procs), str(proc_unit)))
+
+    else:
+        if proc > curr_avail_procs:
+            raise HmcError("{2} Available system proc units is not enough for {1} dedicated CPUs. Provide value on or below {0} CPUs"
+                           .format(str(int_avail_proc), str(proc), str(curr_avail_procs)))
 
     curr_avail_mem = system_dom.xpath('//CurrentAvailableSystemMemory')[0].text
     int_avail_mem = int(curr_avail_mem)
     curr_avail_lmb = system_dom.xpath('//CurrentLogicalMemoryBlockSize')[0].text
     lmb = int(curr_avail_lmb)
-
-    if proc > int_avail_proc:
-        raise HmcError("Available system proc units is not enough. Provide value on or below {0}".format(str(int_avail_proc)))
 
     if mem % lmb > 0:
         raise HmcError("Requested mem value not in mutiple of block size:{0}".format(curr_avail_lmb))
@@ -433,19 +447,23 @@ def validate_parameters(params):
 
     if opr == 'present':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']
-        unsupportedList = ['prof_name', 'keylock', 'iIPLsource', 'retain_vios_cfg', 'delete_vdisks']
+        unsupportedList = ['prof_name', 'keylock', 'iIPLsource', 'retain_vios_cfg', 'delete_vdisks', 'advanced_info']
     elif opr == 'poweron':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'volume_config', 'virt_network_config', 'retain_vios_cfg', 'delete_vdisks',
-                           'all_resources', 'max_virtual_slots']
+                           'all_resources', 'max_virtual_slots', 'advanced_info']
     elif opr == 'absent':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
-                           'all_resources', 'max_virtual_slots']
-    else:
+                           'all_resources', 'max_virtual_slots', 'advanced_info']
+    elif opr == 'facts':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots']
+    else:
+        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
+        unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
+                           'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots', 'advanced_info']
 
     collate = []
     for eachMandatory in mandatoryList:
@@ -469,7 +487,8 @@ def validate_parameters(params):
             raise ParameterError("unsupported parameters: %s" % (', '.join(collate)))
 
     if params['volume_config']:
-        validate_sub_dict('volume_config', params['volume_config'])
+        for each_volume_config in params['volume_config']:
+            validate_sub_dict('volume_config', each_volume_config)
 
 
 def fetchAllInUsePhyVolumes(rest_conn, vios_uuid):
@@ -484,7 +503,7 @@ def fetchAllInUsePhyVolumes(rest_conn, vios_uuid):
     return pvid_in_use
 
 
-def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, vios_name=None):
+def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, vios_name=None, pvid_list=None):
     user_choice_vios = None
     user_choice_pvid = None
     vios_response = rest_conn.getVirtualIOServersQuick(system_uuid)
@@ -518,6 +537,11 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
         pvs_in_use += fetchAllInUsePhyVolumes(rest_conn, vios_uuid)
         logger.debug(len(pv_xml_list))
         for each in pv_xml_list:
+
+            # This condition is to avoid picking already picked UDID in case of mutiple volume config
+            if(pvid_list and each.xpath("UniqueDeviceID")[0].text in pvid_list):
+                continue
+
             if volume_size > 0 and int(each.xpath("VolumeCapacity")[0].text) >= volume_size:
                 logger.debug("Vios Name: %s", viosname)
                 logger.debug("Volume Name: %s", each.xpath("VolumeName")[0].text)
@@ -647,6 +671,8 @@ def fetch_fc_config(rest_conn, system_uuid, fc_config_list):
             vios = [vios for vios in vios_list if vios['PartitionName'] == each_fc['vios_name']]
         if not vios:
             raise Error("Requested vios: {0} for npiv is not available".format(each_fc['vios_name']))
+        elif vios[0]['RMCState'] != 'active':
+            raise Error("Requested vios: {0} RMC state is {1} ".format(each_fc['vios_name'], vios[0]['RMCState']))
 
         if each_fc['fc_port'] is not None:
             vios_fcports = rest_conn.vios_fetch_fcports_info(vios[0]['UUID'])
@@ -661,6 +687,31 @@ def fetch_fc_config(rest_conn, system_uuid, fc_config_list):
                 raise Error("Given fc port:{0} is either not NPIV capable or not available".format(each_fc['fc_port']))
 
     return fcports_identified
+
+
+# Validates and fetch virtual network information
+def fetch_virt_networks(rest_conn, system_uuid, virt_nw_config_list, max_slot_no):
+    vnw_response = rest_conn.getVirtualNetworksQuick(system_uuid)
+    virt_nws_identified = []
+    if vnw_response:
+        for ud_nw in virt_nw_config_list:
+            nw_uuid = None
+            virtual_slot_number = None
+            for rr_nw in vnw_response:
+                if ud_nw['network_name'] == rr_nw['NetworkName']:
+                    if 'slot_number' in ud_nw and ud_nw['slot_number']:
+                        virtual_slot_number = int(ud_nw['slot_number'])
+                        if int(ud_nw['slot_number']) > int(max_slot_no):
+                            raise Error("Virtual slot number: {0} is greater than max virtual slots allowed in a partition".format(ud_nw['slot_number']))
+                    nw_uuid = rr_nw['UUID']
+                    nw_dict = {'nw_name': rr_nw['NetworkName'], 'nw_uuid': nw_uuid, 'virtual_slot_number': virtual_slot_number}
+                    virt_nws_identified.append(nw_dict)
+                    break
+            if not nw_uuid:
+                raise Error("Requested Virtual Network: {0} is not available".format(ud_nw['network_name']))
+    else:
+        raise Error("There are no Virtual Networks configured on the managed system")
+    return virt_nws_identified
 
 
 def create_partition(module, params):
@@ -686,9 +737,6 @@ def create_partition(module, params):
     vios_name = None
     temp_template_name = "ansible_powervm_create_{0}".format(str(randint(1000, 9999)))
     temp_copied = False
-    nw_uuid = None
-    virt_network_name = None
-    virtual_slot_number = None
     fcports_config = None
     cli_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(cli_conn)
@@ -747,7 +795,7 @@ def create_partition(module, params):
 
         return True, None, None
 
-    validate_proc_mem(server_dom, int(proc), int(mem))
+    validate_proc_mem(server_dom, int(proc), int(mem), proc_unit)
 
     if params['npiv_config']:
         fcports_config = fetch_fc_config(rest_conn, system_uuid, params['npiv_config'])
@@ -795,30 +843,12 @@ def create_partition(module, params):
             add_physical_io(rest_conn, server_dom, temporary_temp_dom, physical_io)
 
         rest_conn.updateProcMemSettingsToDom(temporary_temp_dom, config_dict)
-        # Virtual Network Configuration settings
+
+        # Add Virtual Networks to partition
         if params['virt_network_config']:
-            if 'network_name' in params['virt_network_config'] and params['virt_network_config']['network_name']:
-                virt_network_name = params['virt_network_config']['network_name']
-            if 'slot_number' in params['virt_network_config'] and params['virt_network_config']['slot_number']:
-                virtual_slot_number = int(params['virt_network_config']['slot_number'])
-                if virtual_slot_number > int(max_virtual_slots):
-                    raise Error("Virtual slot number: {0} is greater than max virtual slots allowed in a partition".format(virtual_slot_number))
+            virt_nw_list = fetch_virt_networks(rest_conn, system_uuid, params['virt_network_config'], max_virtual_slots)
+            rest_conn.updateVirtualNWSettingsToDom(temporary_temp_dom, virt_nw_list)
 
-        if virt_network_name:
-            vnw_response = rest_conn.getVirtualNetworksQuick(system_uuid)
-            if vnw_response:
-                for nw in vnw_response:
-                    nw_name = nw['NetworkName']
-                    if nw_name == virt_network_name:
-                        nw_uuid = nw['UUID']
-                        nw_dict = {'nw_name': nw_name, 'nw_uuid': nw_uuid, 'virtual_slot_number': virtual_slot_number}
-                        rest_conn.updateVirtualNWSettingsToDom(temporary_temp_dom, nw_dict)
-                        break
-                if not nw_uuid:
-                    raise Error("Requested Virtual Network: {0} is not available".format(virt_network_name))
-
-            else:
-                raise Error("There are no Virtual Networks present in the system")
         rest_conn.updatePartitionTemplate(temp_uuid, temporary_temp_dom)
 
         resp = rest_conn.checkPartitionTemplate(temp_template_name, system_uuid)
@@ -834,31 +864,39 @@ def create_partition(module, params):
             rest_conn.updatePartitionTemplate(draft_uuid, draft_template_dom)
 
         # Volume configuration settings
+        pvid_added = []
+        vscsi_clients_payload = ''
         if params['volume_config']:
-            if 'vios_name' in params['volume_config'] and params['volume_config']['vios_name']:
-                vios_name = params['volume_config']['vios_name']
-                vios_response = rest_conn.getVirtualIOServersQuick(system_uuid)
+            for each_vol_config in params['volume_config']:
+                if 'vios_name' in each_vol_config and each_vol_config['vios_name']:
+                    vios_name = each_vol_config['vios_name']
+                    vios_response = rest_conn.getVirtualIOServersQuick(system_uuid)
 
-                if vios_response:
-                    vios_list = json.loads(vios_response)
-                    logger.debug(vios_list)
-                    vios = [vios for vios in vios_list if vios['PartitionName'] == vios_name]
-                    if not vios:
+                    if vios_response:
+                        vios_list = json.loads(vios_response)
+                        logger.debug(vios_list)
+                        vios = [vios for vios in vios_list if vios['PartitionName'] == vios_name]
+                        if not vios:
+                            raise Error("Requested vios: {0} is not available".format(vios_name))
+                    else:
                         raise Error("Requested vios: {0} is not available".format(vios_name))
+
+                    vol_tuple_list = identifyFreeVolume(rest_conn, system_uuid, volume_name=each_vol_config['volume_name'],
+                                                        vios_name=each_vol_config['vios_name'], pvid_list=pvid_added)
                 else:
-                    raise Error("Requested vios: {0} is not available".format(vios_name))
+                    vol_tuple_list = identifyFreeVolume(rest_conn, system_uuid, volume_size=each_vol_config['volume_size'],
+                                                        pvid_list=pvid_added)
 
-                vol_tuple_list = identifyFreeVolume(rest_conn, system_uuid, volume_name=params['volume_config']['volume_name'],
-                                                    vios_name=params['volume_config']['vios_name'])
-            else:
-                vol_tuple_list = identifyFreeVolume(rest_conn, system_uuid, volume_size=params['volume_config']['volume_size'])
+                logger.debug(vol_tuple_list)
+                if vol_tuple_list:
+                    pvid_added.append(vol_tuple_list[0][2].xpath('UniqueDeviceID')[0].text)
+                    vscsi_clients_payload += rest_conn.add_vscsi_payload(vol_tuple_list)
+                else:
+                    module.fail_json(msg="Unable to identify free physical volume")
 
-            logger.debug(vol_tuple_list)
-            if vol_tuple_list:
-                rest_conn.add_vscsi_payload(draft_template_dom, vol_tuple_list)
+            if vscsi_clients_payload:
+                rest_conn.add_vscsi(draft_template_dom, vscsi_clients_payload)
                 rest_conn.updatePartitionTemplate(draft_uuid, draft_template_dom)
-            else:
-                module.fail_json(msg="Unable to identify free physical volume")
 
         resp_dom = rest_conn.deployPartitionTemplate(draft_uuid, system_uuid)
         partition_uuid = resp_dom.xpath("//ParameterName[text()='PartitionUuid']/following-sibling::ParameterValue")[0].text
@@ -1101,6 +1139,7 @@ def partition_details(module, params):
     password = params['hmc_auth']['password']
     system_name = params['system_name']
     vm_name = params['vm_name']
+    advanced_info = params['advanced_info']
 
     try:
         rest_conn = HmcRestClient(hmc_host, hmc_user, password)
@@ -1127,6 +1166,11 @@ def partition_details(module, params):
                     break
         else:
             module.fail_json(msg="There are no Logical Partitions present on the system")
+
+        if lpar_uuid and advanced_info:
+            vfc_adapter_details = rest_conn.getVirtualFiberChannelAdapters(lpar_uuid)
+            partition_prop['VirtualFiberChannelAdapters'] = vfc_adapter_details
+            logger.debug(vfc_adapter_details)
 
         if not lpar_uuid:
             module.fail_json(msg="Given Logical Partition is not present on the system")
@@ -1171,6 +1215,13 @@ def run_module():
                      fc_port=dict(type='str', required=True),
                      wwpn_pair=dict(type='str')
                      )
+    virt_network_args = dict(network_name=dict(type='str', required=True),
+                             slot_number=dict(type='int')
+                             )
+    pv_args = dict(volume_name=dict(type='str'),
+                   vios_name=dict(type='str'),
+                   volume_size=dict(type='int')
+                   )
     # define available arguments/parameters a user can pass to the module
     module_args = dict(
         hmc_host=dict(type='str', required=True),
@@ -1188,18 +1239,13 @@ def run_module():
         proc_unit=dict(type='float'),
         mem=dict(type='int'),
         os_type=dict(type='str', choices=['aix', 'linux', 'aix_linux', 'ibmi']),
-        volume_config=dict(type='dict',
-                           options=dict(
-                               volume_name=dict(type='str'),
-                               vios_name=dict(type='str'),
-                               volume_size=dict(type='int'),
-                           )
+        volume_config=dict(type='list',
+                           elements='dict',
+                           options=pv_args
                            ),
-        virt_network_config=dict(type='dict',
-                                 options=dict(
-                                     network_name=dict(type='str', required=True),
-                                     slot_number=dict(type='int'),
-                                 )
+        virt_network_config=dict(type='list',
+                                 elements='dict',
+                                 options=virt_network_args
                                  ),
         npiv_config=dict(type='list',
                          elements='dict',
@@ -1213,6 +1259,7 @@ def run_module():
         iIPLsource=dict(type='str', choices=['a', 'b', 'c', 'd']),
         retain_vios_cfg=dict(type='bool'),
         delete_vdisks=dict(type='bool'),
+        advanced_info=dict(type='bool'),
         state=dict(type='str',
                    choices=['present', 'absent', 'facts']),
         action=dict(type='str',

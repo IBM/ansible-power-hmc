@@ -1,0 +1,10 @@
+plugins/inventory/powervm_inventory.py pylint:consider-using-f-string
+plugins/module_utils/hmc_cli_client.py pylint:consider-using-f-string
+plugins/module_utils/hmc_exceptions.py pylint:consider-using-f-string
+plugins/module_utils/hmc_rest_client.py pylint:consider-using-f-string
+plugins/modules/powervm_lpar_instance.py pylint:consider-using-f-string
+plugins/modules/power_system.py pylint:consider-using-f-string
+plugins/modules/hmc_update_upgrade.py pylint:consider-using-f-string
+plugins/modules/vios.py pylint:consider-using-f-string
+plugins/modules/powervm_lpar_migration.py pylint:consider-using-f-string
+plugins/module_utils/hmc_resource.py pylint:consider-using-f-string
