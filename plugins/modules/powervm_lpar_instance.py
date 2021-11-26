@@ -538,7 +538,7 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
         logger.debug(len(pv_xml_list))
         for each in pv_xml_list:
 
-            #This condition is to avoid picking already picked UDID in case of mutiple volume config
+            # This condition is to avoid picking already picked UDID in case of mutiple volume config
             if(pvid_list and each.xpath("UniqueDeviceID")[0].text in pvid_list):
                 continue
 
@@ -865,7 +865,7 @@ def create_partition(module, params):
 
         # Volume configuration settings
         pvid_added = []
-        vscsi_clients_payload = '' 
+        vscsi_clients_payload = ''
         if params['volume_config']:
             for each_vol_config in params['volume_config']:
                 if 'vios_name' in each_vol_config and each_vol_config['vios_name']:
