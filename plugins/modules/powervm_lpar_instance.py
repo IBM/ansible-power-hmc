@@ -124,12 +124,12 @@ options:
             volume_name:
                 description:
                     - Physical volume name visible through VIOS.
-                      This option is mutually exclusive with I(volume_size)
+                    - This option is mutually exclusive with I(volume_size)
                 type: str
             vios_name:
                 description:
                     - VIOS name to which mentioned I(volume_name) is present.
-                      This option is mutually exclusive with I(volume_size)
+                    - This option is mutually exclusive with I(volume_size)
                 type: str
             volume_size:
                 description:
@@ -244,9 +244,13 @@ EXAMPLES = '''
       proc_unit: 4
       mem: 20480
       volume_config:
-         vios_name: <viosname>
-         volume_name: <volumename>
-      physical_io: <IO_location_code>
+         - vios_name: <viosname1>
+           volume_name: <volumename1>
+         - vios_name: <viosname2>
+           volume_name: <volumename2>
+      physical_io:
+         - <physicalIO location code>
+         - <physicalio location code>
       max_virtual_slots: 50
       os_type: ibmi
       state: present
@@ -261,7 +265,8 @@ EXAMPLES = '''
       system_name: <system_name>
       vm_name: <vm_name>
       volume_config:
-         volume_size: <disk_size>
+         - volume_size: <disk_size>
+         - volume_size: <disk_size>
       virt_network_config:
          - network_name: <virtual_nw_name>
            slot_number: <client_slot_no>
