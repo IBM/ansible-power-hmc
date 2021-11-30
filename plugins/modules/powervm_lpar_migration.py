@@ -25,7 +25,7 @@ version_added: 1.0.0
 options:
     hmc_host:
         description:
-            - The IP address or hostname of the HMC.
+            - The IP Address or hostname of the HMC.
         required: true
         type: str
     hmc_auth:
@@ -82,7 +82,7 @@ options:
 '''
 
 EXAMPLES = '''
-- name: validate specified vm_name1 and vm_name2 for migration
+- name: Validate that the input partitions can be migrated to the destination
   powervm_lpar_migration:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:

@@ -27,7 +27,7 @@ version_added: 1.0.0
 options:
     hmc_host:
         description:
-            - The IP address or hostname of the HMC.
+            - The IP Address or hostname of the HMC.
         required: true
         type: str
     hmc_auth:
@@ -86,7 +86,7 @@ options:
     location_code:
         description:
             - Network adapter location code to be used while installing VIOS.
-            - If user doesn't provide, it automatically picks the first successful adapter attached to the partition
+            - If user doesn't provide, it automatically picks the first pingable adapter attached to the partition.
             - valid only for C(action) = I(install)
         type: str
     nim_subnetmask:
@@ -132,10 +132,23 @@ EXAMPLES = '''
   vios:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
-         username: '{{ ansible_user }}'
-         password: '{{ hmc_password }}'
+      username: '{{ ansible_user }}'
+      password: '{{ hmc_password }}'
     system_name: <managed_system_name>
     name: <vios_partition_name>
+    state: present
+
+- name: Create VIOS with user defined settings
+  vios:
+    hmc_host: '{{ inventory_hostname }}'
+    hmc_auth:
+      username: '{{ ansible_user }}'
+      password: '{{ hmc_password }}'
+    system_name: <managed_system_name>
+    name: <vios_partition_name>
+    settings:
+      profile_name: <profileName>
+      io_slots: <ioslot1>,<ioslot2>
     state: present
 
 - name: Install VIOS using NIM Server
