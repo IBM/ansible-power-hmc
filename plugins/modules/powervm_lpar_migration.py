@@ -25,7 +25,7 @@ version_added: 1.0.0
 options:
     hmc_host:
         description:
-            - The IPaddress or hostname of the HMC.
+            - The IP Address or hostname of the HMC.
         required: true
         type: str
     hmc_auth:
@@ -51,20 +51,20 @@ options:
     dest_system:
         description:
             - The name of the destination managed system.
-            - valid only for C(validate) and C(migrate) operation
+            - valid only for C(validate) and C(migrate) I(action) operation.
         type: str
     vm_names:
         description:
             - Name of the partition/s to be migrated/validated.
-            - To perform action on multiple partitions, provide comma seperated partition names or in list form
-            - For C(recover) I(action) only one partition name is allowed
+            - To perform action on multiple partitions, provide comma separated partition names or in list form.
+            - For C(recover) I(action) only one partition name is allowed.
         type: list
         elements: str
     vm_ids:
         description:
-            - ID/s of the partition to be  migrated/validated.
-            - To perform action on multiple partitions, provide comma seperated partition ids or in list form
-            - For C(recover) I(action) only one partition id is allowed
+            - ID/s of the partition to be migrated/validated.
+            - To perform action on multiple partitions, provide comma separated partition ids or in list form.
+            - For C(recover) I(action) only one partition id is allowed.
         type: list
         elements: str
     all_vms:
@@ -74,15 +74,15 @@ options:
         type: bool
     action:
         description:
-            - C(validate) validate a specified partition.
-            - C(migrate) migrate a specified partition from I(src_system) to I(dest_system).
-            - C(recover) recover a specified partition .
+            - C(validate) validate a specified partition/s.
+            - C(migrate) migrate a specified partition/s from I(src_system) to I(dest_system).
+            - C(recover) recover a specified partition.
         type: str
         choices: ['validate', 'migrate', 'recover']
 '''
 
 EXAMPLES = '''
-- name: validate specified vm_namemigration
+- name: Validate that the input partitions can be migrated to the destination
   powervm_lpar_migration:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
@@ -95,7 +95,7 @@ EXAMPLES = '''
       - <vm_name2>
     action: validate
 
-- name: recover specifed vm_id
+- name: recover specifed vm_id from migration failure
   powervm_lpar_migration:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:

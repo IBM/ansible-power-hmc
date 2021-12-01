@@ -20,11 +20,14 @@ author:
 short_description: Creation and management of VirtualIOServer partition
 description:
     - "Creates VIOS partition"
+    - "Installs VIOS"
+    - "Displays VIOS information"
+    - "Accepts VIOS License"
 version_added: 1.0.0
 options:
     hmc_host:
         description:
-            - The IPaddress or hostname of the HMC.
+            - The IP Address or hostname of the HMC.
         required: true
         type: str
     hmc_auth:
@@ -49,64 +52,65 @@ options:
         type: str
     name:
         description:
-            - The name of the VirtualIOServer
+            - The name of the VirtualIOServer.
         required: true
         type: str
     settings:
         description:
-            - To configure various supported attributes of VIOS partition
+            - To configure various supported attributes of VIOS partition.
             - Supports all the attributes available for creation of VIOS
               on the mksyscfg command
+            - valid only for C(state) = I(present)
         type: dict
     nim_IP:
         description:
-            - IP Address of the NIM Server
+            - IP Address of the NIM Server.
             - valid only for C(action) = I(install)
         type: str
     nim_gateway:
         description:
-            - VIOS gateway IP Address
+            - VIOS gateway IP Address.
             - valid only for C(action) = I(install)
         type: str
     vios_IP:
         description:
-            - IP Address to be configured to VIOS
+            - IP Address to be configured to VIOS.
             - valid only for C(action) = I(install)
         type: str
     prof_name:
         description:
-            - Profile Name to be used for VIOS install
+            - Profile Name to be used for VIOS install.
             - Default profile name 'default_profile'
             - valid only for C(action) = I(install)
         type: str
     location_code:
         description:
-            - network adapter location code to be used while installing VIOS
-            - If user doesn't pass, it automatically picks the first successfule adapter attached to partition
+            - Network adapter location code to be used while installing VIOS.
+            - If user doesn't provide, it automatically picks the first pingable adapter attached to the partition.
             - valid only for C(action) = I(install)
         type: str
     nim_subnetmask:
         description:
-            - Subnetmask IP Address to be configured to VIOS
+            - Subnetmask IP Address to be configured to VIOS.
             - valid only for C(action) = I(install)
         type: str
     nim_vlan_id:
         description:
-            - Specifies the VLANID(0 to 4094) to use for tagging Ethernet frames during network install for virtual network communication
+            - Specifies the VLANID(0 to 4094) to use for tagging Ethernet frames during network install for virtual network communication.
             - Default value is 0
             - valid only for C(action) = I(install)
         type: str
     nim_vlan_priority:
         description:
-            - Specifies the VLAN priority (0 to 7) to use for tagging Ethernet frames during network install for virtual network communication
+            - Specifies the VLAN priority (0 to 7) to use for tagging Ethernet frames during network install for virtual network communication.
             - Default value is 0
             - valid only for C(action) = I(install)
         type: str
     timeout:
         description:
-            - Max waiting time in mins for VIOS to bootup fully
-            - Min timeout should be more than 10 mins
-            - Default value is 60 min
+            - Max waiting time in mins for VIOS to bootup fully.
+            - Min timeout should be more than 10 mins.
+            - Default value is 60 min.
             - valid only for C(action) = I(install)
         type: int
     state:
@@ -128,10 +132,23 @@ EXAMPLES = '''
   vios:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
-         username: '{{ ansible_user }}'
-         password: '{{ hmc_password }}'
+      username: '{{ ansible_user }}'
+      password: '{{ hmc_password }}'
     system_name: <managed_system_name>
     name: <vios_partition_name>
+    state: present
+
+- name: Create VIOS with user defined settings
+  vios:
+    hmc_host: '{{ inventory_hostname }}'
+    hmc_auth:
+      username: '{{ ansible_user }}'
+      password: '{{ hmc_password }}'
+    system_name: <managed_system_name>
+    name: <vios_partition_name>
+    settings:
+      profile_name: <profileName>
+      io_slots: <ioslot1>,<ioslot2>
     state: present
 
 - name: Install VIOS using NIM Server
@@ -147,6 +164,16 @@ EXAMPLES = '''
     vios_IP: <vios ip>
     nim_subnetmask: <subnetmask>
     action: install
+
+- name: Accept License after VIOS Installation
+  vios:
+    hmc_host: "{{ inventory_hostname }}"
+    hmc_auth:
+         username: '{{ ansible_user }}'
+         password: '{{ hmc_password }}'
+    system_name: <managed_system_name>
+    name: <vios_partition_name>
+    action: accept_license
 
 '''
 
@@ -234,7 +261,7 @@ def checkForVIOSToBootUpFully(hmc, system_name, name, timeoutInMin=60):
         time.sleep(POLL_INTERVAL_IN_SEC)
     if not rmcActive:
         res = hmc.getPartitionRefcode(system_name, name)
-        ref_code = res['refcode']
+        ref_code = res['REFCODE']
     return rmcActive, conf_dict, ref_code
 
 
@@ -355,7 +382,7 @@ def installVios(module, params):
             changed = True
             warn_msg = "VIOS installation has been succefull but RMC didnt come up, please check the HMC firewall and security"
         else:
-            module.fail_json(msg="VIOS Installation failed even after waiting for " + timeout + " mins and the reference code is " + ref_code)
+            module.fail_json(msg="VIOS Installation failed even after waiting for " + str(timeout) + " mins and the reference code is " + ref_code)
     except HmcError as install_error:
         return False, repr(install_error), None
 

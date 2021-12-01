@@ -23,7 +23,7 @@ version_added: 1.0.0
 options:
     hmc_host:
         description:
-            - The IPaddress or hostname of the HMC.
+            - The IP address or hostname of the HMC.
         required: true
         type: str
     hmc_auth:
@@ -54,8 +54,8 @@ options:
 '''
 
 EXAMPLES = '''
-- name: validate specified vm_name migration
-  powervm_lpar_migration:
+- name: Execute a command on HMC
+  hmc_adhoc_command:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
          username: '{{ ansible_user }}'
