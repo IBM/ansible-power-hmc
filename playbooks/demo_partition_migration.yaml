@@ -1,5 +1,5 @@
 ---
-- name: HMC create and activate logical partition
+- name: Logical parttion validation and migration
   hosts: hmcs
   collections:
       - ibm.power_hmc
@@ -13,41 +13,38 @@
           6130373162376464666634363734303164396364656535350a663661636663323434386466383634
           63323432303833643864396130393133346666336661346432356433353035663038643833373332
           3664333762656138640a306539363765343261383363346532643639383938656434333564323139
-          6365
+          6365 
 
   tasks:
-  - name: Create logical partition with mem, shared proc, storage, network config and npiv
-    powervm_lpar_instance:
+  - name: validate partition id 42 and 71 migration
+    powervm_lpar_migration:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth: "{{ curr_hmc_auth }}"
-      system_name: zepp31fp
-      vm_name: test
-      proc: 2
-      proc_unit: 2
-      mem: 2048
-      os_type: aix
-      max_virtual_slots: 50
-      volume_config:
-        - vios_name: zepp31-vios1
-          volume_name: hdisk4
-      virt_network_config:
-        - network_name: VLAN1-ETHERNET0
-          slot_number: 49
-      npiv_config:
-        - vios_name: zepp31-vios1
-          fc_port: fc0
-      state: present
+      src_system: z2534ae
+      dest_system: z2436ae
+      vm_ids:
+        - 42
+        - 71
+      all_vms: true
+      action: validate
     register: testout
 
   - name: Stdout the created logical partition
     debug:
         msg: '{{ testout }}'
 
-  - name: Activate logical partition with default profile and keylock config
-    powervm_lpar_instance:
+  tasks:
+  - name: migrate all  partitions of the cec
+    powervm_lpar_migration:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth: "{{ curr_hmc_auth }}"
-      system_name: zepp31fp
-      vm_name: test
-      keylock: normal
-      action: poweron
+      src_system: z2534ae
+      dest_system: z2436ae
+      all_vms: true
+      action: migrate
+    register: testout1
+
+  - name: Stdout the created logical partition
+    debug:
+        msg: '{{ testout1 }}'
+

@@ -1,0 +1,65 @@
+---
+- name: HMC create and Install VIOS then accept license
+  hosts: hmcs
+  collections:
+      - ibm.power_hmc
+  connection: local
+  vars:
+    curr_hmc_auth:
+      username: hscroot
+      password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          34656335616165343966323739633761653065346138623233633764353636373063313736373563
+          6130373162376464666634363734303164396364656535350a663661636663323434386466383634
+          63323432303833643864396130393133346666336661346432356433353035663038643833373332
+          3664333762656138640a306539363765343261383363346532643639383938656434333564323139
+          6365
+ 
+
+  tasks:
+  - name: Create VIOS user defined profile_name and io_slots
+    vios:
+      hmc_host: '{{ inventory_hostname }}'
+      hmc_auth: "{{ curr_hmc_auth }}"
+      system_name: d131a
+      name: Nov24
+      settings:
+        profile_name: default_profile
+        io_slots: 21010010/none/0,21010018/none/0
+      state: present
+    register: testout
+
+  - name:  Stdout the created VIOS
+    debug:
+        msg: '{{ testout }}'
+
+  - name: Install VIOS through nim server
+    vios:
+      hmc_host: '{{ inventory_hostname }}'
+      hmc_auth: "{{ curr_hmc_auth }}"
+      system_name: d131a
+      name: Nov24
+      nim_IP: 9.3.165.16
+      nim_gateway: 9.3.232.1
+      vios_IP: 9.3.232.18
+      nim_subnetmask: 255.255.254.0
+      timeout: 70
+      action: install
+    register: testout
+
+  - name: Stdout the install VIOS
+    debug:
+        msg: '{{ testout }}'
+
+  - name: Accept VIOS License
+    vios:
+      hmc_host: '{{ inventory_hostname }}'
+      hmc_auth: "{{ curr_hmc_auth }}"
+      system_name: d131a
+      name: Nov24
+      action: accept_license
+    register: testout
+
+  - name: Stdout accept vios license
+    debug:
+       msg: '{{ testout }}'
