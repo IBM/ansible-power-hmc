@@ -11,6 +11,7 @@ import subprocess
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_command_stack import HmcCommandStack
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
 
 import logging
 logger = logging.getLogger(__name__)
@@ -341,3 +342,164 @@ class Hmc():
         chhwresCmd += self.cmdClass.i_a_ConfigBuilder('CHHWRES', '-A', sysConfig)
         logger.debug(chhwresCmd)
         self.hmcconn.execute(chhwresCmd)
+
+    def migratePartitions(self, opr, srcCEC, dstCEC=None, lparNames=None, lparIDs=None, aLL=False):
+        opr = opr.upper()
+        migrlparCmd = self.CMD['MIGRLPAR'] + \
+            self.OPT['MIGRLPAR']['-O'][opr] +\
+            self.OPT['MIGRLPAR']['-M'] + srcCEC
+        if opr != 'R':
+            migrlparCmd += self.OPT['MIGRLPAR']['-T'] + dstCEC
+        if lparNames:
+            migrlparCmd += self.OPT['MIGRLPAR']['-P'] + lparNames
+        elif lparIDs:
+            migrlparCmd += self.OPT['MIGRLPAR']['--ID'] + lparIDs
+        elif aLL:
+            migrlparCmd += self.OPT['MIGRLPAR']['--ALL']
+        self.hmcconn.execute(migrlparCmd)
+
+    def _configMandatoryLparSettings(self, delta_config=None):
+        lparMandatConfig = {'PROFILE_NAME': 'default',
+                            'MIN_MEM': '2048',
+                            'DESIRED_MEM': '2048',
+                            'MAX_MEM': '4096',
+                            'MIN_PROCS': '2',
+                            'DESIRED_PROCS': '2',
+                            'MAX_PROCS': '4',
+                            'BOOT_MODE': 'norm',
+                            'PROC_MODE': 'ded',
+                            'SHARING_MODE': 'keep_idle_procs',
+                            'MAX_VIRTUAL_SLOTS': '20'}
+
+        if delta_config:
+
+            if delta_config.get('all_resources'):
+                lparMandatConfig = {'PROFILE_NAME': delta_config.get('profile_name') or 'default'}
+                for eachKey in delta_config:
+                    lparMandatConfig[eachKey.upper()] = str(delta_config[eachKey])
+                return lparMandatConfig
+
+            lparMandatConfig['MAX_MEM'] = str(delta_config.get('desired_mem') or lparMandatConfig['MAX_MEM'])
+            lparMandatConfig['MAX_PROCS'] = str(delta_config.get('desired_procs') or lparMandatConfig['MAX_PROCS'])
+
+            for eachKey in delta_config:
+                if 'proc_mode' == eachKey and delta_config['proc_mode'] == 'shared':
+                    if 'max_proc_units' not in delta_config:
+                        lparMandatConfig['MAX_PROC_UNITS'] = str(delta_config.get('desired_proc_units') or '1.0')
+                    if 'min_proc_units' not in delta_config:
+                        lparMandatConfig['MIN_PROC_UNITS'] = '0.1'
+                    if 'desired_proc_units' not in delta_config:
+                        lparMandatConfig['DESIRED_PROC_UNITS'] = '0.5'
+                    if 'sharing_mode' not in delta_config:
+                        lparMandatConfig['SHARING_MODE'] = 'cap'
+
+                lparMandatConfig[eachKey.upper()] = str(delta_config[eachKey])
+
+        return lparMandatConfig
+
+    def createVirtualIOServer(self, system_name, name, vios_config=None):
+
+        viosconfig = {'LPAR_ENV': 'vioserver'}
+        viosconfig['NAME'] = name
+        viosconfig.update(self._configMandatoryLparSettings(vios_config))
+
+        invalid_settings_keys = [key for key in viosconfig.keys() if key not in self.OPT['MKSYSCFG']['-I']]
+        if invalid_settings_keys:
+            raise ParameterError("Invalid attributes: {0}".format(','.join(invalid_settings_keys)))
+
+        mksyscfg = self.CMD['MKSYSCFG'] +\
+            self.OPT['MKSYSCFG']['-R']['LPAR'] +\
+            self.OPT['MKSYSCFG']['-M'] + system_name + \
+            self.cmdClass.i_a_ConfigBuilder('MKSYSCFG', '-I', viosconfig)
+
+        self.hmcconn.execute(mksyscfg)
+
+    def getPartitionConfig(self, system_name, name, prof=None):
+        filter_config = dict(LPAR_NAMES=name)
+        lssyscfg = self.CMD['LSSYSCFG'] +\
+            self.OPT['LSSYSCFG']['-R']['LPAR'] +\
+            self.OPT['LSSYSCFG']['-M'] + system_name +\
+            self.cmdClass.filterBuilder("LSSYSCFG", filter_config)
+
+        result = self.hmcconn.execute(lssyscfg)
+        res_dict = self.cmdClass.parseCSV(result)
+        res = dict((k.lower(), v) for k, v in res_dict.items())
+
+        if prof:
+            filter_config['PROFILE_NAMES'] = prof
+            logger.debug(filter_config)
+            lssyscfg_prof = self.CMD['LSSYSCFG'] +\
+                self.OPT['LSSYSCFG']['-R']['PROF'] +\
+                self.OPT['LSSYSCFG']['-M'] + system_name +\
+                self.cmdClass.filterBuilder("LSSYSCFG", filter_config)
+
+            result_prof = self.hmcconn.execute(lssyscfg_prof)
+            res_dict_prof = self.cmdClass.parseCSV(result_prof)
+            res_prof = dict((k.lower(), v) for k, v in res_dict_prof.items())
+            res.update({'profile_config': res_prof})
+
+        return res
+
+    def _parseIODetailsFromNetboot(self, result):
+        lns = result.strip('\n').split('\n')
+        res = []
+        for ln in lns:
+            di = {}
+            if not ln.lstrip().startswith('#'):
+                x = ln.split()
+                di['Type'] = x[0]
+                di['Location Code'] = x[1]
+                di['MAC Address'] = x[2]
+                di['Full Path Name'] = x[3]
+                di['Ping Result'] = x[4]
+                di['Device Type'] = x[5]
+                res.append(di)
+        return res
+
+    def fetchIODetailsForNetboot(self, nimIP, gateway, lparIP, viosName, profName, systemName):
+        lpar_netboot = self.CMD['LPAR_NETBOOT'] +\
+            self.OPT['LPAR_NETBOOT']['-A'] +\
+            self.OPT['LPAR_NETBOOT']['-M'] +\
+            self.OPT['LPAR_NETBOOT']['-D'] +\
+            self.OPT['LPAR_NETBOOT']['-N'] +\
+            self.OPT['LPAR_NETBOOT']['-T'] + "ent" +\
+            self.OPT['LPAR_NETBOOT']['-S'] + nimIP +\
+            self.OPT['LPAR_NETBOOT']['-G'] + gateway +\
+            self.OPT['LPAR_NETBOOT']['-C'] + lparIP +\
+            " " + viosName + " " + profName + " " + systemName
+        result = self.hmcconn.execute(lpar_netboot)
+        return self._parseIODetailsFromNetboot(result)
+
+    def installVIOSFromNIM(self, loc_code, nimIP, gateway, lparIP, vlanID, vlanPrio, submask, viosName, profName, systemName):
+        lpar_netboot = self.CMD['LPAR_NETBOOT'] +\
+            self.OPT['LPAR_NETBOOT']['-F'] +\
+            self.OPT['LPAR_NETBOOT']['-D'] +\
+            self.OPT['LPAR_NETBOOT']['-T'] + "ent" +\
+            self.OPT['LPAR_NETBOOT']['-L'] + loc_code +\
+            self.OPT['LPAR_NETBOOT']['-S'] + nimIP +\
+            self.OPT['LPAR_NETBOOT']['-G'] + gateway +\
+            self.OPT['LPAR_NETBOOT']['-C'] + lparIP +\
+            self.OPT['LPAR_NETBOOT']['-V'] + vlanID +\
+            self.OPT['LPAR_NETBOOT']['-Y'] + vlanPrio +\
+            self.OPT['LPAR_NETBOOT']['-K'] + submask +\
+            " " + viosName + " " + profName + " " + systemName
+        self.hmcconn.execute(lpar_netboot)
+
+    def getPartitionRefcode(self, system_name, name):
+        filter_config = dict(LPAR_NAMES=name)
+        lsrefcode = self.CMD['LSREFCODE'] +\
+            self.OPT['LSREFCODE']['-R']['LPAR'] +\
+            self.OPT['LSREFCODE']['-M'] + system_name +\
+            self.cmdClass.filterBuilder("LSREFCODE", filter_config)
+        result = self.hmcconn.execute(lsrefcode)
+        res_dict = self.cmdClass.parseCSV(result)
+        res = dict((k, v) for k, v in res_dict.items())
+
+        return res
+
+    def runCommandOnVIOS(self, system_name, name, cmd):
+        viosvrcmd = self.CMD['VIOSVRCMD'] +\
+            self.OPT['VIOSVRCMD']['-M'] + system_name +\
+            self.OPT['VIOSVRCMD']['-P'] + name +\
+            self.OPT['VIOSVRCMD']['-C'] + '"' + cmd + '"'
+        self.hmcconn.execute(viosvrcmd)

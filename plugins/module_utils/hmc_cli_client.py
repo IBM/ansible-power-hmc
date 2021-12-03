@@ -40,9 +40,9 @@ class HmcCliConnection:
 
         logger.debug("COMMAND: %s", cmd)
         if self.pwd:
-            ssh_hmc_cmd = "sshpass -p  {0} ssh {1}@{2} {3}".format(self.pwd, self.user, self.ip, cmd)
+            ssh_hmc_cmd = "sshpass -p  {0} ssh {1}@{2} '{3}'".format(self.pwd, self.user, self.ip, cmd)
         else:
-            ssh_hmc_cmd = "ssh {0}@{1} {2}".format(self.user, self.ip, cmd)
+            ssh_hmc_cmd = "ssh {0}@{1} '{2}'".format(self.user, self.ip, cmd)
 
         status_code, stdout, stderr = self.module.run_command(ssh_hmc_cmd, use_unsafe_shell=True)
 
@@ -50,7 +50,13 @@ class HmcCliConnection:
             stderr = stderr.replace("\n", "").replace("\r", "").replace("\\", "")
             stdout = stdout.replace("\r", "").replace("..|", "\n").replace("../", "\n").replace("..-", "\n").replace("\\", "\n").replace("...", "")
             stdout = "".join(list(OrderedDict.fromkeys(stdout.split("\n"))))
-            errMsg = stdout if stdout not in (None, '') else stderr
+            errMsg = None
+            if stdout not in (None, '') and stderr:
+                errMsg = stdout + " ERROR MSG => " + stderr
+            elif stdout not in (None, ''):
+                errMsg = stdout
+            else:
+                errMsg = stderr
             if not errMsg:
                 raise HmcError(resolve_return_code(status_code))
             else:
