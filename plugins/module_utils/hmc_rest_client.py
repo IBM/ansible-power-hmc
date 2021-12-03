@@ -184,6 +184,8 @@ def lookup_physical_io(rest_conn, server_dom, drcname):
             raise Error("Given location code matching with adapters from multiple drawer")
         elif occurence == 0:
             return None
+    elif len(drcname_occurences) == 1:
+        drcname = drcname_occurences[0].text
 
     for each in physical_io_list:
         each_eletree = etree.ElementTree(each)

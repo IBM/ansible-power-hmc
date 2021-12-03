@@ -13,12 +13,12 @@ ANSIBLE_METADATA = {
 
 DOCUMENTATION = '''
 ---
-module: hmc_adhoc_command
+module: hmc_command
 author:
     - Navinakumar Kandakur (@nkandak1)
-short_description: run an adhoc command on HMC
+short_description: Execute HMC command
 description:
-    - "Execute HMC command"
+    - "Executes a command on HMC"
 version_added: 1.0.0
 options:
     hmc_host:
@@ -55,7 +55,7 @@ options:
 
 EXAMPLES = '''
 - name: Execute a command on HMC
-  hmc_adhoc_command:
+  hmc_command:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
          username: '{{ ansible_user }}'

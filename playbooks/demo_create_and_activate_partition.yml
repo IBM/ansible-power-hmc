@@ -28,11 +28,11 @@
       os_type: aix
       max_virtual_slots: 50
       volume_config:
-        vios_name: zepp31-vios1
-        volume_name: hdisk4
+        - vios_name: zepp31-vios1
+          volume_name: hdisk4
       virt_network_config:
-        network_name: VLAN1-ETHERNET0
-        slot_number: 49
+        - network_name: VLAN1-ETHERNET0
+          slot_number: 49
       npiv_config:
         - vios_name: zepp31-vios1
           fc_port: fc0

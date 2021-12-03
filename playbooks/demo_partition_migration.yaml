@@ -1,0 +1,48 @@
+---
+- name: Logical parttion validation and migration
+  hosts: hmcs
+  collections:
+      - ibm.power_hmc
+  connection: local
+  vars:
+    curr_hmc_auth:
+      username: hscroot
+      password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          34656335616165343966323739633761653065346138623233633764353636373063313736373563
+          6130373162376464666634363734303164396364656535350a663661636663323434386466383634
+          63323432303833643864396130393133346666336661346432356433353035663038643833373332
+          3664333762656138640a306539363765343261383363346532643639383938656434333564323139
+          6365 
+
+  tasks:
+  - name: Validate partition IDs 42 and 71 for migration
+    powervm_lpar_migration:
+      hmc_host: '{{ inventory_hostname }}'
+      hmc_auth: "{{ curr_hmc_auth }}"
+      src_system: z2534ae
+      dest_system: z2436ae
+      vm_ids:
+        - 42
+        - 71
+      all_vms: true
+      action: validate
+    register: testout
+
+  - name: Stdout the partition migration validation report
+    debug:
+        msg: '{{ testout }}'
+
+  - name: migrate all  partitions of the cec
+    powervm_lpar_migration:
+      hmc_host: '{{ inventory_hostname }}'
+      hmc_auth: "{{ curr_hmc_auth }}"
+      src_system: z2534ae
+      dest_system: z2436ae
+      all_vms: true
+      action: migrate
+    register: testout1
+
+  - name: Stdout the partition migration report
+    debug:
+        msg: '{{ testout1 }}'
