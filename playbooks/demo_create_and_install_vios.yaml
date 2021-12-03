@@ -17,12 +17,12 @@
  
 
   tasks:
-  - name: Create VIOS user defined profile_name and io_slots
+  - name: Create VIOS with user defined profile_name and io_slots
     vios:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth: "{{ curr_hmc_auth }}"
       system_name: d131a
-      name: Nov24
+      name: demo_vios
       settings:
         profile_name: default_profile
         io_slots: 21010010/none/0,21010018/none/0
@@ -38,7 +38,7 @@
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth: "{{ curr_hmc_auth }}"
       system_name: d131a
-      name: Nov24
+      name: demo_vios
       nim_IP: 9.3.165.16
       nim_gateway: 9.3.232.1
       vios_IP: 9.3.232.18
@@ -47,7 +47,7 @@
       action: install
     register: testout
 
-  - name: Stdout the install VIOS
+  - name: Stdout the VIOS config after install
     debug:
         msg: '{{ testout }}'
 
@@ -60,6 +60,6 @@
       action: accept_license
     register: testout
 
-  - name: Stdout accept vios license
+  - name: Stdout accept license report
     debug:
        msg: '{{ testout }}'
