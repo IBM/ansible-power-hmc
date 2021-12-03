@@ -33,7 +33,6 @@
     debug:
         msg: '{{ testout }}'
 
-  tasks:
   - name: migrate all  partitions of the cec
     powervm_lpar_migration:
       hmc_host: '{{ inventory_hostname }}'
@@ -47,4 +46,3 @@
   - name: Stdout the created logical partition
     debug:
         msg: '{{ testout1 }}'
-
