@@ -128,7 +128,7 @@ options:
 '''
 
 EXAMPLES = '''
-- name: create VIOS with default configuration
+- name: Create VIOS with default configuration
   vios:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
