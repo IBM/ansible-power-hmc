@@ -80,7 +80,7 @@ options:
     prof_name:
         description:
             - Profile Name to be used for VIOS install.
-            - Default profile name 'default_profile'
+            - Default profile name 'default'
             - valid only for C(action) = I(install)
         type: str
     location_code:
@@ -345,7 +345,7 @@ def installVios(module, params):
     nim_IP = params['nim_IP']
     nim_gateway = params['nim_gateway']
     vios_IP = params['vios_IP']
-    prof_name = params['prof_name'] or 'default_profile'
+    prof_name = params['prof_name'] or 'default'
     location_code = params['location_code']
     nim_subnetmask = params['nim_subnetmask']
     nim_vlan_id = params['nim_vlan_id'] or '0'
