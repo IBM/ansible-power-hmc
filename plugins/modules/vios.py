@@ -80,7 +80,7 @@ options:
     prof_name:
         description:
             - Profile Name to be used for VIOS install.
-            - Default profile name 'default'
+            - Default profile name 'default_profile'
             - valid only for C(action) = I(install)
         type: str
     location_code:
@@ -326,8 +326,8 @@ def createVios(module, params):
         hmc.createVirtualIOServer(system_name, name, params['settings'])
 
         if params.get('settings'):
-            # Settings default_profile name to 'default' in case user didnt provide
-            prof_name = params.get('settings').get('profile_name', 'default')
+            # Settings default profile name to 'default_profile' in case user didnt provide
+            prof_name = params.get('settings').get('profile_name', 'default_profile')
 
         lpar_config = hmc.getPartitionConfig(system_name, name, prof_name)
     except HmcError as vios_error:
@@ -345,7 +345,7 @@ def installVios(module, params):
     nim_IP = params['nim_IP']
     nim_gateway = params['nim_gateway']
     vios_IP = params['vios_IP']
-    prof_name = params['prof_name'] or 'default'
+    prof_name = params['prof_name'] or 'default_profile'
     location_code = params['location_code']
     nim_subnetmask = params['nim_subnetmask']
     nim_vlan_id = params['nim_vlan_id'] or '0'
