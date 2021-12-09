@@ -17,7 +17,7 @@ module: vios
 author:
     - Anil Vijayan (@AnilVijayan)
     - Navinakumar Kandakur (@nkandak1)
-short_description: Creation and management of VirtualIOServer partition
+short_description: Creation and management of Virtual I/O Server partition
 description:
     - "Creates VIOS partition"
     - "Installs VIOS"
@@ -181,7 +181,7 @@ RETURN = '''
 vios_info:
     description: Respective VIOS information
     type: dict
-    returned: on success for action C(install)
+    returned: on success for action install
 '''
 
 import logging

@@ -92,7 +92,7 @@ vios
 create and install vios then accept license
 """""""""""""""""""""""""""""""""""""""""""
 
-The following demo illustrates the use case of creating VIOS partition with user provided profilename and ioslots settings and then installing VIOS on newly created VIOS partition from user provided NIM server details, After succeful installation accept the VIOS license.
+The following demo illustrates the use case of creating VIOS partition with user provided profilename and ioslots settings and then installing VIOS on newly created VIOS partition from user provided NIM server details, After successful installation accept the VIOS license.
 
 .. figure:: ../images/demo_create_and_install_vios.gif
    :alt:

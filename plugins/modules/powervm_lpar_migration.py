@@ -16,7 +16,7 @@ DOCUMENTATION = '''
 module: powervm_lpar_migration
 author:
     - Navinakumar Kandakur (@nkandak1)
-short_description: validate, migrate, recover, of the LPAR
+short_description: validate, migrate and recover of the LPAR
 description:
     - "Validate provided LPAR/s for migration"
     - "Migrate provided LPAR/s"
