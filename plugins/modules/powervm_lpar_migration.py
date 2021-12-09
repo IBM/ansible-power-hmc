@@ -16,11 +16,11 @@ DOCUMENTATION = '''
 module: powervm_lpar_migration
 author:
     - Navinakumar Kandakur (@nkandak1)
-short_description: validate, migrate, recover, of the LPAR
+short_description: validate, migrate and recover of the LPAR
 description:
-    - "validate provided LPAR/s for migration"
-    - "migrate provided LPAR/s"
-    - "recover provided LPAR"
+    - "Validate provided LPAR/s for migration"
+    - "Migrate provided LPAR/s"
+    - "Recover provided LPAR"
 version_added: 1.0.0
 options:
     hmc_host:
@@ -95,7 +95,7 @@ EXAMPLES = '''
       - <vm_name2>
     action: validate
 
-- name: recover specifed vm_id from migration failure
+- name: Recover specifed vm_id from migration failure
   powervm_lpar_migration:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
@@ -106,7 +106,7 @@ EXAMPLES = '''
       - <id1>
     action: recover
 
-- name: migrate all partitions of the cec
+- name: Migrate all partitions of the cec
   hmc_managed_system:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:

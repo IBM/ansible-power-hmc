@@ -18,7 +18,9 @@ author:
     - Navinakumar Kandakur (@nkandak1)
 short_description: Execute HMC command
 description:
-    - "Executes a command on HMC"
+    - Generic module that can execute any HMC CLI command
+    - The given command will be executed on all selected HMC
+    - Information about the HMC CLI commands can be found in the https://www.ibm.com/docs/en/power10/7063-CR1?topic=hmc-commands
 version_added: 1.0.0
 options:
     hmc_host:
@@ -46,11 +48,6 @@ options:
             - The command to be executed on HMC.
         required: true
         type: str
-    action:
-        description:
-            - C(run) Runs command on HMC.
-        type: str
-        choices: ['run']
 '''
 
 EXAMPLES = '''
@@ -61,7 +58,6 @@ EXAMPLES = '''
          username: '{{ ansible_user }}'
          password: '{{ hmc_password }}'
     cmd: <cmd>
-    action: run
 '''
 
 RETURN = '''
@@ -111,14 +107,9 @@ def run_hmc_adhoc_command(module, params):
 def perform_task(module):
 
     params = module.params
-    actions = {
-        "run": run_hmc_adhoc_command,
-    }
-    oper = 'action'
-    if params['action'] is None:
-        oper = 'state'
+    actions = run_hmc_adhoc_command
     try:
-        return actions[params[oper]](module, params)
+        return actions(module, params)
     except (HmcError) as error:
         return False, repr(error), None
 
@@ -137,13 +128,10 @@ def run_module():
                       )
                       ),
         cmd=dict(type='str', required=True),
-        action=dict(type='str', choices=['run']),
     )
 
     module = AnsibleModule(
         argument_spec=module_args,
-        required_if=[['action', 'run', ['hmc_host', 'hmc_auth', 'cmd']],
-                     ],
     )
 
     if module._verbosity >= 5:

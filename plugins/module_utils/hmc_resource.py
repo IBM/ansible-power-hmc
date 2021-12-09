@@ -359,7 +359,7 @@ class Hmc():
         self.hmcconn.execute(migrlparCmd)
 
     def _configMandatoryLparSettings(self, delta_config=None):
-        lparMandatConfig = {'PROFILE_NAME': 'default',
+        lparMandatConfig = {'PROFILE_NAME': 'default_profile',
                             'MIN_MEM': '2048',
                             'DESIRED_MEM': '2048',
                             'MAX_MEM': '4096',

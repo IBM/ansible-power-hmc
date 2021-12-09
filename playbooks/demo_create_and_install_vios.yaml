@@ -24,7 +24,7 @@
       system_name: d131a
       name: demo_vios
       settings:
-        profile_name: default_profile
+        profile_name: default
         io_slots: 21010010/none/0,21010018/none/0
       state: present
     register: testout
