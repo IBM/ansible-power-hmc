@@ -7,7 +7,7 @@ namespace: ibm
 name: power_hmc
 
 # The version of the collection. Must be compatible with semantic versioning
-version: 1.3.0
+version: 1.4.0
 
 # The path to the Markdown (.md) readme file. This path is relative to the root of the collection
 readme: README.md
@@ -16,6 +16,7 @@ readme: README.md
 # @nicks:irc/im.site#channel'
 authors:
 - Anil Vijayan (@AnilVijayan)
+- Navinakumar Kandakur (@nkandak1)
 
 
 ### OPTIONAL but strongly recommended
