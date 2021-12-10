@@ -17,7 +17,7 @@ module: vios
 author:
     - Anil Vijayan (@AnilVijayan)
     - Navinakumar Kandakur (@nkandak1)
-short_description: Creation and management of VirtualIOServer partition
+short_description: Creation and management of Virtual I/O Server partition
 description:
     - "Creates VIOS partition"
     - "Installs VIOS"
@@ -128,7 +128,7 @@ options:
 '''
 
 EXAMPLES = '''
-- name: create VIOS with default configuration
+- name: Create VIOS with default configuration
   vios:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
@@ -181,7 +181,7 @@ RETURN = '''
 vios_info:
     description: Respective VIOS information
     type: dict
-    returned: on success for action C(install)
+    returned: on success for action install
 '''
 
 import logging
@@ -326,8 +326,8 @@ def createVios(module, params):
         hmc.createVirtualIOServer(system_name, name, params['settings'])
 
         if params.get('settings'):
-            # Settings default_profile name to 'default' in case user didnt provide
-            prof_name = params.get('settings').get('profile_name', 'default')
+            # Settings default profile name to 'default_profile' in case user didnt provide
+            prof_name = params.get('settings').get('profile_name', 'default_profile')
 
         lpar_config = hmc.getPartitionConfig(system_name, name, prof_name)
     except HmcError as vios_error:

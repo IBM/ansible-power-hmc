@@ -1095,19 +1095,20 @@ class HmcRestClient:
     def getVirtualFiberChannelAdapters(self, partition_uuid):
         raw_vfc = self.getXmlVirtualFiberChannelAdapters(partition_uuid)
         vfcs = []
-        for vfc1 in raw_vfc:
-            vfc_dict = {}
-            vfc = etree.ElementTree(vfc1)
-            vfc_dict['LocationCode'] = vfc.xpath('//LocationCode')[0].text
-            vfc_dict['VirtualSlotNumber'] = vfc.xpath('//VirtualSlotNumber')[0].text
-            wwpn_len = len((vfc.xpath('//WWPNs')[0].text).split(' '))
-            wwpns = []
-            for i in range(wwpn_len):
-                wwpn_dict = {}
-                wwpn_dict['WWPN'] = vfc.xpath('//WWPN')[i].text
-                wwpn_dict['WWPNStatus'] = vfc.xpath('//WWPNStatus')[i].text
-                wwpn_dict['LoggedInBy'] = vfc.xpath('//LoggedInBy')[i].text
-                wwpns.append(wwpn_dict)
-            vfc_dict['WWPNs'] = wwpns
-            vfcs.append(vfc_dict)
+        if raw_vfc:
+            for vfc1 in raw_vfc:
+                vfc_dict = {}
+                vfc = etree.ElementTree(vfc1)
+                vfc_dict['LocationCode'] = vfc.xpath('//LocationCode')[0].text
+                vfc_dict['VirtualSlotNumber'] = vfc.xpath('//VirtualSlotNumber')[0].text
+                wwpn_len = len((vfc.xpath('//WWPNs')[0].text).split(' '))
+                wwpns = []
+                for i in range(wwpn_len):
+                    wwpn_dict = {}
+                    wwpn_dict['WWPN'] = vfc.xpath('//WWPN')[i].text
+                    wwpn_dict['WWPNStatus'] = vfc.xpath('//WWPNStatus')[i].text
+                    wwpn_dict['LoggedInBy'] = vfc.xpath('//LoggedInBy')[i].text
+                    wwpns.append(wwpn_dict)
+                vfc_dict['WWPNs'] = wwpns
+                vfcs.append(vfc_dict)
         return vfcs
