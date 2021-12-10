@@ -19,7 +19,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Plugins" href="../plugins.html" />
+    <link rel="next" title="powervm_lpar_migration – validate, migrate and recover of the LPAR" href="powervm_lpar_migration.html" />
     <link rel="prev" title="power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the Managed system" href="power_system.html" /> 
 </head>
 
@@ -47,6 +47,7 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../modules.html">Modules</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../modules.html#module-reference">Module reference</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="hmc_command.html">hmc_command – Execute HMC command</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hmc_pwdpolicy.html">hmc_pwdpolicy – Manages the list, create, change and remove password policies of the HMC</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hmc_update_upgrade.html">hmc_update_upgrade – Manages the update and upgrade of the HMC</a></li>
 <li class="toctree-l3"><a class="reference internal" href="power_system.html">power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the Managed system</a></li>
@@ -60,6 +61,8 @@
 <li class="toctree-l4"><a class="reference internal" href="#status">Status</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="powervm_lpar_migration.html">powervm_lpar_migration – validate, migrate and recover of the LPAR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vios.html">vios – Creation and management of Virtual I/O Server partition</a></li>
 </ul>
 </li>
 </ul>
@@ -181,20 +184,22 @@
 <p>If this option provided for AIX/Linux type partition, operation gives a warning and then ignores this option and proceed with the operation.</p>
 <p>This option is valid only for <code class="docutils literal notranslate"><span class="pre">poweron</span></code> <em>action</em></p>
 </dd>
-<dt>volume_config (optional, dict, None)</dt><dd><p>Storage volume configurations of a partition.</p>
-<p>Attaches Physical Volume via Virtual SCSI.</p>
+<dt>volume_config (optional, list, None)</dt><dd><p>Storage volume configurations of a partition.</p>
+<p>Attach Physical Volumes via Virtual SCSI.</p>
 <p>Redundant paths created by default, if the specified/identified physical volume is visible in more than one VIOS.</p>
 <p>User needs to provide either <em>volume_size</em> or both <em>volume_name</em> and <em>vios_name</em>. If <em>volume_size</em> is provided, available physical volume matching or greater than specified size would be attached.</p>
-<dl class="simple">
-<dt>volume_name (optional, str, None)</dt><dd><p>Physical volume name visible through VIOS. This option is mutually exclusive with <em>volume_size</em></p>
+<dl>
+<dt>volume_name (optional, str, None)</dt><dd><p>Physical volume name visible through VIOS.</p>
+<p>This option is mutually exclusive with <em>volume_size</em></p>
 </dd>
-<dt>vios_name (optional, str, None)</dt><dd><p>VIOS name to which mentioned <em>volume_name</em> is present. This option is mutually exclusive with <em>volume_size</em></p>
+<dt>vios_name (optional, str, None)</dt><dd><p>VIOS name to which mentioned <em>volume_name</em> is present.</p>
+<p>This option is mutually exclusive with <em>volume_size</em></p>
 </dd>
 <dt>volume_size (optional, int, None)</dt><dd><p>Physical volume size in MB</p>
 </dd>
 </dl>
 </dd>
-<dt>virt_network_config (optional, dict, None)</dt><dd><p>Virtual Network configuration of the partition</p>
+<dt>virt_network_config (optional, list, None)</dt><dd><p>Virtual Network configuration of the partition</p>
 <p>This implicitly adds a Virtual Ethernet Adapter with given virtual network to the partition</p>
 <p>Make sure provided Virtual Network has been attached to an active Network Bridge for external network communication.</p>
 <dl>
@@ -238,6 +243,11 @@
 <dt>delete_vdisks (optional, bool, None)</dt><dd><p>Option to delete the Virtual Disks associated with the partition when deleting the partition.</p>
 <p>Default is to not delete the virtual disks.</p>
 </dd>
+<dt>advanced_info (optional, bool, None)</dt><dd><p>Option to display advanced information of the logical partition.</p>
+<p>Applicable only for <code class="docutils literal notranslate"><span class="pre">facts</span></code> state.</p>
+<p>Default is false.</p>
+<p>Currently we are showing only NPIV storage details.</p>
+</dd>
 <dt>state (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">present</span></code> creates a partition of the specified <em>os_type</em>, <em>vm_name</em>, <em>proc</em> and <em>memory</em> on specified <em>system_name</em>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">absent</span></code> deletes a partition of the specified <em>vm_name</em> on specified <em>system_name</em>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">facts</span></code> fetch the details of the specified <em>vm_name</em> on specified <em>system_name</em>.</p>
@@ -275,9 +285,13 @@
       <span class="nt">proc_unit</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">4</span>
       <span class="nt">mem</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">20480</span>
       <span class="nt">volume_config</span><span class="p">:</span>
-         <span class="nt">vios_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;viosname&gt;</span>
-         <span class="nt">volume_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;volumename&gt;</span>
-      <span class="nt">physical_io</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;IO_location_code&gt;</span>
+         <span class="p p-Indicator">-</span> <span class="nt">vios_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;viosname1&gt;</span>
+           <span class="nt">volume_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;volumename1&gt;</span>
+         <span class="p p-Indicator">-</span> <span class="nt">vios_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;viosname2&gt;</span>
+           <span class="nt">volume_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;volumename2&gt;</span>
+      <span class="nt">physical_io</span><span class="p">:</span>
+         <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">&lt;physicalIO location code&gt;</span>
+         <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">&lt;physicalio location code&gt;</span>
       <span class="nt">max_virtual_slots</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">50</span>
       <span class="nt">os_type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ibmi</span>
       <span class="nt">state</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">present</span>
@@ -292,10 +306,11 @@
       <span class="nt">system_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;system_name&gt;</span>
       <span class="nt">vm_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;vm_name&gt;</span>
       <span class="nt">volume_config</span><span class="p">:</span>
-         <span class="nt">volume_size</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;disk_size&gt;</span>
+         <span class="p p-Indicator">-</span> <span class="nt">volume_size</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;disk_size&gt;</span>
+         <span class="p p-Indicator">-</span> <span class="nt">volume_size</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;disk_size&gt;</span>
       <span class="nt">virt_network_config</span><span class="p">:</span>
-         <span class="nt">network_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;virtual_nw_name&gt;</span>
-         <span class="nt">slot_number</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;client_slot_no&gt;</span>
+         <span class="p p-Indicator">-</span> <span class="nt">network_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;virtual_nw_name&gt;</span>
+           <span class="nt">slot_number</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;client_slot_no&gt;</span>
       <span class="nt">npiv_config</span><span class="p">:</span>
          <span class="p p-Indicator">-</span> <span class="nt">vios_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;viosname&gt;</span>
            <span class="nt">fc_port</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;fc_port_name/loc_code&gt;</span>
@@ -389,7 +404,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="power_system.html" class="btn btn-neutral float-left" title="power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the Managed system" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../plugins.html" class="btn btn-neutral float-right" title="Plugins" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="powervm_lpar_migration.html" class="btn btn-neutral float-right" title="powervm_lpar_migration – validate, migrate and recover of the LPAR" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

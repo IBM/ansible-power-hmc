@@ -1,0 +1,233 @@
+.. _vios_module:
+
+
+vios -- Creation and management of Virtual I/O Server partition
+===============================================================
+
+.. contents::
+   :local:
+   :depth: 1
+
+
+Synopsis
+--------
+
+Creates VIOS partition
+
+Installs VIOS
+
+Displays VIOS information
+
+Accepts VIOS License
+
+
+
+
+
+
+Parameters
+----------
+
+  hmc_host (True, str, None)
+    The IP Address or hostname of the HMC.
+
+
+  hmc_auth (True, dict, None)
+    Username and Password credential of the HMC.
+
+
+    username (True, str, None)
+      Username of the HMC to login.
+
+
+    password (optional, str, None)
+      Password of the HMC.
+
+
+
+  system_name (True, str, None)
+    The name of the managed system.
+
+
+  name (True, str, None)
+    The name of the VirtualIOServer.
+
+
+  settings (optional, dict, None)
+    To configure various supported attributes of VIOS partition.
+
+    Supports all the attributes available for creation of VIOS on the mksyscfg command
+
+    valid only for ``state`` = *present*
+
+
+  nim_IP (optional, str, None)
+    IP Address of the NIM Server.
+
+    valid only for ``action`` = *install*
+
+
+  nim_gateway (optional, str, None)
+    VIOS gateway IP Address.
+
+    valid only for ``action`` = *install*
+
+
+  vios_IP (optional, str, None)
+    IP Address to be configured to VIOS.
+
+    valid only for ``action`` = *install*
+
+
+  prof_name (optional, str, None)
+    Profile Name to be used for VIOS install.
+
+    Default profile name 'default_profile'
+
+    valid only for ``action`` = *install*
+
+
+  location_code (optional, str, None)
+    Network adapter location code to be used while installing VIOS.
+
+    If user doesn't provide, it automatically picks the first pingable adapter attached to the partition.
+
+    valid only for ``action`` = *install*
+
+
+  nim_subnetmask (optional, str, None)
+    Subnetmask IP Address to be configured to VIOS.
+
+    valid only for ``action`` = *install*
+
+
+  nim_vlan_id (optional, str, None)
+    Specifies the VLANID(0 to 4094) to use for tagging Ethernet frames during network install for virtual network communication.
+
+    Default value is 0
+
+    valid only for ``action`` = *install*
+
+
+  nim_vlan_priority (optional, str, None)
+    Specifies the VLAN priority (0 to 7) to use for tagging Ethernet frames during network install for virtual network communication.
+
+    Default value is 0
+
+    valid only for ``action`` = *install*
+
+
+  timeout (optional, int, None)
+    Max waiting time in mins for VIOS to bootup fully.
+
+    Min timeout should be more than 10 mins.
+
+    Default value is 60 min.
+
+    valid only for ``action`` = *install*
+
+
+  state (optional, str, None)
+    ``facts`` fetch details of specified *virtualioserver*
+
+    ``present`` creates VIOS with specified *settings*
+
+
+  action (optional, str, None)
+    ``install`` install VIOS through NIM Server
+
+    ``accept_license`` Accept license after fresh installation of VIOS
+
+
+
+
+
+
+
+
+
+Examples
+--------
+
+.. code-block:: yaml+jinja
+
+    
+    - name: Create VIOS with default configuration
+      vios:
+        hmc_host: "{{ inventory_hostname }}"
+        hmc_auth:
+          username: '{{ ansible_user }}'
+          password: '{{ hmc_password }}'
+        system_name: <managed_system_name>
+        name: <vios_partition_name>
+        state: present
+
+    - name: Create VIOS with user defined settings
+      vios:
+        hmc_host: '{{ inventory_hostname }}'
+        hmc_auth:
+          username: '{{ ansible_user }}'
+          password: '{{ hmc_password }}'
+        system_name: <managed_system_name>
+        name: <vios_partition_name>
+        settings:
+          profile_name: <profileName>
+          io_slots: <ioslot1>,<ioslot2>
+        state: present
+
+    - name: Install VIOS using NIM Server
+      vios:
+        hmc_host: '{{ inventory_hostname }}'
+        hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+        system_name: <managed_system_name>
+        name: <vios name>
+        nim_IP: <NIM Server IP>
+        nim_gateway: <vios gateway ip>
+        vios_IP: <vios ip>
+        nim_subnetmask: <subnetmask>
+        action: install
+
+    - name: Accept License after VIOS Installation
+      vios:
+        hmc_host: "{{ inventory_hostname }}"
+        hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+        system_name: <managed_system_name>
+        name: <vios_partition_name>
+        action: accept_license
+
+
+
+
+Return Values
+-------------
+
+vios_info (on success for action install, dict, )
+  Respective VIOS information
+
+
+
+
+
+Status
+------
+
+
+
+
+- This module is not guaranteed to have a backwards compatible interface. *[preview]*
+
+
+- This module is maintained by community.
+
+
+
+Authors
+~~~~~~~
+
+- Anil Vijayan (@AnilVijayan)
+- Navinakumar Kandakur (@nkandak1)
+

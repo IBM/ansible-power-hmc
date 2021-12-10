@@ -1,0 +1,164 @@
+.. _powervm_lpar_migration_module:
+
+
+powervm_lpar_migration -- validate, migrate and recover of the LPAR
+===================================================================
+
+.. contents::
+   :local:
+   :depth: 1
+
+
+Synopsis
+--------
+
+Validate provided LPAR/s for migration
+
+Migrate provided LPAR/s
+
+Recover provided LPAR
+
+
+
+
+
+
+Parameters
+----------
+
+  hmc_host (True, str, None)
+    The IP Address or hostname of the HMC.
+
+
+  hmc_auth (True, dict, None)
+    Username and Password credential of the HMC.
+
+
+    username (True, str, None)
+      Username of the HMC to login.
+
+
+    password (optional, str, None)
+      Password of the HMC.
+
+
+
+  src_system (True, str, None)
+    The name of the source managed system.
+
+
+  dest_system (optional, str, None)
+    The name of the destination managed system.
+
+    valid only for ``validate`` and ``migrate`` *action* operation.
+
+
+  vm_names (optional, list, None)
+    Name of the partition/s to be migrated/validated.
+
+    To perform action on multiple partitions, provide comma separated partition names or in list form.
+
+    For ``recover`` *action* only one partition name is allowed.
+
+
+  vm_ids (optional, list, None)
+    ID/s of the partition to be migrated/validated.
+
+    To perform action on multiple partitions, provide comma separated partition ids or in list form.
+
+    For ``recover`` *action* only one partition id is allowed.
+
+
+  all_vms (optional, bool, None)
+    All the partitions of the *src_system* to be migrated.
+
+    valid only for ``migrate`` *action*
+
+
+  action (optional, str, None)
+    ``validate`` validate a specified partition/s.
+
+    ``migrate`` migrate a specified partition/s from *src_system* to *dest_system*.
+
+    ``recover`` recover a specified partition.
+
+
+
+
+
+
+
+
+
+Examples
+--------
+
+.. code-block:: yaml+jinja
+
+    
+    - name: Validate that the input partitions can be migrated to the destination
+      powervm_lpar_migration:
+        hmc_host: "{{ inventory_hostname }}"
+        hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+        src_system: <managed_system_name>
+        dest_system: <destination_managed_system>
+        vm_names:
+          - <vm_name1>
+          - <vm_name2>
+        action: validate
+
+    - name: Recover specifed vm_id from migration failure
+      powervm_lpar_migration:
+        hmc_host: "{{ inventory_hostname }}"
+        hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+        src_system: <managed_system_name>
+        vm_ids:
+          - <id1>
+        action: recover
+
+    - name: Migrate all partitions of the cec
+      hmc_managed_system:
+        hmc_host: "{{ inventory_hostname }}"
+        hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+        src_system: <managed_system_name>
+        dest_system: <destination_system_name>
+        all_vms: true
+        action: migrate
+
+
+
+
+Return Values
+-------------
+
+system_info (always, dict, )
+  Respective partition migration information
+
+
+
+
+
+Status
+------
+
+
+
+
+- This module is not guaranteed to have a backwards compatible interface. *[preview]*
+
+
+- This module is maintained by community.
+
+
+
+Authors
+~~~~~~~
+
+- Navinakumar Kandakur (@nkandak1)
+

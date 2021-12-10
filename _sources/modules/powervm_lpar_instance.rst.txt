@@ -115,10 +115,10 @@ Parameters
     This option is valid only for ``poweron`` *action*
 
 
-  volume_config (optional, dict, None)
+  volume_config (optional, list, None)
     Storage volume configurations of a partition.
 
-    Attaches Physical Volume via Virtual SCSI.
+    Attach Physical Volumes via Virtual SCSI.
 
     Redundant paths created by default, if the specified/identified physical volume is visible in more than one VIOS.
 
@@ -126,11 +126,15 @@ Parameters
 
 
     volume_name (optional, str, None)
-      Physical volume name visible through VIOS. This option is mutually exclusive with *volume_size*
+      Physical volume name visible through VIOS.
+
+      This option is mutually exclusive with *volume_size*
 
 
     vios_name (optional, str, None)
-      VIOS name to which mentioned *volume_name* is present. This option is mutually exclusive with *volume_size*
+      VIOS name to which mentioned *volume_name* is present.
+
+      This option is mutually exclusive with *volume_size*
 
 
     volume_size (optional, int, None)
@@ -138,7 +142,7 @@ Parameters
 
 
 
-  virt_network_config (optional, dict, None)
+  virt_network_config (optional, list, None)
     Virtual Network configuration of the partition
 
     This implicitly adds a Virtual Ethernet Adapter with given virtual network to the partition
@@ -220,6 +224,16 @@ Parameters
     Default is to not delete the virtual disks.
 
 
+  advanced_info (optional, bool, None)
+    Option to display advanced information of the logical partition.
+
+    Applicable only for ``facts`` state.
+
+    Default is false.
+
+    Currently we are showing only NPIV storage details.
+
+
   state (optional, str, None)
     ``present`` creates a partition of the specified *os_type*, *vm_name*, *proc* and *memory* on specified *system_name*.
 
@@ -269,9 +283,13 @@ Examples
           proc_unit: 4
           mem: 20480
           volume_config:
-             vios_name: <viosname>
-             volume_name: <volumename>
-          physical_io: <IO_location_code>
+             - vios_name: <viosname1>
+               volume_name: <volumename1>
+             - vios_name: <viosname2>
+               volume_name: <volumename2>
+          physical_io:
+             - <physicalIO location code>
+             - <physicalio location code>
           max_virtual_slots: 50
           os_type: ibmi
           state: present
@@ -286,10 +304,11 @@ Examples
           system_name: <system_name>
           vm_name: <vm_name>
           volume_config:
-             volume_size: <disk_size>
+             - volume_size: <disk_size>
+             - volume_size: <disk_size>
           virt_network_config:
-             network_name: <virtual_nw_name>
-             slot_number: <client_slot_no>
+             - network_name: <virtual_nw_name>
+               slot_number: <client_slot_no>
           npiv_config:
              - vios_name: <viosname>
                fc_port: <fc_port_name/loc_code>
@@ -352,7 +371,6 @@ Examples
           vm_name: <vm_name>
           all_resources: True
           state: present
-
 
 
 

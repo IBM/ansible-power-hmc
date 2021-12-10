@@ -85,3 +85,14 @@ The following demo illustrates the use case of listing down power system details
 
 .. figure:: ../images/demo_poweroff_and_modify_system_settings.gif
    :alt:
+   
+vios
+----
+
+create and install vios then accept license
+"""""""""""""""""""""""""""""""""""""""""""
+
+The following demo illustrates the use case of creating VIOS partition with user provided profilename and ioslots settings and then installing VIOS on newly created VIOS partition from user provided NIM server details, After successful installation accept the VIOS license.
+
+.. figure:: ../images/demo_create_and_install_vios.gif
+   :alt:
