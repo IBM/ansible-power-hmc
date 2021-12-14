@@ -84,3 +84,24 @@ Availability
 
 .. _GitHub v1.3.0:
    https://github.com/IBM/ansible-power-hmc/releases/download/v1.3.0/ibm-power_hmc-1.3.0.tar.gz
+
+
+Version 1.4.0
+-------------
+Notes
+  * powervm_lpar_migration: Live Partition Mobility (partition migration) support
+  * vios: Creation and Installation of VIOS partition
+  * hmc_command: HMC CLI Generic command module
+  * powervm_lpar_instance: Multiple volume and network support during partition create
+  * powervm_lpar_instance: NPIV WWPN info on facts state
+  * Fixes for #46 and #47
+
+Availability
+  * `Galaxy v1.4.0`_
+  * `GitHub v1.4.0`_
+
+.. _Galaxy v1.4.0:
+   https://galaxy.ansible.com/download/ibm-power_hmc-1.4.0.tar.gz
+
+.. _GitHub v1.4.0:
+   https://github.com/IBM/ansible-power-hmc/releases/download/v1.4.0/ibm-power_hmc-1.4.0.tar.gz
