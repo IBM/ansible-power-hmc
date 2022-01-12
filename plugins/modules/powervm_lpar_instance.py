@@ -179,6 +179,16 @@ options:
                     - Both the WWPN value should be separated by semicolon delimiter
                     - Optional, if not provided the value will be auto assigned
                 type: str
+            client_adapter_id:
+                description:
+                    - The client adapter slot number to be configured with FC adapter.
+                    - Optional, if not provided next availble value will be assigned.
+                type: int
+            server_adapter_id:
+                description:
+                    - The Server adapter slot number to be configured with FC adapter.
+                    - Optional, if not provided next availble value will be assigned.
+                type: int
     all_resources:
         description:
             - Creates a partition with all the resources available in the managed system.
@@ -685,6 +695,10 @@ def fetch_fc_config(rest_conn, system_uuid, fc_config_list):
                 port_identified[0].update({'viosname': each_fc['vios_name']})
                 if each_fc['wwpn_pair'] is not None and wwpn_pair_is_valid(each_fc['wwpn_pair']):
                     port_identified[0].update({'wwpn_pair': each_fc['wwpn_pair']})
+                if each_fc['client_adapter_id'] is not None:
+                    port_identified[0].update({'client_adapter_id': str(each_fc['client_adapter_id'])})
+                if each_fc['server_adapter_id'] is not None:
+                    port_identified[0].update({'server_adapter_id': str(each_fc['server_adapter_id'])})
                 fcports_identified.append(port_identified[0])
             else:
                 raise Error("Given fc port:{0} is either not NPIV capable or not available".format(each_fc['fc_port']))
@@ -1171,9 +1185,8 @@ def partition_details(module, params):
             module.fail_json(msg="There are no Logical Partitions present on the system")
 
         if lpar_uuid and advanced_info:
-            vfc_adapter_details = rest_conn.getVirtualFiberChannelAdapters(lpar_uuid)
-            partition_prop['VirtualFiberChannelAdapters'] = vfc_adapter_details
-            logger.debug(vfc_adapter_details)
+            partition_prop['VirtualFiberChannelAdapters'], partition_prop['VirtualSCSIClientAdapters'] = (rest_conn.getPartitionAdvancedDetails
+                                                                                                          (system_uuid, partition_prop['PartitionID']))
 
         if not lpar_uuid:
             module.fail_json(msg="Given Logical Partition is not present on the system")
@@ -1216,7 +1229,9 @@ def run_module():
 
     npiv_args = dict(vios_name=dict(type='str', required=True),
                      fc_port=dict(type='str', required=True),
-                     wwpn_pair=dict(type='str')
+                     wwpn_pair=dict(type='str'),
+                     client_adapter_id=dict(type='int'),
+                     server_adapter_id=dict(type='int')
                      )
     virt_network_args = dict(network_name=dict(type='str', required=True),
                              slot_number=dict(type='int')
