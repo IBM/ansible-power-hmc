@@ -1081,12 +1081,11 @@ class HmcRestClient:
         suspendEnableTag = lpar_template_dom.xpath("//suspendEnable")[0]
         suspendEnableTag.addprevious(etree.XML(virtualFibreChannelClientAdapters))
 
-    def getPartitionAdvancedDetails(self, system_uuid, lpar_id):
+    def fetchFCDetailsFromVIOS(self, system_uuid, lpar_id):
         vfcs = []
-        vscsis = []
         vios_response = self.getVirtualIOServersQuick(system_uuid)
         if vios_response is None:
-            return vfcs, vscsis
+            return vfcs
         vios_list = json.loads(vios_response)
         vios_dict = {vios['PartitionID']: vios['PartitionName'] for vios in vios_list}
 
@@ -1107,6 +1106,16 @@ class HmcRestClient:
                     vfcs.append(vfc_dict)
         except Exception:
             pass
+
+        return vfcs
+
+    def fetchSCSIDetailsFromVIOS(self, system_uuid, lpar_id):
+        vscsis = []
+        vios_response = self.getVirtualIOServersQuick(system_uuid)
+        if vios_response is None:
+            return vscsis
+        vios_list = json.loads(vios_response)
+        vios_dict = {vios['PartitionID']: vios['PartitionName'] for vios in vios_list}
 
         try:
             vios_scsi_xml = xml_strip_namespace(self.getVirtualIOServers(system_uuid, 'ViosSCSIMapping'))
@@ -1136,4 +1145,4 @@ class HmcRestClient:
         except Exception:
             pass
 
-        return vfcs, vscsis
+        return vscsis

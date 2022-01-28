@@ -1185,8 +1185,8 @@ def partition_details(module, params):
             module.fail_json(msg="There are no Logical Partitions present on the system")
 
         if lpar_uuid and advanced_info:
-            partition_prop['VirtualFiberChannelAdapters'], partition_prop['VirtualSCSIClientAdapters'] = (rest_conn.getPartitionAdvancedDetails
-                                                                                                          (system_uuid, partition_prop['PartitionID']))
+            partition_prop['VirtualFiberChannelAdapters'] = rest_conn.fetchFCDetailsFromVIOS(system_uuid, partition_prop['PartitionID'])
+            partition_prop['VirtualSCSIClientAdapters'] = rest_conn.fetchSCSIDetailsFromVIOS(system_uuid, partition_prop['PartitionID'])
 
         if not lpar_uuid:
             module.fail_json(msg="Given Logical Partition is not present on the system")
