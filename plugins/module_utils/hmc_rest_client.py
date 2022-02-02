@@ -565,14 +565,17 @@ class HmcRestClient:
                     <Atom/>
                 </Metadata>
                 <sharedProcessorPoolId kxe="false" kb="CUD">0</sharedProcessorPoolId>
-                <uncappedWeight kxe="false" kb="CUD">128</uncappedWeight>
-                <minProcessingUnits kb="CUD" kxe="false">0.1</minProcessingUnits>
-                <desiredProcessingUnits kxe="false" kb="CUD">{0}</desiredProcessingUnits>
-                <maxProcessingUnits kb="CUD" kxe="false">{0}</maxProcessingUnits>
-                <minVirtualProcessors kb="CUD" kxe="false">1</minVirtualProcessors>
-                <desiredVirtualProcessors kxe="false" kb="CUD">{1}</desiredVirtualProcessors>
-                <maxVirtualProcessors kxe="false" kb="CUD">{1}</maxVirtualProcessors>
-                </sharedProcessorConfiguration>'''.format(config_dict['proc_unit'], config_dict['proc'])
+                <uncappedWeight kxe="false" kb="CUD">{0}</uncappedWeight>
+                <minProcessingUnits kb="CUD" kxe="false">{1}</minProcessingUnits>
+                <desiredProcessingUnits kxe="false" kb="CUD">{2}</desiredProcessingUnits>
+                <maxProcessingUnits kb="CUD" kxe="false">{3}</maxProcessingUnits>
+                <minVirtualProcessors kb="CUD" kxe="false">{4}</minVirtualProcessors>
+                <desiredVirtualProcessors kxe="false" kb="CUD">{5}</desiredVirtualProcessors>
+                <maxVirtualProcessors kxe="false" kb="CUD">{6}</maxVirtualProcessors>
+                </sharedProcessorConfiguration>'''.format(config_dict['weight'], config_dict['min_proc_unit'],
+                                                          config_dict['proc_unit'], config_dict['max_proc_unit'],
+                                                          config_dict['min_proc'], config_dict['proc'],
+                                                          config_dict['max_proc'])
 
             shared_config_tag = template_xml.xpath("//sharedProcessorConfiguration")[0]
             if shared_config_tag:
@@ -585,15 +588,15 @@ class HmcRestClient:
                 dedi_tag.getparent().remove(dedi_tag)
 
             template_xml.xpath("//currHasDedicatedProcessors")[0].text = 'false'
-            template_xml.xpath("//currSharingMode")[0].text = 'uncapped'
+            template_xml.xpath("//currSharingMode")[0].text = config_dict['proc_mode']
         else:
-            template_xml.xpath("//minProcessors")[0].text = '1'
+            template_xml.xpath("//minProcessors")[0].text = config_dict['min_proc']
             template_xml.xpath("//desiredProcessors")[0].text = config_dict['proc']
-            template_xml.xpath("//maxProcessors")[0].text = config_dict['proc']
+            template_xml.xpath("//maxProcessors")[0].text = config_dict['max_proc']
 
-        template_xml.xpath("//currMinMemory")[0].text = config_dict['mem']
+        template_xml.xpath("//currMinMemory")[0].text = config_dict['min_mem']
         template_xml.xpath("//currMemory")[0].text = config_dict['mem']
-        template_xml.xpath("//currMaxMemory")[0].text = config_dict['mem']
+        template_xml.xpath("//currMaxMemory")[0].text = config_dict['max_mem']
 
     def updatePartitionTemplate(self, uuid, template_xml):
         templateUrl = "https://{0}/rest/api/templates/PartitionTemplate/{1}".format(self.hmc_ip, uuid)

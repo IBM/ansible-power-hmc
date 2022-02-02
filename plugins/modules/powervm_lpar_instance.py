@@ -74,14 +74,69 @@ options:
               shared processor setting.
             - Default value is 2. This will not work during shared processor setting.
         type: int
+    max_proc:
+        description:
+            - The maximum number of dedicated processors to create a partition.
+            - If C(proc_unit) parameter is set, then this value will work as max virtual processors for
+              shared processor setting.
+            - Default value is C(proc)
+            - This values should be allways equal or greater than C(proc)
+        type: int
+    min_proc:
+        description:
+            - The minimum number of dedicated processors to create a partition.
+            - If C(proc_unit) parameter is set, then this value will work as min virtual processors for
+              shared processor setting
+            - Default value is 1
+            - This values should be allways equal or less than C(proc)
+        type: int
     proc_unit:
         description:
             - The number of shared processing units to create a partition.
         type: float
+    max_proc_unit:
+        description:
+            - The maximum number of shared processing units to create a partition
+            - This value should be equal or greater than C(proc_unit)
+            - This parameter can be used only with C(proc_unit)
+            - Default value is C(proc_unit)
+        type: float
+    min_proc_unit:
+        description:
+            - The minimum number of shared processing units to create a partition
+            - This value should be equal or less than C(proc_unit)
+            - This parameter can be used only with C(proc_unit)
+            - Default value is 0.1
+        type: float
+    proc_mode:
+        description:
+            - The processor mode to be used create a partition with shared processor
+            - Default value is 'uncapped'
+            - This parameter can be used only with C(proc_unit)
+        type: str
+        choices: ['capped', 'uncapped']
+    weight:
+        description:
+            - The weight to be for uncapped proc mode while  create a partition with shared processor
+            - Default value is '128'
+            - This parameter can be used only with C(proc_mode)
+        type: int
     mem:
         description:
             - The value of dedicated memory value in megabytes to create a partition.
             - Default value is 2048 MB.
+        type: int
+    max_mem:
+        description:
+            - The maximum value of dedicated memory value in megabytes to create a partition.
+            - Default value is 2048 MB.
+            - This parameter can only be used with C(mem)
+        type: int
+    min_mem:
+        description:
+            - The maximum value of dedicated memory value in megabytes to create a partition.
+            - Default value is 1024 MB.
+            - This parameter can only be used with C(mem)
         type: int
     os_type:
         description:
@@ -392,12 +447,23 @@ def init_logger():
         level=logging.DEBUG)
 
 
-def validate_proc_mem(system_dom, proc, mem, proc_unit=None):
+def validate_proc_mem(system_dom, proc, mem, max_proc, min_proc, max_mem, min_mem, weight, min_proc_unit, max_proc_unit, proc_unit=None):
+    if max_proc < min_proc or proc < min_proc or proc > max_proc:
+        raise HmcError("Allocated processor:{0} value should be in-between minimum_processor:{1} and maximum_processor:{2}"
+                       .format(str(proc), str(min_proc), str(max_proc)))
+    if max_mem < min_mem or mem < min_mem or mem > max_mem:
+        raise HmcError("Allocated memory:{0} value should be in-between minimum memory:{1} and  maximum memory:{2}"
+                       .format(str(mem), str(min_mem), str(max_mem)))
     curr_avail_proc_units = system_dom.xpath('//CurrentAvailableSystemProcessorUnits')[0].text
     curr_avail_procs = float(curr_avail_proc_units)
     int_avail_proc = int(float(curr_avail_proc_units))
 
     if proc_unit:
+        if weight not in range(256):
+            raise HmcError("weight value should be in between 0 to 255")
+        if max_proc_unit < min_proc_unit or proc_unit < min_proc_unit or proc_unit > max_proc_unit:
+            raise HmcError("Allocated processor units:{0} value should be in-between minimum processor units:{1} and maximum processor units:{2}"
+                           .format(str(proc_unit), str(min_proc_unit), str(max_proc_unit)))
         min_proc_unit_per_virtproc = system_dom.xpath('//MinimumProcessorUnitsPerVirtualProcessor')[0].text
         if Decimal(str(proc_unit)) % Decimal(min_proc_unit_per_virtproc) != Decimal('0.0'):
             raise HmcError("Input processor units: {0} must be a multiple of {1}".format(proc_unit, min_proc_unit_per_virtproc))
@@ -464,19 +530,23 @@ def validate_parameters(params):
     elif opr == 'poweron':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'volume_config', 'virt_network_config', 'retain_vios_cfg', 'delete_vdisks',
-                           'all_resources', 'max_virtual_slots', 'advanced_info']
+                           'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
+                           'proc_mode', 'weight']
     elif opr == 'absent':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
-                           'all_resources', 'max_virtual_slots', 'advanced_info']
+                           'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
+                           'proc_mode', 'weight']
     elif opr == 'facts':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
-                           'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots']
+                           'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
+                           'proc_mode', 'weight']
     else:
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
-                           'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots', 'advanced_info']
+                           'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc',
+                           'min_proc_unit', 'max_proc_unit', 'proc_mode', 'weight']
 
     collate = []
     for eachMandatory in mandatoryList:
@@ -745,8 +815,16 @@ def create_partition(module, params):
     system_name = params['system_name']
     vm_name = params['vm_name']
     proc = str(params['proc'] or 2)
+    max_proc = str(params['max_proc']) or proc
+    min_proc = str(params['min_proc'] or 1)
+    proc_mode = params['proc_mode'] or 'uncapped'
+    weight = params['weight'] or 128
     mem = str(params['mem'] or 2048)
+    max_mem = str(params['max_mem'] or 2048)
+    min_mem = str(params['min_mem'] or 1024)
     proc_unit = params['proc_unit']
+    max_proc_unit = params['max_proc_unit'] or proc_unit
+    min_proc_unit = params['min_proc_unit'] or 0.1
     os_type = params['os_type']
     all_resources = params['all_resources']
     max_virtual_slots = str(params['max_virtual_slots'] or 20)
@@ -812,7 +890,8 @@ def create_partition(module, params):
 
         return True, None, None
 
-    validate_proc_mem(server_dom, int(proc), int(mem), proc_unit)
+    validate_proc_mem(server_dom, int(proc), int(mem), int(max_proc), int(min_proc), int(max_mem),
+                      int(min_mem), weight, min_proc_unit, max_proc_unit, proc_unit)
 
     if params['npiv_config']:
         fcports_config = fetch_fc_config(rest_conn, system_uuid, params['npiv_config'])
@@ -845,9 +924,17 @@ def create_partition(module, params):
             config_dict['lpar_id'] = str(next_lpar_id)
         config_dict['vm_name'] = vm_name
         config_dict['proc'] = proc
+        config_dict['max_proc'] = max_proc
+        config_dict['min_proc'] = min_proc
         config_dict['proc_unit'] = str(proc_unit) if proc_unit else None
+        config_dict['max_proc_unit'] = str(max_proc_unit)
+        config_dict['min_proc_unit'] = str(min_proc_unit)
         config_dict['mem'] = mem
+        config_dict['max_mem'] = max_mem
+        config_dict['min_mem'] = min_mem
         config_dict['max_virtual_slots'] = max_virtual_slots
+        config_dict['proc_mode'] = proc_mode
+        config_dict['weight'] = str(weight) if proc_mode == 'uncapped' else str(0)
 
         # Tagged IO
         if os_type == 'ibmi':
@@ -1254,8 +1341,17 @@ def run_module():
         system_name=dict(type='str', required=True),
         vm_name=dict(type='str', required=True),
         proc=dict(type='int'),
+        max_proc=dict(type='int'),
+        min_proc=dict(type='int'),
         proc_unit=dict(type='float'),
+        max_proc_unit=dict(type='float'),
+        min_proc_unit=dict(type='float'),
+        proc_mode=dict(type='str', choices=['capped', 'uncapped']),
+        weight=dict(type='int'),
         mem=dict(type='int'),
+        max_mem=dict(type='int'),
+        min_mem=dict(type='int'),
+        proc_compatibility_mode=dict(type='str'),
         os_type=dict(type='str', choices=['aix', 'linux', 'aix_linux', 'ibmi']),
         volume_config=dict(type='list',
                            elements='dict',
@@ -1293,10 +1389,18 @@ def run_module():
                      ['state', 'present', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']],
                      ['action', 'shutdown', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
                      ['action', 'poweron', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
-                     ['action', 'restart', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']]
+                     ['action', 'restart', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
                      ],
         required_by=dict(
             proc_unit=('proc', ),
+            max_proc=('proc', ),
+            min_proc=('proc', ),
+            max_mem=('mem', ),
+            min_mem=('mem', ),
+            proc_mode=('proc_unit', ),
+            weight=('proc_mode', ),
+            max_proc_unit=('proc_unit', ),
+            min_proc_unit=('proc_unit', ),
         ),
     )
 
