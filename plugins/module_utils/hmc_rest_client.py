@@ -597,6 +597,8 @@ class HmcRestClient:
         template_xml.xpath("//currMinMemory")[0].text = config_dict['min_mem']
         template_xml.xpath("//currMemory")[0].text = config_dict['mem']
         template_xml.xpath("//currMaxMemory")[0].text = config_dict['max_mem']
+        if config_dict['proc_comp_mode']:
+            template_xml.xpath("//currProcessorCompatibilityMode")[0].text = config_dict['proc_comp_mode']
 
     def updatePartitionTemplate(self, uuid, template_xml):
         templateUrl = "https://{0}/rest/api/templates/PartitionTemplate/{1}".format(self.hmc_ip, uuid)

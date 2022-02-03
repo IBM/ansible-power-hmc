@@ -121,6 +121,10 @@ options:
             - Default value is '128'
             - This parameter can be used only with C(proc_mode)
         type: int
+    proc_compatibility_mode:
+        description:
+            - The processor compatibility mode to be configured while creating a partition
+        type: str
     mem:
         description:
             - The value of dedicated memory value in megabytes to create a partition.
@@ -471,14 +475,18 @@ def validate_proc_mem(system_dom, proc, mem, max_proc, min_proc, max_mem, min_me
             raise HmcError("{0} Available system proc units is not enough for {1} shared CPUs. Provide value on or below {0}"
                            .format(str(curr_avail_procs), str(proc_unit)))
     else:
-        if proc > curr_avail_procs:
+        if max_proc > curr_avail_procs:
             raise HmcError("{2} Available system proc units is not enough for {1} dedicated CPUs. Provide value on or below {0} CPUs"
-                           .format(str(int_avail_proc), str(proc), str(curr_avail_procs)))
+                           .format(str(int_avail_proc), str(max_proc), str(curr_avail_procs)))
 
     curr_avail_mem = system_dom.xpath('//CurrentAvailableSystemMemory')[0].text
     int_avail_mem = int(curr_avail_mem)
     curr_avail_lmb = system_dom.xpath('//CurrentLogicalMemoryBlockSize')[0].text
     lmb = int(curr_avail_lmb)
+
+    if max_mem < min_mem or mem < min_mem or mem > max_mem:
+        raise HmcError("Allocated Memory:{0} value should be in-between minimum_memory:{1} and maximum_memory:{2}"
+                       .format(str(mem), str(min_mem), str(max_mem)))
 
     if mem % lmb > 0:
         raise HmcError("Requested mem value not in mutiple of block size:{0}".format(curr_avail_lmb))
@@ -531,22 +539,22 @@ def validate_parameters(params):
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'volume_config', 'virt_network_config', 'retain_vios_cfg', 'delete_vdisks',
                            'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
-                           'proc_mode', 'weight']
+                           'proc_mode', 'weight', 'proc_compatibility_mode']
     elif opr == 'absent':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
-                           'proc_mode', 'weight']
+                           'proc_mode', 'weight', 'proc_compatibility_mode']
     elif opr == 'facts':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
-                           'proc_mode', 'weight']
+                           'proc_mode', 'weight', 'proc_compatibility_mode']
     else:
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc',
-                           'min_proc_unit', 'max_proc_unit', 'proc_mode', 'weight']
+                           'min_proc_unit', 'max_proc_unit', 'proc_mode', 'weight', 'proc_compatibility_mode']
 
     collate = []
     for eachMandatory in mandatoryList:
@@ -815,12 +823,12 @@ def create_partition(module, params):
     system_name = params['system_name']
     vm_name = params['vm_name']
     proc = str(params['proc'] or 2)
-    max_proc = str(params['max_proc']) or proc
+    max_proc = str(params['max_proc'] or params['proc'])
     min_proc = str(params['min_proc'] or 1)
     proc_mode = params['proc_mode'] or 'uncapped'
     weight = params['weight'] or 128
     mem = str(params['mem'] or 2048)
-    max_mem = str(params['max_mem'] or 2048)
+    max_mem = str(params['max_mem'] or params['mem'])
     min_mem = str(params['min_mem'] or 1024)
     proc_unit = params['proc_unit']
     max_proc_unit = params['max_proc_unit'] or proc_unit
@@ -829,6 +837,7 @@ def create_partition(module, params):
     all_resources = params['all_resources']
     max_virtual_slots = str(params['max_virtual_slots'] or 20)
     physical_io = params['physical_io']
+    proc_compatibility_mode = params['proc_compatibility_mode']
     vios_name = None
     temp_template_name = "ansible_powervm_create_{0}".format(str(randint(1000, 9999)))
     temp_copied = False
@@ -892,6 +901,12 @@ def create_partition(module, params):
 
     validate_proc_mem(server_dom, int(proc), int(mem), int(max_proc), int(min_proc), int(max_mem),
                       int(min_mem), weight, min_proc_unit, max_proc_unit, proc_unit)
+    if proc_compatibility_mode:
+        sys_details = hmc.getManagedSystemDetails(system_name)
+        supp_compat_modes = (sys_details['lpar_proc_compat_modes']).split(',')
+        supp_compat_modes = [modes.replace('+', '_plus') for modes in supp_compat_modes]
+        if proc_compatibility_mode not in supp_compat_modes:
+            raise HmcError("unsupported proc_compat_mode:{0}, Supported proc_compat_modes are {1}".format(proc_compatibility_mode, supp_compat_modes))
 
     if params['npiv_config']:
         fcports_config = fetch_fc_config(rest_conn, system_uuid, params['npiv_config'])
@@ -935,6 +950,7 @@ def create_partition(module, params):
         config_dict['max_virtual_slots'] = max_virtual_slots
         config_dict['proc_mode'] = proc_mode
         config_dict['weight'] = str(weight) if proc_mode == 'uncapped' else str(0)
+        config_dict['proc_comp_mode'] = proc_compatibility_mode
 
         # Tagged IO
         if os_type == 'ibmi':
