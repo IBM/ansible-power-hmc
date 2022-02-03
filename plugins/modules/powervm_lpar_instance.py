@@ -823,12 +823,12 @@ def create_partition(module, params):
     system_name = params['system_name']
     vm_name = params['vm_name']
     proc = str(params['proc'] or 2)
-    max_proc = str(params['max_proc'] or params['proc'])
+    max_proc = str(params['max_proc'] or proc)
     min_proc = str(params['min_proc'] or 1)
     proc_mode = params['proc_mode'] or 'uncapped'
     weight = params['weight'] or 128
     mem = str(params['mem'] or 2048)
-    max_mem = str(params['max_mem'] or params['mem'])
+    max_mem = str(params['max_mem'] or mem)
     min_mem = str(params['min_mem'] or 1024)
     proc_unit = params['proc_unit']
     max_proc_unit = params['max_proc_unit'] or proc_unit
