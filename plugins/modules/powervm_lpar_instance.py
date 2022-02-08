@@ -903,7 +903,7 @@ def create_partition(module, params):
                       int(min_mem), weight, min_proc_unit, max_proc_unit, proc_unit)
     if proc_compatibility_mode:
         supp_compat_modes = server_dom.xpath("//SupportedPartitionProcessorCompatibilityModes")
-        supp_compat_modes = [scm.text if scm.text != 'default' else 'Default' for scm in supp_compat_modes]
+        supp_compat_modes = [scm.text.replace('Plus', 'plus') if scm.text != 'default' else 'Default' for scm in supp_compat_modes]
         if proc_compatibility_mode not in supp_compat_modes:
             raise HmcError("unsupported proc_compat_mode:{0}, Supported proc_compat_modes are {1}".format(proc_compatibility_mode, supp_compat_modes))
 
