@@ -902,9 +902,8 @@ def create_partition(module, params):
     validate_proc_mem(server_dom, int(proc), int(mem), int(max_proc), int(min_proc), int(max_mem),
                       int(min_mem), weight, min_proc_unit, max_proc_unit, proc_unit)
     if proc_compatibility_mode:
-        sys_details = hmc.getManagedSystemDetails(system_name)
-        supp_compat_modes = (sys_details['lpar_proc_compat_modes']).split(',')
-        supp_compat_modes = [modes.replace('+', '_plus') for modes in supp_compat_modes]
+        supp_compat_modes = server_dom.xpath("//SupportedPartitionProcessorCompatibilityModes")
+        supp_compat_modes = [scm.text if scm.text != 'default' else 'Default' for scm in supp_compat_modes]
         if proc_compatibility_mode not in supp_compat_modes:
             raise HmcError("unsupported proc_compat_mode:{0}, Supported proc_compat_modes are {1}".format(proc_compatibility_mode, supp_compat_modes))
 
