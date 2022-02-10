@@ -119,6 +119,7 @@ options:
         description:
             - The weight to be for uncapped proc mode while  create a partition with shared processor
             - Default value is '128'
+            - This value will be ignored if the C(proc_mode) is set to I(capped)
             - This parameter can be used only with C(proc_mode)
         type: int
     proc_compatibility_mode:
