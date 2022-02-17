@@ -453,10 +453,10 @@ def init_logger():
 
 
 def validate_proc_mem(system_dom, proc, mem, max_proc, min_proc, max_mem, min_mem, weight, min_proc_unit, max_proc_unit, proc_unit=None):
-    if max_proc < min_proc or proc < min_proc or proc > max_proc:
+    if not (min_proc <= proc <= max_proc):
         raise HmcError("Allocated processor:{0} value should be in-between minimum_processor:{1} and maximum_processor:{2}"
                        .format(str(proc), str(min_proc), str(max_proc)))
-    if max_mem < min_mem or mem < min_mem or mem > max_mem:
+    if not (min_mem <= mem <= max_mem):
         raise HmcError("Allocated memory:{0} value should be in-between minimum memory:{1} and  maximum memory:{2}"
                        .format(str(mem), str(min_mem), str(max_mem)))
     curr_avail_proc_units = system_dom.xpath('//CurrentAvailableSystemProcessorUnits')[0].text
@@ -466,7 +466,7 @@ def validate_proc_mem(system_dom, proc, mem, max_proc, min_proc, max_mem, min_me
     if proc_unit:
         if weight not in range(256):
             raise HmcError("weight value should be in between 0 to 255")
-        if max_proc_unit < min_proc_unit or proc_unit < min_proc_unit or proc_unit > max_proc_unit:
+        if not (min_proc_unit <= proc_unit <= max_proc_unit):
             raise HmcError("Allocated processor units:{0} value should be in-between minimum processor units:{1} and maximum processor units:{2}"
                            .format(str(proc_unit), str(min_proc_unit), str(max_proc_unit)))
         min_proc_unit_per_virtproc = system_dom.xpath('//MinimumProcessorUnitsPerVirtualProcessor')[0].text
@@ -831,9 +831,9 @@ def create_partition(module, params):
     mem = str(params['mem'] or 2048)
     max_mem = str(params['max_mem'] or mem)
     min_mem = str(params['min_mem'] or 1024)
-    proc_unit = params['proc_unit']
-    max_proc_unit = params['max_proc_unit'] or proc_unit
-    min_proc_unit = params['min_proc_unit'] or 0.1
+    proc_unit = round(params['proc_unit'], 2) if params['proc_unit'] else None
+    max_proc_unit = round(params['max_proc_unit'], 2) if params['max_proc_unit'] else proc_unit
+    min_proc_unit = round(params['min_proc_unit'] or 0.1, 2)
     os_type = params['os_type']
     all_resources = params['all_resources']
     max_virtual_slots = str(params['max_virtual_slots'] or 20)
