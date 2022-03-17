@@ -266,16 +266,13 @@ def make_hmc_authentication(module, params):
     hmc = Hmc(hmc_conn)
 
     try:
-        hmc.authenticateHMCs(remote_ip,test=True)
-        #hmc.authenticateHMCs(remote_ip, username=remote_username, passwd=remote_passwd, test=False)
-    except HmcError as on_system_error:
+        hmc.authenticateHMCs(remote_ip, test=True)
+    except HmcError:
         try:
             hmc.authenticateHMCs(remote_ip, username=remote_username, passwd=remote_passwd, test=False)
             changed = True
-        except:
+        except HmcError as on_system_error:
             return changed, repr(on_system_error), None
-        #return changed, repr(on_system_error), None
-
     return changed, None, None
 
 

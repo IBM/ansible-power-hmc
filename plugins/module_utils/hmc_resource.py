@@ -515,7 +515,7 @@ class Hmc():
             mkauthcmd += self.OPT['MKAUTHKEYS']['--TEST']
         else:
             mkauthcmd += self.OPT['MKAUTHKEYS']['-G'] +\
-            self.OPT['MKAUTHKEYS']['--IP'] + remote_hmc +\
-            self.OPT['MKAUTHKEYS']['-U'] + username +\
-            self.OPT['MKAUTHKEYS']['--PASSWD'] + passwd
+                self.OPT['MKAUTHKEYS']['--IP'] + remote_hmc +\
+                self.OPT['MKAUTHKEYS']['-U'] + username +\
+                self.OPT['MKAUTHKEYS']['--PASSWD'] + passwd
         self.hmcconn.execute(mkauthcmd)
