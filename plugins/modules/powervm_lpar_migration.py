@@ -46,7 +46,6 @@ options:
     src_system:
         description:
             - The name of the source managed system.
-        required: true
         type: str
     dest_system:
         description:
@@ -75,26 +74,31 @@ options:
     remote_ip:
         description:
             - IP Address of the destination managed system containing HMC
-            - This option is mandatory for C(auth) I(action) and optional for other I(action)
+            - This option is mandatory for C(authenticate) I(action) and optional for other I(action)
         type: str
     remote_username:
         description:
             - Username of the destination managed system containing HMC
-            - This option can be used only with C(auth) I(action)
+            - This option can be used only with C(authenticate) I(action)
         type: str
     remote_passwd:
         description:
             - Password of the destination managed system containing HMC
-            - This option can be used only with C(auth) I(action)
+            - This option can be used only with C(authenticate) I(action)
         type: str
+    wait:
+        description:
+            - The maximum time, in minutes, to wait for operation to complete
+            - This option can be used only with C(migrate) and C(validate) I(action)
+        type: int
     action:
         description:
             - C(validate) validate a specified partition/s.
             - C(migrate) migrate a specified partition/s from I(src_system) to I(dest_system).
             - C(recover) recover a specified partition.
-            - C(auth) make authentication between source and destination HMCs
+            - C(authenticate) make authentication between source and destination HMCs
         type: str
-        choices: ['validate', 'migrate', 'recover', 'auth']
+        choices: ['validate', 'migrate', 'recover', 'authenticate']
 '''
 
 EXAMPLES = '''
@@ -143,7 +147,7 @@ EXAMPLES = '''
     remote_ip: <IP Address of the remote HMC>
     remote_username: <Username of the remote HMC>
     remote_passwd: <Password of the remote HMC>
-    action: auth
+    action: authenticate
 '''
 
 RETURN = '''
@@ -176,13 +180,13 @@ def validate_parameters(params):
 
     if opr == 'recover':
         mandatoryList = ['hmc_host', 'hmc_auth', 'src_system']
-        unsupportedList = ['dest_system', 'all_vms']
+        unsupportedList = ['dest_system', 'all_vms', 'wait']
     elif opr == 'validate':
         mandatoryList = ['hmc_host', 'hmc_auth', 'src_system', 'dest_system']
         unsupportedList = ['all_vms']
-    elif opr == 'auth':
+    elif opr == 'authenticate':
         mandatoryList = ['hmc_host', 'hmc_auth', 'remote_ip', 'remote_username', 'remote_passwd']
-        unsupportedList = ['all_vms', 'src_system', 'dest_system', 'vm_names', 'vm_ids']
+        unsupportedList = ['all_vms', 'src_system', 'dest_system', 'vm_names', 'vm_ids', 'wait']
     elif opr == 'migrate':
         mandatoryList = ['hmc_host', 'hmc_auth', 'src_system', 'dest_system']
         unsupportedList = []
@@ -219,6 +223,7 @@ def logical_partition_migration(module, params):
     vm_ids = params['vm_ids']
     all_vms = params['all_vms']
     remote_ip = params['remote_ip']
+    wait = params['wait']
     operation = params['action']
     validate_parameters(params)
     changed = False
@@ -230,13 +235,13 @@ def logical_partition_migration(module, params):
         if vm_names:
             if operation == 'recover' and len(vm_names) > 1:
                 module.fail_json(msg="Please provide only one partition name for recover operation")
-            hmc.migratePartitions(operation[0], src_system, dest_system, lparNames=",".join(vm_names), lparIDs=None, aLL=False, ip=remote_ip)
+            hmc.migratePartitions(operation[0], src_system, dest_system, lparNames=",".join(vm_names), lparIDs=None, aLL=False, ip=remote_ip, wait=wait)
         elif vm_ids:
             if operation == 'recover' and len(vm_ids) > 1:
                 module.fail_json(msg="Please provide only one partition id for recover operation")
-            hmc.migratePartitions(operation[0], src_system, dest_system, lparNames=None, lparIDs=",".join(vm_ids), aLL=False, ip=remote_ip)
+            hmc.migratePartitions(operation[0], src_system, dest_system, lparNames=None, lparIDs=",".join(vm_ids), aLL=False, ip=remote_ip, wait=wait)
         elif all_vms:
-            hmc.migratePartitions(operation[0], src_system, dest_system, lparNames=None, lparIDs=None, aLL=True, ip=remote_ip)
+            hmc.migratePartitions(operation[0], src_system, dest_system, lparNames=None, lparIDs=None, aLL=True, ip=remote_ip, wait=wait)
         else:
             module.fail_json(msg="Please provide one of the lpar details vm_names, vm_ids, all_vms")
         if operation != 'validate':
@@ -261,9 +266,15 @@ def make_hmc_authentication(module, params):
     hmc = Hmc(hmc_conn)
 
     try:
-        hmc.authenticateHMCs(remote_ip, remote_username, remote_passwd)
+        hmc.authenticateHMCs(remote_ip,test=True)
+        #hmc.authenticateHMCs(remote_ip, username=remote_username, passwd=remote_passwd, test=False)
     except HmcError as on_system_error:
-        return changed, repr(on_system_error), None
+        try:
+            hmc.authenticateHMCs(remote_ip, username=remote_username, passwd=remote_passwd, test=False)
+            changed = True
+        except:
+            return changed, repr(on_system_error), None
+        #return changed, repr(on_system_error), None
 
     return changed, None, None
 
@@ -275,7 +286,7 @@ def perform_task(module):
         "migrate": logical_partition_migration,
         "validate": logical_partition_migration,
         "recover": logical_partition_migration,
-        "auth": make_hmc_authentication,
+        "authenticate": make_hmc_authentication,
     }
     oper = 'action'
     if params['action'] is None:
@@ -307,7 +318,8 @@ def run_module():
         remote_ip=dict(type='str'),
         remote_username=dict(type='str'),
         remote_passwd=dict(type='str', no_log=True),
-        action=dict(type='str', choices=['validate', 'migrate', 'recover', 'auth']),
+        wait=dict(type='int'),
+        action=dict(type='str', choices=['validate', 'migrate', 'recover', 'authenticate']),
     )
 
     module = AnsibleModule(
@@ -316,7 +328,7 @@ def run_module():
         required_if=[['action', 'validate', ['hmc_host', 'hmc_auth', 'src_system', 'dest_system']],
                      ['action', 'migrate', ['hmc_host', 'hmc_auth', 'src_system', 'dest_system']],
                      ['action', 'recover', ['hmc_host', 'hmc_auth', 'src_system']],
-                     ['action', 'auth', ['hmc_host', 'hmc_auth', 'remote_ip', 'remote_username', 'remote_passwd']]
+                     ['action', 'authenticate', ['hmc_host', 'hmc_auth', 'remote_ip', 'remote_username', 'remote_passwd']]
                      ],
     )
 

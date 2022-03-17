@@ -291,7 +291,8 @@ class HmcCommandStack():
                                 '-P': ' -p ',
                                 '--IP': ' --ip ',
                                 '--ALL': ' --all',
-                                '--ID': ' --id '},
+                                '--ID': ' --id ',
+                                '-W': ' -w '},
                    'LPAR_NETBOOT': {'-A': ' -A',
                                     '-M': ' -M',
                                     '-D': ' -D',
@@ -315,7 +316,8 @@ class HmcCommandStack():
                    'MKAUTHKEYS': {'-G': ' -g ',
                                   '--IP': ' --ip ',
                                   '-U': ' -u ',
-                                  '--PASSWD': ' --passwd '}
+                                  '--PASSWD': ' --passwd ',
+                                  '--TEST': ' --test'}
                    }
 
     def filterBuilder(self, cmdKey, configOptionsDict):
