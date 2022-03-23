@@ -21,6 +21,7 @@ description:
     - "Validate provided LPAR/s for migration"
     - "Migrate provided LPAR/s"
     - "Recover provided LPAR"
+    - "Authenticate HMCs"
 version_added: 1.0.0
 options:
     hmc_host:
