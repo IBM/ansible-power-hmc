@@ -101,6 +101,7 @@ options:
             - C(recover) recover a specified partition.
             - C(authenticate) make authentication between source and destination HMCs
         type: str
+        required: true
         choices: ['validate', 'migrate', 'recover', 'authenticate']
 '''
 
