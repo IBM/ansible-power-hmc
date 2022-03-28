@@ -324,7 +324,7 @@ def run_module():
         remote_username=dict(type='str'),
         remote_passwd=dict(type='str', no_log=True),
         wait=dict(type='int'),
-        action=dict(type='str', choices=['validate', 'migrate', 'recover', 'authenticate']),
+        action=dict(type='str', choices=['validate', 'migrate', 'recover', 'authenticate'], required=True),
     )
 
     module = AnsibleModule(
