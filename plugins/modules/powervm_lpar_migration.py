@@ -74,17 +74,19 @@ options:
         type: bool
     remote_ip:
         description:
-            - IP Address of the destination managed system containing HMC
+            - If the destination managed system is not managed by the same management console
+              that is managing the source managed system, then use this option to specify the IP address
+              or host name of the management console that is managing the destination managed system.
             - This option is mandatory for C(authenticate) I(action) and optional for other I(action)
         type: str
     remote_username:
         description:
-            - Username of the destination managed system containing HMC
+            - Username of the remote HMC
             - This option can be used only with C(authenticate) I(action)
         type: str
     remote_passwd:
         description:
-            - Password of the destination managed system containing HMC
+            - Password of the remote HMC
             - This option can be used only with C(authenticate) I(action)
         type: str
     wait:
@@ -166,6 +168,7 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client impor
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_resource import Hmc
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import parse_error_response
 
 
 def init_logger():
@@ -268,12 +271,16 @@ def make_hmc_authentication(module, params):
 
     try:
         hmc.authenticateHMCs(remote_ip, test=True)
-    except HmcError:
-        try:
-            hmc.authenticateHMCs(remote_ip, username=remote_username, passwd=remote_passwd, test=False)
-            changed = True
-        except HmcError as on_system_error:
-            return changed, repr(on_system_error), None
+    except HmcError as auth_err:
+        error_msg = parse_error_response(auth_err)
+        if 'HSCL3653' in error_msg:
+            try:
+                hmc.authenticateHMCs(remote_ip, username=remote_username, passwd=remote_passwd, test=False)
+                changed = True
+            except HmcError as on_system_error:
+                return changed, repr(on_system_error), None
+        else:
+            return changed, error_msg, None
     return changed, None, None
 
 
