@@ -94,6 +94,10 @@ options:
         description:
             - The number of shared processing units to create a partition.
         type: float
+    shared_proc_pool:
+        description:
+            - Shared Processor  Pool ID or Name
+            - Default value is DefaultPool
     max_proc_unit:
         description:
             - The maximum number of shared processing units to create a partition
@@ -540,22 +544,22 @@ def validate_parameters(params):
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'volume_config', 'virt_network_config', 'retain_vios_cfg', 'delete_vdisks',
                            'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
-                           'proc_mode', 'weight', 'proc_compatibility_mode']
+                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool']
     elif opr == 'absent':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
-                           'proc_mode', 'weight', 'proc_compatibility_mode']
+                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool']
     elif opr == 'facts':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
-                           'proc_mode', 'weight', 'proc_compatibility_mode']
+                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool']
     else:
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc',
-                           'min_proc_unit', 'max_proc_unit', 'proc_mode', 'weight', 'proc_compatibility_mode']
+                           'min_proc_unit', 'max_proc_unit', 'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool']
 
     collate = []
     for eachMandatory in mandatoryList:
@@ -839,6 +843,7 @@ def create_partition(module, params):
     max_virtual_slots = str(params['max_virtual_slots'] or 20)
     physical_io = params['physical_io']
     proc_compatibility_mode = params['proc_compatibility_mode']
+    shared_proc_pool = params['shared_proc_pool']
     vios_name = None
     temp_template_name = "ansible_powervm_create_{0}".format(str(randint(1000, 9999)))
     temp_copied = False
@@ -902,6 +907,11 @@ def create_partition(module, params):
 
     validate_proc_mem(server_dom, int(proc), int(mem), int(max_proc), int(min_proc), int(max_mem),
                       int(min_mem), weight, min_proc_unit, max_proc_unit, proc_unit)
+    if shared_proc_pool:
+        shared_proc_pool = rest_conn.validateSharedProcessorPoolNameAndID(system_uuid, shared_proc_pool)
+        if not shared_proc_pool:
+            raise HmcError("Shared Processor Pool ID or Name:{0}, does not exist in the managed system:{1}". format(params['shared_proc_pool'], system_name))
+
     if proc_compatibility_mode:
         supp_compat_modes = server_dom.xpath("//SupportedPartitionProcessorCompatibilityModes")
         supp_compat_modes = [scm.text.replace('Plus', 'plus') if scm.text != 'default' else 'Default' for scm in supp_compat_modes]
@@ -951,6 +961,7 @@ def create_partition(module, params):
         config_dict['proc_mode'] = proc_mode
         config_dict['weight'] = str(weight) if proc_mode == 'uncapped' else str(0)
         config_dict['proc_comp_mode'] = proc_compatibility_mode
+        config_dict['shared_proc_pool'] = shared_proc_pool if shared_proc_pool else str(0)
 
         # Tagged IO
         if os_type == 'ibmi':
@@ -1368,6 +1379,7 @@ def run_module():
         max_mem=dict(type='int'),
         min_mem=dict(type='int'),
         proc_compatibility_mode=dict(type='str'),
+        shared_proc_pool=dict(type='str'),
         os_type=dict(type='str', choices=['aix', 'linux', 'aix_linux', 'ibmi']),
         volume_config=dict(type='list',
                            elements='dict',
@@ -1417,6 +1429,7 @@ def run_module():
             weight=('proc_mode', ),
             max_proc_unit=('proc_unit', ),
             min_proc_unit=('proc_unit', ),
+            shared_proc_pool=('proc_unit', ),
         ),
     )
 
