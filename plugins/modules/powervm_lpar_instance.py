@@ -96,7 +96,9 @@ options:
         type: float
     shared_proc_pool:
         description:
-            - Shared Processor  Pool ID or Name
+            - Shared Processor Pool ID or Name
+            - If numeric value provided to this parameter will be considered as Shared Processor Pool ID
+            - This parametr can be used only with C(proc_unit)
             - Default value is DefaultPool
     max_proc_unit:
         description:
