@@ -14,58 +14,63 @@ test_data = [
     # src_system is missing in validate
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'action': 'validate',
       'src_system': None, 'dest_system': 'dstsys', 'all_vms': False,
-      'vm_names': 'name', 'vm_ids': None},
+      'vm_names': 'name', 'vm_ids': None, 'remote_ip': None, 'wait': 2},
      "ParameterError: mandatory parameter 'src_system' is missing"),
     # dest_system is missing in validate
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'action': 'validate',
       'src_system': 'srcsys', 'dest_system': None, 'all_vms': False,
-      'vm_names': 'name', 'vm_ids': None},
+      'vm_names': 'name', 'vm_ids': None, 'remote_ip': None, 'wait': 2},
      "ParameterError: mandatory parameter 'dest_system' is missing"),
     # host is missing in validate
     ({'hmc_host': None, 'hmc_auth': hmc_auth, 'action': 'validate',
       'src_system': 'srcsys', 'dest_system': 'destsys', 'all_vms': False,
-      'vm_names': 'name', 'vm_ids': None},
+      'vm_names': 'name', 'vm_ids': None, 'remote_ip': None, 'wait': 2},
      "ParameterError: mandatory parameter 'hmc_host' is missing"),
     # unsupported parameter all_vms in validate
     ({'hmc_host': '1.1.1.1', 'hmc_auth': hmc_auth, 'action': 'validate',
       'src_system': 'srcsys', 'dest_system': 'destsys', 'all_vms': True,
-      'vm_names': 'name', 'vm_ids': None},
+      'vm_names': 'name', 'vm_ids': None, 'remote_ip': None, 'wait': 2},
      "ParameterError: unsupported parameter: all_vms"),
     # src_system is missing in migrate
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'action': 'migrate',
       'src_system': None, 'dest_system': 'dstsys', 'all_vms': False,
-      'vm_names': 'name', 'vm_ids': None},
+      'vm_names': 'name', 'vm_ids': None, 'remote_ip': None, 'wait': 2},
      "ParameterError: mandatory parameter 'src_system' is missing"),
     # dest_system is missing in migrate
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'action': 'migrate',
       'src_system': 'srcsys', 'dest_system': None, 'all_vms': False,
-      'vm_names': 'name', 'vm_ids': None},
+      'vm_names': 'name', 'vm_ids': None, 'remote_ip': None, 'wait': 2},
      "ParameterError: mandatory parameter 'dest_system' is missing"),
     # host is missing in migrate
     ({'hmc_host': None, 'hmc_auth': hmc_auth, 'action': 'migrate',
       'src_system': 'srcsys', 'dest_system': 'destsys', 'all_vms': False,
-      'vm_names': 'name', 'vm_ids': None},
+      'vm_names': 'name', 'vm_ids': None, 'remote_ip': None, 'wait': 2},
      "ParameterError: mandatory parameter 'hmc_host' is missing"),
     # src_system is missing in recover
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'action': 'recover',
       'src_system': None, 'dest_system': None, 'all_vms': False,
-      'vm_names': 'name', 'vm_ids': None},
+      'vm_names': 'name', 'vm_ids': None, 'remote_ip': None, 'wait': 2},
      "ParameterError: mandatory parameter 'src_system' is missing"),
     # host is missing in recover
     ({'hmc_host': None, 'hmc_auth': hmc_auth, 'action': 'recover',
       'src_system': 'srcsys', 'dest_system': None, 'all_vms': False,
-      'vm_names': 'name', 'vm_ids': None},
+      'vm_names': 'name', 'vm_ids': None, 'remote_ip': None, 'wait': 2},
      "ParameterError: mandatory parameter 'hmc_host' is missing"),
-    # unsupported parameter all_vms in validate
+    # unsupported parameter all_vms in recover
     ({'hmc_host': '1.1.1.1', 'hmc_auth': hmc_auth, 'action': 'recover',
       'src_system': 'srcsys', 'dest_system': None, 'all_vms': True,
-      'vm_names': 'name', 'vm_ids': None},
+      'vm_names': 'name', 'vm_ids': None, 'remote_ip': None, 'wait': None},
      "ParameterError: unsupported parameter: all_vms"),
-    # unsupported parameter all_vms in validate
+    # unsupported parameter dest_system in recover
     ({'hmc_host': '1.1.1.1', 'hmc_auth': hmc_auth, 'action': 'recover',
       'src_system': 'srcsys', 'dest_system': 'dest_sys', 'all_vms': False,
-      'vm_names': 'name', 'vm_ids': None},
-     "ParameterError: unsupported parameter: dest_system")]
+      'vm_names': 'name', 'vm_ids': None, 'remote_ip': None, 'wait': None},
+     "ParameterError: unsupported parameter: dest_system"),
+    # unsupported parameter all_vms in validate
+    ({'hmc_host': '1.1.1.1', 'hmc_auth': hmc_auth, 'action': 'recover',
+      'src_system': 'srcsys', 'dest_system': None, 'all_vms': False,
+      'vm_names': 'name', 'vm_ids': None, 'remote_ip': None, 'wait': 2},
+     "ParameterError: unsupported parameter: wait")]
 
 
 def common_mock_setup(mocker):
