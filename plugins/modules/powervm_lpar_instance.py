@@ -100,6 +100,7 @@ options:
             - If numeric value provided to this parameter will be considered as Shared Processor Pool ID
             - This parametr can be used only with C(proc_unit)
             - Default value is DefaultPool
+        type: str
     max_proc_unit:
         description:
             - The maximum number of shared processing units to create a partition
