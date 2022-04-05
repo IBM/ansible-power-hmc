@@ -185,7 +185,7 @@ def validate_parameters(params):
 
     if opr == 'recover':
         mandatoryList = ['hmc_host', 'hmc_auth', 'src_system']
-        unsupportedList = ['dest_system', 'all_vms', 'wait']
+        unsupportedList = ['dest_system', 'all_vms', 'wait', 'remote_ip']
     elif opr == 'validate':
         mandatoryList = ['hmc_host', 'hmc_auth', 'src_system', 'dest_system']
         unsupportedList = ['all_vms']

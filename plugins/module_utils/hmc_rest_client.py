@@ -564,7 +564,7 @@ class HmcRestClient:
                 <Metadata>
                     <Atom/>
                 </Metadata>
-                <sharedProcessorPoolId kxe="false" kb="CUD">0</sharedProcessorPoolId>
+                <sharedProcessorPoolId kxe="false" kb="CUD">{7}</sharedProcessorPoolId>
                 <uncappedWeight kxe="false" kb="CUD">{0}</uncappedWeight>
                 <minProcessingUnits kb="CUD" kxe="false">{1}</minProcessingUnits>
                 <desiredProcessingUnits kxe="false" kb="CUD">{2}</desiredProcessingUnits>
@@ -575,7 +575,7 @@ class HmcRestClient:
                 </sharedProcessorConfiguration>'''.format(config_dict['weight'], config_dict['min_proc_unit'],
                                                           config_dict['proc_unit'], config_dict['max_proc_unit'],
                                                           config_dict['min_proc'], config_dict['proc'],
-                                                          config_dict['max_proc'])
+                                                          config_dict['max_proc'], config_dict['shared_proc_pool'])
 
             shared_config_tag = template_xml.xpath("//sharedProcessorConfiguration")[0]
             if shared_config_tag:
@@ -1151,3 +1151,40 @@ class HmcRestClient:
             pass
 
         return vscsis
+
+    def getSharedProcessorPools(self, system_uuid):
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/SharedProcessorPool".format(self.hmc_ip, system_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': '*/*'}
+        resp = open_url(url,
+                        headers=header,
+                        method='GET',
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=300)
+        if resp.code != 200:
+            logger.debug("Get of Shared Processor Pool failed. Respsonse code: %d", resp.code)
+            return None
+        sharedProcPool_root = xml_strip_namespace(resp.read())
+        sharedProcPool = sharedProcPool_root.xpath('//entry')
+        return sharedProcPool
+
+    def validateSharedProcessorPoolNameAndID(self, system_uuid, user_spp):
+        spps = self.getSharedProcessorPools(system_uuid)
+        spp_dict = {}
+        spp_id = None
+        for spp_raw in spps:
+            spp = etree.ElementTree(spp_raw)
+            v = spp.xpath('//PoolName')[0].text
+            k = spp.xpath('//PoolID')[0].text
+            spp_dict[k] = v
+        if user_spp.isdigit():
+            if user_spp in spp_dict:
+                spp_id = user_spp
+        else:
+            logger.debug(spp_dict)
+            for key, value in spp_dict.items():
+                if value == user_spp:
+                    spp_id = key
+
+        return spp_id
