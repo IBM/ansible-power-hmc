@@ -1179,7 +1179,7 @@ class HmcRestClient:
             k = spp.xpath('//PoolID')[0].text
             spp_dict[k] = v
         if user_spp.isdigit():
-            if user_spp in spp_dict.keys():
+            if user_spp in spp_dict:
                 spp_id = user_spp
         else:
             logger.debug(spp_dict)
