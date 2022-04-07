@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 import logging
+import os
 from collections import OrderedDict
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
 logger = logging.getLogger(__name__)
@@ -38,12 +39,19 @@ class HmcCliConnection:
         stderr = None
         stdout = None
 
+        host_key_ignore = ''
+        #This env 'ANSIBLE_HOST_KEY_CHECKING' only will work in case if it is set as environment variable
+        #All other options like from ansible config file or inventory file wont work
+        if os.environ.get('ANSIBLE_HOST_KEY_CHECKING') in ['False', 'false', 'FALSE', '0', 'no', 'No', 'NO']:
+            host_key_ignore = ' -o StrictHostKeyChecking=no '
+
         logger.debug("COMMAND: %s", cmd)
         if self.pwd:
-            ssh_hmc_cmd = "sshpass -p  {0} ssh {1}@{2} '{3}'".format(self.pwd, self.user, self.ip, cmd)
+            ssh_hmc_cmd = "sshpass -p  {0} ssh {1}@{2} {3} '{4}'".format(self.pwd, self.user, self.ip, host_key_ignore, cmd)
         else:
-            ssh_hmc_cmd = "ssh {0}@{1} '{2}'".format(self.user, self.ip, cmd)
+            ssh_hmc_cmd = "ssh {0}@{1} {2} '{3}'".format(self.user, self.ip, host_key_ignore, cmd)
 
+        logger.debug(ssh_hmc_cmd)
         status_code, stdout, stderr = self.module.run_command(ssh_hmc_cmd, use_unsafe_shell=True)
 
         if status_code != 0:
