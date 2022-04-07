@@ -40,8 +40,8 @@ class HmcCliConnection:
         stdout = None
 
         host_key_ignore = ''
-        #This env 'ANSIBLE_HOST_KEY_CHECKING' only will work in case if it is set as environment variable
-        #All other options like from ansible config file or inventory file wont work
+        # This env 'ANSIBLE_HOST_KEY_CHECKING' only will work in case if it is set as environment variable
+        # All other options like from ansible config file or inventory file wont work
         if os.environ.get('ANSIBLE_HOST_KEY_CHECKING') in ['False', 'false', 'FALSE', '0', 'no', 'No', 'NO']:
             host_key_ignore = ' -o StrictHostKeyChecking=no '
 
