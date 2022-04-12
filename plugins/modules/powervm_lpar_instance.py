@@ -72,7 +72,7 @@ options:
             - The number of dedicated processors to create a partition.
             - If C(proc_unit) parameter is set, then this value will work as virtual processors for
               shared processor setting.
-            - Default value is 2. This will not work during shared processor setting.
+            - Default value is '2'. This will not work during shared processor setting.
         type: int
     max_proc:
         description:
@@ -87,7 +87,7 @@ options:
             - The minimum number of dedicated processors to create a partition.
             - If C(proc_unit) parameter is set, then this value will work as min virtual processors for
               shared processor setting
-            - Default value is 1
+            - Default value is '1'
             - This values should be allways equal or less than C(proc)
         type: int
     proc_unit:
@@ -97,9 +97,9 @@ options:
     shared_proc_pool:
         description:
             - Shared Processor Pool ID or Name
-            - If numeric value provided to this parameter will be considered as Shared Processor Pool ID
-            - This parametr can be used only with C(proc_unit)
-            - Default value is DefaultPool
+            - If numeric value provided to this parameter, it will be considered as Shared Processor Pool ID.
+            - This parameter can be used only with C(proc_unit)
+            - Default value is 'DefaultPool'
         type: str
     max_proc_unit:
         description:
@@ -113,18 +113,18 @@ options:
             - The minimum number of shared processing units to create a partition
             - This value should be equal or less than C(proc_unit)
             - This parameter can be used only with C(proc_unit)
-            - Default value is 0.1
+            - Default value is '0.1'
         type: float
     proc_mode:
         description:
-            - The processor mode to be used create a partition with shared processor
+            - The processor mode to be used to create a partition with shared processor settings
             - Default value is 'uncapped'
             - This parameter can be used only with C(proc_unit)
         type: str
         choices: ['capped', 'uncapped']
     weight:
         description:
-            - The weight to be for uncapped proc mode while  create a partition with shared processor
+            - The weight to be used for uncapped proc mode while create a partition with shared processor settings
             - Default value is '128'
             - This value will be ignored if the C(proc_mode) is set to I(capped)
             - This parameter can be used only with C(proc_mode)
@@ -136,18 +136,18 @@ options:
     mem:
         description:
             - The value of dedicated memory value in megabytes to create a partition.
-            - Default value is 2048 MB.
+            - Default value is '2048 MB'.
         type: int
     max_mem:
         description:
             - The maximum value of dedicated memory value in megabytes to create a partition.
-            - Default value is 2048 MB.
+            - Default value is '2048 MB'.
             - This parameter can only be used with C(mem)
         type: int
     min_mem:
         description:
             - The maximum value of dedicated memory value in megabytes to create a partition.
-            - Default value is 1024 MB.
+            - Default value is '1024 MB'.
             - This parameter can only be used with C(mem)
         type: int
     os_type:
