@@ -343,7 +343,7 @@ class Hmc():
         logger.debug(chhwresCmd)
         self.hmcconn.execute(chhwresCmd)
 
-    def migratePartitions(self, opr, srcCEC, dstCEC=None, lparNames=None, lparIDs=None, aLL=False):
+    def migratePartitions(self, opr, srcCEC, dstCEC=None, lparNames=None, lparIDs=None, aLL=False, ip=None, wait=None):
         opr = opr.upper()
         migrlparCmd = self.CMD['MIGRLPAR'] + \
             self.OPT['MIGRLPAR']['-O'][opr] +\
@@ -356,6 +356,10 @@ class Hmc():
             migrlparCmd += self.OPT['MIGRLPAR']['--ID'] + lparIDs
         elif aLL:
             migrlparCmd += self.OPT['MIGRLPAR']['--ALL']
+        if ip:
+            migrlparCmd += self.OPT['MIGRLPAR']['--IP'] + ip
+        if wait:
+            migrlparCmd += self.OPT['MIGRLPAR']['-W'] + str(wait)
         self.hmcconn.execute(migrlparCmd)
 
     def _configMandatoryLparSettings(self, delta_config=None):
@@ -503,3 +507,14 @@ class Hmc():
             self.OPT['VIOSVRCMD']['-P'] + name +\
             self.OPT['VIOSVRCMD']['-C'] + '"' + cmd + '"'
         self.hmcconn.execute(viosvrcmd)
+
+    def authenticateHMCs(self, remote_hmc, username=None, passwd=None, test=False):
+        mkauthcmd = self.CMD['MKAUTHKEYS'] +\
+            self.OPT['MKAUTHKEYS']['--IP'] + remote_hmc
+        if test:
+            mkauthcmd += self.OPT['MKAUTHKEYS']['--TEST']
+        else:
+            mkauthcmd += self.OPT['MKAUTHKEYS']['-G'] +\
+                self.OPT['MKAUTHKEYS']['-U'] + username +\
+                self.OPT['MKAUTHKEYS']['--PASSWD'] + passwd
+        self.hmcconn.execute(mkauthcmd)

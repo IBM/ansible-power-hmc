@@ -481,8 +481,8 @@ class HmcRestClient:
         response = resp.read()
         return response
 
-    def getVirtualIOServers(self, system_uuid):
-        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/VirtualIOServer?group=Advanced".format(self.hmc_ip, system_uuid)
+    def getVirtualIOServers(self, system_uuid, group='Advanced'):
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/VirtualIOServer?group={2}".format(self.hmc_ip, system_uuid, group)
         header = {'X-API-Session': self.session,
                   'Accept': 'application/vnd.ibm.powervm.uom+xml; type=VirtualIOServer'}
         resp = open_url(url,
@@ -564,15 +564,18 @@ class HmcRestClient:
                 <Metadata>
                     <Atom/>
                 </Metadata>
-                <sharedProcessorPoolId kxe="false" kb="CUD">0</sharedProcessorPoolId>
-                <uncappedWeight kxe="false" kb="CUD">128</uncappedWeight>
-                <minProcessingUnits kb="CUD" kxe="false">0.1</minProcessingUnits>
-                <desiredProcessingUnits kxe="false" kb="CUD">{0}</desiredProcessingUnits>
-                <maxProcessingUnits kb="CUD" kxe="false">{0}</maxProcessingUnits>
-                <minVirtualProcessors kb="CUD" kxe="false">1</minVirtualProcessors>
-                <desiredVirtualProcessors kxe="false" kb="CUD">{1}</desiredVirtualProcessors>
-                <maxVirtualProcessors kxe="false" kb="CUD">{1}</maxVirtualProcessors>
-                </sharedProcessorConfiguration>'''.format(config_dict['proc_unit'], config_dict['proc'])
+                <sharedProcessorPoolId kxe="false" kb="CUD">{7}</sharedProcessorPoolId>
+                <uncappedWeight kxe="false" kb="CUD">{0}</uncappedWeight>
+                <minProcessingUnits kb="CUD" kxe="false">{1}</minProcessingUnits>
+                <desiredProcessingUnits kxe="false" kb="CUD">{2}</desiredProcessingUnits>
+                <maxProcessingUnits kb="CUD" kxe="false">{3}</maxProcessingUnits>
+                <minVirtualProcessors kb="CUD" kxe="false">{4}</minVirtualProcessors>
+                <desiredVirtualProcessors kxe="false" kb="CUD">{5}</desiredVirtualProcessors>
+                <maxVirtualProcessors kxe="false" kb="CUD">{6}</maxVirtualProcessors>
+                </sharedProcessorConfiguration>'''.format(config_dict['weight'], config_dict['min_proc_unit'],
+                                                          config_dict['proc_unit'], config_dict['max_proc_unit'],
+                                                          config_dict['min_proc'], config_dict['proc'],
+                                                          config_dict['max_proc'], config_dict['shared_proc_pool'])
 
             shared_config_tag = template_xml.xpath("//sharedProcessorConfiguration")[0]
             if shared_config_tag:
@@ -585,15 +588,17 @@ class HmcRestClient:
                 dedi_tag.getparent().remove(dedi_tag)
 
             template_xml.xpath("//currHasDedicatedProcessors")[0].text = 'false'
-            template_xml.xpath("//currSharingMode")[0].text = 'uncapped'
+            template_xml.xpath("//currSharingMode")[0].text = config_dict['proc_mode']
         else:
-            template_xml.xpath("//minProcessors")[0].text = '1'
+            template_xml.xpath("//minProcessors")[0].text = config_dict['min_proc']
             template_xml.xpath("//desiredProcessors")[0].text = config_dict['proc']
-            template_xml.xpath("//maxProcessors")[0].text = config_dict['proc']
+            template_xml.xpath("//maxProcessors")[0].text = config_dict['max_proc']
 
-        template_xml.xpath("//currMinMemory")[0].text = config_dict['mem']
+        template_xml.xpath("//currMinMemory")[0].text = config_dict['min_mem']
         template_xml.xpath("//currMemory")[0].text = config_dict['mem']
-        template_xml.xpath("//currMaxMemory")[0].text = config_dict['mem']
+        template_xml.xpath("//currMaxMemory")[0].text = config_dict['max_mem']
+        if config_dict['proc_comp_mode']:
+            template_xml.xpath("//currProcessorCompatibilityMode")[0].text = config_dict['proc_comp_mode']
 
     def updatePartitionTemplate(self, uuid, template_xml):
         templateUrl = "https://{0}/rest/api/templates/PartitionTemplate/{1}".format(self.hmc_ip, uuid)
@@ -1060,6 +1065,14 @@ class HmcRestClient:
                 wwpn_str = ' '.join(fc['wwpn_pair'].split(';'))
                 wwpn_xml = '<wwpns kb="CUD" kxe="false">{0}</wwpns>'.format(wwpn_str)
                 fc_client_adpt_dom.xpath("//locationCode")[0].addnext(etree.XML(wwpn_xml))
+            if 'client_adapter_id' in fc:
+                caid_str = fc['client_adapter_id']
+                caid_xml = '<VirtualSlotNumber kb="CUD" kxe="false">{0}</VirtualSlotNumber>'.format(caid_str)
+                fc_client_adpt_dom.xpath("//locationCode")[0].addprevious(etree.XML(caid_xml))
+            if 'server_adapter_id' in fc:
+                said_str = fc['server_adapter_id']
+                said_xml = '<remoteAdapterID kb="CUD" kxe="false">{0}</remoteAdapterID>'.format(said_str)
+                fc_client_adpt_dom.xpath("//connectingPartitionName")[0].addnext(etree.XML(said_xml))
 
             fc_clients += ET.tostring(fc_client_adpt_dom).decode("utf-8")
 
@@ -1073,42 +1086,109 @@ class HmcRestClient:
         suspendEnableTag = lpar_template_dom.xpath("//suspendEnable")[0]
         suspendEnableTag.addprevious(etree.XML(virtualFibreChannelClientAdapters))
 
-    def getXmlVirtualFiberChannelAdapters(self, partition_uuid):
-        url = "https://{0}/rest/api/uom/LogicalPartition/{1}/VirtualFibreChannelClientAdapter/".format(self.hmc_ip, partition_uuid)
+    def fetchFCDetailsFromVIOS(self, system_uuid, lpar_id):
+        vfcs = []
+        vios_response = self.getVirtualIOServersQuick(system_uuid)
+        if vios_response is None:
+            return vfcs
+        vios_list = json.loads(vios_response)
+        vios_dict = {vios['PartitionID']: vios['PartitionName'] for vios in vios_list}
+
+        try:
+            vios_fc_xml = xml_strip_namespace(self.getVirtualIOServers(system_uuid, 'ViosFCMapping'))
+            vios_fcs = vios_fc_xml.xpath('//VirtualFibreChannelMapping')
+            for vios_fc_raw in vios_fcs:
+                vfc_dict = {}
+                vios_fc = etree.ElementTree(vios_fc_raw)
+                if vios_fc.find('//ClientAdapter') is None:
+                    continue
+                part_id = vios_fc.xpath('//ClientAdapter/LocalPartitionID')[0].text
+                if str(lpar_id) == str(part_id):
+                    vios_id = int(vios_fc.xpath('//ClientAdapter/ConnectingPartitionID')[0].text)
+                    vfc_dict['PortName'] = vios_fc.xpath('//ServerAdapter/PhysicalPort/PortName')[0].text
+                    vfc_dict['vios'] = vios_dict[vios_id]
+                    vfc_dict['LocationCode'] = vios_fc.xpath('//ServerAdapter/PhysicalPort/LocationCode')[0].text
+                    vfc_dict['WWPNs'] = vios_fc.xpath('//ClientAdapter/WWPNs')[0].text
+                    vfc_dict['ClientVirtualSlotNumber'] = vios_fc.xpath('//ClientAdapter/VirtualSlotNumber')[0].text
+                    vfc_dict['ServerVirtualSlotNumber'] = vios_fc.xpath('//ClientAdapter/ConnectingVirtualSlotNumber')[0].text
+                    vfcs.append(vfc_dict)
+        except Exception:
+            pass
+
+        return vfcs
+
+    def fetchSCSIDetailsFromVIOS(self, system_uuid, lpar_id):
+        vscsis = []
+        vios_response = self.getVirtualIOServersQuick(system_uuid)
+        if vios_response is None:
+            return vscsis
+        vios_list = json.loads(vios_response)
+        vios_dict = {vios['PartitionID']: vios['PartitionName'] for vios in vios_list}
+
+        try:
+            vios_scsi_xml = xml_strip_namespace(self.getVirtualIOServers(system_uuid, 'ViosSCSIMapping'))
+            vios_scsis = vios_scsi_xml.xpath('//VirtualSCSIMapping')
+            for vios_scsi_raw in vios_scsis:
+                vscsi_dict = {}
+                vios_scsi = etree.ElementTree(vios_scsi_raw)
+                # This code is to handle stale adapters and shared storage
+                if vios_scsi.find('//ClientAdapter') is None or vios_scsi.find('//Storage') is None:
+                    continue
+                part_id = vios_scsi.xpath('//ClientAdapter/LocalPartitionID')[0].text
+                if str(lpar_id) == str(part_id):
+                    volumeUniqueID = vios_scsi.xpath('//Storage/PhysicalVolume/VolumeUniqueID')[0].text
+                    vscsi_dict['VolumeUniqueID'] = volumeUniqueID
+                    vios_id = int(vios_scsi.xpath('//ClientAdapter/RemoteLogicalPartitionID')[0].text)
+                    vol_dict = {"name": vios_dict[vios_id], 'vios': vios_scsi.xpath('//Storage/PhysicalVolume/VolumeName')[0].text}
+                    vscsi_dict['Volume'] = [vol_dict]
+                    flag = False
+                    for vscsi in vscsis:
+                        if vscsi['VolumeUniqueID'] == volumeUniqueID:
+                            vscsi['Volume'].append(vol_dict)
+                            flag = True
+                    if not flag:
+                        vscsi_dict['ClientVirtualSlotNumber'] = vios_scsi.xpath('//ClientAdapter/VirtualSlotNumber')[0].text
+                        vscsi_dict['ServerVirtualSlotNumber'] = vios_scsi.xpath('//ClientAdapter/RemoteSlotNumber')[0].text
+                        vscsi_dict['TargetDeviceName'] = vios_scsi.xpath('//TargetDevice//TargetName')[0].text
+                        vscsis.append(vscsi_dict)
+        except Exception:
+            pass
+
+        return vscsis
+
+    def getSharedProcessorPools(self, system_uuid):
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/SharedProcessorPool".format(self.hmc_ip, system_uuid)
         header = {'X-API-Session': self.session,
                   'Accept': '*/*'}
-
-        response = open_url(url,
-                            headers=header,
-                            method='GET',
-                            validate_certs=False,
-                            force_basic_auth=True,
-                            timeout=300)
-
-        if response.code == 204:
+        resp = open_url(url,
+                        headers=header,
+                        method='GET',
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=300)
+        if resp.code != 200:
+            logger.debug("Get of Shared Processor Pool failed. Respsonse code: %d", resp.code)
             return None
+        sharedProcPool_root = xml_strip_namespace(resp.read())
+        sharedProcPool = sharedProcPool_root.xpath('//entry')
+        return sharedProcPool
 
-        vfc_root = xml_strip_namespace(response.read())
-        vfc_adapters = vfc_root.xpath('//VirtualFibreChannelClientAdapter')
-        return vfc_adapters
+    def validateSharedProcessorPoolNameAndID(self, system_uuid, user_spp):
+        spps = self.getSharedProcessorPools(system_uuid)
+        spp_dict = {}
+        spp_id = None
+        for spp_raw in spps:
+            spp = etree.ElementTree(spp_raw)
+            v = spp.xpath('//PoolName')[0].text
+            k = spp.xpath('//PoolID')[0].text
+            spp_dict[k] = v
+        if user_spp.isdigit():
+            if user_spp in spp_dict:
+                spp_id = user_spp
+        else:
+            logger.debug(spp_dict)
+            for key, value in spp_dict.items():
+                if value == user_spp:
+                    spp_id = key
 
-    def getVirtualFiberChannelAdapters(self, partition_uuid):
-        raw_vfc = self.getXmlVirtualFiberChannelAdapters(partition_uuid)
-        vfcs = []
-        if raw_vfc:
-            for vfc1 in raw_vfc:
-                vfc_dict = {}
-                vfc = etree.ElementTree(vfc1)
-                vfc_dict['LocationCode'] = vfc.xpath('//LocationCode')[0].text
-                vfc_dict['VirtualSlotNumber'] = vfc.xpath('//VirtualSlotNumber')[0].text
-                wwpn_len = len((vfc.xpath('//WWPNs')[0].text).split(' '))
-                wwpns = []
-                for i in range(wwpn_len):
-                    wwpn_dict = {}
-                    wwpn_dict['WWPN'] = vfc.xpath('//WWPN')[i].text
-                    wwpn_dict['WWPNStatus'] = vfc.xpath('//WWPNStatus')[i].text
-                    wwpn_dict['LoggedInBy'] = vfc.xpath('//LoggedInBy')[i].text
-                    wwpns.append(wwpn_dict)
-                vfc_dict['WWPNs'] = wwpns
-                vfcs.append(vfc_dict)
-        return vfcs
+        return spp_id
