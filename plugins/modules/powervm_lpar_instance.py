@@ -80,7 +80,7 @@ options:
             - If C(proc_unit) parameter is set, then this value will work as max virtual processors for
               shared processor setting.
             - Default value is C(proc)
-            - This values should be allways equal or greater than C(proc)
+            - This value should be always equal or greater than C(proc)
         type: int
     min_proc:
         description:
@@ -88,7 +88,7 @@ options:
             - If C(proc_unit) parameter is set, then this value will work as min virtual processors for
               shared processor setting
             - Default value is '1'
-            - This values should be allways equal or less than C(proc)
+            - This value should be always equal or less than C(proc)
         type: int
     proc_unit:
         description:
@@ -254,7 +254,7 @@ options:
             server_adapter_id:
                 description:
                     - The Server adapter slot number to be configured with FC adapter.
-                    - Optional, if not provided next availble value will be assigned.
+                    - Optional, if not provided next available value will be assigned.
                 type: int
     all_resources:
         description:
@@ -395,7 +395,7 @@ EXAMPLES = '''
          password: '{{ hmc_password }}'
       system_name: <system_name>
       vm_name: <vm_name>
-      keylock: 'norm'
+      keylock: 'normal'
       iIPLsource: 'd'
       action: poweron
 
@@ -408,6 +408,7 @@ EXAMPLES = '''
       system_name: <system_name>
       vm_name: <vm_name>
       all_resources: True
+      os_type: aix_linux
       state: present
 '''
 
