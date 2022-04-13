@@ -71,14 +71,102 @@ Parameters
     Default value is 2. This will not work during shared processor setting.
 
 
+  max_proc (optional, int, None)
+    The maximum number of dedicated processors to create a partition.
+
+    If ``proc_unit`` parameter is set, then this value will work as max virtual processors for shared processor setting.
+
+    Default value is ``proc``
+
+    This values should be allways equal or greater than ``proc``
+
+
+  min_proc (optional, int, None)
+    The minimum number of dedicated processors to create a partition.
+
+    If ``proc_unit`` parameter is set, then this value will work as min virtual processors for shared processor setting
+
+    Default value is 1
+
+    This values should be allways equal or less than ``proc``
+
+
   proc_unit (optional, float, None)
     The number of shared processing units to create a partition.
+
+
+  shared_proc_pool (optional, str, None)
+    Shared Processor Pool ID or Name
+
+    If numeric value provided to this parameter will be considered as Shared Processor Pool ID
+
+    This parametr can be used only with ``proc_unit``
+
+    Default value is DefaultPool
+
+
+  max_proc_unit (optional, float, None)
+    The maximum number of shared processing units to create a partition
+
+    This value should be equal or greater than ``proc_unit``
+
+    This parameter can be used only with ``proc_unit``
+
+    Default value is ``proc_unit``
+
+
+  min_proc_unit (optional, float, None)
+    The minimum number of shared processing units to create a partition
+
+    This value should be equal or less than ``proc_unit``
+
+    This parameter can be used only with ``proc_unit``
+
+    Default value is 0.1
+
+
+  proc_mode (optional, str, None)
+    The processor mode to be used create a partition with shared processor
+
+    Default value is 'uncapped'
+
+    This parameter can be used only with ``proc_unit``
+
+
+  weight (optional, int, None)
+    The weight to be for uncapped proc mode while  create a partition with shared processor
+
+    Default value is '128'
+
+    This value will be ignored if the ``proc_mode`` is set to *capped*
+
+    This parameter can be used only with ``proc_mode``
+
+
+  proc_compatibility_mode (optional, str, None)
+    The processor compatibility mode to be configured while creating a partition
 
 
   mem (optional, int, None)
     The value of dedicated memory value in megabytes to create a partition.
 
     Default value is 2048 MB.
+
+
+  max_mem (optional, int, None)
+    The maximum value of dedicated memory value in megabytes to create a partition.
+
+    Default value is 2048 MB.
+
+    This parameter can only be used with ``mem``
+
+
+  min_mem (optional, int, None)
+    The maximum value of dedicated memory value in megabytes to create a partition.
+
+    Default value is 1024 MB.
+
+    This parameter can only be used with ``mem``
 
 
   os_type (optional, str, None)
@@ -187,6 +275,18 @@ Parameters
       Both the WWPN value should be separated by semicolon delimiter
 
       Optional, if not provided the value will be auto assigned
+
+
+    client_adapter_id (optional, int, None)
+      The client adapter slot number to be configured with FC adapter.
+
+      Optional, if not provided next availble value will be assigned.
+
+
+    server_adapter_id (optional, int, None)
+      The Server adapter slot number to be configured with FC adapter.
+
+      Optional, if not provided next availble value will be assigned.
 
 
 

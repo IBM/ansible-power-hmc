@@ -124,6 +124,7 @@
 <p>Validate provided LPAR/s for migration</p>
 <p>Migrate provided LPAR/s</p>
 <p>Recover provided LPAR</p>
+<p>Authenticate HMCs</p>
 </section>
 <section id="parameters">
 <h2><a class="toc-backref" href="#id2">Parameters</a><a class="headerlink" href="#parameters" title="Permalink to this headline"></a></h2>
@@ -139,7 +140,7 @@
 </dd>
 </dl>
 </dd>
-<dt>src_system (True, str, None)</dt><dd><p>The name of the source managed system.</p>
+<dt>src_system (optional, str, None)</dt><dd><p>The name of the source managed system.</p>
 </dd>
 <dt>dest_system (optional, str, None)</dt><dd><p>The name of the destination managed system.</p>
 <p>valid only for <code class="docutils literal notranslate"><span class="pre">validate</span></code> and <code class="docutils literal notranslate"><span class="pre">migrate</span></code> <em>action</em> operation.</p>
@@ -155,49 +156,74 @@
 <dt>all_vms (optional, bool, None)</dt><dd><p>All the partitions of the <em>src_system</em> to be migrated.</p>
 <p>valid only for <code class="docutils literal notranslate"><span class="pre">migrate</span></code> <em>action</em></p>
 </dd>
-<dt>action (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">validate</span></code> validate a specified partition/s.</p>
+<dt>remote_ip (optional, str, None)</dt><dd><p>If the destination managed system is not managed by the same management console that is managing the source managed system, then use this option to specify the IP address or host name of the management console that is managing the destination managed system.</p>
+<p>This option is mandatory for <code class="docutils literal notranslate"><span class="pre">authenticate</span></code> <em>action</em> and optional for other <em>action</em></p>
+</dd>
+<dt>remote_username (optional, str, None)</dt><dd><p>Username of the remote HMC</p>
+<p>This option can be used only with <code class="docutils literal notranslate"><span class="pre">authenticate</span></code> <em>action</em></p>
+</dd>
+<dt>remote_passwd (optional, str, None)</dt><dd><p>Password of the remote HMC</p>
+<p>This option can be used only with <code class="docutils literal notranslate"><span class="pre">authenticate</span></code> <em>action</em></p>
+</dd>
+<dt>wait (optional, int, None)</dt><dd><p>The maximum time, in minutes, to wait for operation to complete</p>
+<p>This option can be used only with <code class="docutils literal notranslate"><span class="pre">migrate</span></code> and <code class="docutils literal notranslate"><span class="pre">validate</span></code> <em>action</em></p>
+</dd>
+<dt>action (True, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">validate</span></code> validate a specified partition/s.</p>
 <p><code class="docutils literal notranslate"><span class="pre">migrate</span></code> migrate a specified partition/s from <em>src_system</em> to <em>dest_system</em>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">recover</span></code> recover a specified partition.</p>
+<p><code class="docutils literal notranslate"><span class="pre">authenticate</span></code> make authentication between source and destination HMCs</p>
 </dd>
 </dl>
 </div></blockquote>
 </section>
 <section id="examples">
 <h2><a class="toc-backref" href="#id3">Examples</a><a class="headerlink" href="#examples" title="Permalink to this headline"></a></h2>
-<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Validate that the input partitions can be migrated to the destination</span>
-  <span class="nt">powervm_lpar_migration</span><span class="p">:</span>
-    <span class="nt">hmc_host</span><span class="p">:</span> <span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span>
-    <span class="nt">hmc_auth</span><span class="p">:</span>
-         <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
-         <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
-    <span class="nt">src_system</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;managed_system_name&gt;</span>
-    <span class="nt">dest_system</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;destination_managed_system&gt;</span>
-    <span class="nt">vm_names</span><span class="p">:</span>
-      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">&lt;vm_name1&gt;</span>
-      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">&lt;vm_name2&gt;</span>
-    <span class="nt">action</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">validate</span>
+<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Validate that the input partitions can be migrated to the destination</span><span class="w"></span>
+<span class="w">  </span><span class="nt">powervm_lpar_migration</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span><span class="w"></span>
+<span class="w">         </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span><span class="w"></span>
+<span class="w">         </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">src_system</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;managed_system_name&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">dest_system</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;destination_managed_system&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">vm_names</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;vm_name1&gt;</span><span class="w"></span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;vm_name2&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">validate</span><span class="w"></span>
 
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Recover specifed vm_id from migration failure</span>
-  <span class="nt">powervm_lpar_migration</span><span class="p">:</span>
-    <span class="nt">hmc_host</span><span class="p">:</span> <span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span>
-    <span class="nt">hmc_auth</span><span class="p">:</span>
-         <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
-         <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
-    <span class="nt">src_system</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;managed_system_name&gt;</span>
-    <span class="nt">vm_ids</span><span class="p">:</span>
-      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">&lt;id1&gt;</span>
-    <span class="nt">action</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">recover</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Recover specifed vm_id from migration failure</span><span class="w"></span>
+<span class="w">  </span><span class="nt">powervm_lpar_migration</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span><span class="w"></span>
+<span class="w">         </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span><span class="w"></span>
+<span class="w">         </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">src_system</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;managed_system_name&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">vm_ids</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;id1&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">recover</span><span class="w"></span>
 
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Migrate all partitions of the cec</span>
-  <span class="nt">hmc_managed_system</span><span class="p">:</span>
-    <span class="nt">hmc_host</span><span class="p">:</span> <span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span>
-    <span class="nt">hmc_auth</span><span class="p">:</span>
-         <span class="nt">username</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
-         <span class="nt">password</span><span class="p">:</span> <span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
-    <span class="nt">src_system</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;managed_system_name&gt;</span>
-    <span class="nt">dest_system</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;destination_system_name&gt;</span>
-    <span class="nt">all_vms</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
-    <span class="nt">action</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">migrate</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Migrate all partitions of the cec to remote HMC</span><span class="w"></span>
+<span class="w">  </span><span class="nt">powervm_lpar_migration</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span><span class="w"></span>
+<span class="w">         </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span><span class="w"></span>
+<span class="w">         </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">src_system</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;managed_system_name&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">dest_system</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;destination_system_name&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">remote_ip</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;ipaddress of the remote HMC&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">all_vms</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">migrate</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Make authentication between source managed system and destination manages system HMCs</span><span class="w"></span>
+<span class="w">  </span><span class="nt">powervm_lpar_migration</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span><span class="w"></span>
+<span class="w">         </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span><span class="w"></span>
+<span class="w">         </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">remote_ip</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;IP Address of the remote HMC&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">remote_username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;Username of the remote HMC&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">remote_passwd</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;Password of the remote HMC&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">authenticate</span><span class="w"></span>
 </pre></div>
 </div>
 </section>

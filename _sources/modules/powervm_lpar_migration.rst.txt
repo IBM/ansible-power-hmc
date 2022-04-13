@@ -18,6 +18,8 @@ Migrate provided LPAR/s
 
 Recover provided LPAR
 
+Authenticate HMCs
+
 
 
 
@@ -43,7 +45,7 @@ Parameters
 
 
 
-  src_system (True, str, None)
+  src_system (optional, str, None)
     The name of the source managed system.
 
 
@@ -75,12 +77,38 @@ Parameters
     valid only for ``migrate`` *action*
 
 
-  action (optional, str, None)
+  remote_ip (optional, str, None)
+    If the destination managed system is not managed by the same management console that is managing the source managed system, then use this option to specify the IP address or host name of the management console that is managing the destination managed system.
+
+    This option is mandatory for ``authenticate`` *action* and optional for other *action*
+
+
+  remote_username (optional, str, None)
+    Username of the remote HMC
+
+    This option can be used only with ``authenticate`` *action*
+
+
+  remote_passwd (optional, str, None)
+    Password of the remote HMC
+
+    This option can be used only with ``authenticate`` *action*
+
+
+  wait (optional, int, None)
+    The maximum time, in minutes, to wait for operation to complete
+
+    This option can be used only with ``migrate`` and ``validate`` *action*
+
+
+  action (True, str, None)
     ``validate`` validate a specified partition/s.
 
     ``migrate`` migrate a specified partition/s from *src_system* to *dest_system*.
 
     ``recover`` recover a specified partition.
+
+    ``authenticate`` make authentication between source and destination HMCs
 
 
 
@@ -120,17 +148,28 @@ Examples
           - <id1>
         action: recover
 
-    - name: Migrate all partitions of the cec
-      hmc_managed_system:
+    - name: Migrate all partitions of the cec to remote HMC
+      powervm_lpar_migration:
         hmc_host: "{{ inventory_hostname }}"
         hmc_auth:
              username: '{{ ansible_user }}'
              password: '{{ hmc_password }}'
         src_system: <managed_system_name>
         dest_system: <destination_system_name>
+        remote_ip: <ipaddress of the remote HMC>
         all_vms: true
         action: migrate
 
+    - name: Make authentication between source managed system and destination manages system HMCs
+      powervm_lpar_migration:
+        hmc_host: "{{ inventory_hostname }}"
+        hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+        remote_ip: <IP Address of the remote HMC>
+        remote_username: <Username of the remote HMC>
+        remote_passwd: <Password of the remote HMC>
+        action: authenticate
 
 
 

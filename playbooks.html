@@ -145,12 +145,12 @@ instead of on a remote host</p>
 <p>Included in the <a class="reference external" href="https://github.com/IBM/ansible-power-hmc/tree/dev-collection/playbooks">playbooks directory</a> is a <a class="reference external" href="https://github.com/IBM/ansible-power-hmc/tree/dev-collection/playbooks/inventory">sample inventory file</a> that can be
 used to manage your nodes with a little modification. This inventory file
 should be included when running the sample playbook.</p>
-<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[hmcs]</span>
-<span class="na">hmc01</span>
-<span class="na">hmc02</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[hmcs]</span><span class="w"></span>
+<span class="na">hmc01</span><span class="w"></span>
+<span class="na">hmc02</span><span class="w"></span>
 
-<span class="k">[hmcs:vars]</span>
-<span class="na">ansible_user</span><span class="o">=</span><span class="s">hscroot</span>
+<span class="k">[hmcs:vars]</span><span class="w"></span>
+<span class="na">ansible_user</span><span class="o">=</span><span class="s">hscroot</span><span class="w"></span>
 </pre></div>
 </div>
 <p>Inside the playbook, refer the mentioned  managed nodes (HMCs) from the inventory file
