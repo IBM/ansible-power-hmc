@@ -21,7 +21,7 @@ description:
     - "Validate provided LPAR/s for migration"
     - "Migrate provided LPAR/s"
     - "Recover provided LPAR"
-    - "Authenticate HMCs"
+    - "Authenticate HMC"
 version_added: 1.0.0
 options:
     hmc_host:
@@ -77,7 +77,7 @@ options:
             - If the destination managed system is not managed by the same management console
               that is managing the source managed system, then use this option to specify the IP address
               or host name of the management console that is managing the destination managed system.
-            - This option is mandatory for C(authenticate) I(action) and optional for other I(action)
+              This option is mandatory for C(authenticate) I(action) and optional for other I(action)
         type: str
     remote_username:
         description:
@@ -99,7 +99,7 @@ options:
             - C(validate) validate a specified partition/s.
             - C(migrate) migrate a specified partition/s from I(src_system) to I(dest_system).
             - C(recover) recover a specified partition.
-            - C(authenticate) make authentication between source and destination HMCs
+            - C(authenticate) adds SSH authentication key of remote management console.
         type: str
         required: true
         choices: ['validate', 'migrate', 'recover', 'authenticate']
@@ -142,7 +142,7 @@ EXAMPLES = '''
     all_vms: true
     action: migrate
 
-- name: Make authentication between source managed system and destination manages system HMCs
+- name: Adds SSH authentication key of remote HMC.
   powervm_lpar_migration:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
