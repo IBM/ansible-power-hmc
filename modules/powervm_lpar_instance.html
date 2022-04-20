@@ -160,24 +160,24 @@
 </dd>
 <dt>proc (optional, int, None)</dt><dd><p>The number of dedicated processors to create a partition.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">proc_unit</span></code> parameter is set, then this value will work as virtual processors for shared processor setting.</p>
-<p>Default value is 2. This will not work during shared processor setting.</p>
+<p>Default value is ‘2’. This will not work during shared processor setting.</p>
 </dd>
 <dt>max_proc (optional, int, None)</dt><dd><p>The maximum number of dedicated processors to create a partition.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">proc_unit</span></code> parameter is set, then this value will work as max virtual processors for shared processor setting.</p>
 <p>Default value is <code class="docutils literal notranslate"><span class="pre">proc</span></code></p>
-<p>This values should be allways equal or greater than <code class="docutils literal notranslate"><span class="pre">proc</span></code></p>
+<p>This value should be always equal or greater than <code class="docutils literal notranslate"><span class="pre">proc</span></code></p>
 </dd>
 <dt>min_proc (optional, int, None)</dt><dd><p>The minimum number of dedicated processors to create a partition.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">proc_unit</span></code> parameter is set, then this value will work as min virtual processors for shared processor setting</p>
-<p>Default value is 1</p>
-<p>This values should be allways equal or less than <code class="docutils literal notranslate"><span class="pre">proc</span></code></p>
+<p>Default value is ‘1’</p>
+<p>This value should be always equal or less than <code class="docutils literal notranslate"><span class="pre">proc</span></code></p>
 </dd>
 <dt>proc_unit (optional, float, None)</dt><dd><p>The number of shared processing units to create a partition.</p>
 </dd>
 <dt>shared_proc_pool (optional, str, None)</dt><dd><p>Shared Processor Pool ID or Name</p>
-<p>If numeric value provided to this parameter will be considered as Shared Processor Pool ID</p>
-<p>This parametr can be used only with <code class="docutils literal notranslate"><span class="pre">proc_unit</span></code></p>
-<p>Default value is DefaultPool</p>
+<p>If numeric value provided to this parameter, it will be considered as Shared Processor Pool ID.</p>
+<p>This parameter can be used only with <code class="docutils literal notranslate"><span class="pre">proc_unit</span></code></p>
+<p>Default value is ‘DefaultPool’</p>
 </dd>
 <dt>max_proc_unit (optional, float, None)</dt><dd><p>The maximum number of shared processing units to create a partition</p>
 <p>This value should be equal or greater than <code class="docutils literal notranslate"><span class="pre">proc_unit</span></code></p>
@@ -187,13 +187,13 @@
 <dt>min_proc_unit (optional, float, None)</dt><dd><p>The minimum number of shared processing units to create a partition</p>
 <p>This value should be equal or less than <code class="docutils literal notranslate"><span class="pre">proc_unit</span></code></p>
 <p>This parameter can be used only with <code class="docutils literal notranslate"><span class="pre">proc_unit</span></code></p>
-<p>Default value is 0.1</p>
+<p>Default value is ‘0.1’</p>
 </dd>
-<dt>proc_mode (optional, str, None)</dt><dd><p>The processor mode to be used create a partition with shared processor</p>
+<dt>proc_mode (optional, str, None)</dt><dd><p>The processor mode to be used to create a partition with shared processor settings</p>
 <p>Default value is ‘uncapped’</p>
 <p>This parameter can be used only with <code class="docutils literal notranslate"><span class="pre">proc_unit</span></code></p>
 </dd>
-<dt>weight (optional, int, None)</dt><dd><p>The weight to be for uncapped proc mode while  create a partition with shared processor</p>
+<dt>weight (optional, int, None)</dt><dd><p>The weight to be used for uncapped proc mode while create a partition with shared processor settings</p>
 <p>Default value is ‘128’</p>
 <p>This value will be ignored if the <code class="docutils literal notranslate"><span class="pre">proc_mode</span></code> is set to <em>capped</em></p>
 <p>This parameter can be used only with <code class="docutils literal notranslate"><span class="pre">proc_mode</span></code></p>
@@ -201,14 +201,14 @@
 <dt>proc_compatibility_mode (optional, str, None)</dt><dd><p>The processor compatibility mode to be configured while creating a partition</p>
 </dd>
 <dt>mem (optional, int, None)</dt><dd><p>The value of dedicated memory value in megabytes to create a partition.</p>
-<p>Default value is 2048 MB.</p>
+<p>Default value is ‘2048 MB’.</p>
 </dd>
 <dt>max_mem (optional, int, None)</dt><dd><p>The maximum value of dedicated memory value in megabytes to create a partition.</p>
-<p>Default value is 2048 MB.</p>
+<p>Default value is ‘2048 MB’.</p>
 <p>This parameter can only be used with <code class="docutils literal notranslate"><span class="pre">mem</span></code></p>
 </dd>
 <dt>min_mem (optional, int, None)</dt><dd><p>The maximum value of dedicated memory value in megabytes to create a partition.</p>
-<p>Default value is 1024 MB.</p>
+<p>Default value is ‘1024 MB’.</p>
 <p>This parameter can only be used with <code class="docutils literal notranslate"><span class="pre">mem</span></code></p>
 </dd>
 <dt>os_type (optional, str, None)</dt><dd><p>Type of logical partition to be created.</p>
@@ -272,7 +272,7 @@
 <p>Optional, if not provided next availble value will be assigned.</p>
 </dd>
 <dt>server_adapter_id (optional, int, None)</dt><dd><p>The Server adapter slot number to be configured with FC adapter.</p>
-<p>Optional, if not provided next availble value will be assigned.</p>
+<p>Optional, if not provided next available value will be assigned.</p>
 </dd>
 </dl>
 </dd>
@@ -409,7 +409,7 @@
 <span class="w">         </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span><span class="w"></span>
 <span class="w">      </span><span class="nt">system_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;system_name&gt;</span><span class="w"></span>
 <span class="w">      </span><span class="nt">vm_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;vm_name&gt;</span><span class="w"></span>
-<span class="w">      </span><span class="nt">keylock</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;norm&#39;</span><span class="w"></span>
+<span class="w">      </span><span class="nt">keylock</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;normal&#39;</span><span class="w"></span>
 <span class="w">      </span><span class="nt">iIPLsource</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;d&#39;</span><span class="w"></span>
 <span class="w">      </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">poweron</span><span class="w"></span>
 
@@ -422,6 +422,7 @@
 <span class="w">      </span><span class="nt">system_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;system_name&gt;</span><span class="w"></span>
 <span class="w">      </span><span class="nt">vm_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;vm_name&gt;</span><span class="w"></span>
 <span class="w">      </span><span class="nt">all_resources</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span><span class="w"></span>
+<span class="w">      </span><span class="nt">os_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">aix_linux</span><span class="w"></span>
 <span class="w">      </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span><span class="w"></span>
 </pre></div>
 </div>

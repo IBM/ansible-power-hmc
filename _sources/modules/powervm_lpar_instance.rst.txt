@@ -68,7 +68,7 @@ Parameters
 
     If ``proc_unit`` parameter is set, then this value will work as virtual processors for shared processor setting.
 
-    Default value is 2. This will not work during shared processor setting.
+    Default value is '2'. This will not work during shared processor setting.
 
 
   max_proc (optional, int, None)
@@ -78,7 +78,7 @@ Parameters
 
     Default value is ``proc``
 
-    This values should be allways equal or greater than ``proc``
+    This value should be always equal or greater than ``proc``
 
 
   min_proc (optional, int, None)
@@ -86,9 +86,9 @@ Parameters
 
     If ``proc_unit`` parameter is set, then this value will work as min virtual processors for shared processor setting
 
-    Default value is 1
+    Default value is '1'
 
-    This values should be allways equal or less than ``proc``
+    This value should be always equal or less than ``proc``
 
 
   proc_unit (optional, float, None)
@@ -98,11 +98,11 @@ Parameters
   shared_proc_pool (optional, str, None)
     Shared Processor Pool ID or Name
 
-    If numeric value provided to this parameter will be considered as Shared Processor Pool ID
+    If numeric value provided to this parameter, it will be considered as Shared Processor Pool ID.
 
-    This parametr can be used only with ``proc_unit``
+    This parameter can be used only with ``proc_unit``
 
-    Default value is DefaultPool
+    Default value is 'DefaultPool'
 
 
   max_proc_unit (optional, float, None)
@@ -122,11 +122,11 @@ Parameters
 
     This parameter can be used only with ``proc_unit``
 
-    Default value is 0.1
+    Default value is '0.1'
 
 
   proc_mode (optional, str, None)
-    The processor mode to be used create a partition with shared processor
+    The processor mode to be used to create a partition with shared processor settings
 
     Default value is 'uncapped'
 
@@ -134,7 +134,7 @@ Parameters
 
 
   weight (optional, int, None)
-    The weight to be for uncapped proc mode while  create a partition with shared processor
+    The weight to be used for uncapped proc mode while create a partition with shared processor settings
 
     Default value is '128'
 
@@ -150,13 +150,13 @@ Parameters
   mem (optional, int, None)
     The value of dedicated memory value in megabytes to create a partition.
 
-    Default value is 2048 MB.
+    Default value is '2048 MB'.
 
 
   max_mem (optional, int, None)
     The maximum value of dedicated memory value in megabytes to create a partition.
 
-    Default value is 2048 MB.
+    Default value is '2048 MB'.
 
     This parameter can only be used with ``mem``
 
@@ -164,7 +164,7 @@ Parameters
   min_mem (optional, int, None)
     The maximum value of dedicated memory value in megabytes to create a partition.
 
-    Default value is 1024 MB.
+    Default value is '1024 MB'.
 
     This parameter can only be used with ``mem``
 
@@ -286,7 +286,7 @@ Parameters
     server_adapter_id (optional, int, None)
       The Server adapter slot number to be configured with FC adapter.
 
-      Optional, if not provided next availble value will be assigned.
+      Optional, if not provided next available value will be assigned.
 
 
 
@@ -457,7 +457,7 @@ Examples
              password: '{{ hmc_password }}'
           system_name: <system_name>
           vm_name: <vm_name>
-          keylock: 'norm'
+          keylock: 'normal'
           iIPLsource: 'd'
           action: poweron
 
@@ -470,6 +470,7 @@ Examples
           system_name: <system_name>
           vm_name: <vm_name>
           all_resources: True
+          os_type: aix_linux
           state: present
 
 
