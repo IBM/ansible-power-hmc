@@ -138,5 +138,25 @@ To install a build from the ansible-power-hmc Git repository:
 
       .. _installing collections with Ansible Galaxy:
          https://docs.ansible.com/ansible/latest/user_guide/collections_using.html#installing-collections-with-ansible-galaxy
+ 
 
+Build Execution Environment Image
+---------------------------------
+By default, the published execution environment images unlikely to contain the HMC collections. For that user may need to create custom ee image to package
+the HMC collection along with base universal ee image.
 
+Following step demonstrate how an ansible execution environment image can be created to support Ansible Automation Platform 2.X based environment:
+
+   1. Setup the machine with ansible builder tool. Refer `official documentation`_
+
+   .. _official documentation:
+      https://ansible-builder.readthedocs.io/en/latest/
+
+   2. Build the ee image using the `execution environment configuration yaml`_. Make sure the command is executed from the home path where yaml file is present.
+
+      .. _execution environment configuration yaml:
+         https://github.com/IBM/ansible-power-hmc/blob/dev-collection/execution-environment.yml
+
+      .. code-block:: sh
+
+         $ansible-builder build –t <image_tag>
