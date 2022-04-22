@@ -105,3 +105,23 @@ Availability
 
 .. _GitHub v1.4.0:
    https://github.com/IBM/ansible-power-hmc/releases/download/v1.4.0/ibm-power_hmc-1.4.0.tar.gz
+
+
+Version 1.5.0
+-------------
+Notes
+  * powervm_lpar_migration: Cross HMC (partition migration) support
+  * powervm_lpar_instance: Virtual Slot settings support for NPIV config
+  * powervm_lpar_instance: Storage details on facts state
+  * powervm_lpar_instance: Support for more proc and mem settings including shared processor pool
+  * Support to ignore SSH host key using env
+
+Availability
+  * `Galaxy v1.5.0`_
+  * `GitHub v1.5.0`_
+
+.. _Galaxy v1.5.0:
+   https://galaxy.ansible.com/download/ibm-power_hmc-1.5.0.tar.gz
+
+.. _GitHub v1.5.0:
+   https://github.com/IBM/ansible-power-hmc/releases/download/v1.5.0/ibm-power_hmc-1.5.0.tar.gz

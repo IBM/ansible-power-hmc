@@ -43,6 +43,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#ansible-galaxy">Ansible Galaxy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#local-build">Local build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#build-execution-environment-image">Build Execution Environment Image</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
@@ -190,6 +191,24 @@ Installing <span class="s1">&#39;ibm.power_hmc:1.0.0&#39;</span> to <span class=
 <p>You can use the <code class="docutils literal notranslate"><span class="pre">-p</span></code> option with <code class="docutils literal notranslate"><span class="pre">ansible-galaxy</span></code> to specify the
 installation path, for example, <code class="docutils literal notranslate"><span class="pre">ansible-galaxy</span> <span class="pre">collection</span> <span class="pre">install</span> <span class="pre">ibm-power_hmc-1.0.0.tar.gz</span> <span class="pre">-p</span> <span class="pre">/home/ansible/collections</span></code>.</p>
 <p>For more information, see <a class="reference external" href="https://docs.ansible.com/ansible/latest/user_guide/collections_using.html#installing-collections-with-ansible-galaxy">installing collections with Ansible Galaxy</a>.</p>
+</li>
+</ol>
+</div></blockquote>
+</section>
+<section id="build-execution-environment-image">
+<h2>Build Execution Environment Image<a class="headerlink" href="#build-execution-environment-image" title="Permalink to this headline"></a></h2>
+<p>By default, the published execution environment images unlikely to contain the HMC collections. For that user may need to create custom ee image to package
+the HMC collection along with base universal ee image.</p>
+<p>Following step demonstrate how an ansible execution environment image can be created to support Ansible Automation Platform 2.X based environment:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Setup the machine with ansible builder tool. Refer <a class="reference external" href="https://ansible-builder.readthedocs.io/en/latest/">official documentation</a></p></li>
+</ol>
+<ol class="arabic" start="2">
+<li><p>Build the ee image using the <a class="reference external" href="https://github.com/IBM/ansible-power-hmc/blob/dev-collection/execution-environment.yml">execution environment configuration yaml</a>. Make sure the command is executed from the home path where yaml file is present.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nv">$ansible</span>-builder build –t &lt;image_tag&gt;
+</pre></div>
+</div>
 </li>
 </ol>
 </div></blockquote>
