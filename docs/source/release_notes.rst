@@ -124,4 +124,4 @@ Availability
    https://galaxy.ansible.com/download/ibm-power_hmc-1.5.0.tar.gz
 
 .. _GitHub v1.5.0:
-   https://github.com/IBM/ansible-power-hmc/releases/download/v1.4.0/ibm-power_hmc-1.5.0.tar.gz
+   https://github.com/IBM/ansible-power-hmc/releases/download/v1.5.0/ibm-power_hmc-1.5.0.tar.gz
