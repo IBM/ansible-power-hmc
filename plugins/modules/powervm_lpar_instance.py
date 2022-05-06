@@ -67,6 +67,11 @@ options:
             - The name of the powervm partition to create/delete/poweron/shutdown/facts
         required: true
         type: str
+    vm_id:
+        description:
+            - The partition ID to be set while creating a Logical Partition
+            - Optional, if not provided, next available value will be assigned
+        type: int
     proc:
         description:
             - The number of dedicated processors to create a partition.
@@ -548,22 +553,22 @@ def validate_parameters(params):
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'volume_config', 'virt_network_config', 'retain_vios_cfg', 'delete_vdisks',
                            'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
-                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool']
+                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'vm_id']
     elif opr == 'absent':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
-                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool']
+                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'vm_id']
     elif opr == 'facts':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
-                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool']
+                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'vm_id']
     else:
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc',
-                           'min_proc_unit', 'max_proc_unit', 'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool']
+                           'min_proc_unit', 'max_proc_unit', 'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'vm_id']
 
     collate = []
     for eachMandatory in mandatoryList:
@@ -831,6 +836,7 @@ def create_partition(module, params):
     password = params['hmc_auth']['password']
     system_name = params['system_name']
     vm_name = params['vm_name']
+    vm_id = params['vm_id']
     proc = str(params['proc'] or 2)
     max_proc = str(params['max_proc'] or proc)
     min_proc = str(params['min_proc'] or 1)
@@ -966,6 +972,8 @@ def create_partition(module, params):
         config_dict['weight'] = str(weight) if proc_mode == 'uncapped' else str(0)
         config_dict['proc_comp_mode'] = proc_compatibility_mode
         config_dict['shared_proc_pool'] = shared_proc_pool if shared_proc_pool else str(0)
+        if vm_id:
+            config_dict['lpar_id'] = str(vm_id)
 
         # Tagged IO
         if os_type == 'ibmi':
@@ -1371,6 +1379,7 @@ def run_module():
                       ),
         system_name=dict(type='str', required=True),
         vm_name=dict(type='str', required=True),
+        vm_id=dict(type='int'),
         proc=dict(type='int'),
         max_proc=dict(type='int'),
         min_proc=dict(type='int'),
