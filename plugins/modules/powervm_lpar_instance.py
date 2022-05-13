@@ -299,49 +299,49 @@ options:
     install_settings:
         description:
             - Settings for installing Operating System on logical partition
-        typr: dict
+        type: dict
         suboptions:
             vm_ip:
                 description:
                     - IP Address to be configured to Logical Partition
                 required: True
-                typr: str
+                type: str
             nim_ip:
                 description:
                     - IP Address of the NIM Server.
                 required: True
-                typr: str
+                type: str
             nim_gateway:
                 description:
                     - logical Partition gateway IP Address.
                 required: True
-                typr: str
+                type: str
             nim_subnetmask:
                 description:
                     - Subnetmask IP Address to be configured to Logical Partition.
                 required: True
-                typr: str
+                type: str
             location_code:
                 description:
                     - Network adapter location code to be used while installing OS.
                     - If user doesn't provide, it automatically picks the first pingable adapter attached to the partition.
-                typr: str
+                type: str
             nim_vlan_id:
                 description:
                     - Specifies the VLANID(0 to 4094) to use for tagging Ethernet frames during network install for virtual network communication.
                     - Default value is 0
-                typr: str
+                type: str
             nim_vlan_priority:
                 description:
                     - Specifies the VLAN priority (0 to 7) to use for tagging Ethernet frames during network install for virtual network communication.
                     - Default value is 0
-                typr: str
+                type: str
             timeout:
                 description:
                     - Max waiting time in mins for OS to bootup fully.
                     - Min timeout should be more than 10 mins.
                     - Default value is 60 min.
-                typr: str
+                type: str
     state:
         description:
             - C(present) creates a partition of the specified I(os_type), I(vm_name), I(proc) and I(memory) on specified I(system_name).
