@@ -357,7 +357,7 @@ def installVios(module, params):
             changed = True
         elif ref_code in ['', '00']:
             changed = True
-            warn_msg = "VIOS installation has been succefull but RMC didnt come up, please check the HMC firewall and security"
+            warn_msg = "VIOS installation has been successfull but RMC didnt come up, please check the HMC firewall and security"
         else:
             module.fail_json(msg="VIOS Installation failed even after waiting for " + str(timeout) + " mins and the reference code is " + ref_code)
     except HmcError as install_error:

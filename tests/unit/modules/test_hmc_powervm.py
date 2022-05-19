@@ -62,10 +62,10 @@ test_data1 = [
       '1024', 'os_type': 'aix_linux', 'proc_unit': '4', 'prof_name': 'default', 'keylock': 'manual', 'iIPLsource': 'a',
       'volume_config': volume_config, 'virt_network_config': virt_network_config, 'all_resources': True, 'max_virtual_slots': 25, 'advanced_info': True,
       'min_proc': '1', 'max_proc': '2', 'min_proc_unit': '0.1', 'max_proc_unit': '1', 'proc_mode': 'uncapped', 'weight': '124',
-      'proc_compatibility_mode': 'POWER8', 'shared_proc_pool': '1', 'vm_id': 4, 'install_settings': install_Settings},
+      'proc_compatibility_mode': 'POWER8', 'shared_proc_pool': '1', 'min_mem': '2048', 'max_mem': '1024', 'vm_id': 4, 'install_settings': install_Settings},
      "ParameterError: unsupported parameters: proc, mem, os_type, proc_unit, prof_name, keylock, iIPLsource, volume_config, virt_network_config,"
      " all_resources, max_virtual_slots, advanced_info, min_proc, max_proc, min_proc_unit, max_proc_unit, proc_mode, weight, proc_compatibility_mode,"
-     " shared_proc_pool, vm_id, install_settings")]
+     " shared_proc_pool, min_mem, max_mem, vm_id, install_settings")]
 test_data2 = [
     # ALL Shutdown partition testdata
     # system_name value is missing
@@ -86,11 +86,12 @@ test_data2 = [
       '1024', 'os_type': 'aix_linux', 'proc_unit': '4', 'prof_name': 'default', 'keylock': 'manual', 'iIPLsource': 'a',
       'volume_config': volume_config, 'virt_network_config': virt_network_config, 'retain_vios_cfg': True, 'delete_vdisks': True,
       'all_resources': True, 'max_virtual_slots': 25, 'advanced_info': True, 'min_proc': '1', 'max_proc': '2', 'min_proc_unit': '0.1',
-      'max_proc_unit': '1', 'proc_mode': 'uncapped', 'weight': '124', 'proc_compatibility_mode': 'POWER8', 'shared_proc_pool': '2', 'vm_id': 5,
-      'install_settings': install_Settings},
+      'max_proc_unit': '1', 'proc_mode': 'uncapped', 'weight': '124', 'proc_compatibility_mode': 'POWER8', 'shared_proc_pool': '2',
+      'min_mem': '2048', 'max_mem': '1024', 'vm_id': 5, 'install_settings': install_Settings},
      "ParameterError: unsupported parameters: proc, mem, os_type, proc_unit, prof_name, keylock, iIPLsource, volume_config,"
      " virt_network_config, retain_vios_cfg, delete_vdisks, all_resources, max_virtual_slots, advanced_info,"
-     " min_proc, max_proc, min_proc_unit, max_proc_unit, proc_mode, weight, proc_compatibility_mode, shared_proc_pool, vm_id, install_settings")]
+     " min_proc, max_proc, min_proc_unit, max_proc_unit, proc_mode, weight, proc_compatibility_mode, shared_proc_pool,"
+     " min_mem, max_mem, vm_id, install_settings")]
 test_data3 = [
     # ALL Activate partition testdata
     # system name is missing
@@ -111,10 +112,10 @@ test_data3 = [
       '1024', 'os_type': 'aix_linux', 'proc_unit': '4', 'volume_config': volume_config, 'virt_network_config': 'test_vn_name',
       'retain_vios_cfg': True, 'delete_vdisks': True, 'all_resources': True, 'max_virtual_slots': 25, 'advanced_info': True,
       'min_proc': '1', 'max_proc': '2', 'min_proc_unit': '0.1', 'max_proc_unit': '1', 'proc_mode': 'uncapped', 'weight': '124',
-      'proc_compatibility_mode': 'POWER8', 'shared_proc_pool': '2', 'vm_id': 5, 'install_settings': install_Settings},
+      'proc_compatibility_mode': 'POWER8', 'shared_proc_pool': '2', 'min_mem': '2048', 'max_mem': '1024', 'vm_id': 5, 'install_settings': install_Settings},
      "ParameterError: unsupported parameters: proc, mem, os_type, proc_unit, volume_config, virt_network_config, retain_vios_cfg, delete_vdisks,"
      " all_resources, max_virtual_slots, advanced_info, min_proc, max_proc, min_proc_unit, max_proc_unit, proc_mode, weight, proc_compatibility_mode,"
-     " shared_proc_pool, vm_id, install_settings")]
+     " shared_proc_pool, min_mem, max_mem, vm_id, install_settings")]
 
 
 def common_mock_setup(mocker):

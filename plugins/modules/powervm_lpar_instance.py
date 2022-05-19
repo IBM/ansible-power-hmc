@@ -599,27 +599,28 @@ def validate_parameters(params):
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'volume_config', 'virt_network_config', 'retain_vios_cfg', 'delete_vdisks',
                            'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
-                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'vm_id', 'install_settings']
+                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'install_settings']
     elif opr == 'absent':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
-                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'vm_id', 'install_settings']
+                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'install_settings']
     elif opr == 'facts':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
-                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'vm_id', 'install_settings']
+                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'install_settings']
     elif opr == 'install_os':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'install_settings']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config', 'retain_vios_cfg',
                            'delete_vdisks', 'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
-                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'vm_id']
+                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id']
     else:
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc',
-                           'min_proc_unit', 'max_proc_unit', 'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'vm_id', 'install_settings']
+                           'min_proc_unit', 'max_proc_unit', 'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem',
+                           'vm_id', 'install_settings']
 
     collate = []
     for eachMandatory in mandatoryList:
@@ -1347,6 +1348,10 @@ def install_aix_os(module, params):
     if timeout < 10:
         module.fail_json(msg="timeout should be more than 10mins")
     try:
+        lpar_details = hmc.getPartitionConfig(system_name, vm_name)
+        if lpar_details['lpar_env'] != 'aixlinux':
+            module.fail_json(msg="UnSupported logical partitions os type:" + lpar_details['lpar_env'] + ", Supported logical partition os type is aixlinux")
+
         if location_code:
             hmc.installOSFromNIM(location_code, nim_ip, nim_gateway, vm_ip, nim_vlan_id, nim_vlan_priority, nim_subnetmask, vm_name, profile_name, system_name)
         else:
@@ -1366,7 +1371,7 @@ def install_aix_os(module, params):
             changed = True
         elif ref_code in ['', '00']:
             changed = True
-            warn_msg = "AIX installation has been succefull but RMC didnt come up, please check the HMC firewall and security"
+            warn_msg = "AIX installation has been successfull but RMC didnt come up, please check the HMC firewall and security"
         else:
             module.fail_json(msg="AIX Installation failed even after waiting for " + str(timeout) + " mins and the reference code is " + ref_code)
     except HmcError as install_error:
