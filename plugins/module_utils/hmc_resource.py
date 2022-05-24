@@ -518,3 +518,41 @@ class Hmc():
                 self.OPT['MKAUTHKEYS']['-U'] + username +\
                 self.OPT['MKAUTHKEYS']['--PASSWD'] + passwd
         self.hmcconn.execute(mkauthcmd)
+
+    def listUsr(self, user_type=None, filt={}):
+        listHmcUsr = self.CMD['LSHMCUSR']
+        if user_type:
+            listHmcUsr += self.OPT['LSHMCUSR']['-T'][user_type.upper()]
+        if filt:
+            listHmcUsr += self.cmdClass.filterBuilder('LSHMCUSR', filt)
+        result = self.hmcconn.execute(listHmcUsr)
+        if 'No results were found' in result:
+            return []
+        return self.cmdClass.parseMultiLineCSV(result)
+
+    def createUsr(self, configDict):
+        config = {each.upper(): str(configDict[each]) for each in configDict if configDict[each] is not None}
+        mkhmcusrCmd = self.CMD['MKHMCUSR'] +\
+            self.cmdClass.i_a_ConfigBuilder('MKHMCUSR', '-I', config)
+        self.hmcconn.execute(mkhmcusrCmd)
+
+    def modifyUsr(self, configDict=None, enable=False, modify_type=None):
+        chhmcusrCmd = self.CMD['CHHMCUSR']
+        config = {each.upper(): str(configDict[each]) for each in configDict if configDict[each] is not None}
+        if enable:
+            chhmcusrCmd += self.OPT['CHHMCUSR']['-O']['E'] +\
+                self.OPT['CHHMCUSR']['-U'] + config['NAME']
+        elif modify_type == 'default' and config:
+            chhmcusrCmd += self.OPT['CHHMCUSR']['-T']['DEFAULT'] +\
+                self.cmdClass.i_a_ConfigBuilder('CHHMCUSR', '-I', config)
+        elif config:
+            chhmcusrCmd += self.cmdClass.i_a_ConfigBuilder('CHHMCUSR', '-I', config)
+        self.hmcconn.execute(chhmcusrCmd)
+
+    def removeUsr(self, usr=None, rm_type=None):
+        rmhmcusrCmd = self.CMD['RMHMCUSR']
+        if usr:
+            rmhmcusrCmd += self.OPT['RMHMCUSR']['-U'] + usr
+        elif rm_type:
+            rmhmcusrCmd += self.OPT['RMHMCUSR']['-T'][rm_type.upper()]
+        self.hmcconn.execute(rmhmcusrCmd)

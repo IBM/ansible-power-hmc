@@ -35,7 +35,11 @@ class HmcCommandStack():
                'LPAR_NETBOOT': 'lpar_netboot',
                'LSREFCODE': 'lsrefcode',
                'VIOSVRCMD': 'viosvrcmd',
-               'MKAUTHKEYS': 'mkauthkeys'}
+               'MKAUTHKEYS': 'mkauthkeys',
+               'LSHMCUSR': 'lshmcusr',
+               'MKHMCUSR': 'mkhmcusr',
+               'CHHMCUSR': 'chhmcusr',
+               'RMHMCUSR': 'rmhmcusr'}
 
     HMC_CMD_OPT = {'LSHMC': {'-N': ' -n ',
                              '-v': ' -v ',
@@ -317,7 +321,38 @@ class HmcCommandStack():
                                   '--IP': ' --ip ',
                                   '-U': ' -u ',
                                   '--PASSWD': ' --passwd ',
-                                  '--TEST': ' --test'}
+                                  '--TEST': ' --test'},
+                   'LSHMCUSR': {'-T': {'DEFAULT': ' -t default ', 'USER': ' -t user '},
+                                '--FILTER': {'NAMES': 'names', 'RESOURCES': 'resources',
+                                             'RESOURCEROLES': 'resourceroles', 'TASKROLES': 'taskroles',
+                                             'PASSWORD_ENCRYPTIONS': 'password_encryptions'}},
+                   'RMHMCUSR': {'-U': ' -u ',
+                                '-T': {'ALL': ' -t all ', 'LOCAL': ' -t local ', 'KERBEROS': ' -t kerberos ',
+                                       'LDAP': ' -t ldap ', 'AUTOMANAGE': ' -t automanage '}},
+                   'MKHMCUSR': {'-I': {'NAME': 'name', 'TASKROLE': 'taskrole', 'RESOURCEROLE': 'resourcerole',
+                                       'DESCRIPTION': 'description', 'PASSWD': 'passwd', 'PWAGE': 'pwage',
+                                       'MIN_PWAGE': 'min_pwage', 'AUTHENTICATION_TYPE': 'authentication_type',
+                                       'SESSION_TIMEOUT': 'session_timeout', 'VERIFY_TIMEOUT': 'verify_timeout',
+                                       'IDLE_TIMEOUT': 'idle_timeout', 'REMOTE_WEBUI_ACCESS': 'remote_webui_access',
+                                       'REMOTE_SSH_ACCESS': 'remote_ssh_access',
+                                       'REMOTE_USER_NAME': 'remote_user_name',
+                                       'INACTIVITY_EXPIRATION': 'inactivity_expiration'}},
+                   'CHHMCUSR': {'-T': {'DEFAULT': ' -t default '},
+                                '-O': {'A': ' -o a ', 'E': ' -o e '},
+                                '-U': ' -u ',
+                                '-I': {'NAME': 'name', 'TASKROLE': 'taskrole', 'RESOURCEROLE': 'resourcerole',
+                                       'DESCRIPTION': 'description', 'PASSWD': 'passwd', 'PWAGE': 'pwage',
+                                       'MIN_PWAGE': 'min_pwage', 'AUTHENTICATION_TYPE': 'authentication_type',
+                                       'SESSION_TIMEOUT': 'session_timeout', 'VERIFY_TIMEOUT': 'verify_timeout',
+                                       'IDLE_TIMEOUT': 'idle_timeout', 'REMOTE_WEBUI_ACCESS': 'remote_webui_access',
+                                       'REMOTE_SSH_ACCESS': 'remote_ssh_access', 'REMOTE_USER_NAME': 'remote_user_name',
+                                       'INACTIVITY_EXPIRATION': 'inactivity_expiration', 'NEW_NAME': 'new_name',
+                                       'CURRENT_PASSWD': 'current_passwd', 'PASSWD_AUTHENTICATION': 'passwd_authentication',
+                                       'MAX_WEBUI_LOGIN_ATTEMPTS': 'max_webui_login_attempts',
+                                       'MAX_WEBUI_LOGIN_SUSPEND_TIME': 'max_webui_login_suspend_time',
+                                       'WEBUI_LOGIN_SUSPEND_TIME': 'webui_login_suspend_time',
+                                       'MAX_WEBUI_LOGIN_ATTEMPTS': 'max_webui_login_attempts',
+                                       'WEBUI_LOGIN_SUSPEND_TIME': 'webui_login_suspend_time'}},
                    }
 
     def filterBuilder(self, cmdKey, configOptionsDict):
@@ -481,13 +516,13 @@ class HmcCommandStack():
     def parseMultiLineCSV(self, csvData, userConfig=None):
         eachDict = {}
         listOfDict = []
-
         lines = csvData.split('\n')
         for line in lines:
             if not line:  # to remove empty lines
                 continue
             eachDict = self.parseCSV(line, userConfig)
             listOfDict.append(eachDict)
+
         return listOfDict
 
     def parseAttributes(self, i_csvAttrStr, i_csvValueStr):
