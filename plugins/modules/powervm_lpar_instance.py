@@ -340,7 +340,7 @@ options:
                 description:
                     - Max waiting time in mins for OS to bootup fully.
                     - Min timeout should be more than 10 mins.
-                    - Default value is 60 mins
+                    - Default value is 60 min.
                 type: int
     state:
         description:
@@ -1347,47 +1347,11 @@ def install_aix_os(module, params):
 
     if timeout < 10:
         module.fail_json(msg="timeout should be more than 10mins")
-
     try:
-        rest_conn = HmcRestClient(hmc_host, hmc_user, password)
-    except Exception as error:
-        error_msg = parse_error_response(error)
-        module.fail_json(msg=error_msg)
+        lpar_details = hmc.getPartitionConfig(system_name, vm_name)
+        if lpar_details['lpar_env'] != 'aixlinux':
+            module.fail_json(msg="UnSupported logical partitions os type:" + lpar_details['lpar_env'] + ", Supported logical partition os type is aixlinux")
 
-    try:
-        system_uuid, server_dom = rest_conn.getManagedSystem(system_name)
-    except Exception as error:
-        try:
-            rest_conn.logoff()
-        except Exception:
-            logger.debug("Logoff error")
-        error_msg = parse_error_response(error)
-        module.fail_json(msg=error_msg)
-    if not system_uuid:
-        module.fail_json(msg="Given system is not present")
-
-    try:
-        partition_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, vm_name)
-    except Exception as error:
-        try:
-            rest_conn.logoff()
-        except Exception:
-            logger.debug("Logoff error")
-        error_msg = parse_error_response(error)
-        module.fail_json(msg=error_msg)
-
-    if partition_uuid:
-        lpar_env = partition_dom.xpath("//PartitionType/text()")[0]
-        if lpar_env != 'AIX/Linux':
-            module.fail_json(msg="UnSupported logical partitions os type:" + lpar_env + ", Supported logical partition os type is aixlinux")
-        vscsi_conn = partition_dom.xpath("//VirtualSCSIClientAdapters/link")
-        vfc_conn = partition_dom.xpath("//VirtualFibreChannelClientAdapters/link")
-        if not (vscsi_conn or vfc_conn):
-            module.fail_json(msg="No storage attached to the logical partition")
-    else:
-        module.fail_json(msg="logical partition: " + vm_name + "doesn't exist")
-
-    try:
         if location_code:
             hmc.installOSFromNIM(location_code, nim_ip, nim_gateway, vm_ip, nim_vlan_id, nim_vlan_priority, nim_subnetmask, vm_name, profile_name, system_name)
         else:
