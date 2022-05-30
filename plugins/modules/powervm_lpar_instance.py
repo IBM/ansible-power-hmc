@@ -355,7 +355,7 @@ options:
             - C(poweron) poweron a partition of the specified I(vm_name) with specified I(prof_name), I(keylock), I(iIPLsource) on specified I(system_name).
             - C(restart) restart a partition of the specified I(vm_name) on specified I(system_name).
         type: str
-        choices: ['poweron', 'shutdown', 'restart', install_os]
+        choices: ['poweron', 'shutdown', 'restart', 'install_os']
 '''
 
 EXAMPLES = '''
@@ -1350,7 +1350,7 @@ def install_aix_os(module, params):
     try:
         lpar_details = hmc.getPartitionConfig(system_name, vm_name)
         if lpar_details['lpar_env'] != 'aixlinux':
-            module.fail_json(msg="UnSupported logical partitions os type:" + lpar_details['lpar_env'] + ", Supported logical partition os type is aixlinux")
+            module.fail_json(msg="Unsupported logical partition os type:" + lpar_details['lpar_env'] + ", Supported os type is aixlinux")
 
         if location_code:
             hmc.installOSFromNIM(location_code, nim_ip, nim_gateway, vm_ip, nim_vlan_id, nim_vlan_priority, nim_subnetmask, vm_name, profile_name, system_name)
