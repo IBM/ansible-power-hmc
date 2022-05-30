@@ -148,20 +148,24 @@ options:
 '''
 
 EXAMPLES = '''
-- name: Execute a command on HMC
-  hmc_command:
+- name: Create hmc user
+  hmc_user:
+    state: present
     hmc_host: "{{ inventory_hostname }}"
+    name: hscroot1
     hmc_auth:
-         username: '{{ ansible_user }}'
-         password: '{{ hmc_password }}'
-    cmd: <cmd>
+      username: <username>
+      password: <password>
+    attributes:
+      authentication_type: local
+      taskrole: hmcsuperadmin
+      passwd: <new_user_password>
 '''
 
 RETURN = '''
 Command_output:
-    description: Respective command output
-    type: str
-    returned: always
+    description: Respective user configuration
+    type: dict
 '''
 
 import logging
@@ -212,6 +216,9 @@ def validate_sub_params(params):
             if len(all_data) > len(default_types):
                 raise ParameterError("%s state will support only attributes: %s for default type"
                                      % (state, ','.join(default_support)))
+        elif params['type'] is None and params['name'] is None:
+            raise ParameterError("%s state need parameter: name with non default settings"
+                                 % (state))
         key = 'type'
         supportedList = ['default']
         notTogetherList = [['enable_user', 'attributes'],
@@ -361,6 +368,18 @@ def ensure_absent(module, params):
     return changed, None, None
 
 
+def isDifferent(source, target):
+    for each in source:
+        if source[each] is not None and isinstance(source.get(each), bool):
+            if source[each]:
+                source[each] = '1'
+            else:
+                source[each] = '0'
+        if source[each] is not None and str(source[each]) != target.get(each.upper()):
+            return True
+    return False
+
+
 def ensure_update(module, params):
     hmc_host = params['hmc_host']
     hmc_user = params['hmc_auth']['username']
@@ -392,18 +411,24 @@ def ensure_update(module, params):
             m_config.update(attributes)
 
         if enable_user:
-            hmc.modifyUsr(enable=enable_user, configDict={"NAME": usr_name})
-        elif m_type:
-            hmc.modifyUsr(modify_type=m_type, configDict=m_config)
+            user_info_check = hmc.listUsr(filt=filter_d)
+            if user_info_check[0].get('disabled') == '1':
+                hmc.modifyUsr(enable=enable_user, configDict={"NAME": usr_name})
+                changed = True
         else:
-            hmc.modifyUsr(configDict=m_config)
+            user_info_check = hmc.listUsr(filt=filter_d)
+            if isDifferent(m_config, user_info_check[0]):
+                hmc.modifyUsr(configDict=m_config)
+                changed = True
+
         user_info = hmc.listUsr(filt=filter_d)
-        changed = True
-        return changed, user_info, None
+        return changed, user_info[0], None
     elif m_type:
-        hmc.modifyUsr(modify_type=m_type, configDict=attributes)
+        user_info_check = hmc.listUsr(user_type=m_type)
+        if isDifferent(attributes, user_info_check[0]):
+            hmc.modifyUsr(modify_type=m_type, configDict=attributes)
+            changed = True
         user_info = hmc.listUsr(user_type=m_type)
-        changed = True
         return changed, user_info, None
     return changed, None, None
 
@@ -423,7 +448,7 @@ def perform_task(module):
     try:
         return actions[params['state']](module, params)
     except Exception as error:
-        return False, str(error), None
+        return False, repr(error), None
 
 
 def run_module():
