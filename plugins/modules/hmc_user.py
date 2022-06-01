@@ -103,7 +103,7 @@ options:
                 description:
                     - Valid values are C(local|kerberos|ldap).
                 type: str
-                choices: ['local' 'kerberos', 'ldap']
+                choices: ['local', 'kerberos', 'ldap']
             session_timeout:
                 description:
                     - Number of minutes.
