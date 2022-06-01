@@ -59,11 +59,16 @@ options:
                during I(state=absent). Supported values are C(all|local|kerberos|ldap|automanage).
                During I(state=facts), valid values are C(default|user).
         type: str
+        choices: ['default', 'user', 'all', 'localkerberos', 'ldap', 'automanage']
     attributes:
         description:
             - Configuration attributes used during the create and modify of HMC user
         type: dict
         suboptions:
+            new_name:
+                description:
+                    - The new name to be updated.
+                type: str
             taskrole:
                 description:
                     - Valid values are C(hmcsuperadmin|hmcoperator|hmcviewer|
@@ -98,6 +103,7 @@ options:
                 description:
                     - Valid values are C(local|kerberos|ldap).
                 type: str
+                choices: ['local' 'kerberos', 'ldap']
             session_timeout:
                 description:
                     - Number of minutes.
@@ -133,6 +139,14 @@ options:
                 description:
                     - Kerberos users only.
                 type: str
+            max_webui_login_attempts:
+                description:
+                    - Maximum HMC UI login attempts.
+                type: int
+            webui_login_suspend_time:
+                description:
+                    - Number of minutes.
+                type: int
     state:
         description:
             - The desired state of the HMC user.
@@ -166,6 +180,7 @@ RETURN = '''
 Command_output:
     description: Respective user configuration
     type: dict
+    returned: on success of all states except C(absent|)
 '''
 
 import logging
@@ -197,7 +212,7 @@ def validate_sub_params(params):
         supportedList = ['default', 'user']
         if params['type'] == 'default' and params['name']:
             raise ParameterError("%s state will not support parameter: name with default type"
-                                 % (state))
+                                 % state)
     elif state == 'present':
         mandatoryList = ['taskrole']
         key = params['attributes']
@@ -227,6 +242,9 @@ def validate_sub_params(params):
         notTogetherList = [['name', 'type']]
         key = 'type'
         supportedList = ['all', 'local', 'kerberos', 'ldap', 'automanage']
+
+        if params['type'] is None and params['name'] is None:
+            raise ParameterError("%s state need either name or type parameter" % (state))
 
     if isinstance(key, str):
         if params.get(key) and params[key] not in supportedList:
@@ -486,6 +504,7 @@ def run_module():
                             inactivity_expiration=dict(type='int'),
                             remote_webui_access=dict(type='bool'),
                             remote_ssh_access=dict(type='bool'),
+                            passwd_authentication=dict(type='bool'),
                             remote_user_name=dict(type='str'),
                             max_webui_login_attempts=dict(type='int'),
                             webui_login_suspend_time=dict(type='int')

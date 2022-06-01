@@ -519,7 +519,7 @@ class Hmc():
                 self.OPT['MKAUTHKEYS']['--PASSWD'] + passwd
         self.hmcconn.execute(mkauthcmd)
 
-    def listUsr(self, user_type=None, filt={}):
+    def listUsr(self, user_type=None, filt=None):
         listHmcUsr = self.CMD['LSHMCUSR']
         if user_type:
             listHmcUsr += self.OPT['LSHMCUSR']['-T'][user_type.upper()]

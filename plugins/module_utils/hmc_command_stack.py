@@ -348,9 +348,7 @@ class HmcCommandStack():
                                        'REMOTE_SSH_ACCESS': 'remote_ssh_access', 'REMOTE_USER_NAME': 'remote_user_name',
                                        'INACTIVITY_EXPIRATION': 'inactivity_expiration', 'NEW_NAME': 'new_name',
                                        'CURRENT_PASSWD': 'current_passwd', 'PASSWD_AUTHENTICATION': 'passwd_authentication',
-                                       'MAX_WEBUI_LOGIN_ATTEMPTS': 'max_webui_login_attempts',
                                        'MAX_WEBUI_LOGIN_SUSPEND_TIME': 'max_webui_login_suspend_time',
-                                       'WEBUI_LOGIN_SUSPEND_TIME': 'webui_login_suspend_time',
                                        'MAX_WEBUI_LOGIN_ATTEMPTS': 'max_webui_login_attempts',
                                        'WEBUI_LOGIN_SUSPEND_TIME': 'webui_login_suspend_time'}},
                    }
