@@ -72,7 +72,7 @@ options:
             taskrole:
                 description:
                     - Valid values are C(hmcsuperadmin|hmcoperator|hmcviewer|
-                      hmcpe|hmcservicerep|hmcclientliveupdate).
+                      hmcpe|hmcservicerep|hmcclientliveupdate|<custom user role>).
                 type: str
             resourcerole:
                 description:
@@ -162,11 +162,20 @@ options:
 '''
 
 EXAMPLES = '''
+- name: List the properties of hmc user
+  hmc_user:
+    state: facts
+    hmc_host: "{{ inventory_hostname }}"
+    name: <user_name>
+    hmc_auth:
+      username: <username>
+      password: <password>
+
 - name: Create hmc user
   hmc_user:
     state: present
     hmc_host: "{{ inventory_hostname }}"
-    name: hscroot1
+    name: <user_name>
     hmc_auth:
       username: <username>
       password: <password>
@@ -174,6 +183,28 @@ EXAMPLES = '''
       authentication_type: local
       taskrole: hmcsuperadmin
       passwd: <new_user_password>
+
+- name: Modify hmc user
+  hmc_user:
+    state: updated
+    hmc_host: "{{ inventory_hostname }}"
+    name: <user_name>
+    hmc_auth:
+      username: <username>
+      password: <password>
+    attributes:
+      new_name: <new_user_name>
+      max_webui_login_attempts: 20
+
+- name: Remove hmc user
+  hmc_user:
+    state: absent
+    hmc_host: "{{ inventory_hostname }}"
+    name: <user_name>
+    hmc_auth:
+      username: <username>
+      password: <password>
+
 '''
 
 RETURN = '''
@@ -189,7 +220,9 @@ logger = logging.getLogger(__name__)
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_resource import Hmc
+USER_AUTHORITY_ERR = "HSCL350B The user does not have the appropriate authority"
 
 
 def init_logger():
@@ -231,6 +264,8 @@ def validate_sub_params(params):
             if len(all_data) > len(default_types):
                 raise ParameterError("%s state will support only attributes: %s for default type"
                                      % (state, ','.join(default_support)))
+        elif params['type'] == 'default' and params['attributes'] is None:
+            raise ParameterError("mandatory parameter: attributes missing")
         elif params['type'] is None and params['name'] is None:
             raise ParameterError("%s state need parameter: name with non default settings"
                                  % (state))
@@ -318,6 +353,7 @@ def facts(module, params):
     hmc_user = params['hmc_auth']['username']
     password = params['hmc_auth']['password']
     filter_d = {}
+    user_details = []
 
     validate_parameters(params)
     hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
@@ -327,7 +363,14 @@ def facts(module, params):
         filter_d = {"NAMES": params['name']}
     u_type = params.get('type')
 
-    user_details = hmc.listUsr(filt=filter_d, user_type=u_type)
+    try:
+        user_details = hmc.listUsr(filt=filter_d, user_type=u_type)
+    except HmcError as error:
+        if USER_AUTHORITY_ERR in repr(error):
+            logger.debug(repr(error))
+            return False, None, None
+        else:
+            raise
     return False, user_details, None
 
 
@@ -336,6 +379,7 @@ def ensure_present(module, params):
     hmc_user = params['hmc_auth']['username']
     password = params['hmc_auth']['password']
     usr_name = params['name']
+    user_info = []
 
     validate_parameters(params)
     hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
@@ -343,7 +387,14 @@ def ensure_present(module, params):
 
     already_exist = False
     filter_d = {"NAMES": usr_name}
-    user_info = hmc.listUsr(filt=filter_d)
+    try:
+        user_info = hmc.listUsr(filt=filter_d)
+    except HmcError as error:
+        if USER_AUTHORITY_ERR in repr(error):
+            logger.debug(repr(error))
+            return False, None, None
+        else:
+            raise
     for each in user_info:
         if usr_name in each['NAME']:
             already_exist = True
@@ -366,6 +417,7 @@ def ensure_absent(module, params):
     password = params['hmc_auth']['password']
     usr_name = params.get("name")
     r_type = params['type']
+    user_info = []
 
     validate_parameters(params)
     hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
@@ -373,7 +425,14 @@ def ensure_absent(module, params):
 
     already_exist = False
     filter_d = {"NAMES": usr_name}
-    user_info = hmc.listUsr(filt=filter_d)
+    try:
+        user_info = hmc.listUsr(filt=filter_d)
+    except HmcError as error:
+        if USER_AUTHORITY_ERR in repr(error):
+            logger.debug(repr(error))
+            return False, None, None
+        else:
+            raise
     if usr_name in user_info[0]['NAME']:
         already_exist = True
 
@@ -407,6 +466,7 @@ def ensure_update(module, params):
     usr_name = params.get('name')
     enable_user = params.get('enable_user')
     attributes = params.get('attributes')
+    user_info = []
 
     validate_parameters(params)
     hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
@@ -415,8 +475,15 @@ def ensure_update(module, params):
     already_exist = False
     if usr_name:
         filter_d = {"NAMES": usr_name}
-        user_info = hmc.listUsr(filt=filter_d)
-        if usr_name in user_info[0]['NAME']:
+        try:
+            user_info = hmc.listUsr(filt=filter_d)
+        except HmcError as error:
+            if USER_AUTHORITY_ERR in repr(error):
+                logger.debug(repr(error))
+                return False, None, None
+            else:
+                raise
+        if user_info and usr_name in user_info[0]['NAME']:
             already_exist = True
         else:
             return False, None, None
@@ -442,7 +509,16 @@ def ensure_update(module, params):
         user_info = hmc.listUsr(filt=filter_d)
         return changed, user_info[0], None
     elif m_type:
-        user_info_check = hmc.listUsr(user_type=m_type)
+        user_info_check = None
+        try:
+            user_info_check = hmc.listUsr(user_type=m_type)
+        except HmcError as error:
+            if USER_AUTHORITY_ERR in repr(error):
+                logger.debug(repr(error))
+                return False, None, None
+            else:
+                raise
+
         if isDifferent(attributes, user_info_check[0]):
             hmc.modifyUsr(modify_type=m_type, configDict=attributes)
             changed = True
