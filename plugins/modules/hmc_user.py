@@ -59,7 +59,7 @@ options:
                during I(state=absent). Supported values are C(all|local|kerberos|ldap|automanage).
                During I(state=facts), valid values are C(default|user).
         type: str
-        choices: ['default', 'user', 'all', 'localkerberos', 'ldap', 'automanage']
+        choices: ['default', 'user', 'all', 'local', 'kerberos', 'ldap', 'automanage']
     attributes:
         description:
             - Configuration attributes used during the create and modify of HMC user
@@ -269,6 +269,10 @@ def validate_sub_params(params):
         elif params['type'] is None and params['name'] is None:
             raise ParameterError("%s state need parameter: name with non default settings"
                                  % (state))
+        if params['type'] is None and params['name'] and params['attributes'] is None and \
+                params['enable_user'] is None:
+            raise ParameterError("%s state with parameter: name either need enable_user or attributes param"
+                                 % state)
         key = 'type'
         supportedList = ['default']
         notTogetherList = [['enable_user', 'attributes'],
@@ -395,9 +399,8 @@ def ensure_present(module, params):
             return False, None, None
         else:
             raise
-    for each in user_info:
-        if usr_name in each['NAME']:
-            already_exist = True
+    if user_info and usr_name == user_info[0]['NAME']:
+        already_exist = True
 
     changed = False
     if not already_exist:
@@ -405,9 +408,8 @@ def ensure_present(module, params):
         config.update(params['attributes'])
         hmc.createUsr(config)
         user_info = hmc.listUsr(filt=filter_d)
-        for each in user_info:
-            if usr_name in each['NAME']:
-                changed = True
+        if user_info and usr_name == user_info[0]['NAME']:
+            changed = True
     return changed, user_info, None
 
 
@@ -423,7 +425,7 @@ def ensure_absent(module, params):
     hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(hmc_conn)
 
-    already_exist = False
+    user_exist = False
     filter_d = {"NAMES": usr_name}
     try:
         user_info = hmc.listUsr(filt=filter_d)
@@ -433,11 +435,11 @@ def ensure_absent(module, params):
             return False, None, None
         else:
             raise
-    if usr_name in user_info[0]['NAME']:
-        already_exist = True
+    if user_info and usr_name == user_info[0]['NAME']:
+        user_exist = True
 
     changed = False
-    if already_exist:
+    if user_exist:
         hmc.removeUsr(usr=usr_name, rm_type=r_type)
         user_info = hmc.listUsr(filt=filter_d)
         if not user_info:
@@ -453,6 +455,9 @@ def isDifferent(source, target):
             else:
                 source[each] = '0'
         if source[each] is not None and str(source[each]) != target.get(each.upper()):
+            return True
+    if source['new_name'] is not None:
+        if source['new_name'] != source['name']:
             return True
     return False
 
@@ -483,15 +488,14 @@ def ensure_update(module, params):
                 return False, None, None
             else:
                 raise
-        if user_info and usr_name in user_info[0]['NAME']:
+        if user_info and usr_name == user_info[0]['NAME']:
             already_exist = True
         else:
             return False, None, None
 
     changed = False
     if already_exist:
-        if usr_name:
-            m_config = {"NAME": usr_name}
+        m_config = {"NAME": usr_name}
         if attributes:
             m_config.update(attributes)
 
@@ -504,6 +508,8 @@ def ensure_update(module, params):
             user_info_check = hmc.listUsr(filt=filter_d)
             if isDifferent(m_config, user_info_check[0]):
                 hmc.modifyUsr(configDict=m_config)
+                if attributes and attributes['new_name'] is not None:
+                    filter_d['NAMES'] = attributes['new_name']
                 changed = True
 
         user_info = hmc.listUsr(filt=filter_d)
@@ -558,7 +564,7 @@ def run_module():
                       ),
         name=dict(type='str'),
         enable_user=dict(type='bool'),
-        type=dict(type='str', choices=['default', 'user', 'all', 'local'
+        type=dict(type='str', choices=['default', 'user', 'all', 'local',
                                        'kerberos', 'ldap', 'automanage']),
         state=dict(required=True, type='str',
                    choices=['facts', 'present', 'absent', 'updated']),
