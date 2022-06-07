@@ -273,6 +273,11 @@ def validate_sub_params(params):
                 params['enable_user'] is None:
             raise ParameterError("%s state with parameter: name either need enable_user or attributes param"
                                  % state)
+        if params['name'] is not None:
+            for each in ['webui_login_suspend_time', 'max_webui_login_attempts']:
+                if params['attributes'][each] is not None:
+                    raise ParameterError("updated state with parameter:name will not support attributes: %s"
+                                         % ','.join(['webui_login_suspend_time', 'max_webui_login_attempts']))
         key = 'type'
         supportedList = ['default']
         notTogetherList = [['enable_user', 'attributes'],
@@ -413,6 +418,18 @@ def ensure_present(module, params):
     return changed, user_info, None
 
 
+def is_user_present(user_list, r_type):
+    permanent_user = ['root', 'hscroot', 'hscpe']
+    for eachUser in user_list:
+        if eachUser['NAME'] in permanent_user:
+            continue
+        elif r_type == 'all':
+            return True
+        elif eachUser['AUTHENTICATION_TYPE'] == r_type:
+            return True
+    return False
+
+
 def ensure_absent(module, params):
     hmc_host = params['hmc_host']
     hmc_user = params['hmc_auth']['username']
@@ -420,13 +437,15 @@ def ensure_absent(module, params):
     usr_name = params.get("name")
     r_type = params['type']
     user_info = []
+    filter_d = None
 
     validate_parameters(params)
     hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(hmc_conn)
 
     user_exist = False
-    filter_d = {"NAMES": usr_name}
+    if usr_name:
+        filter_d = {"NAMES": usr_name}
     try:
         user_info = hmc.listUsr(filt=filter_d)
     except HmcError as error:
@@ -444,6 +463,17 @@ def ensure_absent(module, params):
         user_info = hmc.listUsr(filt=filter_d)
         if not user_info:
             changed = True
+    else:
+        user_info = hmc.listUsr()
+        if not is_user_present(user_info, r_type):
+            return False, None, None
+
+        hmc.removeUsr(rm_type=r_type)
+
+        user_info = hmc.listUsr()
+        if is_user_present(user_info, r_type):
+            return False, None, "user removal not succeeded"
+        changed = True
     return changed, None, None
 
 
