@@ -67,6 +67,11 @@ options:
             - The name of the powervm partition to create/delete/poweron/shutdown/facts
         required: true
         type: str
+    vm_id:
+        description:
+            - The partition ID to be set while creating a Logical Partition
+            - Optional, if not provided, next available value will be assigned
+        type: int
     proc:
         description:
             - The number of dedicated processors to create a partition.
@@ -291,6 +296,52 @@ options:
             - Default is false.
             - Currently we are showing only NPIV storage details.
         type: bool
+    install_settings:
+        description:
+            - Settings for installing Operating System on logical partition
+        type: dict
+        suboptions:
+            vm_ip:
+                description:
+                    - IP Address to be configured to Logical Partition
+                required: True
+                type: str
+            nim_ip:
+                description:
+                    - IP Address of the NIM Server.
+                required: True
+                type: str
+            nim_gateway:
+                description:
+                    - logical Partition gateway IP Address.
+                required: True
+                type: str
+            nim_subnetmask:
+                description:
+                    - Subnetmask IP Address to be configured to Logical Partition.
+                required: True
+                type: str
+            location_code:
+                description:
+                    - Network adapter location code to be used while installing OS.
+                    - If user doesn't provide, it automatically picks the first pingable adapter attached to the partition.
+                type: str
+            nim_vlan_id:
+                description:
+                    - Specifies the VLANID(0 to 4094) to use for tagging Ethernet frames during network install for virtual network communication.
+                    - Default value is 0
+                type: str
+            nim_vlan_priority:
+                description:
+                    - Specifies the VLAN priority (0 to 7) to use for tagging Ethernet frames during network install for virtual network communication.
+                    - Default value is 0
+                type: str
+            timeout:
+                description:
+                    - Max waiting time in mins for OS to bootup fully.
+                    - Min timeout should be more than 10 mins.
+                    - Default value is 60 min.
+                type: int
     state:
         description:
             - C(present) creates a partition of the specified I(os_type), I(vm_name), I(proc) and I(memory) on specified I(system_name).
@@ -304,7 +355,7 @@ options:
             - C(poweron) poweron a partition of the specified I(vm_name) with specified I(prof_name), I(keylock), I(iIPLsource) on specified I(system_name).
             - C(restart) restart a partition of the specified I(vm_name) on specified I(system_name).
         type: str
-        choices: ['poweron', 'shutdown', 'restart']
+        choices: ['poweron', 'shutdown', 'restart', 'install_os']
 '''
 
 EXAMPLES = '''
@@ -543,27 +594,33 @@ def validate_parameters(params):
 
     if opr == 'present':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']
-        unsupportedList = ['prof_name', 'keylock', 'iIPLsource', 'retain_vios_cfg', 'delete_vdisks', 'advanced_info']
+        unsupportedList = ['prof_name', 'keylock', 'iIPLsource', 'retain_vios_cfg', 'delete_vdisks', 'advanced_info', 'install_settings']
     elif opr == 'poweron':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'volume_config', 'virt_network_config', 'retain_vios_cfg', 'delete_vdisks',
                            'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
-                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool']
+                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'install_settings']
     elif opr == 'absent':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
-                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool']
+                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'install_settings']
     elif opr == 'facts':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
-                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool']
+                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'install_settings']
+    elif opr == 'install_os':
+        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'install_settings']
+        unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config', 'retain_vios_cfg',
+                           'delete_vdisks', 'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
+                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id']
     else:
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc',
-                           'min_proc_unit', 'max_proc_unit', 'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool']
+                           'min_proc_unit', 'max_proc_unit', 'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem',
+                           'vm_id', 'install_settings']
 
     collate = []
     for eachMandatory in mandatoryList:
@@ -831,6 +888,7 @@ def create_partition(module, params):
     password = params['hmc_auth']['password']
     system_name = params['system_name']
     vm_name = params['vm_name']
+    vm_id = params['vm_id']
     proc = str(params['proc'] or 2)
     max_proc = str(params['max_proc'] or proc)
     min_proc = str(params['min_proc'] or 1)
@@ -966,6 +1024,8 @@ def create_partition(module, params):
         config_dict['weight'] = str(weight) if proc_mode == 'uncapped' else str(0)
         config_dict['proc_comp_mode'] = proc_compatibility_mode
         config_dict['shared_proc_pool'] = shared_proc_pool if shared_proc_pool else str(0)
+        if vm_id:
+            config_dict['lpar_id'] = str(vm_id)
 
         # Tagged IO
         if os_type == 'ibmi':
@@ -1262,6 +1322,64 @@ def poweron_partition(module, params):
     return changed, None, None
 
 
+def install_aix_os(module, params):
+    hmc_host = params['hmc_host']
+    hmc_user = params['hmc_auth']['username']
+    password = params['hmc_auth']['password']
+    system_name = params['system_name']
+    vm_name = params['vm_name']
+    vm_ip = params['install_settings']['vm_ip']
+    nim_ip = params['install_settings']['nim_ip']
+    nim_gateway = params['install_settings']['nim_gateway']
+    nim_subnetmask = params['install_settings']['nim_subnetmask']
+    location_code = params['install_settings']['location_code']
+    profile_name = params['prof_name'] or 'default_profile'
+    nim_vlan_id = params['install_settings']['nim_vlan_id'] or '0'
+    nim_vlan_priority = params['install_settings']['nim_vlan_priority'] or '0'
+    timeout = params['install_settings']['timeout'] or 60
+    validate_parameters(params)
+    changed = False
+    warn_msg = None
+    vm_property = None
+
+    hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
+    hmc = Hmc(hmc_conn)
+
+    if timeout < 10:
+        module.fail_json(msg="timeout should be more than 10mins")
+    try:
+        lpar_details = hmc.getPartitionConfig(system_name, vm_name)
+        if lpar_details['lpar_env'] != 'aixlinux':
+            module.fail_json(msg="Unsupported logical partition os type:" + lpar_details['lpar_env'] + ", Supported os type is aixlinux")
+
+        if location_code:
+            hmc.installOSFromNIM(location_code, nim_ip, nim_gateway, vm_ip, nim_vlan_id, nim_vlan_priority, nim_subnetmask, vm_name, profile_name, system_name)
+        else:
+            dvcdictlt = hmc.fetchIODetailsForNetboot(nim_ip, nim_gateway, vm_ip, vm_name, profile_name, system_name)
+            for dvcdict in dvcdictlt:
+                if dvcdict['Ping Result'] == 'successful':
+                    location_code = dvcdict['Location Code']
+                    break
+            if location_code:
+                hmc.installOSFromNIM(location_code, nim_ip, nim_gateway, vm_ip, nim_vlan_id, nim_vlan_priority, nim_subnetmask,
+                                     vm_name, profile_name, system_name)
+            else:
+                module.fail_json(msg="None of adapters part of the profile is reachable through network. Please attach correct network adapter")
+
+        rmc_state, vm_property, ref_code = hmc.checkForOSToBootUpFully(system_name, vm_name, timeout)
+        if rmc_state:
+            changed = True
+        elif ref_code in ['', '00']:
+            changed = True
+            warn_msg = "AIX installation has been successfull but RMC didnt come up, please check the HMC firewall and security"
+        else:
+            module.fail_json(msg="AIX Installation failed even after waiting for " + str(timeout) + " mins and the reference code is " + ref_code)
+    except HmcError as install_error:
+        return False, repr(install_error), None
+
+    return changed, vm_property, warn_msg
+
+
 def partition_details(module, params):
     rest_conn = None
     system_uuid = None
@@ -1332,6 +1450,7 @@ def perform_task(module):
         "shutdown": poweroff_partition,
         "poweron": poweron_partition,
         "restart": poweroff_partition,
+        "install_os": install_aix_os,
     }
 
     oper = 'state'
@@ -1358,6 +1477,15 @@ def run_module():
                    vios_name=dict(type='str'),
                    volume_size=dict(type='int')
                    )
+    install_os_args = dict(vm_ip=dict(type='str', required=True),
+                           nim_ip=dict(type='str', required=True),
+                           nim_gateway=dict(type='str', required=True),
+                           nim_subnetmask=dict(type='str', required=True),
+                           location_code=dict(type='str'),
+                           nim_vlan_id=dict(type='str'),
+                           nim_vlan_priority=dict(type='str'),
+                           timeout=dict(type='int')
+                           )
     # define available arguments/parameters a user can pass to the module
     module_args = dict(
         hmc_host=dict(type='str', required=True),
@@ -1371,6 +1499,7 @@ def run_module():
                       ),
         system_name=dict(type='str', required=True),
         vm_name=dict(type='str', required=True),
+        vm_id=dict(type='int'),
         proc=dict(type='int'),
         max_proc=dict(type='int'),
         min_proc=dict(type='int'),
@@ -1406,10 +1535,12 @@ def run_module():
         retain_vios_cfg=dict(type='bool'),
         delete_vdisks=dict(type='bool'),
         advanced_info=dict(type='bool'),
+        install_settings=dict(type='dict',
+                              options=install_os_args),
         state=dict(type='str',
                    choices=['present', 'absent', 'facts']),
         action=dict(type='str',
-                    choices=['shutdown', 'poweron', 'restart'])
+                    choices=['shutdown', 'poweron', 'restart', 'install_os'])
     )
 
     module = AnsibleModule(
@@ -1422,6 +1553,7 @@ def run_module():
                      ['action', 'shutdown', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
                      ['action', 'poweron', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
                      ['action', 'restart', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
+                     ['action', 'install_os', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'install_settings']],
                      ],
         required_by=dict(
             proc_unit=('proc', ),
