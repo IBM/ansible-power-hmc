@@ -35,7 +35,8 @@ class HmcCommandStack():
                'LPAR_NETBOOT': 'lpar_netboot',
                'LSREFCODE': 'lsrefcode',
                'VIOSVRCMD': 'viosvrcmd',
-               'MKAUTHKEYS': 'mkauthkeys'}
+               'MKAUTHKEYS': 'mkauthkeys',
+               'UPDLIC': 'updlic'}
 
     HMC_CMD_OPT = {'LSHMC': {'-N': ' -n ',
                              '-v': ' -v ',
@@ -317,7 +318,19 @@ class HmcCommandStack():
                                   '--IP': ' --ip ',
                                   '-U': ' -u ',
                                   '--PASSWD': ' --passwd ',
-                                  '--TEST': ' --test'}
+                                  '--TEST': ' --test'},
+                   'UPDLIC': {'-M': ' -m ',
+                              '-O': {'RETINSTACT': ' -o a',
+                                     'UPGRADE': ' -o u'},
+                              '-T': {'SYS': ' -t sys',
+                                     'BMC': ' -t bmc'},
+                              '-L': ' -l ',
+                              '-R': ' -r ',
+                              '-H': ' -h ',
+                              '-U': ' -u ',
+                              '--PASSWD': ' --passwd ',
+                              '-K': ' -k ',
+                              '-D': ' -d '},
                    }
 
     def filterBuilder(self, cmdKey, configOptionsDict):
