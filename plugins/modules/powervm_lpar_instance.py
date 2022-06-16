@@ -342,7 +342,7 @@ options:
                     - Min timeout should be more than 10 mins.
                     - Default value is 60 min.
                 type: int
-    vnic_args:
+    vnic_config:
         description:
             - Virtual NIC Configuration of the partition
         type: list

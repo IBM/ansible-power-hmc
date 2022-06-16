@@ -1341,6 +1341,6 @@ class HmcRestClient:
                     sriov_dict['LinkStatus'] = sriov_pp.xpath("//LinkStatus")[0].text
                     sriov_dict['AllocatedCapacity'] = sriov_pp.xpath("//AllocatedCapacity")[0].text.strip('%')
                     sriov_col_li.append(sriov_dict)
-            except:
+            except Exception:
                 raise Error("There are no SRIOV Physical parts available in the managed system")
         return sriov_col_li
