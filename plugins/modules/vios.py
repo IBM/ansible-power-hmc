@@ -185,7 +185,6 @@ vios_info:
 '''
 
 import logging
-import time
 LOG_FILENAME = "/tmp/ansible_power_hmc.log"
 logger = logging.getLogger(__name__)
 from ansible.module_utils.basic import AnsibleModule
@@ -241,28 +240,6 @@ def validate_parameters(params):
             raise ParameterError("unsupported parameter: %s" % (collate[0]))
         else:
             raise ParameterError("unsupported parameters: %s" % (', '.join(collate)))
-
-
-def checkForVIOSToBootUpFully(hmc, system_name, name, timeoutInMin=60):
-    POLL_INTERVAL_IN_SEC = 30
-    WAIT_UNTIL_IN_SEC = timeoutInMin * 60 - 600
-    waited = 0
-    rmcActive = False
-    ref_code = None
-    # wait for 10 mins before polling
-    time.sleep(600)
-    while waited < WAIT_UNTIL_IN_SEC:
-        conf_dict = hmc.getPartitionConfig(system_name, name)
-        if conf_dict['rmc_state'] == 'active':
-            rmcActive = True
-            break
-        else:
-            waited += POLL_INTERVAL_IN_SEC
-        time.sleep(POLL_INTERVAL_IN_SEC)
-    if not rmcActive:
-        res = hmc.getPartitionRefcode(system_name, name)
-        ref_code = res['REFCODE']
-    return rmcActive, conf_dict, ref_code
 
 
 def fetchViosInfo(module, params):
@@ -362,7 +339,7 @@ def installVios(module, params):
         module.fail_json(msg="timeout should be more than 10mins")
     try:
         if location_code:
-            hmc.installVIOSFromNIM(location_code, nim_IP, nim_gateway, vios_IP, nim_vlan_id, nim_vlan_priority, nim_subnetmask, name, prof_name, system_name)
+            hmc.installOSFromNIM(location_code, nim_IP, nim_gateway, vios_IP, nim_vlan_id, nim_vlan_priority, nim_subnetmask, name, prof_name, system_name)
         else:
             dvcdictlt = hmc.fetchIODetailsForNetboot(nim_IP, nim_gateway, vios_IP, name, prof_name, system_name)
             for dvcdict in dvcdictlt:
@@ -370,17 +347,17 @@ def installVios(module, params):
                     location_code = dvcdict['Location Code']
                     break
             if location_code:
-                hmc.installVIOSFromNIM(location_code, nim_IP, nim_gateway, vios_IP, nim_vlan_id, nim_vlan_priority, nim_subnetmask,
-                                       name, prof_name, system_name)
+                hmc.installOSFromNIM(location_code, nim_IP, nim_gateway, vios_IP, nim_vlan_id, nim_vlan_priority, nim_subnetmask,
+                                     name, prof_name, system_name)
             else:
                 module.fail_json(msg="None of adapters part of the profile is reachable through network. Please attach correct network adapter")
 
-        rmc_state, vios_property, ref_code = checkForVIOSToBootUpFully(hmc, system_name, name, timeout)
+        rmc_state, vios_property, ref_code = hmc.checkForOSToBootUpFully(system_name, name, timeout)
         if rmc_state:
             changed = True
         elif ref_code in ['', '00']:
             changed = True
-            warn_msg = "VIOS installation has been succefull but RMC didnt come up, please check the HMC firewall and security"
+            warn_msg = "VIOS installation has been successfull but RMC didnt come up, please check the HMC firewall and security"
         else:
             module.fail_json(msg="VIOS Installation failed even after waiting for " + str(timeout) + " mins and the reference code is " + ref_code)
     except HmcError as install_error:
