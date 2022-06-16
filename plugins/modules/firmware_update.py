@@ -72,8 +72,6 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_resource import Hmc
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
-from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
-from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import parse_error_response
 
 import logging
 LOG_FILENAME = "/tmp/ansible_power_hmc.log"

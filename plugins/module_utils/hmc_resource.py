@@ -530,7 +530,7 @@ class Hmc():
             update_upgrade_flags +\
             self.OPT['UPDLIC']['-T']['SYS'] +\
             self.OPT['UPDLIC']['-R'] + repo +\
-            self.OPT['UPDLIC']['-L'] + level + " -q"
+            self.OPT['UPDLIC']['-L'] + level
         if remote_repo:
             host = remote_repo['hostname']
             if host:
@@ -549,3 +549,12 @@ class Hmc():
                 updlic_cmd += self.OPT['UPDLIC']['-K'] + ssh_key
 
         self.hmcconn.execute(updlic_cmd)
+
+    def list_all_managed_systems(self):
+        lssysconn_cmd = self.CMD['LSSYSCONN'] +\
+            self.OPT['LSSYSCONN']['-R']['ALL'] +\
+            self.OPT['LSSYSCONN']['-F']['MTMS']
+
+        raw_result = self.hmcconn.execute(lssysconn_cmd)
+        lines = raw_result.split()
+        return lines

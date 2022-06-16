@@ -36,7 +36,8 @@ class HmcCommandStack():
                'LSREFCODE': 'lsrefcode',
                'VIOSVRCMD': 'viosvrcmd',
                'MKAUTHKEYS': 'mkauthkeys',
-               'UPDLIC': 'updlic'}
+               'UPDLIC': 'updlic',
+               'LSSYSCONN': 'lssysconn',}
 
     HMC_CMD_OPT = {'LSHMC': {'-N': ' -n ',
                              '-v': ' -v ',
@@ -331,6 +332,9 @@ class HmcCommandStack():
                               '--PASSWD': ' --passwd ',
                               '-K': ' -k ',
                               '-D': ' -d '},
+                   'LSSYSCONN': {'-R': {'ALL': ' -r all'},
+                                 '-F': {'MTMS': ' -F type_model_serial_num'},
+                                },
                    }
 
     def filterBuilder(self, cmdKey, configOptionsDict):
