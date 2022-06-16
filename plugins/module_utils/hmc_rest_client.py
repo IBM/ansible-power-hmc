@@ -1264,6 +1264,7 @@ class HmcRestClient:
                         eval_dvc_dict['DesiredCapacityPercentage'] = "2.0"
                         eval_dvc_dict['RelatedSRIOVPhysicalPortID'] = sriov_dvc['RelatedSRIOVPhysicalPortID']
                         eval_backing_devices.append(eval_dvc_dict)
+                        break
                 else:
                     raise Error('Their are no backing device with link status up or available capacity more than 2.0 in the managed system')
         else:
