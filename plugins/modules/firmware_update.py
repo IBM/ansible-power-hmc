@@ -7,52 +7,100 @@ __metaclass__ = type
 
 DOCUMENTATION = r'''
 ---
-module: my_test
-
-short_description: This is my test module
-
-# If this is part of a collection, you need to use semantic versioning,
-# i.e. the version is of the form "2.5.0" and not "2.4".
-version_added: "1.0.0"
-
-description: This is my longer description explaining my test module.
-
+module: firmware_update
+short_description: Change firmware level on Managed Systems
+version_added: "1.1.0"
+description:
+    - Update/Upgrade a managed system
 options:
-    name:
-        description: This is the message to send to the test module.
+    hmc_host:
+        description:
+            - IPaddress or hostname of the HMC
         required: true
         type: str
-    new:
+    hmc_auth:
         description:
-            - Control to demo if the result of this module is changed or not.
-            - Parameter description can be a list as well.
-        required: false
-        type: bool
-# Specify this value according to your collection
-# in format of namespace.collection.doc_fragment_name
-extends_documentation_fragment:
-    - my_namespace.my_collection.my_doc_fragment_name
+            - Username and Password credential of the HMC
+        required: true
+        type: dict
+        suboptions:
+            username:
+                description:
+                    - HMC username
+                required: true
+                type: str
+            password:
+                description:
+                    - HMC password
+                type: str
+    system_name:
+        description:
+            - The name of the managed system
+        required: true
+        type: str
+    repository:
+        description: Type of image repository for the firmware image
+        type: str
+        default: ibmwebsite
+        choices: ['ibmwebsite', 'ftp', 'sftp']
+    remote_repo:
+        description: When the image repository needs credentials to be accessed remotely
+        type: dict
+        suboptions:
+            hostname: host for the image repository
+                description:
+                    - The hostname or IPaddress of the remote server where the
+                      firmware image is located.
+                type: str
+            userid:
+                description:
+                    - The user ID to use to log in to the remote FTP or SFTP server.
+                      This option is required when the firmware image is located on a remote FTP or SFTP server
+                      Otherwise, this option is not valid.
+                type: str
+            passwd:
+                description:
+                    - The password to use to log in to the remote FTP or SFTP server.
+                      The I(passwd) and I(sshkey) options are mutually exclusive in case if I(location_type=sftp).
+                      This option is only valid when the firmware image is located on a remote FTP or SFTP server.
+                type: str
+            sshkey_file:
+                description:
+                    - The name of the file that contains the SSH private key.
+                      This option is only valid if I(location_type=sftp).
+                type: str
+            directory:
+                description:
+                    - Location where the images are stored on the host
+                type: str
 
 author:
-    - Your Name (@yourGitHubHandle)
+    - Mario Maldonado (@yourGitHubHandle)
 '''
 
 EXAMPLES = r'''
 # Pass in a message
-- name: Test with a message
-  my_namespace.my_collection.my_test:
-    name: hello world
+- name: Update to latest level with default values (latest at ibmwebsite)
+  ibm.power_hmc.firmware_update:
+      hmc_host: '{{ inventory_hostname }}'
+      hmc_auth:
+         username: '{{ ansible_user }}'
+         password: '{{ hmc_password }}'
+      state: updated
 
-# pass in a message and have changed true
-- name: Test with a message and changed output
-  my_namespace.my_collection.my_test:
-    name: hello world
-    new: true
-
-# fail the module
-- name: Test failure of the module
-  my_namespace.my_collection.my_test:
-    name: fail me
+- name: Upgrade system to specific level at an sftp repo
+  firmware_update:
+    hmc_host: '{{ inventory_hostname }}'
+    hmc_auth: '{{ curr_hmc_auth }}'
+    system_name: <System name/mtms>
+    repository: sftp
+    remote_repo:
+      hostname: 9.3.147.210
+      userid: <user>
+      passwd: <password>
+     directory: /repo/images/
+    level: 01VL941_047
+    state: upgraded
 '''
 
 RETURN = r'''
@@ -159,7 +207,7 @@ def run_module():
         action=dict(type='str', choices=['change', 'remove', 'activate']),
         state=dict(type='str', choices=['updated', 'upgraded',]),
         level=dict(type='str', default='latest'),
-        repository=dict(type='str', default='ibmwebsite', choices=['ibmwebsite', 'disk', 'ftp', 'sftp', 'dvd', 'mountpoint', 'usb']),
+        repository=dict(type='str', default='ibmwebsite', choices=['ibmwebsite', 'ftp', 'sftp']),
         remote_repo=dict(type='dict', options=dict(
                               hostname=dict(type='str'),
                               userid=dict(type='str'),
@@ -211,7 +259,7 @@ def run_module():
         #result['changed'] = True
     result['changed'] = changed
     if info:
-        result['partition_info'] = info
+        result['message'] = info
 
     if warning:
         result['warning'] = warning

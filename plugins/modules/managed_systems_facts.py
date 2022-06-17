@@ -7,42 +7,55 @@ __metaclass__ = type
 
 DOCUMENTATION = r'''
 ---
-module: my_test_facts
-
-short_description: This is my test facts module
-
-version_added: "1.0.0"
-
-description: This is my longer description explaining my test facts module.
-
+module: managed_systems_facts
+short_description: Gather facts related to managed systems on the HMC
+version_added: "1.1.0"
+description: Gather data related to the systems being managed by the HMC when facts are collected.
+options:
+    hmc_host:
+        description:
+            - IPaddress or hostname of the HMC
+        required: true
+        type: str
+    hmc_auth:
+        description:
+            - Username and Password credential of the HMC
+        required: true
+        type: dict
+        suboptions:
+            username:
+                description:
+                    - HMC username
+                required: true
+                type: str
+            password:
+                description:
+                    - HMC password
+                type: str
 author:
-    - Your Name (@yourGitHubHandle)
+    - Mario Maldonado (@yourGitHubHandle)
 '''
 
 EXAMPLES = r'''
 - name: Return ansible_facts
-  my_namespace.my_collection.my_test_facts:
+  ibm.power_hmc.managed_systems_facts:
+    hmc_host: '{{ inventory_hostname }}'
+    hmc_auth:
+      username: '{{ ansible_user }}'
+      password: '{{ hmc_password }}'
 '''
 
 RETURN = r'''
-# These are examples of possible return values, and in general should use other names for return values.
 ansible_facts:
   description: Facts to add to ansible_facts.
   returned: always
   type: dict
   contains:
-    foo:
-      description: Foo facts about operating system.
-      type: str
-      returned: when operating system foo fact is present
-      sample: 'bar'
-    answer:
-      description:
-      - Answer facts about operating system.
-      - This description can be a list as well.
-      type: str
-      returned: when operating system answer fact is present
-      sample: '42'
+    managed_systems:
+      description: Systems currently being managed
+      type: list
+      returned: when systems are being managed
+      sample: '0123-01A*0123456'
 '''
 
 import logging
