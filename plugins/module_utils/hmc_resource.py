@@ -555,7 +555,7 @@ class Hmc():
             self.OPT['LSLIC']['-M'] + system_name +\
             self.OPT['LSLIC']['-F']['SPNAMELEVEL']
         raw_result = self.hmcconn.execute(lslic_cmd)
-        headers = "service_pack,level"
+        headers = "service_pack,level,ecnumber"
         res_dict = self.cmdClass.parseAttributes(headers, raw_result)
         parsed_res = dict((k.lower(), v) for k, v in res_dict.items())
         return parsed_res

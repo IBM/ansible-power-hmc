@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
-# Copyright: (c) 2018, Terry Jones <terry.jones@example.org>
+# Copyright: (c) 2018- IBM, Inc
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
 from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
@@ -79,7 +80,6 @@ author:
 '''
 
 EXAMPLES = r'''
-# Pass in a message
 - name: Update to latest level with default values (latest at ibmwebsite)
   ibm.power_hmc.firmware_update:
       hmc_host: '{{ inventory_hostname }}'
@@ -104,7 +104,6 @@ EXAMPLES = r'''
 '''
 
 RETURN = r'''
-# These are examples of possible return values, and in general should use other names for return values.
 service_pack:
     description: The service pack representation of the system
     type: str
@@ -115,6 +114,11 @@ level:
     type: str
     returned: always
     sample: '55'
+ecnumber:
+    description: The engineering change (EC) number associated with the firmware update
+    type: str
+    returned: always
+    sample: '01VL940'
 '''
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
@@ -131,34 +135,42 @@ def init_logger():
         format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
         level=logging.DEBUG)
 
-def uplevel_system(module, params):
+def create_hmc_conn(module, params):
     hmc_host = params['hmc_host']
     hmc_user = params['hmc_auth']['username']
     password = params['hmc_auth']['password']
-    system_name = params['system_name']
-    repo = params['repository']
-    changed = False
     hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(hmc_conn)
+
+    return hmc
+
+def extract_updlic_options(params):
+    system_name = params['system_name']
+    repo = params['repository']
     level = params['level']
     remote_repo = params['remote_repo']
-    if params['state'] == 'upgraded':
-        upgrade = True
-    else:
-        upgrade = False
 
+    return system_name, repo, level, remote_repo
+
+def update_system(module, params):
+    hmc = create_hmc_conn(module, params)
+    system_name, repo, level, remote_repo = extract_updlic_options(params)
+    ret_dict = {}
     try:
         initial_level = hmc.get_firmware_level(system_name)
-        logger.debug("initial_level: %s", initial_level)
-        hmc.update_managed_system(system_name, upgrade, repo, level, remote_repo)
-        logger.debug('updated')
-        new_level = hmc.get_firmware_level(system_name)
-        logger.debug("new_level: %s", new_level)
+        if initial_level['level'] == level:
+            ret_dict['msg']='system already at the specified level'
+            ret_dict.update(initial_level)
+            new_level = initial_level
+        else:
+            hmc.update_managed_system(system_name, False, repo, level, remote_repo)
+            ret_dict = {'msg': 'system update finished'}
+            new_level = hmc.get_firmware_level(system_name)
+            logger.debug("new_level: %s", new_level)
+            ret_dict.update(new_level)
     except HmcError as on_system_error:
         return False, None, repr(on_system_error)
 
-    ret_dict = {'msg': 'system firmware operation finished'}
-    ret_dict.update(new_level)
     if initial_level != new_level:
         changed = True
         ret_dict['diff'] = {'before': initial_level,
@@ -168,16 +180,40 @@ def uplevel_system(module, params):
         changed = False
     return changed, ret_dict, None
 
-def reinstall_system(module):
-    return False, None, {'msg':'reinstall no-op stub'}
+def upgrade_system(module, params):
+    hmc = create_hmc_conn(module, params)
+    system_name, repo, level, remote_repo = extract_updlic_options(params)
+    ret_dict = {}
+    try:
+        initial_level = hmc.get_firmware_level(system_name)
+        ecnum_and_level = initial_level['ecnumber']+'_'+initial_level['level'].zfill(3)
+        if ecnum_and_level == level:
+            ret_dict['msg']='system already at the specified level'
+            ret_dict.update(initial_level)
+            new_level = initial_level
+        else:
+            hmc.update_managed_system(system_name, True, repo, level, remote_repo)
+            ret_dict = {'msg': 'system upgrade finished'}
+            new_level = hmc.get_firmware_level(system_name)
+            logger.debug("new_level: %s", new_level)
+            ret_dict.update(new_level)
+    except HmcError as on_system_error:
+        return False, None, repr(on_system_error)
 
+    if initial_level != new_level:
+        changed = True
+        ret_dict['diff'] = {'before': initial_level,
+                            'after': new_level,
+                           }
+    else:
+        changed = False
+    return changed, ret_dict, None
 
 def perform_task(module):
     params = module.params
     actions = {
-        "updated": uplevel_system,
-        "upgraded": uplevel_system,
-        "reinstall": reinstall_system,
+        "updated": update_system,
+        "upgraded": upgrade_system,
     }
     oper = 'action'
     if params['action'] is None:
@@ -200,7 +236,7 @@ def run_module():
                       )
         ),
         system_name=dict(type='str', required=True),
-        action=dict(type='str', choices=['reinstall',]),
+        action=dict(type='str', choices=['change',]),
         state=dict(type='str', choices=['updated', 'upgraded',]),
         level=dict(type='str', default='latest'),
         repository=dict(type='str', default='ibmwebsite', choices=['ibmwebsite', 'ftp', 'sftp']),
@@ -245,6 +281,7 @@ def run_module():
     # part where your module will do what it needs to do)
     changed, return_dict, error = perform_task(module)
 
+    logger.debug("return-val: %s", return_dict)
     # use whatever logic you need to determine whether or not this module
     # made any modifications to your target
     result['changed'] = changed

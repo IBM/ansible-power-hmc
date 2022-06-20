@@ -334,7 +334,7 @@ class HmcCommandStack():
                               '-K': ' -k ',
                               '-D': ' -d '},
                    'LSLIC': {'-M': ' -m ',
-                             '-F': {'SPNAMELEVEL': ' -F activated_spname,activated_level'}},
+                             '-F': {'SPNAMELEVEL': ' -F activated_spname,activated_level,ecnumber'}},
                    'LSSYSCONN': {'-R': {'ALL': ' -r all'},
                                  '-F': {'MTMS': ' -F type_model_serial_num'},
                                 },
