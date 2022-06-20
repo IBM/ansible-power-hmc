@@ -37,6 +37,7 @@ class HmcCommandStack():
                'VIOSVRCMD': 'viosvrcmd',
                'MKAUTHKEYS': 'mkauthkeys',
                'UPDLIC': 'updlic',
+               'LSLIC': 'lslic',
                'LSSYSCONN': 'lssysconn',}
 
     HMC_CMD_OPT = {'LSHMC': {'-N': ' -n ',
@@ -332,6 +333,8 @@ class HmcCommandStack():
                               '--PASSWD': ' --passwd ',
                               '-K': ' -k ',
                               '-D': ' -d '},
+                   'LSLIC': {'-M': ' -m ',
+                             '-F': {'SPNAMELEVEL': ' -F activated_spname,activated_level'}},
                    'LSSYSCONN': {'-R': {'ALL': ' -r all'},
                                  '-F': {'MTMS': ' -F type_model_serial_num'},
                                 },

@@ -105,16 +105,16 @@ EXAMPLES = r'''
 
 RETURN = r'''
 # These are examples of possible return values, and in general should use other names for return values.
-original_message:
-    description: The original name param that was passed in.
+service_pack:
+    description: The service pack representation of the system
     type: str
     returned: always
-    sample: 'hello world'
-message:
-    description: The output message that the test module generates.
+    sample: 'FW940.20'
+level:
+    description: The specific level active on the system
     type: str
     returned: always
-    sample: 'goodbye'
+    sample: '55'
 '''
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
@@ -141,7 +141,6 @@ def uplevel_system(module, params):
     hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(hmc_conn)
     level = params['level']
-    logger.debug("level: %s", level)
     remote_repo = params['remote_repo']
     if params['state'] == 'upgraded':
         upgrade = True
@@ -149,39 +148,36 @@ def uplevel_system(module, params):
         upgrade = False
 
     try:
+        initial_level = hmc.get_firmware_level(system_name)
+        logger.debug("initial_level: %s", initial_level)
         hmc.update_managed_system(system_name, upgrade, repo, level, remote_repo)
+        logger.debug('updated')
+        new_level = hmc.get_firmware_level(system_name)
+        logger.debug("new_level: %s", new_level)
     except HmcError as on_system_error:
-        return False, repr(on_system_error), None
+        return False, None, repr(on_system_error)
 
-    changed = True
-    return changed, None, None
+    ret_dict = {'msg': 'system firmware operation finished'}
+    ret_dict.update(new_level)
+    if initial_level != new_level:
+        changed = True
+        ret_dict['diff'] = {'before': initial_level,
+                            'after': new_level,
+                           }
+    else:
+        changed = False
+    return changed, ret_dict, None
 
-def install_new_level(module, params):
-    logger.debug("install new level")
-    changed = False
+def reinstall_system(module):
+    return False, None, {'msg':'reinstall no-op stub'}
 
-    return changed, None, None
-
-def remove_level(module, params):
-    logger.debug("remove level")
-    changed = False
-
-    return changed, None, None
-
-def activate_level(module, params):
-    logger.debug("activate level")
-    changed = False
-
-    return changed, None, None
 
 def perform_task(module):
     params = module.params
     actions = {
         "updated": uplevel_system,
         "upgraded": uplevel_system,
-        "change": install_new_level,
-        "remove": remove_level,
-        "activate": activate_level
+        "reinstall": reinstall_system,
     }
     oper = 'action'
     if params['action'] is None:
@@ -204,7 +200,7 @@ def run_module():
                       )
         ),
         system_name=dict(type='str', required=True),
-        action=dict(type='str', choices=['change', 'remove', 'activate']),
+        action=dict(type='str', choices=['reinstall',]),
         state=dict(type='str', choices=['updated', 'upgraded',]),
         level=dict(type='str', default='latest'),
         repository=dict(type='str', default='ibmwebsite', choices=['ibmwebsite', 'ftp', 'sftp']),
@@ -225,8 +221,6 @@ def run_module():
     # for consumption, for example, in a subsequent task
     result = dict(
         changed=False,
-        original_message='',
-        message=''
     )
 
     # the AnsibleModule object will be our abstraction working with Ansible
@@ -249,28 +243,21 @@ def run_module():
 
     # manipulate or modify the state as needed (this is going to be the
     # part where your module will do what it needs to do)
-    #result['original_message'] = module.params['name']
-    #result['message'] = 'goodbye'
-    changed, info, warning = perform_task(module)
+    changed, return_dict, error = perform_task(module)
 
     # use whatever logic you need to determine whether or not this module
     # made any modifications to your target
-    #if module.params['new']:
-        #result['changed'] = True
     result['changed'] = changed
-    if info:
-        result['message'] = info
-
-    if warning:
-        result['warning'] = warning
+    if return_dict:
+        result.update(return_dict)
+    if error:
+        result['failed'] = error
 
     # during the execution of the module, if there is an exception or a
     # conditional state that effectively causes a failure, run
     # AnsibleModule.fail_json() to pass in the message and the result
-    #if module.params['name'] == 'fail me':
-        #module.fail_json(msg='You requested this to fail', **result)
-    if isinstance(info, str):
-        module.fail_json(msg=info)
+    if isinstance(error, str):
+        module.fail_json(msg=error)
 
     # in the event of a successful module execution, you will want to
     # simple AnsibleModule.exit_json(), passing the key/value results
