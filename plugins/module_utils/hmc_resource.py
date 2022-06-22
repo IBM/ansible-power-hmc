@@ -519,6 +519,13 @@ class Hmc():
                 self.OPT['MKAUTHKEYS']['--PASSWD'] + passwd
         self.hmcconn.execute(mkauthcmd)
 
+    def accept_level(self, system_name):
+        updlic_cmd = self.CMD['UPDLIC'] +\
+            self.OPT['UPDLIC']['-M'] + system_name +\
+            self.OPT['UPDLIC']['-O']['ACCEPT']
+
+        return self.hmcconn.execute(updlic_cmd)
+
     def update_managed_system(self, system_name, upgrade=False, repo='ibmwebsite', level='latest', remote_repo=None):
         if upgrade:
             update_upgrade_flags = self.OPT['UPDLIC']['-O']['UPGRADE']

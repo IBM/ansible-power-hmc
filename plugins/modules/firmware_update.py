@@ -76,7 +76,7 @@ options:
                 type: str
 
 author:
-    - Mario Maldonado (@yourGitHubHandle)
+    - Mario Maldonado (@Mariomds)
 '''
 
 EXAMPLES = r'''
@@ -209,11 +209,24 @@ def upgrade_system(module, params):
         changed = False
     return changed, ret_dict, None
 
+def accept_level(module, params):
+    hmc = create_hmc_conn(module, params)
+    system_name = params['system_name']
+    ret_dict = {}
+    try:
+        hmc.accept_level(system_name)
+    except HmcError as on_system_error:
+        return False, None, repr(on_system_error)
+
+    ret_dict['msg'] = 'level accepted'
+    return True, ret_dict, None
+
 def perform_task(module):
     params = module.params
     actions = {
         "updated": update_system,
         "upgraded": upgrade_system,
+        "accept": accept_level,
     }
     oper = 'action'
     if params['action'] is None:
@@ -224,7 +237,6 @@ def perform_task(module):
         return False, repr(error), None
 
 def run_module():
-    # define available arguments/parameters a user can pass to the module
     module_args = dict(
         hmc_host=dict(type='str', required=True),
         hmc_auth=dict(type='dict',
@@ -236,7 +248,7 @@ def run_module():
                       )
         ),
         system_name=dict(type='str', required=True),
-        action=dict(type='str', choices=['change',]),
+        action=dict(type='str', choices=['accept']),
         state=dict(type='str', choices=['updated', 'upgraded',]),
         level=dict(type='str', default='latest'),
         repository=dict(type='str', default='ibmwebsite', choices=['ibmwebsite', 'ftp', 'sftp']),
@@ -251,23 +263,15 @@ def run_module():
     )
 
     # seed the result dict in the object
-    # we primarily care about changed and state
-    # changed is if this module effectively modified the target
-    # state will include any data that you want your module to pass back
-    # for consumption, for example, in a subsequent task
     result = dict(
         changed=False,
     )
 
-    # the AnsibleModule object will be our abstraction working with Ansible
-    # this includes instantiation, a couple of common attr would be the
-    # args/params passed to the execution, as well as if the module
-    # supports check mode
     module = AnsibleModule(
         argument_spec=module_args,
-        supports_check_mode=True
+        supports_check_mode=True,
+        mutually_exclusive=[('state', 'action'), ('action','repository'), ('action','remote_repo'), ('action','level')]
     )
-
     if module._verbosity >= 5:
         init_logger()
 
@@ -277,13 +281,8 @@ def run_module():
     if module.check_mode:
         module.exit_json(**result)
 
-    # manipulate or modify the state as needed (this is going to be the
-    # part where your module will do what it needs to do)
     changed, return_dict, error = perform_task(module)
-
     logger.debug("return-val: %s", return_dict)
-    # use whatever logic you need to determine whether or not this module
-    # made any modifications to your target
     result['changed'] = changed
     if return_dict:
         result.update(return_dict)
