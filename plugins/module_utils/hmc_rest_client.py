@@ -1248,7 +1248,7 @@ class HmcRestClient:
                     eval_dvc_dict = {}
                     eval_dvc_dict['partitionName'] = vios_name_list[0]
                     eval_dvc_dict['RelatedSRIOVAdapterID'] = sriov_dvc['RelatedSRIOVAdapterID']
-                    if round((100.0 - float(sriov_dvc['AllocatedCapacity'])), 1) > 2.0:
+                    if round((100.0 - float(sriov_dvc['AllocatedCapacity'])), 1) >= 2.0:
                         eval_dvc_dict['DesiredCapacityPercentage'] = "2.0"
                     else:
                         continue
@@ -1257,7 +1257,7 @@ class HmcRestClient:
                     break
             else:
                 for sriov_dvc in sriov_dvc_col:
-                    if round((100.0 - float(sriov_dvc['AllocatedCapacity'])), 1) > 2.0:
+                    if round((100.0 - float(sriov_dvc['AllocatedCapacity'])), 1) >= 2.0:
                         eval_dvc_dict = {}
                         eval_dvc_dict['partitionName'] = vios_name_list[0]
                         eval_dvc_dict['RelatedSRIOVAdapterID'] = sriov_dvc['RelatedSRIOVAdapterID']
@@ -1271,8 +1271,8 @@ class HmcRestClient:
             for backing_device in backing_devices:
                 for sriov_dvc in sriov_dvc_col:
                     if (backing_device['location_code'] is None) or not("-" in backing_device['location_code']):
-                        raise Error('''
-                        mandatory parameter backing device location_code is missing
+                        raise Error('''\
+                        mandatory parameter backing device location_code is missing\
                          or location_code is not in "C1-T1" or "XXXXX.XXXXX.XXX-P1-C1-T1" format''')
                     if sriov_dvc['LocationCode'] == backing_device['location_code'] or (sriov_dvc['LocationCode']).endswith(backing_device['location_code']):
                         eval_dvc_dict = {}
@@ -1281,14 +1281,14 @@ class HmcRestClient:
                         elif backing_device['hosting_partition'] in vios_name_list:
                             eval_dvc_dict['partitionName'] = backing_device['hosting_partition']
                         else:
-                            raise Error('''Given backing device hosting partition name: {0} not found in the managed system
+                            raise Error('''Given backing device hosting partition name: {0} not found in the managed system\
                              or RMC of state is not active'''.format(backing_device['hosting_partition']))
                         eval_dvc_dict['RelatedSRIOVAdapterID'] = sriov_dvc['RelatedSRIOVAdapterID']
                         if backing_device['capacity']:
-                            if round(backing_device['capacity'], 1) < round(100.0 - float(sriov_dvc['AllocatedCapacity']), 1):
+                            if round(backing_device['capacity'], 1) <= round(100.0 - float(sriov_dvc['AllocatedCapacity']), 1):
                                 eval_dvc_dict['DesiredCapacityPercentage'] = str(backing_device['capacity'])
                             else:
-                                raise Error('''Available Capacity of the backing device:{0} is {1} but desired capacity is: {2}
+                                raise Error('''Available Capacity of the backing device:{0} is {1} but desired capacity is: {2}\
                                 '''.format(sriov_dvc['LocationCode'], round(100.0 - float(sriov_dvc['AllocatedCapacity']), 1), backing_device['capacity']))
                         else:
                             eval_dvc_dict['DesiredCapacityPercentage'] = "2.0"
@@ -1296,7 +1296,7 @@ class HmcRestClient:
                         eval_backing_devices.append(eval_dvc_dict)
                         break
                 else:
-                    raise Error('''Given VNIC SRIOV backing device location code: {0} not found in the managed system
+                    raise Error('''Given VNIC SRIOV backing device location code: {0} not found in the managed system\
                     '''.format(backing_device['location_code']))
         payload = ''
         for ev_bck_dvc in eval_backing_devices:
