@@ -1271,9 +1271,9 @@ class HmcRestClient:
             for backing_device in backing_devices:
                 for sriov_dvc in sriov_dvc_col:
                     if (backing_device['location_code'] is None) or not("-" in backing_device['location_code']):
-                        raise Error('''\
-                        mandatory parameter backing device location_code is missing\
-                         or location_code is not in "C1-T1" or "XXXXX.XXXXX.XXX-P1-C1-T1" format''')
+                        msg = ('mandatory parameter backing device location_code is missing '
+                               'or location_code is not in "C1-T1" or "XXXXX.XXXXX.XXX-P1-C1-T1" format')
+                        raise Error(msg)
                     if sriov_dvc['LocationCode'] == backing_device['location_code'] or (sriov_dvc['LocationCode']).endswith(backing_device['location_code']):
                         eval_dvc_dict = {}
                         if backing_device['hosting_partition'] is None:
@@ -1281,8 +1281,9 @@ class HmcRestClient:
                         elif backing_device['hosting_partition'] in vios_name_list:
                             eval_dvc_dict['partitionName'] = backing_device['hosting_partition']
                         else:
-                            raise Error('''Given backing device hosting partition name: {0} not found in the managed system\
-                             or RMC of state is not active'''.format(backing_device['hosting_partition']))
+                            msg = ("Given backing device hosting partition name: {0} not found in the managed system "
+                                   "or RMC of state is not active")
+                            raise Error(msg.format(backing_device['hosting_partition']))
                         eval_dvc_dict['RelatedSRIOVAdapterID'] = sriov_dvc['RelatedSRIOVAdapterID']
                         if backing_device['capacity']:
                             if round(backing_device['capacity'], 1) <= round(100.0 - float(sriov_dvc['AllocatedCapacity']), 1):
@@ -1296,8 +1297,8 @@ class HmcRestClient:
                         eval_backing_devices.append(eval_dvc_dict)
                         break
                 else:
-                    raise Error('''Given VNIC SRIOV backing device location code: {0} not found in the managed system\
-                    '''.format(backing_device['location_code']))
+                    msg = "Given VNIC SRIOV backing device location code: {0} not found in the managed system"
+                    raise Error(msg.format(backing_device['location_code']))
         payload = ''
         for ev_bck_dvc in eval_backing_devices:
             payload += '''
@@ -1343,5 +1344,5 @@ class HmcRestClient:
                     sriov_dict['AllocatedCapacity'] = sriov_pp.xpath("//AllocatedCapacity")[0].text.strip('%')
                     sriov_col_li.append(sriov_dict)
             except Exception:
-                raise Error("There are no SRIOV Physical parts available in the managed system")
+                raise Error("There are no SRIOV Physical ports available in the managed system")
         return sriov_col_li

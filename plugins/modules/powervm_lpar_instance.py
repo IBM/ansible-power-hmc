@@ -1141,6 +1141,8 @@ def create_partition(module, params):
                     vios_name_list.append(vios['PartitionName'])
             sriov_adapters_dom = server_dom.xpath("//SRIOVAdapters//SRIOVAdapter")
             sriov_dvc_col = rest_conn.create_sriov_collection(sriov_adapters_dom)
+            if sriov_dvc_col is None:
+                module.fail_json(msg="There are no SRIOV Physical ports available in the managed system")
             rest_conn.add_vnic_payload(draft_template_dom, params['vnic_config'], sriov_dvc_col, vios_name_list)
             rest_conn.updatePartitionTemplate(draft_uuid, draft_template_dom)
 
