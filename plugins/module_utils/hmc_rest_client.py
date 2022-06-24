@@ -1272,7 +1272,7 @@ class HmcRestClient:
                 for sriov_dvc in sriov_dvc_col:
                     if (backing_device['location_code'] is None) or not("-" in backing_device['location_code']):
                         msg = ('mandatory parameter backing device location_code is missing '
-                               'or location_code is not in "C1-T1" or "XXXXX.XXXXX.XXX-P1-C1-T1" format')
+                               'or location_code is not in C1-T1 or XXXXX.XXXXX.XXX-P1-C1-T1 format')
                         raise Error(msg)
                     if sriov_dvc['LocationCode'] == backing_device['location_code'] or (sriov_dvc['LocationCode']).endswith(backing_device['location_code']):
                         eval_dvc_dict = {}
@@ -1289,8 +1289,8 @@ class HmcRestClient:
                             if round(backing_device['capacity'], 1) <= round(100.0 - float(sriov_dvc['AllocatedCapacity']), 1):
                                 eval_dvc_dict['DesiredCapacityPercentage'] = str(backing_device['capacity'])
                             else:
-                                raise Error('''Available Capacity of the backing device:{0} is {1} but desired capacity is: {2}\
-                                '''.format(sriov_dvc['LocationCode'], round(100.0 - float(sriov_dvc['AllocatedCapacity']), 1), backing_device['capacity']))
+                                msg = 'Available Capacity of the backing device:{0} is {1} but desired capacity is: {2}'
+                                raise Error(msg.format(sriov_dvc['LocationCode'], round(100.0 - float(sriov_dvc['AllocatedCapacity']), 1), backing_device['capacity']))
                         else:
                             eval_dvc_dict['DesiredCapacityPercentage'] = "2.0"
                         eval_dvc_dict['RelatedSRIOVPhysicalPortID'] = sriov_dvc['RelatedSRIOVPhysicalPortID']
