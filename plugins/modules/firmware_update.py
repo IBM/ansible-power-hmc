@@ -158,26 +158,18 @@ def update_system(module, params):
     ret_dict = {}
     try:
         initial_level = hmc.get_firmware_level(system_name)
-        if initial_level['level'] == level:
-            ret_dict['msg']='system already at the specified level'
-            ret_dict.update(initial_level)
-            new_level = initial_level
-        else:
-            hmc.update_managed_system(system_name, False, repo, level, remote_repo)
-            ret_dict = {'msg': 'system update finished'}
-            new_level = hmc.get_firmware_level(system_name)
-            logger.debug("new_level: %s", new_level)
-            ret_dict.update(new_level)
+        hmc.update_managed_system(system_name, False, repo, level, remote_repo)
+        ret_dict = {'msg': 'system update finished'}
+        new_level = hmc.get_firmware_level(system_name)
+        logger.debug("new_level: %s", new_level)
+        ret_dict.update(new_level)
     except HmcError as on_system_error:
         return False, None, repr(on_system_error)
 
-    if initial_level != new_level:
-        changed = True
-        ret_dict['diff'] = {'before': initial_level,
-                            'after': new_level,
-                           }
-    else:
-        changed = False
+    changed = True
+    ret_dict['diff'] = {'before': initial_level,
+                        'after': new_level,
+                        }
     return changed, ret_dict, None
 
 def upgrade_system(module, params):
@@ -186,27 +178,18 @@ def upgrade_system(module, params):
     ret_dict = {}
     try:
         initial_level = hmc.get_firmware_level(system_name)
-        ecnum_and_level = initial_level['ecnumber']+'_'+initial_level['level'].zfill(3)
-        if ecnum_and_level == level:
-            ret_dict['msg']='system already at the specified level'
-            ret_dict.update(initial_level)
-            new_level = initial_level
-        else:
-            hmc.update_managed_system(system_name, True, repo, level, remote_repo)
-            ret_dict = {'msg': 'system upgrade finished'}
-            new_level = hmc.get_firmware_level(system_name)
-            logger.debug("new_level: %s", new_level)
-            ret_dict.update(new_level)
+        hmc.update_managed_system(system_name, True, repo, level, remote_repo)
+        ret_dict = {'msg': 'system upgrade finished'}
+        new_level = hmc.get_firmware_level(system_name)
+        logger.debug("new_level: %s", new_level)
+        ret_dict.update(new_level)
     except HmcError as on_system_error:
         return False, None, repr(on_system_error)
 
-    if initial_level != new_level:
-        changed = True
-        ret_dict['diff'] = {'before': initial_level,
-                            'after': new_level,
-                           }
-    else:
-        changed = False
+    changed = True
+    ret_dict['diff'] = {'before': initial_level,
+                        'after': new_level,
+                        }
     return changed, ret_dict, None
 
 def accept_level(module, params):
