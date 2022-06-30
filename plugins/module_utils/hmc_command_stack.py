@@ -38,7 +38,8 @@ class HmcCommandStack():
                'MKAUTHKEYS': 'mkauthkeys',
                'UPDLIC': 'updlic',
                'LSLIC': 'lslic',
-               'LSSYSCONN': 'lssysconn',}
+               'LSSYSCONN': 'lssysconn',
+               }
 
     HMC_CMD_OPT = {'LSHMC': {'-N': ' -n ',
                              '-v': ' -v ',
@@ -338,7 +339,7 @@ class HmcCommandStack():
                              '-F': {'SPNAMELEVEL': ' -F activated_spname,activated_level,ecnumber'}},
                    'LSSYSCONN': {'-R': {'ALL': ' -r all'},
                                  '-F': {'MTMS': ' -F type_model_serial_num'},
-                                },
+                                 },
                    }
 
     def filterBuilder(self, cmdKey, configOptionsDict):

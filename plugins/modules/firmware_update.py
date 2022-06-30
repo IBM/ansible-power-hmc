@@ -43,12 +43,15 @@ options:
         description: Type of image repository for the firmware image
         type: str
         default: ibmwebsite
-        choices: ['ibmwebsite', 'ftp', 'sftp']
+        choices:
+          - ibmwebsite
+          - ftp
+          - sftp
     remote_repo:
         description: When the image repository needs credentials to be accessed remotely
         type: dict
         suboptions:
-            hostname: host for the image repository
+            hostname:
                 description:
                     - The hostname or IPaddress of the remote server where the
                       firmware image is located.
@@ -74,6 +77,21 @@ options:
                 description:
                     - Location where the images are stored on the host
                 type: str
+    level:
+        description: target level of operation
+        type: str
+        default: latest
+    state:
+        description:
+            - C(updated) executes an update on target system
+            - C(upgraded) executes an upgrade on target system
+        type: str
+        choices: ['updated', 'upgraded']
+    action:
+        description:
+            - C(accept) accepts firmware level for target system
+        type: str
+        choices: ['accept']
 
 author:
     - Mario Maldonado (@Mariomds)
@@ -98,7 +116,7 @@ EXAMPLES = r'''
       hostname: 9.3.147.210
       userid: <user>
       passwd: <password>
-     directory: /repo/images/
+      directory: /repo/images/
     level: 01VL941_047
     state: upgraded
 '''
@@ -129,11 +147,13 @@ import logging
 LOG_FILENAME = "/tmp/ansible_power_hmc.log"
 logger = logging.getLogger(__name__)
 
+
 def init_logger():
     logging.basicConfig(
         filename=LOG_FILENAME,
         format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
         level=logging.DEBUG)
+
 
 def create_hmc_conn(module, params):
     hmc_host = params['hmc_host']
@@ -144,6 +164,7 @@ def create_hmc_conn(module, params):
 
     return hmc
 
+
 def extract_updlic_options(params):
     system_name = params['system_name']
     repo = params['repository']
@@ -151,6 +172,7 @@ def extract_updlic_options(params):
     remote_repo = params['remote_repo']
 
     return system_name, repo, level, remote_repo
+
 
 def update_system(module, params):
     hmc = create_hmc_conn(module, params)
@@ -172,6 +194,7 @@ def update_system(module, params):
                         }
     return changed, ret_dict, None
 
+
 def upgrade_system(module, params):
     hmc = create_hmc_conn(module, params)
     system_name, repo, level, remote_repo = extract_updlic_options(params)
@@ -192,6 +215,7 @@ def upgrade_system(module, params):
                         }
     return changed, ret_dict, None
 
+
 def accept_level(module, params):
     hmc = create_hmc_conn(module, params)
     system_name = params['system_name']
@@ -203,6 +227,7 @@ def accept_level(module, params):
 
     ret_dict['msg'] = 'level accepted'
     return True, ret_dict, None
+
 
 def perform_task(module):
     params = module.params
@@ -219,6 +244,7 @@ def perform_task(module):
     except Exception as error:
         return False, repr(error), None
 
+
 def run_module():
     module_args = dict(
         hmc_host=dict(type='str', required=True),
@@ -229,10 +255,10 @@ def run_module():
                           username=dict(required=True, type='str'),
                           password=dict(type='str', no_log=True),
                       )
-        ),
+                      ),
         system_name=dict(type='str', required=True),
         action=dict(type='str', choices=['accept']),
-        state=dict(type='str', choices=['updated', 'upgraded',]),
+        state=dict(type='str', choices=['updated', 'upgraded', ]),
         level=dict(type='str', default='latest'),
         repository=dict(type='str', default='ibmwebsite', choices=['ibmwebsite', 'ftp', 'sftp']),
         remote_repo=dict(type='dict', options=dict(
@@ -240,9 +266,8 @@ def run_module():
                               userid=dict(type='str'),
                               passwd=dict(type='str', no_log=True),
                               sshkey_file=dict(type='str'),
-                              directory=dict(type='str'),
-                              )
-                        )
+                              directory=dict(type='str'), )
+                         )
     )
 
     # seed the result dict in the object
@@ -253,7 +278,7 @@ def run_module():
     module = AnsibleModule(
         argument_spec=module_args,
         supports_check_mode=True,
-        mutually_exclusive=[('state', 'action'), ('action','repository'), ('action','remote_repo'), ('action','level')]
+        mutually_exclusive=[('state', 'action'), ('action', 'repository'), ('action', 'remote_repo'), ('action', 'level')]
     )
     if module._verbosity >= 5:
         init_logger()

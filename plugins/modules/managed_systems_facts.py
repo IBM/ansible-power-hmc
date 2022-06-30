@@ -67,11 +67,13 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client impor
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_resource import Hmc
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
 
+
 def init_logger():
     logging.basicConfig(
         filename=LOG_FILENAME,
         format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
         level=logging.DEBUG)
+
 
 def get_facts_dict(module):
     params = module.params
@@ -85,7 +87,7 @@ def get_facts_dict(module):
     except HmcError as on_system_error:
         return False, repr(on_system_error), None
 
-    return {'managed_systems' : system_list}
+    return {'managed_systems': system_list}
 
 
 def run_module():
