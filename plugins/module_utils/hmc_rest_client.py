@@ -1290,7 +1290,8 @@ class HmcRestClient:
                                 eval_dvc_dict['DesiredCapacityPercentage'] = str(backing_device['capacity'])
                             else:
                                 msg = 'Available Capacity of the backing device:{0} is {1} but desired capacity is: {2}'
-                                raise Error(msg.format(sriov_dvc['LocationCode'], round(100.0 - float(sriov_dvc['AllocatedCapacity']), 1), backing_device['capacity']))
+                                raise Error(msg.format(sriov_dvc['LocationCode'], round(100.0 - float(sriov_dvc['AllocatedCapacity']), 1),
+                                            backing_device['capacity']))
                         else:
                             eval_dvc_dict['DesiredCapacityPercentage'] = "2.0"
                         eval_dvc_dict['RelatedSRIOVPhysicalPortID'] = sriov_dvc['RelatedSRIOVPhysicalPortID']
