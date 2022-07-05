@@ -378,7 +378,7 @@ class HmcCommandStack():
         next(csvIter)
         prevdata = ""
         for each in csvList:
-            if csvIter.length_hint():
+            if csvIter.__length_hint__():
                 nextdata = next(csvIter)
             else:
                 nextdata = ""
