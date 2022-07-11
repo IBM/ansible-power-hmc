@@ -395,22 +395,24 @@ class HmcRestClient:
         response = resp.read()
         return response
 
-    def getLogicalPartition(self, system_uuid, partition_name):
+    def getLogicalPartition(self, system_uuid, partition_name, partition_uuid=None):
         lpar_uuid = None
-        lpar_quick_list = []
+        if partition_uuid is None:
+            lpar_quick_list = []
+            lpar_response = self.getLogicalPartitionsQuick(system_uuid)
+            if lpar_response:
+                lpar_quick_list = json.loads(lpar_response)
 
-        lpar_response = self.getLogicalPartitionsQuick(system_uuid)
-        if lpar_response:
-            lpar_quick_list = json.loads(lpar_response)
+            if lpar_quick_list:
+                for eachLpar in lpar_quick_list:
+                    if eachLpar['PartitionName'] == partition_name:
+                        lpar_uuid = eachLpar['UUID']
+                        break
 
-        if lpar_quick_list:
-            for eachLpar in lpar_quick_list:
-                if eachLpar['PartitionName'] == partition_name:
-                    lpar_uuid = eachLpar['UUID']
-                    break
-
-        if not lpar_uuid:
-            return None, None
+            if not lpar_uuid:
+                return None, None
+        else:
+            lpar_uuid = partition_uuid
 
         url = "https://{0}/rest/api/uom/LogicalPartition/{1}".format(self.hmc_ip, lpar_uuid)
         header = {'X-API-Session': self.session,
@@ -1086,12 +1088,10 @@ class HmcRestClient:
         suspendEnableTag = lpar_template_dom.xpath("//suspendEnable")[0]
         suspendEnableTag.addprevious(etree.XML(virtualFibreChannelClientAdapters))
 
-    def fetchFCDetailsFromVIOS(self, system_uuid, lpar_id):
+    def fetchFCDetailsFromVIOS(self, system_uuid, lpar_id, vios_list):
         vfcs = []
-        vios_response = self.getVirtualIOServersQuick(system_uuid)
-        if vios_response is None:
+        if not vios_list:
             return vfcs
-        vios_list = json.loads(vios_response)
         vios_dict = {vios['PartitionID']: vios['PartitionName'] for vios in vios_list}
 
         try:
@@ -1117,12 +1117,10 @@ class HmcRestClient:
 
         return vfcs
 
-    def fetchSCSIDetailsFromVIOS(self, system_uuid, lpar_id):
+    def fetchSCSIDetailsFromVIOS(self, system_uuid, lpar_id, vios_list):
         vscsis = []
-        vios_response = self.getVirtualIOServersQuick(system_uuid)
-        if vios_response is None:
+        if not vios_list:
             return vscsis
-        vios_list = json.loads(vios_response)
         vios_dict = {vios['PartitionID']: vios['PartitionName'] for vios in vios_list}
 
         try:
@@ -1347,3 +1345,51 @@ class HmcRestClient:
             except Exception:
                 raise Error("There are no SRIOV Physical ports available in the managed system")
         return sriov_col_li
+
+    def generic_get(self, url):
+        header = {'X-API-Session': self.session,
+                  'Accept': '*/*'}
+        resp = open_url(url,
+                        headers=header,
+                        method='GET',
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=3600)
+        if resp.code != 200:
+            logger.debug("Get operation failed. Respsonse code: %d", resp.code)
+            return None
+        response = resp.read()
+        gen_response = xml_strip_namespace(response)
+        return gen_response
+
+    def fetchDedicatedVirtualNICs(self, system_uuid, lpar_uuid, vm_name, vios_list):
+        lpar_uuid, partition_dom = self.getLogicalPartition(system_uuid, vm_name, lpar_uuid)
+        vios_dict = {}
+        if vios_list:
+            vios_dict = {vios['UUID']: vios['PartitionName'] for vios in vios_list}
+        vnics_list = []
+        vnic_links = partition_dom.xpath('//DedicatedVirtualNICs//link')
+        if vnic_links:
+            for vnic_link_raw in vnic_links:
+                vnic_dict = {}
+                vnic_link = etree.ElementTree(vnic_link_raw)
+                href = vnic_link.xpath('./@href')[0]
+                vnic_dom = self.generic_get(href)
+                vnic_dict['vnic_adapter_id'] = vnic_dom.xpath('//VirtualSlotNumber')[0].text
+                vnic_backing_devices = vnic_dom.xpath('//VirtualNICBackingDeviceChoice')
+                bck_dvcs = []
+                for vnic_bck_dvc_raw in vnic_backing_devices:
+                    bck_dvc_dict = {}
+                    vnic_bck_dvc = etree.ElementTree(vnic_bck_dvc_raw)
+                    bck_dvc_dict['Capacity'] = vnic_bck_dvc.xpath('//CurrentCapacityPercentage')[0].text
+                    bck_dvc_dict['DeviceType'] = vnic_bck_dvc.xpath('//DeviceType')[0].text
+                    bck_dvc_dict['Status'] = vnic_bck_dvc.xpath('//Status')[0].text
+                    bck_dvc_dict['RelatedSRIOVAdapterID'] = vnic_bck_dvc.xpath('//RelatedSRIOVAdapterID')[0].text
+                    vios_href = vnic_bck_dvc.xpath('//AssociatedVirtualIOServer')[0].attrib['href']
+                    bck_dvc_dict['AssociatedVirtualIOServer'] = vios_dict[(vios_href.split('/'))[-1]]
+                    sriov_href = vnic_bck_dvc.xpath('//RelatedSRIOVLogicalPort')[0].attrib['href']
+                    bck_dvc_dict['RelatedSRIOVLocationCode'] = self.generic_get(sriov_href).xpath('//LocationCode')[0].text
+                    bck_dvcs.append(bck_dvc_dict)
+                vnic_dict['backing_devices'] = bck_dvcs
+                vnics_list.append(vnic_dict)
+        return vnics_list
