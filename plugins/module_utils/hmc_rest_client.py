@@ -1343,7 +1343,7 @@ class HmcRestClient:
                     sriov_dict['AllocatedCapacity'] = sriov_pp.xpath("//AllocatedCapacity")[0].text.strip('%')
                     sriov_col_li.append(sriov_dict)
             except Exception:
-                raise Error("There are no SRIOV Physical ports available in the managed system")
+                continue
         return sriov_col_li
 
     def generic_get(self, url):

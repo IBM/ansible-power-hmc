@@ -1139,6 +1139,8 @@ def create_partition(module, params):
             for vios in vios_list:
                 if vios['RMCState'] == 'active':
                     vios_name_list.append(vios['PartitionName'])
+            if not vios_name_list:
+                module.fail_json(msg="There are no RMC Active VIOS available in the managed system")
             sriov_adapters_dom = server_dom.xpath("//SRIOVAdapters//SRIOVAdapter")
             sriov_dvc_col = rest_conn.create_sriov_collection(sriov_adapters_dom)
             if sriov_dvc_col is None:
