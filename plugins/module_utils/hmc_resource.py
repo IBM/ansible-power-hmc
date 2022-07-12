@@ -539,18 +539,12 @@ class Hmc():
             self.OPT['UPDLIC']['-R'] + repo +\
             self.OPT['UPDLIC']['-L'] + level
         if remote_repo:
-            host = remote_repo['hostname']
-            if host:
-                updlic_cmd += self.OPT['UPDLIC']['-H'] + host
-            username = remote_repo['userid']
-            if username:
-                updlic_cmd += self.OPT['UPDLIC']['-U'] + username
+            updlic_cmd += self.OPT['UPDLIC']['-H'] + remote_repo['hostname']
+            updlic_cmd += self.OPT['UPDLIC']['-U'] + remote_repo['userid']
+            updlic_cmd += self.OPT['UPDLIC']['-D'] + remote_repo['directory']
             passwd = remote_repo['passwd']
             if passwd:
                 updlic_cmd += self.OPT['UPDLIC']['--PASSWD'] + passwd
-            directory = remote_repo['directory']
-            if directory:
-                updlic_cmd += self.OPT['UPDLIC']['-D'] + directory
             ssh_key = remote_repo['sshkey_file']
             if ssh_key:
                 updlic_cmd += self.OPT['UPDLIC']['-K'] + ssh_key

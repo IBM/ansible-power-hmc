@@ -55,12 +55,14 @@ options:
                 description:
                     - The hostname or IPaddress of the remote server where the
                       firmware image is located.
+                required: true
                 type: str
             userid:
                 description:
                     - The user ID to use to log in to the remote FTP or SFTP server.
                       This option is required when the firmware image is located on a remote FTP or SFTP server
                       Otherwise, this option is not valid.
+                required: true
                 type: str
             passwd:
                 description:
@@ -76,6 +78,7 @@ options:
             directory:
                 description:
                     - Location where the images are stored on the host
+                required: true
                 type: str
     level:
         description: target level of operation
@@ -262,11 +265,11 @@ def run_module():
         level=dict(type='str', default='latest'),
         repository=dict(type='str', default='ibmwebsite', choices=['ibmwebsite', 'ftp', 'sftp']),
         remote_repo=dict(type='dict', options=dict(
-                              hostname=dict(type='str'),
-                              userid=dict(type='str'),
+                              hostname=dict(type='str', required=True),
+                              userid=dict(type='str', required=True),
                               passwd=dict(type='str', no_log=True),
                               sshkey_file=dict(type='str'),
-                              directory=dict(type='str'), )
+                              directory=dict(type='str', required=True), )
                          )
     )
 
