@@ -6,6 +6,8 @@ from ansible.module_utils.urls import open_url
 import ansible.module_utils.six.moves.urllib.error as urllib_error
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import Error
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
+import re
 import xml.etree.ElementTree as ET
 NEED_LXML = False
 try:
@@ -1268,10 +1270,10 @@ class HmcRestClient:
         else:
             for backing_device in backing_devices:
                 for sriov_dvc in sriov_dvc_col:
-                    if (backing_device['location_code'] is None) or not("-" in backing_device['location_code']):
+                    if (backing_device['location_code'] is None) or (re.search(r'[a-zA-Z]+\d+-[a-zA-Z]+\d+$', backing_device['location_code']) is None):
                         msg = ('mandatory parameter backing device location_code is missing '
                                'or location_code is not in C1-T1 or XXXXX.XXXXX.XXX-P1-C1-T1 format')
-                        raise Error(msg)
+                        raise ParameterError(msg)
                     if sriov_dvc['LocationCode'] == backing_device['location_code'] or (sriov_dvc['LocationCode']).endswith(backing_device['location_code']):
                         eval_dvc_dict = {}
                         if backing_device['hosting_partition'] is None:
@@ -1291,7 +1293,11 @@ class HmcRestClient:
                                 raise Error(msg.format(sriov_dvc['LocationCode'], round(100.0 - float(sriov_dvc['AllocatedCapacity']), 1),
                                             backing_device['capacity']))
                         else:
-                            eval_dvc_dict['DesiredCapacityPercentage'] = "2.0"
+                            if round(100.0 - float(sriov_dvc['AllocatedCapacity']), 1) >= 2.0:
+                                eval_dvc_dict['DesiredCapacityPercentage'] = "2.0"
+                            else:
+                                msg = 'Available Capacity of the backing device:{0} is {1} but desired capacity is: 2.0'
+                                raise Error(msg.format(sriov_dvc['LocationCode'], round(100.0 - float(sriov_dvc['AllocatedCapacity']), 1)))
                         eval_dvc_dict['RelatedSRIOVPhysicalPortID'] = sriov_dvc['RelatedSRIOVPhysicalPortID']
                         eval_backing_devices.append(eval_dvc_dict)
                         break
