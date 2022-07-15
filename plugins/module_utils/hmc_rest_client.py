@@ -1270,7 +1270,7 @@ class HmcRestClient:
         else:
             for backing_device in backing_devices:
                 for sriov_dvc in sriov_dvc_col:
-                    if (backing_device['location_code'] is None) or (re.search(r'[a-zA-Z]+\d+-[a-zA-Z]+\d+$', backing_device['location_code']) is None):
+                    if (backing_device['location_code'] is None) or (re.search(r'[a-zA-Z]\d{1,2}-[a-zA-Z]\d{1,2}$', backing_device['location_code']) is None):
                         msg = ('mandatory parameter backing device location_code is missing '
                                'or location_code is not in C1-T1 or XXXXX.XXXXX.XXX-P1-C1-T1 format')
                         raise ParameterError(msg)
@@ -1302,7 +1302,7 @@ class HmcRestClient:
                         eval_backing_devices.append(eval_dvc_dict)
                         break
                 else:
-                    msg = "Given VNIC SRIOV backing device location code: {0} not found in the managed system"
+                    msg = "Given VNIC SRIOV backing device location code: {0} not found in the managed system or exhausted with Ethernet LogicalPort limit"
                     raise Error(msg.format(backing_device['location_code']))
         payload = ''
         for ev_bck_dvc in eval_backing_devices:
@@ -1342,6 +1342,10 @@ class HmcRestClient:
                 for sriov_pp_raw in sriov_pps:
                     sriov_pp = etree.ElementTree(sriov_pp_raw)
                     sriov_dict = {}
+                    maxELP = int(sriov_pp.xpath("//ConfiguredMaxEthernetLogicalPorts")[0].text)
+                    cELP = int(sriov_pp.xpath("//ConfiguredEthernetLogicalPorts")[0].text)
+                    if maxELP - cELP == 0:
+                        continue
                     sriov_dict['RelatedSRIOVAdapterID'] = sriov_adapter_id
                     sriov_dict['LocationCode'] = sriov_pp.xpath("//LocationCode")[0].text
                     sriov_dict['RelatedSRIOVPhysicalPortID'] = sriov_pp.xpath("//PhysicalPortID")[0].text
