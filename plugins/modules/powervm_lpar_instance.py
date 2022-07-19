@@ -342,6 +342,41 @@ options:
                     - Min timeout should be more than 10 mins.
                     - Default value is 60 min.
                 type: int
+    vnic_config:
+        description:
+            - Virtual NIC Configuration of the partition
+        type: list
+        elements: dict
+        suboptions:
+            vnic_adapter_id:
+                description:
+                    - Virtual Nic Adapter ID to be configured while creating a partition
+                    - Default value is next available
+                type: int
+            backing_devices:
+                description:
+                    - SRIOV physical ports to be used as a backing device of VNIC
+                    - If user doesn't provide this option, by default it picks the SRIOV Physical port link status up as backing device
+                    - If there are no SRIOV Physical port with link status as up then it randomly picks physical port which has capacity more than 2.0%
+                type: list
+                elements: dict
+                suboptions:
+                    location_code:
+                        description:
+                            - SRIOV Physical port location code to be used as backing device
+                            - An illustrative pattern for SRIOV physical port location code is XXXXX.XXX.XXXXXXX-P1-T1 or P1-T1.
+                        required: True
+                        type: str
+                    capacity:
+                        description:
+                            - Capacity value to be configured for vnic backing device
+                            - default value is 2.0%
+                        type: float
+                    hosting_partition:
+                        description:
+                            - The VIOS name on which SRIOV physical port location code to be configured
+                            - by default picks a random VIOS name with RMC state as active
+                        type: str
     state:
         description:
             - C(present) creates a partition of the specified I(os_type), I(vm_name), I(proc) and I(memory) on specified I(system_name).
@@ -599,28 +634,31 @@ def validate_parameters(params):
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'volume_config', 'virt_network_config', 'retain_vios_cfg', 'delete_vdisks',
                            'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
-                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'install_settings']
+                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'install_settings',
+                           'vnic_config']
     elif opr == 'absent':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
-                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'install_settings']
+                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'install_settings',
+                           'vnic_config']
     elif opr == 'facts':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
-                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'install_settings']
+                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'install_settings',
+                           'vnic_config']
     elif opr == 'install_os':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'install_settings']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config', 'retain_vios_cfg',
                            'delete_vdisks', 'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
-                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id']
+                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'vnic_config']
     else:
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc',
                            'min_proc_unit', 'max_proc_unit', 'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem',
-                           'vm_id', 'install_settings']
+                           'vm_id', 'install_settings', 'vnic_config']
 
     collate = []
     for eachMandatory in mandatoryList:
@@ -1093,6 +1131,23 @@ def create_partition(module, params):
                 rest_conn.add_vscsi(draft_template_dom, vscsi_clients_payload)
                 rest_conn.updatePartitionTemplate(draft_uuid, draft_template_dom)
 
+        # Virtual NIC Configurations
+        if params['vnic_config']:
+            vios_response = rest_conn.getVirtualIOServersQuick(system_uuid)
+            vios_list = json.loads(vios_response)
+            vios_name_list = []
+            for vios in vios_list:
+                if vios['RMCState'] == 'active':
+                    vios_name_list.append(vios['PartitionName'])
+            if not vios_name_list:
+                module.fail_json(msg="There are no RMC Active VIOS available in the managed system")
+            sriov_adapters_dom = server_dom.xpath("//SRIOVAdapters//SRIOVAdapter")
+            sriov_dvc_col = rest_conn.create_sriov_collection(sriov_adapters_dom)
+            if sriov_dvc_col is None:
+                module.fail_json(msg="There are no SRIOV Physical ports available in the managed system")
+            rest_conn.add_vnic_payload(draft_template_dom, params['vnic_config'], sriov_dvc_col, vios_name_list)
+            rest_conn.updatePartitionTemplate(draft_uuid, draft_template_dom)
+
         resp_dom = rest_conn.deployPartitionTemplate(draft_uuid, system_uuid)
         partition_uuid = resp_dom.xpath("//ParameterName[text()='PartitionUuid']/following-sibling::ParameterValue")[0].text
         partition_prop = rest_conn.quickGetPartition(partition_uuid)
@@ -1143,7 +1198,6 @@ def remove_partition(module, params):
         deleteVdisks = False
     else:
         retainViosCfg = not(retainViosCfg)
-
     try:
         hmc.deletePartition(system_name, vm_name, retainViosCfg, deleteVdisks)
     except HmcError as del_lpar_error:
@@ -1350,7 +1404,7 @@ def install_aix_os(module, params):
     try:
         lpar_details = hmc.getPartitionConfig(system_name, vm_name)
         if lpar_details['lpar_env'] != 'aixlinux':
-            module.fail_json(msg="Unsupported logical partition os type:" + lpar_details['lpar_env'] + ", Supported os type is aixlinux")
+            module.fail_json(msg="UnSupported logical partitions os type:" + lpar_details['lpar_env'] + ", Supported logical partition os type is aixlinux")
 
         if location_code:
             hmc.installOSFromNIM(location_code, nim_ip, nim_gateway, vm_ip, nim_vlan_id, nim_vlan_priority, nim_subnetmask, vm_name, profile_name, system_name)
@@ -1421,8 +1475,13 @@ def partition_details(module, params):
             module.fail_json(msg="There are no Logical Partitions present on the system")
 
         if lpar_uuid and advanced_info:
-            partition_prop['VirtualFiberChannelAdapters'] = rest_conn.fetchFCDetailsFromVIOS(system_uuid, partition_prop['PartitionID'])
-            partition_prop['VirtualSCSIClientAdapters'] = rest_conn.fetchSCSIDetailsFromVIOS(system_uuid, partition_prop['PartitionID'])
+            vios_response = rest_conn.getVirtualIOServersQuick(system_uuid)
+            vios_list = []
+            if vios_response is not None:
+                vios_list = json.loads(vios_response)
+            partition_prop['VirtualFiberChannelAdapters'] = rest_conn.fetchFCDetailsFromVIOS(system_uuid, partition_prop['PartitionID'], vios_list)
+            partition_prop['VirtualSCSIClientAdapters'] = rest_conn.fetchSCSIDetailsFromVIOS(system_uuid, partition_prop['PartitionID'], vios_list)
+            partition_prop['DedicatedVirtualNICs'] = rest_conn.fetchDedicatedVirtualNICs(system_uuid, lpar_uuid, vm_name, vios_list)
 
         if not lpar_uuid:
             module.fail_json(msg="Given Logical Partition is not present on the system")
@@ -1486,6 +1545,16 @@ def run_module():
                            nim_vlan_priority=dict(type='str'),
                            timeout=dict(type='int')
                            )
+    bck_dvc_args = dict(location_code=dict(type='str', required=True),
+                        capacity=dict(type='float'),
+                        hosting_partition=dict(type='str')
+                        )
+    vnic_args = dict(vnic_adapter_id=dict(type='int'),
+                     backing_devices=dict(type='list',
+                                          elements='dict',
+                                          options=bck_dvc_args)
+                     )
+
     # define available arguments/parameters a user can pass to the module
     module_args = dict(
         hmc_host=dict(type='str', required=True),
@@ -1537,6 +1606,10 @@ def run_module():
         advanced_info=dict(type='bool'),
         install_settings=dict(type='dict',
                               options=install_os_args),
+        vnic_config=dict(type='list',
+                         elements='dict',
+                         options=vnic_args
+                         ),
         state=dict(type='str',
                    choices=['present', 'absent', 'facts']),
         action=dict(type='str',
