@@ -6,10 +6,6 @@
     curr_hmc_auth:
       username: '{{ ansible_user }}'
   tasks:
-  - name: gather managed systems
-    managed_systems_facts:
-      hmc_host: '{{ inventory_hostname }}'
-      hmc_auth: '{{ curr_hmc_auth }}'
   - name: update managed systems to newer available level found in an sftp repo
     firmware_update:
       hmc_host: '{{ inventory_hostname }}'
@@ -23,4 +19,4 @@
         directory: <images dir>
       level: <level>
       state: updated
-    with_items: '{{ ansible_facts["managed_systems"] }}'
+    with_items: <systems_to_update>
