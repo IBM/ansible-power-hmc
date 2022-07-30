@@ -2,34 +2,6 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import (absolute_import, division, print_function)
-import xml.etree.ElementTree as ET
-import json
-import sys
-from ansible.plugins.inventory import BaseInventoryPlugin, Constructable, Cacheable
-from ansible.module_utils.six import string_types, viewitems, reraise
-from ansible.errors import AnsibleParserError
-from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
-from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import parse_error_response
-from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import HmcRestClient
-from ansible.config.manager import ensure_type
-from ansible.template import Templar
-
-from ansible.utils.display import Display
-display = Display()
-
-# Generic setting for log initializing and log rotation
-import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc.log"
-logger = logging.getLogger(__name__)
-
-
-def init_logger():
-    logging.basicConfig(
-        filename=LOG_FILENAME,
-        format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
-        level=logging.DEBUG)
-
-
 __metaclass__ = type
 
 DOCUMENTATION = '''
@@ -37,10 +9,9 @@ DOCUMENTATION = '''
     author:
         - Torin Reilly (@torinreilly)
         - Michael Cohoon (@mtcohoon)
-        - Ozzie Rodriguez
-        - Anil Vijayan
+        - Ozzie Rodriguez (@OzzieRodriguez)
+        - Anil Vijayan (@AnilVijayan)
         - Navinakumar Kandakur (@nkandak1)
-    plugin_type: inventory
     version_added: "1.1.0"
     requirements:
         - Python >= 3
@@ -67,7 +38,6 @@ DOCUMENTATION = '''
           description: A dictionary of hosts and their associated usernames and passwords.
           required: true
           type: dict
-          elements: dict
         filters:
             description:
                 - A key value pair for filtering by various LPAR/VIOS attributes.
@@ -85,24 +55,20 @@ DOCUMENTATION = '''
             description: Add hosts to group based on the values of a variable.
             type: list
             elements: str
-            default: []
         exclude_ip:
             description: A list of IP addresses to exclude from the inventory.
               This will be compared to the RMC IP address specified in the HMC.
               Currently, no hostname lookup is performed, so only IP addresses
               that match the RMC IP address specified in the HMC will be excluded.
               This is not valid for IBMi LPARs
-            type: list
-            default: []
+            type: str
         exclude_lpar:
             description: A list of partitions (LPAR, VIOS) to exclude by partition name.
-            type: list
-            default: []
+            type: str
         exclude_system:
             description: A list of HMC managed systems whose partitions (LPAR, VIOS)
               will be excluded from the dynamic inventory.
-            type: list
-            default: []
+            type: str
         ansible_display_name:
             description: By default, partitions names will be used as the name displayed by
               Ansible in output. If you wish this to display the IP address instead you may
@@ -230,6 +196,33 @@ exclude_system:
     - Frame1-XXX-WWWWWW
     - Frame2-XXX-WWWWWW
 '''
+
+import xml.etree.ElementTree as ET
+import json
+import sys
+from ansible.plugins.inventory import BaseInventoryPlugin, Constructable, Cacheable
+from ansible.module_utils.six import string_types, viewitems, reraise
+from ansible.errors import AnsibleParserError
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import parse_error_response
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import HmcRestClient
+from ansible.config.manager import ensure_type
+from ansible.template import Templar
+
+from ansible.utils.display import Display
+display = Display()
+
+# Generic setting for log initializing and log rotation
+import logging
+LOG_FILENAME = "/tmp/ansible_power_hmc.log"
+logger = logging.getLogger(__name__)
+
+
+def init_logger():
+    logging.basicConfig(
+        filename=LOG_FILENAME,
+        format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
+        level=logging.DEBUG)
 
 
 class LparFieldNotFoundError(Exception):

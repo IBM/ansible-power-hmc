@@ -35,7 +35,11 @@ class HmcCommandStack():
                'LPAR_NETBOOT': 'lpar_netboot',
                'LSREFCODE': 'lsrefcode',
                'VIOSVRCMD': 'viosvrcmd',
-               'MKAUTHKEYS': 'mkauthkeys'}
+               'MKAUTHKEYS': 'mkauthkeys',
+               'UPDLIC': 'updlic',
+               'LSLIC': 'lslic',
+               'LSSYSCONN': 'lssysconn',
+               }
 
     HMC_CMD_OPT = {'LSHMC': {'-N': ' -n ',
                              '-v': ' -v ',
@@ -317,7 +321,25 @@ class HmcCommandStack():
                                   '--IP': ' --ip ',
                                   '-U': ' -u ',
                                   '--PASSWD': ' --passwd ',
-                                  '--TEST': ' --test'}
+                                  '--TEST': ' --test'},
+                   'UPDLIC': {'-M': ' -m ',
+                              '-O': {'RETINSTACT': ' -o a',
+                                     'UPGRADE': ' -o u',
+                                     'ACCEPT': ' -o c'},
+                              '-T': {'SYS': ' -t sys',
+                                     'BMC': ' -t bmc'},
+                              '-L': ' -l ',
+                              '-R': ' -r ',
+                              '-H': ' -h ',
+                              '-U': ' -u ',
+                              '--PASSWD': ' --passwd ',
+                              '-K': ' -k ',
+                              '-D': ' -d '},
+                   'LSLIC': {'-M': ' -m ',
+                             '-F': {'SPNAMELEVEL': ' -F activated_spname,activated_level,ecnumber'}},
+                   'LSSYSCONN': {'-R': {'ALL': ' -r all'},
+                                 '-F': {'MTMS': ' -F type_model_serial_num'},
+                                 },
                    }
 
     def filterBuilder(self, cmdKey, configOptionsDict):
