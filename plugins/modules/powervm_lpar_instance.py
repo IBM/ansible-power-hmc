@@ -403,6 +403,7 @@ EXAMPLES = '''
          password: '{{ hmc_password }}'
       system_name: <system_name>
       vm_name: <vm_name>
+      vm_id: <lpar_id>
       proc: 4
       proc_unit: 4
       mem: 20480
@@ -419,7 +420,7 @@ EXAMPLES = '''
       state: present
 
 - name: Create an AIX/Linux logical partition instance with default proc, mem, virt_network_config, volume_config's volumes_size and
-        npiv_config
+        npiv_config, vnic_config
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -437,6 +438,19 @@ EXAMPLES = '''
          - vios_name: <viosname>
            fc_port: <fc_port_name/loc_code>
            wwpn_pair: <wwpn1;wwpn2>
+      vnic_config:
+         - vnic_adapter_id: <vnic_adapter_id>
+           backing_devices:
+              - location_code: XXXXX.XXX.XXXXXXX-P1-T1
+                capacity: <capacity>
+                hosting_partition: <vios_name>
+              - location_code: P1-T2
+         - backing_devices:
+              - location_code: P1-T3
+                hosting_partition: <vios_name>
+              - location_code: P1-T4
+                capacity: <capacity>
+         - vnic_adapter_id: <vnic_adapter_id>
       os_type: aix_linux
       state: present
 
@@ -496,6 +510,20 @@ EXAMPLES = '''
       all_resources: True
       os_type: aix_linux
       state: present
+
+- name: Install aix/Linux OS on LPAR from NIM Server
+  powervm_lpar_instance:
+      hmc_host: '{{ inventory_hostname }}'
+      hmc_auth: "{{ curr_hmc_auth }}"
+      system_name: <system_name>
+      vm_name: <vm_name>
+      install_settings:
+              vm_ip: <IP_address of the lpar>
+              nim_ip: <IP_address of the NIM Server>
+              nim_gateway: <Gateway IP_Addres>
+              nim_subnetmask: <Subnetmask IP_Address>
+      action: install_os
+
 '''
 
 RETURN = '''
