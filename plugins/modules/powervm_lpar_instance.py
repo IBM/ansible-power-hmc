@@ -762,7 +762,7 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
         for each in pv_xml_list:
 
             # This condition is to avoid picking already picked UDID in case of mutiple volume config
-            if(pvid_list and each.xpath("UniqueDeviceID")[0].text in pvid_list):
+            if (pvid_list and each.xpath("UniqueDeviceID")[0].text in pvid_list):
                 continue
 
             if volume_size > 0 and int(each.xpath("VolumeCapacity")[0].text) >= volume_size:
@@ -1225,7 +1225,7 @@ def remove_partition(module, params):
         retainViosCfg = False
         deleteVdisks = False
     else:
-        retainViosCfg = not(retainViosCfg)
+        retainViosCfg = not (retainViosCfg)
     try:
         hmc.deletePartition(system_name, vm_name, retainViosCfg, deleteVdisks)
     except HmcError as del_lpar_error:
@@ -1675,7 +1675,7 @@ def run_module():
 
     if sys.version_info < (3, 0):
         py_ver = sys.version_info[0]
-        module.fail_json("Unsupported Python version {}, supported python version is 3 and above".format(py_ver))
+        module.fail_json("Unsupported Python version {0}, supported python version is 3 and above".format(py_ver))
 
     changed, info, warning = perform_task(module)
 

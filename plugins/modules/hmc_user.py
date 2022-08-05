@@ -304,7 +304,7 @@ def validate_sub_params(params):
 
     if notTogetherList:
         for notTogether in notTogetherList:
-            if(all(params[each] for each in notTogether)):
+            if (all(params[each] for each in notTogether)):
                 raise ParameterError("%s state will not support parameters: %s together" %
                                      (state, ','.join(notTogether)))
     if mandatoryList:
@@ -635,7 +635,7 @@ def run_module():
 
     if sys.version_info < (3, 0):
         py_ver = sys.version_info[0]
-        module.fail_json("Unsupported Python version {}, supported python version is 3 and above".format(py_ver))
+        module.fail_json("Unsupported Python version {0}, supported python version is 3 and above".format(py_ver))
 
     changed, user_info, warning = perform_task(module)
     if isinstance(user_info, str):

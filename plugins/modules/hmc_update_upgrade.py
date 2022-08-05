@@ -200,7 +200,7 @@ def command_option_checker(config):
         unsupportedList = ['mount_location']
 
         if config['location_type'] == 'sftp':
-            if not(config['sshkey_file'] or config['passwd']):
+            if not (config['sshkey_file'] or config['passwd']):
                 raise ParameterError("mandatory parameter 'passwd' or 'sshkey_file' is missing")
             elif config['sshkey_file'] and config['passwd']:
                 raise ParameterError("conflicting parameters 'passwd' and 'sshkey_file'. Provide any one")
@@ -579,7 +579,7 @@ def run_module():
 
     if sys.version_info < (3, 0):
         py_ver = sys.version_info[0]
-        module.fail_json("Unsupported Python version {}, supported python version is 3 and above".format(py_ver))
+        module.fail_json("Unsupported Python version {0}, supported python version is 3 and above".format(py_ver))
 
     changed, build_info, warning = perform_task(module)
 
