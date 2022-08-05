@@ -170,6 +170,7 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_resource import 
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import parse_error_response
+import sys
 
 
 def init_logger():
@@ -340,6 +341,10 @@ def run_module():
 
     if module._verbosity >= 5:
         init_logger()
+
+    if sys.version_info < (3, 0):
+        py_ver = sys.version_info[0]
+        module.fail_json("Unsupported Python version {}, supported python version is 3 and above".format(py_ver))
 
     changed, info, warning = perform_task(module)
 

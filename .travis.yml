@@ -2,7 +2,7 @@ sudo: required
 dist: bionic
 language: python
 python:
-  - "3.7"
+  - "3.10"
 
 # command to install dependencies
 install:
@@ -46,6 +46,7 @@ script:
 
   - pyenv global 3.7
   - ansible-test sanity --python 3.7 --skip-test shellcheck
+  - ansible-test sanity --python 3.10 --skip-test shellcheck
   - cd /home/travis/.ansible/collections/
   - python -m pytest
   - cd $build_path

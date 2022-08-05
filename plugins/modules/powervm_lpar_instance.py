@@ -1673,6 +1673,10 @@ def run_module():
     if module._verbosity >= 5:
         init_logger()
 
+    if sys.version_info < (3, 0):
+        py_ver = sys.version_info[0]
+        module.fail_json("Unsupported Python version {}, supported python version is 3 and above".format(py_ver))
+
     changed, info, warning = perform_task(module)
 
     if isinstance(info, str):
