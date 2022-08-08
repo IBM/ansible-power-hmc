@@ -222,6 +222,8 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client impor
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_resource import Hmc
+import sys
+
 USER_AUTHORITY_ERR = "HSCL350B The user does not have the appropriate authority"
 
 
@@ -302,7 +304,7 @@ def validate_sub_params(params):
 
     if notTogetherList:
         for notTogether in notTogetherList:
-            if(all(params[each] for each in notTogether)):
+            if (all(params[each] for each in notTogether)):
                 raise ParameterError("%s state will not support parameters: %s together" %
                                      (state, ','.join(notTogether)))
     if mandatoryList:
@@ -630,6 +632,10 @@ def run_module():
 
     if module._verbosity >= 5:
         init_logger()
+
+    if sys.version_info < (3, 0):
+        py_ver = sys.version_info[0]
+        module.fail_json("Unsupported Python version {0}, supported python version is 3 and above".format(py_ver))
 
     changed, user_info, warning = perform_task(module)
     if isinstance(user_info, str):

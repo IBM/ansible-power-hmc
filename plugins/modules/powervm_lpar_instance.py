@@ -403,6 +403,7 @@ EXAMPLES = '''
          password: '{{ hmc_password }}'
       system_name: <system_name>
       vm_name: <vm_name>
+      vm_id: <lpar_id>
       proc: 4
       proc_unit: 4
       mem: 20480
@@ -419,7 +420,7 @@ EXAMPLES = '''
       state: present
 
 - name: Create an AIX/Linux logical partition instance with default proc, mem, virt_network_config, volume_config's volumes_size and
-        npiv_config
+        npiv_config, vnic_config
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -437,6 +438,19 @@ EXAMPLES = '''
          - vios_name: <viosname>
            fc_port: <fc_port_name/loc_code>
            wwpn_pair: <wwpn1;wwpn2>
+      vnic_config:
+         - vnic_adapter_id: <vnic_adapter_id>
+           backing_devices:
+              - location_code: XXXXX.XXX.XXXXXXX-P1-T1
+                capacity: <capacity>
+                hosting_partition: <vios_name>
+              - location_code: P1-T2
+         - backing_devices:
+              - location_code: P1-T3
+                hosting_partition: <vios_name>
+              - location_code: P1-T4
+                capacity: <capacity>
+         - vnic_adapter_id: <vnic_adapter_id>
       os_type: aix_linux
       state: present
 
@@ -496,6 +510,20 @@ EXAMPLES = '''
       all_resources: True
       os_type: aix_linux
       state: present
+
+- name: Install aix/Linux OS on LPAR from NIM Server
+  powervm_lpar_instance:
+      hmc_host: '{{ inventory_hostname }}'
+      hmc_auth: "{{ curr_hmc_auth }}"
+      system_name: <system_name>
+      vm_name: <vm_name>
+      install_settings:
+              vm_ip: <IP_address of the lpar>
+              nim_ip: <IP_address of the NIM Server>
+              nim_gateway: <Gateway IP_Addres>
+              nim_subnetmask: <Subnetmask IP_Address>
+      action: install_os
+
 '''
 
 RETURN = '''
@@ -734,7 +762,7 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
         for each in pv_xml_list:
 
             # This condition is to avoid picking already picked UDID in case of mutiple volume config
-            if(pvid_list and each.xpath("UniqueDeviceID")[0].text in pvid_list):
+            if (pvid_list and each.xpath("UniqueDeviceID")[0].text in pvid_list):
                 continue
 
             if volume_size > 0 and int(each.xpath("VolumeCapacity")[0].text) >= volume_size:
@@ -1197,7 +1225,7 @@ def remove_partition(module, params):
         retainViosCfg = False
         deleteVdisks = False
     else:
-        retainViosCfg = not(retainViosCfg)
+        retainViosCfg = not (retainViosCfg)
     try:
         hmc.deletePartition(system_name, vm_name, retainViosCfg, deleteVdisks)
     except HmcError as del_lpar_error:
@@ -1644,6 +1672,10 @@ def run_module():
 
     if module._verbosity >= 5:
         init_logger()
+
+    if sys.version_info < (3, 0):
+        py_ver = sys.version_info[0]
+        module.fail_json("Unsupported Python version {0}, supported python version is 3 and above".format(py_ver))
 
     changed, info, warning = perform_task(module)
 
