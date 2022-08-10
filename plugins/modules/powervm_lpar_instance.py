@@ -254,7 +254,7 @@ options:
             client_adapter_id:
                 description:
                     - The client adapter slot number to be configured with FC adapter.
-                    - Optional, if not provided next availble value will be assigned.
+                    - Optional, if not provided next available value will be assigned.
                 type: int
             server_adapter_id:
                 description:
