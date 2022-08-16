@@ -502,7 +502,7 @@ def isDifferent(source, target):
                 source[each] = '0'
         if source[each] is not None and str(source[each]) != target.get(each.upper()):
             return True
-    if source['new_name'] is not None:
+    if source.get('new_name') is not None:
         if source['new_name'] != source['name']:
             return True
     return False
