@@ -128,23 +128,28 @@ test_data3 = [
     # when type is all for updated state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'updated', 'attributes': {'authentication_type': 'local', 'passwd': 'passwd',
       'taskrole': 'taskrole', 'max_webui_login_attempts': None, 'webui_login_suspend_time': None, 'session_timeout': None, 'idle_timeout': None},
-      'enable_user': True, 'name': 'name', 'type': 'all'}, "ParameterError: updated state will not support parameters: type,attributes,enable_user together"),
+      'enable_user': True, 'name': 'name', 'type': 'all'},
+     "ParameterError: updated state will not support parameters: type,attributes,enable_user together"),
     # when type is local for updated state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'updated', 'attributes': {'authentication_type': 'local', 'passwd': 'passwd',
       'taskrole': 'taskrole', 'max_webui_login_attempts': None, 'webui_login_suspend_time': None, 'session_timeout': None, 'idle_timeout': None},
-      'enable_user': True, 'name': 'name', 'type': 'local'}, "ParameterError: updated state will not support parameters: type,attributes,enable_user together"),
+      'enable_user': True, 'name': 'name', 'type': 'local'},
+     "ParameterError: updated state will not support parameters: type,attributes,enable_user together"),
     # when type is kerberos for updated state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'updated', 'attributes': {'authentication_type': 'local', 'passwd': 'passwd',
       'taskrole': 'taskrole', 'max_webui_login_attempts': None, 'webui_login_suspend_time': None, 'session_timeout': None, 'idle_timeout': None},
-      'enable_user': True, 'name': 'name', 'type': 'kerberos'}, "ParameterError: updated state will not support parameters: type,attributes,enable_user together"),
+      'enable_user': True, 'name': 'name', 'type': 'kerberos'},
+     "ParameterError: updated state will not support parameters: type,attributes,enable_user together"),
     # when type is ldap for updated state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'updated', 'attributes': {'authentication_type': 'local', 'passwd': 'passwd',
       'taskrole': 'taskrole', 'max_webui_login_attempts': None, 'webui_login_suspend_time': None, 'session_timeout': None, 'idle_timeout': None},
-      'enable_user': True, 'name': 'name', 'type': 'ldap'}, "ParameterError: updated state will not support parameters: type,attributes,enable_user together"),
+      'enable_user': True, 'name': 'name', 'type': 'ldap'},
+     "ParameterError: updated state will not support parameters: type,attributes,enable_user together"),
     # when type is automanage for updated state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'updated', 'attributes': {'authentication_type': 'local', 'passwd': 'passwd',
       'taskrole': 'taskrole', 'max_webui_login_attempts': None, 'webui_login_suspend_time': None, 'session_timeout': None, 'idle_timeout': None},
-      'enable_user': True, 'name': 'name', 'type': 'automanage'}, "ParameterError: updated state will not support parameters: type,attributes,enable_user together"),
+      'enable_user': True, 'name': 'name', 'type': 'automanage'},
+     "ParameterError: updated state will not support parameters: type,attributes,enable_user together"),
     # when hmc_auth name is missing
     ({'hmc_host': "0.0.0.0", 'hmc_auth': {'username': None, 'password': None}, 'type': None, 'enable_user': None, 'state': 'updated',
       'attributes': {'authentication_type': 'local', 'passwd': 'abcd1234', 'taskrole': 'hmcservicerep', 'max_webui_login_attempts': None,
