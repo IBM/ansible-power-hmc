@@ -260,6 +260,21 @@ def validate_sub_params(params):
     elif state == 'updated':
         default_support = ['webui_login_suspend_time', 'max_webui_login_attempts',
                            'session_timeout', 'idle_timeout']
+
+        if params['enable_user'] is not None:
+            nonSupport = []
+            if params['type']:
+                nonSupport.append("type")
+            if params['attributes']:
+                nonSupport.append("attributes")
+            if nonSupport:
+                nonSupport.append("enable_user")
+                raise ParameterError("%s state will not support parameters: %s together" %
+                                     (state, ','.join(nonSupport)))
+            if params['name'] is None:
+                raise ParameterError("mandatory parameter: name missing")
+            return
+
         if params['type'] == 'default' and params['attributes']:
             default_types = [each for each in default_support if params['attributes'][each] is not None]
             all_data = [each for each in params['attributes'] if params['attributes'][each] is not None]
@@ -278,12 +293,11 @@ def validate_sub_params(params):
         if params['name'] is not None:
             for each in ['webui_login_suspend_time', 'max_webui_login_attempts']:
                 if params['attributes'][each] is not None:
-                    raise ParameterError("updated state with parameter:name will not support attributes: %s"
+                    raise ParameterError("updated state with parameter: name will not support attributes: %s"
                                          % ','.join(['webui_login_suspend_time', 'max_webui_login_attempts']))
         key = 'type'
         supportedList = ['default']
-        notTogetherList = [['enable_user', 'attributes'],
-                           ['enable_user', 'type'], ['name', 'type']]
+        notTogetherList = [['name', 'type']]
     elif state == 'absent':
         notTogetherList = [['name', 'type']]
         key = 'type'
@@ -488,7 +502,7 @@ def isDifferent(source, target):
                 source[each] = '0'
         if source[each] is not None and str(source[each]) != target.get(each.upper()):
             return True
-    if source['new_name'] is not None:
+    if source.get('new_name') is not None:
         if source['new_name'] != source['name']:
             return True
     return False
@@ -533,7 +547,7 @@ def ensure_update(module, params):
 
         if enable_user:
             user_info_check = hmc.listUsr(filt=filter_d)
-            if user_info_check[0].get('disabled') == '1':
+            if user_info_check[0].get('DISABLED') == '1':
                 hmc.modifyUsr(enable=enable_user, configDict={"NAME": usr_name})
                 changed = True
         else:
