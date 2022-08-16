@@ -547,7 +547,7 @@ def ensure_update(module, params):
 
         if enable_user:
             user_info_check = hmc.listUsr(filt=filter_d)
-            if user_info_check[0].get('disabled') == '1':
+            if user_info_check[0].get('DISABLED') == '1':
                 hmc.modifyUsr(enable=enable_user, configDict={"NAME": usr_name})
                 changed = True
         else:
