@@ -1,0 +1,31 @@
+users:
+  - name: test1
+    taskrole: hmcsuperadmin
+    authentication_type: local
+    remote_ssh_access: 1
+    remote_webui_access: 1
+    passwd: abcd1234
+  - name: test2
+    taskrole: hmcsuperadmin
+    authentication_type: local
+    remote_ssh_access: 1
+    remote_webui_access: 1
+    passwd: abcd1234
+  - name: test3
+    taskrole: hmcsuperadmin
+    authentication_type: local
+    remote_ssh_access: 1
+    remote_webui_access: 1
+    passwd: abcd1234
+  - name: test4
+    taskrole: hmcsuperadmin
+    authentication_type: local
+    remote_ssh_access: 1
+    remote_webui_access: 1
+    passwd: abcd1234
+  - name: test5
+    taskrole: hmcsuperadmin
+    authentication_type: local
+    remote_ssh_access: 1
+    remote_webui_access: 1
+    passwd: abcd1234

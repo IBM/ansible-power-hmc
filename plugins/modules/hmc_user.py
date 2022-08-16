@@ -20,6 +20,7 @@ short_description: Manage the hmc users
 description:
     - Create a Hardware Management Console user
     - List Hardware Management Console user information
+    - Modify a Hardware Management Console user
     - Remove Hardware Management Console users
 version_added: 1.0.0
 options:
@@ -93,11 +94,11 @@ options:
                 type: str
             pwage:
                 description:
-                    - Number of days. Valid only for local user.
+                    - Number of days. Valid only for local user. Default value is 99999
                 type: str
             min_pwage:
                 description:
-                    - Number of days. Valid only for local user.
+                    - Number of days. Valid only for local user. Default value is 0
                 type: str
             authentication_type:
                 description:
@@ -106,29 +107,29 @@ options:
                 choices: ['local', 'kerberos', 'ldap']
             session_timeout:
                 description:
-                    - Number of minutes.
+                    - Number of minutes. Default value is 0
                 type: int
             verify_timeout:
                 description:
-                    - Number of minutes.
+                    - Number of minutes. Default value is 15
                 type: int
             idle_timeout:
                 description:
-                    - Number of minutes.
+                    - Number of minutes. Default value is 120
                 type: int
             inactivity_expiration:
                 description:
-                    - Number of days.
+                    - Number of days. Default value is 0
                 type: int
             remote_webui_access:
                 description:
                     - Allow or not allow the user to log in remotely to the
-                      HMC Web user interface.
+                      HMC Web user interface. Default value is False
                 type: bool
             remote_ssh_access:
                 description:
                     - Allow or not allow the user to log in remotely to the
-                      HMC using SSH.
+                      HMC using SSH. Default value is True
                 type: bool
             passwd_authentication:
                 description:
@@ -211,7 +212,7 @@ RETURN = '''
 Command_output:
     description: Respective user configuration
     type: dict
-    returned: on success of all states except C(absent|)
+    returned: on success of all states except C(absent)
 '''
 
 import logging
