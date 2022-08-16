@@ -458,6 +458,7 @@ class Hmc():
                 di['Ping Result'] = x[4]
                 di['Device Type'] = x[5]
                 res.append(di)
+
         return res
 
     def fetchIODetailsForNetboot(self, nimIP, gateway, lparIP, viosName, profName, systemName):
@@ -474,7 +475,7 @@ class Hmc():
         result = self.hmcconn.execute(lpar_netboot)
         return self._parseIODetailsFromNetboot(result)
 
-    def installVIOSFromNIM(self, loc_code, nimIP, gateway, lparIP, vlanID, vlanPrio, submask, viosName, profName, systemName):
+    def installOSFromNIM(self, loc_code, nimIP, gateway, lparIP, vlanID, vlanPrio, submask, viosName, profName, systemName):
         lpar_netboot = self.CMD['LPAR_NETBOOT'] +\
             self.OPT['LPAR_NETBOOT']['-F'] +\
             self.OPT['LPAR_NETBOOT']['-D'] +\
@@ -518,3 +519,62 @@ class Hmc():
                 self.OPT['MKAUTHKEYS']['-U'] + username +\
                 self.OPT['MKAUTHKEYS']['--PASSWD'] + passwd
         self.hmcconn.execute(mkauthcmd)
+
+    def listUsr(self, user_type=None, filt=None):
+        listHmcUsr = self.CMD['LSHMCUSR']
+        if user_type:
+            listHmcUsr += self.OPT['LSHMCUSR']['-T'][user_type.upper()]
+        if filt:
+            listHmcUsr += self.cmdClass.filterBuilder('LSHMCUSR', filt)
+        result = self.hmcconn.execute(listHmcUsr)
+        if 'No results were found' in result:
+            return []
+        return self.cmdClass.parseMultiLineCSV(result)
+
+    def createUsr(self, configDict):
+        config = {each.upper(): str(configDict[each]) for each in configDict if configDict[each] is not None}
+        mkhmcusrCmd = self.CMD['MKHMCUSR'] +\
+            self.cmdClass.i_a_ConfigBuilder('MKHMCUSR', '-I', config)
+        self.hmcconn.execute(mkhmcusrCmd)
+
+    def modifyUsr(self, configDict=None, enable=False, modify_type=None):
+        chhmcusrCmd = self.CMD['CHHMCUSR']
+        config = {each.upper(): str(configDict[each]) for each in configDict if configDict[each] is not None}
+        if enable:
+            chhmcusrCmd += self.OPT['CHHMCUSR']['-O']['E'] +\
+                self.OPT['CHHMCUSR']['-U'] + config['NAME']
+        elif modify_type == 'default' and config:
+            chhmcusrCmd += self.OPT['CHHMCUSR']['-T']['DEFAULT'] +\
+                self.cmdClass.i_a_ConfigBuilder('CHHMCUSR', '-I', config)
+        elif config:
+            chhmcusrCmd += self.cmdClass.i_a_ConfigBuilder('CHHMCUSR', '-I', config)
+        self.hmcconn.execute(chhmcusrCmd)
+
+    def removeUsr(self, usr=None, rm_type=None):
+        rmhmcusrCmd = self.CMD['RMHMCUSR']
+        if usr:
+            rmhmcusrCmd += self.OPT['RMHMCUSR']['-U'] + usr
+        elif rm_type:
+            rmhmcusrCmd += self.OPT['RMHMCUSR']['-T'][rm_type.upper()]
+        self.hmcconn.execute(rmhmcusrCmd)
+
+    def checkForOSToBootUpFully(self, system_name, name, timeoutInMin=60):
+        POLL_INTERVAL_IN_SEC = 30
+        WAIT_UNTIL_IN_SEC = timeoutInMin * 60 - 600
+        waited = 0
+        rmcActive = False
+        ref_code = None
+        # wait for 10 mins before polling
+        time.sleep(600)
+        while waited < WAIT_UNTIL_IN_SEC:
+            conf_dict = self.getPartitionConfig(system_name, name)
+            if conf_dict['rmc_state'] == 'active':
+                rmcActive = True
+                break
+            else:
+                waited += POLL_INTERVAL_IN_SEC
+            time.sleep(POLL_INTERVAL_IN_SEC)
+        if not rmcActive:
+            res = self.getPartitionRefcode(system_name, name)
+            ref_code = res['REFCODE']
+        return rmcActive, conf_dict, ref_code

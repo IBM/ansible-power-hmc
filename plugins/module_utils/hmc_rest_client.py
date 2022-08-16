@@ -6,6 +6,8 @@ from ansible.module_utils.urls import open_url
 import ansible.module_utils.six.moves.urllib.error as urllib_error
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import Error
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
+import re
 import xml.etree.ElementTree as ET
 NEED_LXML = False
 try:
@@ -395,22 +397,24 @@ class HmcRestClient:
         response = resp.read()
         return response
 
-    def getLogicalPartition(self, system_uuid, partition_name):
+    def getLogicalPartition(self, system_uuid, partition_name, partition_uuid=None):
         lpar_uuid = None
-        lpar_quick_list = []
+        if partition_uuid is None:
+            lpar_quick_list = []
+            lpar_response = self.getLogicalPartitionsQuick(system_uuid)
+            if lpar_response:
+                lpar_quick_list = json.loads(lpar_response)
 
-        lpar_response = self.getLogicalPartitionsQuick(system_uuid)
-        if lpar_response:
-            lpar_quick_list = json.loads(lpar_response)
+            if lpar_quick_list:
+                for eachLpar in lpar_quick_list:
+                    if eachLpar['PartitionName'] == partition_name:
+                        lpar_uuid = eachLpar['UUID']
+                        break
 
-        if lpar_quick_list:
-            for eachLpar in lpar_quick_list:
-                if eachLpar['PartitionName'] == partition_name:
-                    lpar_uuid = eachLpar['UUID']
-                    break
-
-        if not lpar_uuid:
-            return None, None
+            if not lpar_uuid:
+                return None, None
+        else:
+            lpar_uuid = partition_uuid
 
         url = "https://{0}/rest/api/uom/LogicalPartition/{1}".format(self.hmc_ip, lpar_uuid)
         header = {'X-API-Session': self.session,
@@ -1086,12 +1090,10 @@ class HmcRestClient:
         suspendEnableTag = lpar_template_dom.xpath("//suspendEnable")[0]
         suspendEnableTag.addprevious(etree.XML(virtualFibreChannelClientAdapters))
 
-    def fetchFCDetailsFromVIOS(self, system_uuid, lpar_id):
+    def fetchFCDetailsFromVIOS(self, system_uuid, lpar_id, vios_list):
         vfcs = []
-        vios_response = self.getVirtualIOServersQuick(system_uuid)
-        if vios_response is None:
+        if not vios_list:
             return vfcs
-        vios_list = json.loads(vios_response)
         vios_dict = {vios['PartitionID']: vios['PartitionName'] for vios in vios_list}
 
         try:
@@ -1117,12 +1119,10 @@ class HmcRestClient:
 
         return vfcs
 
-    def fetchSCSIDetailsFromVIOS(self, system_uuid, lpar_id):
+    def fetchSCSIDetailsFromVIOS(self, system_uuid, lpar_id, vios_list):
         vscsis = []
-        vios_response = self.getVirtualIOServersQuick(system_uuid)
-        if vios_response is None:
+        if not vios_list:
             return vscsis
-        vios_list = json.loads(vios_response)
         vios_dict = {vios['PartitionID']: vios['PartitionName'] for vios in vios_list}
 
         try:
@@ -1190,5 +1190,216 @@ class HmcRestClient:
             for key, value in spp_dict.items():
                 if value == user_spp:
                     spp_id = key
-
         return spp_id
+
+    def add_vnic_payload(self, lpar_template_dom, vnic_tup, sriov_dvc_col, vios_name_list):
+        payload = ''
+        default_vnic_no = 65535
+        count = 0
+        for vnic in vnic_tup:
+            vnic_id = vnic['vnic_adapter_id'] if vnic['vnic_adapter_id'] else str(default_vnic_no - count)
+            use_nxt_slot = "false" if vnic['vnic_adapter_id'] else "true"
+            backing_devices = vnic['backing_devices']
+            backing_devices_payload = self.get_vnic_backing_devices_payload(backing_devices, sriov_dvc_col, vios_name_list)
+            payload += '''
+            <VirtualNICDedicated schemaVersion="V1_0">
+                    <Metadata>
+                           <Atom/>
+                    </Metadata>
+                    <VirtualSlotNumber kb="CUD" kxe="false">{0}</VirtualSlotNumber>
+                    <drcName kb="CUD" kxe="false">CUSTOM_1653548478255-{1}9747</drcName>
+                    <UseNextAvailableSlotID kxe="false" kb="CUD">{2}</UseNextAvailableSlotID>
+                    <Details kxe="false" kb="CUR" schemaVersion="V1_0">
+                            <Metadata>
+                                    <Atom/>
+                            </Metadata>
+                            <PortVLANID kxe="false" kb="CUD">0</PortVLANID>
+                            <PortVLANIDPriority kxe="false" kb="CUD">0</PortVLANIDPriority>
+                            <AllowedVLANIDs kxe="false" kb="CUD">ALL</AllowedVLANIDs>
+                            <MACAddress kxe="false" kb="COD">HMC-ASSIGNED</MACAddress>
+                            <AllowedOperatingSystemMACAddresses kxe="false" kb="CUD">ALL</AllowedOperatingSystemMACAddresses>
+                            <DesiredMode kxe="false" kb="CUD">DEDICATED</DesiredMode>
+                            <AutoPriorityFailover kxe="false" kb="CUD">true</AutoPriorityFailover>
+                    </Details>
+                    <AssociatedBackingDevices kb="CUR" kxe="false" schemaVersion="V1_0">
+                            <Metadata>
+                                    <Atom/>
+                            </Metadata>
+                                    {3}
+                    </AssociatedBackingDevices>
+            </VirtualNICDedicated>'''.format(vnic_id, str(default_vnic_no - count), use_nxt_slot, backing_devices_payload)
+            count += 1
+
+        vnic_payload = '''
+        <DedicatedVirtualNICs kxe="false" kb="CUD" schemaVersion="V1_0">
+        <Metadata>
+                <Atom/>
+        </Metadata>
+                {0}
+        </DedicatedVirtualNICs>'''.format(payload)
+        dedicatedvnicstag = lpar_template_dom.xpath('//DedicatedVirtualNICs')[0]
+        dedicatedvnicstag.getparent().replace(dedicatedvnicstag, etree.XML(vnic_payload))
+
+    def get_vnic_backing_devices_payload(self, backing_devices, sriov_dvc_col, vios_name_list):
+        eval_backing_devices = []
+        if backing_devices is None:
+            for sriov_dvc in sriov_dvc_col:
+                if sriov_dvc["LinkStatus"] == "true":
+                    eval_dvc_dict = {}
+                    eval_dvc_dict['partitionName'] = vios_name_list[0]
+                    eval_dvc_dict['RelatedSRIOVAdapterID'] = sriov_dvc['RelatedSRIOVAdapterID']
+                    if round((100.0 - float(sriov_dvc['AllocatedCapacity'])), 1) >= 2.0:
+                        eval_dvc_dict['DesiredCapacityPercentage'] = "2.0"
+                    else:
+                        continue
+                    eval_dvc_dict['RelatedSRIOVPhysicalPortID'] = sriov_dvc['RelatedSRIOVPhysicalPortID']
+                    eval_backing_devices.append(eval_dvc_dict)
+                    break
+            else:
+                for sriov_dvc in sriov_dvc_col:
+                    if round((100.0 - float(sriov_dvc['AllocatedCapacity'])), 1) >= 2.0:
+                        eval_dvc_dict = {}
+                        eval_dvc_dict['partitionName'] = vios_name_list[0]
+                        eval_dvc_dict['RelatedSRIOVAdapterID'] = sriov_dvc['RelatedSRIOVAdapterID']
+                        eval_dvc_dict['DesiredCapacityPercentage'] = "2.0"
+                        eval_dvc_dict['RelatedSRIOVPhysicalPortID'] = sriov_dvc['RelatedSRIOVPhysicalPortID']
+                        eval_backing_devices.append(eval_dvc_dict)
+                        break
+                else:
+                    raise Error('Their are no backing device with link status up or available capacity more than 2.0 in the managed system')
+        else:
+            for backing_device in backing_devices:
+                for sriov_dvc in sriov_dvc_col:
+                    if (backing_device['location_code'] is None) or (re.search(r'[a-zA-Z]\d{1,2}-[a-zA-Z]\d{1,2}$', backing_device['location_code']) is None):
+                        msg = ('mandatory parameter backing device location_code is missing '
+                               'or location_code is not in C1-T1 or XXXXX.XXXXX.XXX-P1-C1-T1 format')
+                        raise ParameterError(msg)
+                    if sriov_dvc['LocationCode'] == backing_device['location_code'] or (sriov_dvc['LocationCode']).endswith(backing_device['location_code']):
+                        eval_dvc_dict = {}
+                        if backing_device['hosting_partition'] is None:
+                            eval_dvc_dict['partitionName'] = vios_name_list[0]
+                        elif backing_device['hosting_partition'] in vios_name_list:
+                            eval_dvc_dict['partitionName'] = backing_device['hosting_partition']
+                        else:
+                            msg = ("Given backing device hosting partition name: {0} not found in the managed system "
+                                   "or RMC of state is not active")
+                            raise Error(msg.format(backing_device['hosting_partition']))
+                        eval_dvc_dict['RelatedSRIOVAdapterID'] = sriov_dvc['RelatedSRIOVAdapterID']
+                        if backing_device['capacity']:
+                            if round(backing_device['capacity'], 1) <= round(100.0 - float(sriov_dvc['AllocatedCapacity']), 1):
+                                eval_dvc_dict['DesiredCapacityPercentage'] = str(backing_device['capacity'])
+                            else:
+                                msg = 'Available Capacity of the backing device:{0} is {1} but desired capacity is: {2}'
+                                raise Error(msg.format(sriov_dvc['LocationCode'], round(100.0 - float(sriov_dvc['AllocatedCapacity']), 1),
+                                            backing_device['capacity']))
+                        else:
+                            if round(100.0 - float(sriov_dvc['AllocatedCapacity']), 1) >= 2.0:
+                                eval_dvc_dict['DesiredCapacityPercentage'] = "2.0"
+                            else:
+                                msg = 'Available Capacity of the backing device:{0} is {1} but desired capacity is: 2.0'
+                                raise Error(msg.format(sriov_dvc['LocationCode'], round(100.0 - float(sriov_dvc['AllocatedCapacity']), 1)))
+                        eval_dvc_dict['RelatedSRIOVPhysicalPortID'] = sriov_dvc['RelatedSRIOVPhysicalPortID']
+                        eval_backing_devices.append(eval_dvc_dict)
+                        break
+                else:
+                    msg = "Given VNIC SRIOV backing device location code: {0} not found in the managed system or exhausted with Ethernet LogicalPort limit"
+                    raise Error(msg.format(backing_device['location_code']))
+        payload = ''
+        for ev_bck_dvc in eval_backing_devices:
+            payload += '''
+            <VirtualNICBackingDeviceChoice>
+            <VirtualNICSRIOVBackingDevice schemaVersion="V1_0">
+                    <Metadata>
+                            <Atom/>
+                    </Metadata>
+                    <DeviceType kb="COR" kxe="false">SRIOV</DeviceType>
+                    <AssociatedVirtualIOServer kxe="false" kb="COR" schemaVersion="V1_0">
+                            <Metadata>
+                                    <Atom/>
+                            </Metadata>
+                            <partitionName kb="CUD" kxe="false">{0}</partitionName>
+                    </AssociatedVirtualIOServer>
+                    <FailOverPriority kb="CUD" kxe="false">50</FailOverPriority>
+                    <RelatedSRIOVAdapterID kxe="false" kb="COR">{1}</RelatedSRIOVAdapterID>
+                    <DesiredCapacityPercentage kxe="false" kb="ROR">{2}%</DesiredCapacityPercentage>
+                    <RelatedSRIOVPhysicalPortID kb="COR" kxe="false">{3}</RelatedSRIOVPhysicalPortID>
+            </VirtualNICSRIOVBackingDevice>
+            </VirtualNICBackingDeviceChoice>
+            '''.format(ev_bck_dvc['partitionName'], ev_bck_dvc['RelatedSRIOVAdapterID'],
+                       ev_bck_dvc['DesiredCapacityPercentage'], ev_bck_dvc['RelatedSRIOVPhysicalPortID'])
+        return payload
+
+    def create_sriov_collection(self, sriov_adapters_dom):
+        sriov_col_li = []
+        for sriov_adapter_dom_raw in sriov_adapters_dom:
+            sriov_adapter_dom = etree.ElementTree(sriov_adapter_dom_raw)
+            try:
+                sriov_adapter_id = sriov_adapter_dom.xpath('//SRIOVAdapterID')[0].text
+                sriov_ce_pps = sriov_adapter_dom.xpath('//ConvergedEthernetPhysicalPorts//SRIOVConvergedNetworkAdapterPhysicalPort')
+                sriov_et_pps = sriov_adapter_dom.xpath('//EthernetPhysicalPorts//SRIOVEthernetPhysicalPort')
+                sriov_rc_pps = sriov_adapter_dom.xpath('//SRIOVRoCEPhysicalPorts//SRIOVRoCEPhysicalPort')
+                sriov_pps = sriov_ce_pps + sriov_et_pps + sriov_rc_pps
+                for sriov_pp_raw in sriov_pps:
+                    sriov_pp = etree.ElementTree(sriov_pp_raw)
+                    sriov_dict = {}
+                    maxELP = int(sriov_pp.xpath("//ConfiguredMaxEthernetLogicalPorts")[0].text)
+                    cELP = int(sriov_pp.xpath("//ConfiguredEthernetLogicalPorts")[0].text)
+                    if maxELP - cELP == 0:
+                        continue
+                    sriov_dict['RelatedSRIOVAdapterID'] = sriov_adapter_id
+                    sriov_dict['LocationCode'] = sriov_pp.xpath("//LocationCode")[0].text
+                    sriov_dict['RelatedSRIOVPhysicalPortID'] = sriov_pp.xpath("//PhysicalPortID")[0].text
+                    sriov_dict['LinkStatus'] = sriov_pp.xpath("//LinkStatus")[0].text
+                    sriov_dict['AllocatedCapacity'] = sriov_pp.xpath("//AllocatedCapacity")[0].text.strip('%')
+                    sriov_col_li.append(sriov_dict)
+            except Exception:
+                continue
+        return sriov_col_li
+
+    def generic_get(self, url):
+        header = {'X-API-Session': self.session,
+                  'Accept': '*/*'}
+        resp = open_url(url,
+                        headers=header,
+                        method='GET',
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=3600)
+        if resp.code != 200:
+            logger.debug("Get operation failed. Respsonse code: %d", resp.code)
+            return None
+        response = resp.read()
+        gen_response = xml_strip_namespace(response)
+        return gen_response
+
+    def fetchDedicatedVirtualNICs(self, system_uuid, lpar_uuid, vm_name, vios_list):
+        lpar_uuid, partition_dom = self.getLogicalPartition(system_uuid, vm_name, lpar_uuid)
+        vios_dict = {}
+        if vios_list:
+            vios_dict = {vios['UUID']: vios['PartitionName'] for vios in vios_list}
+        vnics_list = []
+        vnic_links = partition_dom.xpath('//DedicatedVirtualNICs//link')
+        if vnic_links:
+            for vnic_link_raw in vnic_links:
+                vnic_dict = {}
+                vnic_link = etree.ElementTree(vnic_link_raw)
+                href = vnic_link.xpath('./@href')[0]
+                vnic_dom = self.generic_get(href)
+                vnic_dict['vnic_adapter_id'] = vnic_dom.xpath('//VirtualSlotNumber')[0].text
+                vnic_backing_devices = vnic_dom.xpath('//VirtualNICBackingDeviceChoice')
+                bck_dvcs = []
+                for vnic_bck_dvc_raw in vnic_backing_devices:
+                    bck_dvc_dict = {}
+                    vnic_bck_dvc = etree.ElementTree(vnic_bck_dvc_raw)
+                    bck_dvc_dict['Capacity'] = vnic_bck_dvc.xpath('//CurrentCapacityPercentage')[0].text
+                    bck_dvc_dict['DeviceType'] = vnic_bck_dvc.xpath('//DeviceType')[0].text
+                    bck_dvc_dict['Status'] = vnic_bck_dvc.xpath('//Status')[0].text
+                    bck_dvc_dict['RelatedSRIOVAdapterID'] = vnic_bck_dvc.xpath('//RelatedSRIOVAdapterID')[0].text
+                    vios_href = vnic_bck_dvc.xpath('//AssociatedVirtualIOServer')[0].attrib['href']
+                    bck_dvc_dict['AssociatedVirtualIOServer'] = vios_dict[(vios_href.split('/'))[-1]]
+                    sriov_href = vnic_bck_dvc.xpath('//RelatedSRIOVLogicalPort')[0].attrib['href']
+                    bck_dvc_dict['RelatedSRIOVLocationCode'] = self.generic_get(sriov_href).xpath('//LocationCode')[0].text
+                    bck_dvcs.append(bck_dvc_dict)
+                vnic_dict['backing_devices'] = bck_dvcs
+                vnics_list.append(vnic_dict)
+        return vnics_list
