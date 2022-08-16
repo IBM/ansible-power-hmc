@@ -108,43 +108,43 @@ test_data3 = [
     # when attributes dict is mentioned with name & attributes have max_webui_login_attempts , webui_login_suspend_time
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'updated', 'attributes': {'webui_login_suspend_time': 3,
       'max_webui_login_attempts': 4, 'session_timeout': None, 'idle_timeout': None}, 'enable_user': None, 'name': 'name', 'type': None},
-     "ParameterError: updated state with parameter:name will not support attributes: webui_login_suspend_time,max_webui_login_attempts"),
+     "ParameterError: updated state with parameter: name will not support attributes: webui_login_suspend_time,max_webui_login_attempts"),
     # when attributes dict is mentioned with name & attributes have max_webui_login_attempts , webui_login_suspend_time
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'updated', 'attributes': {'authentication_type': 'local', 'passwd': 'abcd1234',
       'max_webui_login_attempts': 3, 'webui_login_suspend_time': 5, 'session_timeout': 5, 'idle_timeout': 60}, 'enable_user': None,
       'name': 'name', 'type': 'default'},
      "ParameterError: updated state will support only attributes: webui_login_suspend_time,max_webui_login_attempts,session_timeout,"
      "idle_timeout for default type"),
-    # when attributes dict and enable_user is not added for updated state
+    # when attributes dict and enable_user is not adupdated state will not support type: allded for updated state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'updated', 'attributes': None, 'enable_user': None, 'name': 'name', 'type': None},
      "ParameterError: updated state with parameter: name either need enable_user or attributes param"),
     # when enable_user & attributes are mentioned
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'updated', 'attributes': {'authentication_type': 'local', 'passwd': 'passwd',
       'taskrole': 'taskrole', 'max_webui_login_attempts': None, 'webui_login_suspend_time': None, 'session_timeout': None, 'idle_timeout': None},
-      'enable_user': True, 'name': 'name', 'type': None}, "ParameterError: updated state will not support parameters: enable_user,attributes together"),
+      'enable_user': True, 'name': 'name', 'type': None}, "ParameterError: updated state will not support parameters: attributes,enable_user together"),
     # when hmc_host missing for updated state
     ({'hmc_host': None, 'hmc_auth': hmc_auth, 'state': 'updated', 'attributes': {'authentication_type': 'name'},
       'enable_user': None, 'name': 'name', 'type': None}, "ParameterError: mandatory parameter 'hmc_host' is missing"),
     # when type is all for updated state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'updated', 'attributes': {'authentication_type': 'local', 'passwd': 'passwd',
       'taskrole': 'taskrole', 'max_webui_login_attempts': None, 'webui_login_suspend_time': None, 'session_timeout': None, 'idle_timeout': None},
-      'enable_user': True, 'name': 'name', 'type': 'all'}, "ParameterError: updated state will not support type: all"),
+      'enable_user': True, 'name': 'name', 'type': 'all'}, "ParameterError: updated state will not support parameters: type,attributes,enable_user together"),
     # when type is local for updated state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'updated', 'attributes': {'authentication_type': 'local', 'passwd': 'passwd',
       'taskrole': 'taskrole', 'max_webui_login_attempts': None, 'webui_login_suspend_time': None, 'session_timeout': None, 'idle_timeout': None},
-      'enable_user': True, 'name': 'name', 'type': 'local'}, "ParameterError: updated state will not support type: local"),
+      'enable_user': True, 'name': 'name', 'type': 'local'}, "ParameterError: updated state will not support parameters: type,attributes,enable_user together"),
     # when type is kerberos for updated state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'updated', 'attributes': {'authentication_type': 'local', 'passwd': 'passwd',
       'taskrole': 'taskrole', 'max_webui_login_attempts': None, 'webui_login_suspend_time': None, 'session_timeout': None, 'idle_timeout': None},
-      'enable_user': True, 'name': 'name', 'type': 'kerberos'}, "ParameterError: updated state will not support type: kerberos"),
+      'enable_user': True, 'name': 'name', 'type': 'kerberos'}, "ParameterError: updated state will not support parameters: type,attributes,enable_user together"),
     # when type is ldap for updated state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'updated', 'attributes': {'authentication_type': 'local', 'passwd': 'passwd',
       'taskrole': 'taskrole', 'max_webui_login_attempts': None, 'webui_login_suspend_time': None, 'session_timeout': None, 'idle_timeout': None},
-      'enable_user': True, 'name': 'name', 'type': 'ldap'}, "ParameterError: updated state will not support type: ldap"),
+      'enable_user': True, 'name': 'name', 'type': 'ldap'}, "ParameterError: updated state will not support parameters: type,attributes,enable_user together"),
     # when type is automanage for updated state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'updated', 'attributes': {'authentication_type': 'local', 'passwd': 'passwd',
       'taskrole': 'taskrole', 'max_webui_login_attempts': None, 'webui_login_suspend_time': None, 'session_timeout': None, 'idle_timeout': None},
-      'enable_user': True, 'name': 'name', 'type': 'automanage'}, "ParameterError: updated state will not support type: automanage"),
+      'enable_user': True, 'name': 'name', 'type': 'automanage'}, "ParameterError: updated state will not support parameters: type,attributes,enable_user together"),
     # when hmc_auth name is missing
     ({'hmc_host': "0.0.0.0", 'hmc_auth': {'username': None, 'password': None}, 'type': None, 'enable_user': None, 'state': 'updated',
       'attributes': {'authentication_type': 'local', 'passwd': 'abcd1234', 'taskrole': 'hmcservicerep', 'max_webui_login_attempts': None,
