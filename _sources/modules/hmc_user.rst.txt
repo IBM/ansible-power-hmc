@@ -1,0 +1,241 @@
+.. _hmc_user_module:
+
+
+hmc_user -- Manage the hmc users
+================================
+
+.. contents::
+   :local:
+   :depth: 1
+
+
+Synopsis
+--------
+
+Create a Hardware Management Console user
+
+List Hardware Management Console user information
+
+Modify a Hardware Management Console user
+
+Remove Hardware Management Console users
+
+
+
+
+
+
+Parameters
+----------
+
+  hmc_host (True, str, None)
+    The IP address or hostname of the HMC.
+
+
+  hmc_auth (True, dict, None)
+    Username and Password credential of the HMC.
+
+
+    username (True, str, None)
+      Username of the HMC to login.
+
+
+    password (optional, str, None)
+      Password of the HMC.
+
+
+
+  name (optional, str, None)
+    The user name of the HMC user.
+
+
+  enable_user (optional, bool, None)
+    To enable an HMC user that was disabled due to inactivity.
+
+    This option is only valid if *state=updated*.
+
+
+  type (optional, str, None)
+    The type of user. During *state=updated* to change the default settings of HMC user, specify ``default`` with this option. The values of this option changes during *state=absent*. Supported values are ``all|local|kerberos|ldap|automanage``. During *state=facts*, valid values are ``default|user``.
+
+
+  attributes (optional, dict, None)
+    Configuration attributes used during the create and modify of HMC user
+
+
+    new_name (optional, str, None)
+      The new name to be updated.
+
+
+    taskrole (optional, str, None)
+      Valid values are ``hmcsuperadmin|hmcoperator|hmcviewer| hmcpe|hmcservicerep|hmcclientliveupdate|<custom user role>``.
+
+
+    resourcerole (optional, str, None)
+      The name of the resource role.
+
+
+    description (optional, str, None)
+      The description of the user.
+
+
+    passwd (optional, str, None)
+      Local and Kerberos users only.
+
+
+    current_passwd (optional, str, None)
+      When changing the password for a Kerberos user, use this attribute to specify the user's current password.
+
+
+    pwage (optional, str, None)
+      Number of days. Valid only for local user. Default value is 99999
+
+
+    min_pwage (optional, str, None)
+      Number of days. Valid only for local user. Default value is 0
+
+
+    authentication_type (optional, str, None)
+      Valid values are ``local|kerberos|ldap``.
+
+
+    session_timeout (optional, int, None)
+      Number of minutes. Default value is 0
+
+
+    verify_timeout (optional, int, None)
+      Number of minutes. Default value is 15
+
+
+    idle_timeout (optional, int, None)
+      Number of minutes. Default value is 120
+
+
+    inactivity_expiration (optional, int, None)
+      Number of days. Default value is 0
+
+
+    remote_webui_access (optional, bool, None)
+      Allow or not allow the user to log in remotely to the HMC Web user interface. Default value is False
+
+
+    remote_ssh_access (optional, bool, None)
+      Allow or not allow the user to log in remotely to the HMC using SSH. Default value is True
+
+
+    passwd_authentication (optional, bool, None)
+      Allow or not allow the user to log in remotely to the HMC using a password.
+
+
+    remote_user_name (optional, str, None)
+      Kerberos users only.
+
+
+    max_webui_login_attempts (optional, int, None)
+      Maximum HMC UI login attempts.
+
+
+    webui_login_suspend_time (optional, int, None)
+      Number of minutes.
+
+
+
+  state (True, str, None)
+    The desired state of the HMC user.
+
+    ``facts`` does not change anything on the HMC and returns the HMC user information or the default settings of HMC user attributes.
+
+    ``updated`` ensures the HMC user is updated with provided configuration.
+
+    ``present`` ensures the HMC user is created with provided configuration.
+
+    ``absent`` ensures the HMC user is removed.
+
+
+
+
+
+
+
+
+
+Examples
+--------
+
+.. code-block:: yaml+jinja
+
+    
+    - name: List the properties of hmc user
+      hmc_user:
+        state: facts
+        hmc_host: "{{ inventory_hostname }}"
+        name: <user_name>
+        hmc_auth:
+          username: <username>
+          password: <password>
+
+    - name: Create hmc user
+      hmc_user:
+        state: present
+        hmc_host: "{{ inventory_hostname }}"
+        name: <user_name>
+        hmc_auth:
+          username: <username>
+          password: <password>
+        attributes:
+          authentication_type: local
+          taskrole: hmcsuperadmin
+          passwd: <new_user_password>
+
+    - name: Modify hmc user
+      hmc_user:
+        state: updated
+        hmc_host: "{{ inventory_hostname }}"
+        name: <user_name>
+        hmc_auth:
+          username: <username>
+          password: <password>
+        attributes:
+          new_name: <new_user_name>
+          max_webui_login_attempts: 20
+
+    - name: Remove hmc user
+      hmc_user:
+        state: absent
+        hmc_host: "{{ inventory_hostname }}"
+        name: <user_name>
+        hmc_auth:
+          username: <username>
+          password: <password>
+
+
+
+
+Return Values
+-------------
+
+Command_output (on success of all states except C(absent), dict, )
+  Respective user configuration
+
+
+
+
+
+Status
+------
+
+
+
+
+- This module is not guaranteed to have a backwards compatible interface. *[preview]*
+
+
+- This module is maintained by community.
+
+
+
+Authors
+~~~~~~~
+
+- Anil Vijayan(@AnilVijayan)
+

@@ -15,6 +15,7 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -94,11 +95,11 @@
            <div itemprop="articleBody">
              
   <section id="quickstart">
-<h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline"></a></h1>
+<h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this heading"></a></h1>
 <p>After installing the collection outlined in the  <a class="reference external" href="installation.html">installation</a> guide, you
 can access the collection and the ansible-doc covered in the following topics:</p>
 <section id="ibm-power-hmc">
-<h2>ibm.power_hmc<a class="headerlink" href="#ibm-power-hmc" title="Permalink to this headline"></a></h2>
+<h2>ibm.power_hmc<a class="headerlink" href="#ibm-power-hmc" title="Permalink to this heading"></a></h2>
 <p>After the collection is installed, you can access the collection content for a
 playbook by referencing the namespace <code class="docutils literal notranslate"><span class="pre">ibm</span></code> and the collection’s fully
 qualified name <code class="docutils literal notranslate"><span class="pre">power_hmc</span></code>. For example:</p>
@@ -131,7 +132,7 @@ to refer to the collection repeatedly. For example, you can use the
 </div>
 </section>
 <section id="ansible-doc">
-<h2>ansible-doc<a class="headerlink" href="#ansible-doc" title="Permalink to this headline"></a></h2>
+<h2>ansible-doc<a class="headerlink" href="#ansible-doc" title="Permalink to this heading"></a></h2>
 <p>Modules included in this collection provide additional documentation that is
 similar to a UNIX-like operating system man page (manual page). This
 documentation can be accessed from the command line by using the
@@ -150,7 +151,7 @@ documentation can be accessed from the command line by using the
 to the <a class="reference external" href="https://docs.ansible.com/ansible/latest/cli/ansible-doc.html#ansible-doc">Ansible guide</a>.</p>
 </section>
 <section id="connection-method">
-<h2>Connection Method<a class="headerlink" href="#connection-method" title="Permalink to this headline"></a></h2>
+<h2>Connection Method<a class="headerlink" href="#connection-method" title="Permalink to this heading"></a></h2>
 <p>Ansible communicates with remote machines over the SSH protocol. By default, Ansible uses native OpenSSH and connects to remote machines and communicates from the control node via SSH tunnel.</p>
 <p>In case of HMC collection, since HMC is a closed appliance solution, its restricted shell will not allow push-based execution model of Ansible. Hence , current ansible collection for HMC would work with local connection type using the connection plugin, executing commands via SSH without pushing the code to the managed HMC.</p>
 </section>

@@ -123,7 +123,7 @@ Examples
 
     
     - name: poweroff managed system
-      hmc_managed_system:
+      power_system:
         hmc_host: "{{ inventory_hostname }}"
         hmc_auth:
              username: '{{ ansible_user }}'
@@ -132,7 +132,7 @@ Examples
         action: poweroff
 
     - name: poweron managed system
-      hmc_managed_system:
+      power_system:
         hmc_host: "{{ inventory_hostname }}"
         hmc_auth:
              username: '{{ ansible_user }}'
@@ -141,7 +141,7 @@ Examples
         action: poweron
 
     - name: modify managed system name, powerOn lpar start policy and powerOff policy
-      hmc_managed_system:
+      power_system:
         hmc_host: "{{ inventory_hostname }}"
         hmc_auth:
              username: '{{ ansible_user }}'
@@ -153,7 +153,7 @@ Examples
         action: modify_syscfg
 
     - name: modify managed system memory settings
-      hmc_managed_system:
+      power_system:
         hmc_host: "{{ inventory_hostname }}"
         hmc_auth:
              username: '{{ ansible_user }}'
@@ -165,7 +165,7 @@ Examples
         action: modify_hwres
 
     - name: fetch the managed system details
-      hmc_managed_system:
+      power_system:
         hmc_host: "{{ inventory_hostname }}"
         hmc_auth:
              username: '{{ ansible_user }}'

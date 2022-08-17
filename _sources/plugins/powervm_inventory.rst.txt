@@ -49,19 +49,19 @@ Parameters
     Add hosts to group based on Jinja2 conditionals.
 
 
-  keyed_groups (optional, list, [])
+  keyed_groups (optional, list, None)
     Add hosts to group based on the values of a variable.
 
 
-  exclude_ip (optional, list, [])
+  exclude_ip (optional, list, None)
     A list of IP addresses to exclude from the inventory. This will be compared to the RMC IP address specified in the HMC. Currently, no hostname lookup is performed, so only IP addresses that match the RMC IP address specified in the HMC will be excluded. This is not valid for IBMi LPARs
 
 
-  exclude_lpar (optional, list, [])
+  exclude_lpar (optional, list, None)
     A list of partitions (LPAR, VIOS) to exclude by partition name.
 
 
-  exclude_system (optional, list, [])
+  exclude_system (optional, list, None)
     A list of HMC managed systems whose partitions (LPAR, VIOS) will be excluded from the dynamic inventory.
 
 
@@ -203,7 +203,7 @@ Authors
 
 - Torin Reilly (@torinreilly)
 - Michael Cohoon (@mtcohoon)
-- Ozzie Rodriguez
-- Anil Vijayan
+- Ozzie Rodriguez (@OzzieRodriguez)
+- Anil Vijayan (@AnilVijayan)
 - Navinakumar Kandakur (@nkandak1)
 

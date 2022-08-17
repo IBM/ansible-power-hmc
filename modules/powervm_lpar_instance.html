@@ -15,6 +15,7 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -50,6 +51,7 @@
 <li class="toctree-l3"><a class="reference internal" href="hmc_command.html">hmc_command – Execute HMC command</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hmc_pwdpolicy.html">hmc_pwdpolicy – Manages the list, create, change and remove password policies of the HMC</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hmc_update_upgrade.html">hmc_update_upgrade – Manages the update and upgrade of the HMC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hmc_user.html">hmc_user – Manage the hmc users</a></li>
 <li class="toctree-l3"><a class="reference internal" href="power_system.html">power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the Managed system</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">powervm_lpar_instance – Create, Delete, Shutdown, Activate, Restart and facts of an AIX/Linux or IBMi partition</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#synopsis">Synopsis</a></li>
@@ -111,7 +113,7 @@
            <div itemprop="articleBody">
              
   <section id="powervm-lpar-instance-create-delete-shutdown-activate-restart-and-facts-of-an-aix-linux-or-ibmi-partition">
-<span id="powervm-lpar-instance-module"></span><h1>powervm_lpar_instance – Create, Delete, Shutdown, Activate, Restart and facts of an AIX/Linux or IBMi partition<a class="headerlink" href="#powervm-lpar-instance-create-delete-shutdown-activate-restart-and-facts-of-an-aix-linux-or-ibmi-partition" title="Permalink to this headline"></a></h1>
+<span id="powervm-lpar-instance-module"></span><h1>powervm_lpar_instance – Create, Delete, Shutdown, Activate, Restart and facts of an AIX/Linux or IBMi partition<a class="headerlink" href="#powervm-lpar-instance-create-delete-shutdown-activate-restart-and-facts-of-an-aix-linux-or-ibmi-partition" title="Permalink to this heading"></a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
 <li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
@@ -124,7 +126,7 @@
 </ul>
 </div>
 <section id="synopsis">
-<h2><a class="toc-backref" href="#id1">Synopsis</a><a class="headerlink" href="#synopsis" title="Permalink to this headline"></a></h2>
+<h2><a class="toc-backref" href="#id1">Synopsis</a><a class="headerlink" href="#synopsis" title="Permalink to this heading"></a></h2>
 <p>Creates AIX/Linux or IBMi partition with specified configuration details on mentioned system</p>
 <p>Or Deletes specified AIX/Linux or IBMi partition on specified system</p>
 <p>Or Shutdown specified AIX/Linux or IBMi partition on specified system</p>
@@ -133,7 +135,7 @@
 <p>Or facts of the specified AIX/Linux or IBMi partition of specified system</p>
 </section>
 <section id="requirements">
-<h2><a class="toc-backref" href="#id2">Requirements</a><a class="headerlink" href="#requirements" title="Permalink to this headline"></a></h2>
+<h2><a class="toc-backref" href="#id2">Requirements</a><a class="headerlink" href="#requirements" title="Permalink to this heading"></a></h2>
 <p>The below requirements are needed on the host that executes this module.</p>
 <ul class="simple">
 <li><p>Python &gt;= 3</p></li>
@@ -141,7 +143,7 @@
 </ul>
 </section>
 <section id="parameters">
-<h2><a class="toc-backref" href="#id3">Parameters</a><a class="headerlink" href="#parameters" title="Permalink to this headline"></a></h2>
+<h2><a class="toc-backref" href="#id3">Parameters</a><a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h2>
 <blockquote>
 <div><dl>
 <dt>hmc_host (True, str, None)</dt><dd><p>IPaddress or hostname of the HMC</p>
@@ -157,6 +159,9 @@
 <dt>system_name (True, str, None)</dt><dd><p>The name of the managed system</p>
 </dd>
 <dt>vm_name (True, str, None)</dt><dd><p>The name of the powervm partition to create/delete/poweron/shutdown/facts</p>
+</dd>
+<dt>vm_id (optional, int, None)</dt><dd><p>The partition ID to be set while creating a Logical Partition</p>
+<p>Optional, if not provided, next available value will be assigned</p>
 </dd>
 <dt>proc (optional, int, None)</dt><dd><p>The number of dedicated processors to create a partition.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">proc_unit</span></code> parameter is set, then this value will work as virtual processors for shared processor setting.</p>
@@ -269,7 +274,7 @@
 <p>Optional, if not provided the value will be auto assigned</p>
 </dd>
 <dt>client_adapter_id (optional, int, None)</dt><dd><p>The client adapter slot number to be configured with FC adapter.</p>
-<p>Optional, if not provided next availble value will be assigned.</p>
+<p>Optional, if not provided next available value will be assigned.</p>
 </dd>
 <dt>server_adapter_id (optional, int, None)</dt><dd><p>The Server adapter slot number to be configured with FC adapter.</p>
 <p>Optional, if not provided next available value will be assigned.</p>
@@ -298,6 +303,53 @@
 <p>Default is false.</p>
 <p>Currently we are showing only NPIV storage details.</p>
 </dd>
+<dt>install_settings (optional, dict, None)</dt><dd><p>Settings for installing Operating System on logical partition</p>
+<dl>
+<dt>vm_ip (True, str, None)</dt><dd><p>IP Address to be configured to Logical Partition</p>
+</dd>
+<dt>nim_ip (True, str, None)</dt><dd><p>IP Address of the NIM Server.</p>
+</dd>
+<dt>nim_gateway (True, str, None)</dt><dd><p>logical Partition gateway IP Address.</p>
+</dd>
+<dt>nim_subnetmask (True, str, None)</dt><dd><p>Subnetmask IP Address to be configured to Logical Partition.</p>
+</dd>
+<dt>location_code (optional, str, None)</dt><dd><p>Network adapter location code to be used while installing OS.</p>
+<p>If user doesn’t provide, it automatically picks the first pingable adapter attached to the partition.</p>
+</dd>
+<dt>nim_vlan_id (optional, str, None)</dt><dd><p>Specifies the VLANID(0 to 4094) to use for tagging Ethernet frames during network install for virtual network communication.</p>
+<p>Default value is 0</p>
+</dd>
+<dt>nim_vlan_priority (optional, str, None)</dt><dd><p>Specifies the VLAN priority (0 to 7) to use for tagging Ethernet frames during network install for virtual network communication.</p>
+<p>Default value is 0</p>
+</dd>
+<dt>timeout (optional, int, None)</dt><dd><p>Max waiting time in mins for OS to bootup fully.</p>
+<p>Min timeout should be more than 10 mins.</p>
+<p>Default value is 60 min.</p>
+</dd>
+</dl>
+</dd>
+<dt>vnic_config (optional, list, None)</dt><dd><p>Virtual NIC Configuration of the partition</p>
+<dl>
+<dt>vnic_adapter_id (optional, int, None)</dt><dd><p>Virtual Nic Adapter ID to be configured while creating a partition</p>
+<p>Default value is next available</p>
+</dd>
+<dt>backing_devices (optional, list, None)</dt><dd><p>SRIOV physical ports to be used as a backing device of VNIC</p>
+<p>If user doesn’t provide this option, by default it picks the SRIOV Physical port link status up as backing device</p>
+<p>If there are no SRIOV Physical port with link status as up then it randomly picks physical port which has capacity more than 2.0%</p>
+<dl>
+<dt>location_code (True, str, None)</dt><dd><p>SRIOV Physical port location code to be used as backing device</p>
+<p>An illustrative pattern for SRIOV physical port location code is XXXXX.XXX.XXXXXXX-P1-T1 or P1-T1.</p>
+</dd>
+<dt>capacity (optional, float, None)</dt><dd><p>Capacity value to be configured for vnic backing device</p>
+<p>default value is 2.0%</p>
+</dd>
+<dt>hosting_partition (optional, str, None)</dt><dd><p>The VIOS name on which SRIOV physical port location code to be configured</p>
+<p>by default picks a random VIOS name with RMC state as active</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
 <dt>state (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">present</span></code> creates a partition of the specified <em>os_type</em>, <em>vm_name</em>, <em>proc</em> and <em>memory</em> on specified <em>system_name</em>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">absent</span></code> deletes a partition of the specified <em>vm_name</em> on specified <em>system_name</em>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">facts</span></code> fetch the details of the specified <em>vm_name</em> on specified <em>system_name</em>.</p>
@@ -310,7 +362,7 @@
 </div></blockquote>
 </section>
 <section id="notes">
-<h2><a class="toc-backref" href="#id4">Notes</a><a class="headerlink" href="#notes" title="Permalink to this headline"></a></h2>
+<h2><a class="toc-backref" href="#id4">Notes</a><a class="headerlink" href="#notes" title="Permalink to this heading"></a></h2>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ul class="simple">
@@ -321,7 +373,7 @@
 </div>
 </section>
 <section id="examples">
-<h2><a class="toc-backref" href="#id5">Examples</a><a class="headerlink" href="#examples" title="Permalink to this headline"></a></h2>
+<h2><a class="toc-backref" href="#id5">Examples</a><a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
 <div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create an IBMi logical partition instance with shared proc, volume_config&#39;s vios_name and volume_name values, PhysicaIO and</span><span class="w"></span>
 <span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">max_virtual_slots</span><span class="w"></span>
 <span class="w">  </span><span class="nt">powervm_lpar_instance</span><span class="p">:</span><span class="w"></span>
@@ -331,6 +383,7 @@
 <span class="w">         </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span><span class="w"></span>
 <span class="w">      </span><span class="nt">system_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;system_name&gt;</span><span class="w"></span>
 <span class="w">      </span><span class="nt">vm_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;vm_name&gt;</span><span class="w"></span>
+<span class="w">      </span><span class="nt">vm_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;lpar_id&gt;</span><span class="w"></span>
 <span class="w">      </span><span class="nt">proc</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span><span class="w"></span>
 <span class="w">      </span><span class="nt">proc_unit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span><span class="w"></span>
 <span class="w">      </span><span class="nt">mem</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20480</span><span class="w"></span>
@@ -347,7 +400,7 @@
 <span class="w">      </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span><span class="w"></span>
 
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create an AIX/Linux logical partition instance with default proc, mem, virt_network_config, volume_config&#39;s volumes_size and</span><span class="w"></span>
-<span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">npiv_config</span><span class="w"></span>
+<span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">npiv_config, vnic_config</span><span class="w"></span>
 <span class="w">  </span><span class="nt">powervm_lpar_instance</span><span class="p">:</span><span class="w"></span>
 <span class="w">      </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&#39;</span><span class="w"></span>
 <span class="w">      </span><span class="nt">hmc_auth</span><span class="p">:</span><span class="w"></span>
@@ -365,6 +418,19 @@
 <span class="w">         </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">vios_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;viosname&gt;</span><span class="w"></span>
 <span class="w">           </span><span class="nt">fc_port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;fc_port_name/loc_code&gt;</span><span class="w"></span>
 <span class="w">           </span><span class="nt">wwpn_pair</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;wwpn1;wwpn2&gt;</span><span class="w"></span>
+<span class="w">      </span><span class="nt">vnic_config</span><span class="p">:</span><span class="w"></span>
+<span class="w">         </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">vnic_adapter_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;vnic_adapter_id&gt;</span><span class="w"></span>
+<span class="w">           </span><span class="nt">backing_devices</span><span class="p">:</span><span class="w"></span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">location_code</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">XXXXX.XXX.XXXXXXX-P1-T1</span><span class="w"></span>
+<span class="w">                </span><span class="nt">capacity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;capacity&gt;</span><span class="w"></span>
+<span class="w">                </span><span class="nt">hosting_partition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;vios_name&gt;</span><span class="w"></span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">location_code</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">P1-T2</span><span class="w"></span>
+<span class="w">         </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">backing_devices</span><span class="p">:</span><span class="w"></span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">location_code</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">P1-T3</span><span class="w"></span>
+<span class="w">                </span><span class="nt">hosting_partition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;vios_name&gt;</span><span class="w"></span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">location_code</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">P1-T4</span><span class="w"></span>
+<span class="w">                </span><span class="nt">capacity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;capacity&gt;</span><span class="w"></span>
+<span class="w">         </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">vnic_adapter_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;vnic_adapter_id&gt;</span><span class="w"></span>
 <span class="w">      </span><span class="nt">os_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">aix_linux</span><span class="w"></span>
 <span class="w">      </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span><span class="w"></span>
 
@@ -424,24 +490,37 @@
 <span class="w">      </span><span class="nt">all_resources</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span><span class="w"></span>
 <span class="w">      </span><span class="nt">os_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">aix_linux</span><span class="w"></span>
 <span class="w">      </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install aix/Linux OS on LPAR from NIM Server</span><span class="w"></span>
+<span class="w">  </span><span class="nt">powervm_lpar_instance</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&#39;</span><span class="w"></span>
+<span class="w">      </span><span class="nt">hmc_auth</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">curr_hmc_auth</span> <span class="cp">}}</span><span class="s">&quot;</span><span class="w"></span>
+<span class="w">      </span><span class="nt">system_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;system_name&gt;</span><span class="w"></span>
+<span class="w">      </span><span class="nt">vm_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;vm_name&gt;</span><span class="w"></span>
+<span class="w">      </span><span class="nt">install_settings</span><span class="p">:</span><span class="w"></span>
+<span class="w">              </span><span class="nt">vm_ip</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;IP_address of the lpar&gt;</span><span class="w"></span>
+<span class="w">              </span><span class="nt">nim_ip</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;IP_address of the NIM Server&gt;</span><span class="w"></span>
+<span class="w">              </span><span class="nt">nim_gateway</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;Gateway IP_Addres&gt;</span><span class="w"></span>
+<span class="w">              </span><span class="nt">nim_subnetmask</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;Subnetmask IP_Address&gt;</span><span class="w"></span>
+<span class="w">      </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">install_os</span><span class="w"></span>
 </pre></div>
 </div>
 </section>
 <section id="return-values">
-<h2><a class="toc-backref" href="#id6">Return Values</a><a class="headerlink" href="#return-values" title="Permalink to this headline"></a></h2>
+<h2><a class="toc-backref" href="#id6">Return Values</a><a class="headerlink" href="#return-values" title="Permalink to this heading"></a></h2>
 <dl class="simple">
 <dt>partition_info (on success for state C(present), dict, {‘AllocatedVirtualProcessors’: None, ‘AssociatedManagedSystem’: ‘&lt;system-name&gt;’, ‘CurrentMemory’: 1024, ‘CurrentProcessingUnits’: None, ‘CurrentProcessors’: 1, ‘Description’: None, ‘HasDedicatedProcessors’: ‘true’, ‘HasPhysicalIO’: ‘true’, ‘IsVirtualServiceAttentionLEDOn’: ‘false’, ‘LastActivatedProfile’: ‘default_profile’, ‘MemoryMode’: ‘Dedicated’, ‘MigrationState’: ‘Not_Migrating’, ‘OperatingSystemVersion’: ‘Unknown’, ‘PartitionID’: 11, ‘PartitionName’: ‘&lt;partition-name&gt;’, ‘PartitionState’: ‘not activated’, ‘PartitionType’: ‘AIX/Linux’, ‘PowerManagementMode’: None, ‘ProgressState’: None, ‘RMCState’: ‘inactive’, ‘ReferenceCode’: ‘’, ‘RemoteRestartState’: ‘Invalid’, ‘ResourceMonitoringIPAddress’: None, ‘SharingMode’: ‘sre idle proces’})</dt><dd><p>The configuration of the partition after creation</p>
 </dd>
 </dl>
 </section>
 <section id="status">
-<h2><a class="toc-backref" href="#id7">Status</a><a class="headerlink" href="#status" title="Permalink to this headline"></a></h2>
+<h2><a class="toc-backref" href="#id7">Status</a><a class="headerlink" href="#status" title="Permalink to this heading"></a></h2>
 <ul class="simple">
 <li><p>This module is not guaranteed to have a backwards compatible interface. <em>[preview]</em></p></li>
 <li><p>This module is maintained by community.</p></li>
 </ul>
 <section id="authors">
-<h3>Authors<a class="headerlink" href="#authors" title="Permalink to this headline"></a></h3>
+<h3>Authors<a class="headerlink" href="#authors" title="Permalink to this heading"></a></h3>
 <ul class="simple">
 <li><p>Anil Vijayan (&#64;AnilVijayan)</p></li>
 <li><p>Navinakumar Kandakur (&#64;nkandak1)</p></li>

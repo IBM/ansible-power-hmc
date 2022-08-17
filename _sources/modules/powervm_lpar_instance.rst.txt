@@ -63,6 +63,12 @@ Parameters
     The name of the powervm partition to create/delete/poweron/shutdown/facts
 
 
+  vm_id (optional, int, None)
+    The partition ID to be set while creating a Logical Partition
+
+    Optional, if not provided, next available value will be assigned
+
+
   proc (optional, int, None)
     The number of dedicated processors to create a partition.
 
@@ -280,7 +286,7 @@ Parameters
     client_adapter_id (optional, int, None)
       The client adapter slot number to be configured with FC adapter.
 
-      Optional, if not provided next availble value will be assigned.
+      Optional, if not provided next available value will be assigned.
 
 
     server_adapter_id (optional, int, None)
@@ -334,6 +340,91 @@ Parameters
     Currently we are showing only NPIV storage details.
 
 
+  install_settings (optional, dict, None)
+    Settings for installing Operating System on logical partition
+
+
+    vm_ip (True, str, None)
+      IP Address to be configured to Logical Partition
+
+
+    nim_ip (True, str, None)
+      IP Address of the NIM Server.
+
+
+    nim_gateway (True, str, None)
+      logical Partition gateway IP Address.
+
+
+    nim_subnetmask (True, str, None)
+      Subnetmask IP Address to be configured to Logical Partition.
+
+
+    location_code (optional, str, None)
+      Network adapter location code to be used while installing OS.
+
+      If user doesn't provide, it automatically picks the first pingable adapter attached to the partition.
+
+
+    nim_vlan_id (optional, str, None)
+      Specifies the VLANID(0 to 4094) to use for tagging Ethernet frames during network install for virtual network communication.
+
+      Default value is 0
+
+
+    nim_vlan_priority (optional, str, None)
+      Specifies the VLAN priority (0 to 7) to use for tagging Ethernet frames during network install for virtual network communication.
+
+      Default value is 0
+
+
+    timeout (optional, int, None)
+      Max waiting time in mins for OS to bootup fully.
+
+      Min timeout should be more than 10 mins.
+
+      Default value is 60 min.
+
+
+
+  vnic_config (optional, list, None)
+    Virtual NIC Configuration of the partition
+
+
+    vnic_adapter_id (optional, int, None)
+      Virtual Nic Adapter ID to be configured while creating a partition
+
+      Default value is next available
+
+
+    backing_devices (optional, list, None)
+      SRIOV physical ports to be used as a backing device of VNIC
+
+      If user doesn't provide this option, by default it picks the SRIOV Physical port link status up as backing device
+
+      If there are no SRIOV Physical port with link status as up then it randomly picks physical port which has capacity more than 2.0%
+
+
+      location_code (True, str, None)
+        SRIOV Physical port location code to be used as backing device
+
+        An illustrative pattern for SRIOV physical port location code is XXXXX.XXX.XXXXXXX-P1-T1 or P1-T1.
+
+
+      capacity (optional, float, None)
+        Capacity value to be configured for vnic backing device
+
+        default value is 2.0%
+
+
+      hosting_partition (optional, str, None)
+        The VIOS name on which SRIOV physical port location code to be configured
+
+        by default picks a random VIOS name with RMC state as active
+
+
+
+
   state (optional, str, None)
     ``present`` creates a partition of the specified *os_type*, *vm_name*, *proc* and *memory* on specified *system_name*.
 
@@ -379,6 +470,7 @@ Examples
              password: '{{ hmc_password }}'
           system_name: <system_name>
           vm_name: <vm_name>
+          vm_id: <lpar_id>
           proc: 4
           proc_unit: 4
           mem: 20480
@@ -395,7 +487,7 @@ Examples
           state: present
 
     - name: Create an AIX/Linux logical partition instance with default proc, mem, virt_network_config, volume_config's volumes_size and
-            npiv_config
+            npiv_config, vnic_config
       powervm_lpar_instance:
           hmc_host: '{{ inventory_hostname }}'
           hmc_auth:
@@ -413,6 +505,19 @@ Examples
              - vios_name: <viosname>
                fc_port: <fc_port_name/loc_code>
                wwpn_pair: <wwpn1;wwpn2>
+          vnic_config:
+             - vnic_adapter_id: <vnic_adapter_id>
+               backing_devices:
+                  - location_code: XXXXX.XXX.XXXXXXX-P1-T1
+                    capacity: <capacity>
+                    hosting_partition: <vios_name>
+                  - location_code: P1-T2
+             - backing_devices:
+                  - location_code: P1-T3
+                    hosting_partition: <vios_name>
+                  - location_code: P1-T4
+                    capacity: <capacity>
+             - vnic_adapter_id: <vnic_adapter_id>
           os_type: aix_linux
           state: present
 
@@ -472,6 +577,20 @@ Examples
           all_resources: True
           os_type: aix_linux
           state: present
+
+    - name: Install aix/Linux OS on LPAR from NIM Server
+      powervm_lpar_instance:
+          hmc_host: '{{ inventory_hostname }}'
+          hmc_auth: "{{ curr_hmc_auth }}"
+          system_name: <system_name>
+          vm_name: <vm_name>
+          install_settings:
+                  vm_ip: <IP_address of the lpar>
+                  nim_ip: <IP_address of the NIM Server>
+                  nim_gateway: <Gateway IP_Addres>
+                  nim_subnetmask: <Subnetmask IP_Address>
+          action: install_os
+
 
 
 
