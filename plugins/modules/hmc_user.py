@@ -291,7 +291,7 @@ def validate_sub_params(params):
                 params['enable_user'] is None:
             raise ParameterError("%s state with parameter: name either need enable_user or attributes param"
                                  % state)
-        if params['name'] is not None:
+        if params['name'] is not None and params['attributes'] is not None:
             for each in ['webui_login_suspend_time', 'max_webui_login_attempts']:
                 if params['attributes'][each] is not None:
                     raise ParameterError("updated state with parameter: name will not support attributes: %s"
