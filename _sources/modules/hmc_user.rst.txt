@@ -60,7 +60,7 @@ Parameters
 
 
   attributes (optional, dict, None)
-    Configuration attributes used during the create and modify of HMC user
+    Configuration attributes used during the create and modify of HMC user.
 
 
     new_name (optional, str, None)
@@ -88,11 +88,11 @@ Parameters
 
 
     pwage (optional, str, None)
-      Number of days. Valid only for local user. Default value is 99999
+      Number of days. Valid only for local user. Default value is 99999.
 
 
     min_pwage (optional, str, None)
-      Number of days. Valid only for local user. Default value is 0
+      Number of days. Valid only for local user. Default value is 0.
 
 
     authentication_type (optional, str, None)
@@ -100,27 +100,27 @@ Parameters
 
 
     session_timeout (optional, int, None)
-      Number of minutes. Default value is 0
+      Number of minutes. Default value is 0.
 
 
     verify_timeout (optional, int, None)
-      Number of minutes. Default value is 15
+      Number of minutes. Default value is 15.
 
 
     idle_timeout (optional, int, None)
-      Number of minutes. Default value is 120
+      Number of minutes. Default value is 120.
 
 
     inactivity_expiration (optional, int, None)
-      Number of days. Default value is 0
+      Number of days. Default value is 0.
 
 
     remote_webui_access (optional, bool, None)
-      Allow or not allow the user to log in remotely to the HMC Web user interface. Default value is False
+      Allow or not allow the user to log in remotely to the HMC Web user interface. Default value is False.
 
 
     remote_ssh_access (optional, bool, None)
-      Allow or not allow the user to log in remotely to the HMC using SSH. Default value is True
+      Allow or not allow the user to log in remotely to the HMC using SSH. Default value is True.
 
 
     passwd_authentication (optional, bool, None)

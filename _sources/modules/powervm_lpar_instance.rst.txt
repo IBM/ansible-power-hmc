@@ -1,8 +1,8 @@
 .. _powervm_lpar_instance_module:
 
 
-powervm_lpar_instance -- Create, Delete, Shutdown, Activate, Restart and facts of an AIX/Linux or IBMi partition
-================================================================================================================
+powervm_lpar_instance -- Create, Delete, Shutdown, Activate, Restart, Facts and Install of PowerVM Partitions
+=============================================================================================================
 
 .. contents::
    :local:
@@ -22,7 +22,9 @@ Or Poweron/Activate specified AIX/Linux or IBMi partition, with provided configu
 
 Or Restart specified AIX/Linux or IBMi partition on specified system
 
-Or facts of the specified AIX/Linux or IBMi partition of specified system
+Or Facts of the specified AIX/Linux or IBMi partition of specified system
+
+Or Install of PowerVM Partition
 
 
 
@@ -39,34 +41,34 @@ Parameters
 ----------
 
   hmc_host (True, str, None)
-    IPaddress or hostname of the HMC
+    IPaddress or hostname of the HMC.
 
 
   hmc_auth (True, dict, None)
-    Username and Password credential of the HMC
+    Username and Password credential of the HMC.
 
 
     username (True, str, None)
-      HMC username
+      HMC username.
 
 
     password (optional, str, None)
-      HMC password
+      HMC password.
 
 
 
   system_name (True, str, None)
-    The name of the managed system
+    The name of the managed system.
 
 
   vm_name (True, str, None)
-    The name of the powervm partition to create/delete/poweron/shutdown/facts
+    The name of the powervm partition.
 
 
   vm_id (optional, int, None)
-    The partition ID to be set while creating a Logical Partition
+    The partition ID to be set while creating a Logical Partition.
 
-    Optional, if not provided, next available value will be assigned
+    Optional, if not provided, next available value will be assigned.
 
 
   proc (optional, int, None)
@@ -82,19 +84,19 @@ Parameters
 
     If ``proc_unit`` parameter is set, then this value will work as max virtual processors for shared processor setting.
 
-    Default value is ``proc``
+    Default value is ``proc``.
 
-    This value should be always equal or greater than ``proc``
+    This value should be always equal or greater than ``proc``.
 
 
   min_proc (optional, int, None)
     The minimum number of dedicated processors to create a partition.
 
-    If ``proc_unit`` parameter is set, then this value will work as min virtual processors for shared processor setting
+    If ``proc_unit`` parameter is set, then this value will work as min virtual processors for shared processor setting.
 
-    Default value is '1'
+    Default value is '1'.
 
-    This value should be always equal or less than ``proc``
+    This value should be always equal or less than ``proc``.
 
 
   proc_unit (optional, float, None)
@@ -102,55 +104,55 @@ Parameters
 
 
   shared_proc_pool (optional, str, None)
-    Shared Processor Pool ID or Name
+    Shared Processor Pool ID or Name.
 
     If numeric value provided to this parameter, it will be considered as Shared Processor Pool ID.
 
-    This parameter can be used only with ``proc_unit``
+    This parameter can be used only with ``proc_unit``.
 
-    Default value is 'DefaultPool'
+    Default value is 'DefaultPool'.
 
 
   max_proc_unit (optional, float, None)
-    The maximum number of shared processing units to create a partition
+    The maximum number of shared processing units to create a partition.
 
-    This value should be equal or greater than ``proc_unit``
+    This value should be equal or greater than ``proc_unit``.
 
-    This parameter can be used only with ``proc_unit``
+    This parameter can be used only with ``proc_unit``.
 
-    Default value is ``proc_unit``
+    Default value is ``proc_unit``.
 
 
   min_proc_unit (optional, float, None)
-    The minimum number of shared processing units to create a partition
+    The minimum number of shared processing units to create a partition.
 
-    This value should be equal or less than ``proc_unit``
+    This value should be equal or less than ``proc_unit``.
 
-    This parameter can be used only with ``proc_unit``
+    This parameter can be used only with ``proc_unit``.
 
-    Default value is '0.1'
+    Default value is '0.1'.
 
 
   proc_mode (optional, str, None)
-    The processor mode to be used to create a partition with shared processor settings
+    The processor mode to be used to create a partition with shared processor settings.
 
-    Default value is 'uncapped'
+    Default value is 'uncapped'.
 
-    This parameter can be used only with ``proc_unit``
+    This parameter can be used only with ``proc_unit``.
 
 
   weight (optional, int, None)
-    The weight to be used for uncapped proc mode while create a partition with shared processor settings
+    The weight to be used for uncapped proc mode while create a partition with shared processor settings.
 
-    Default value is '128'
+    Default value is '128'.
 
-    This value will be ignored if the ``proc_mode`` is set to *capped*
+    This value will be ignored if the ``proc_mode`` is set to *capped*.
 
-    This parameter can be used only with ``proc_mode``
+    This parameter can be used only with ``proc_mode``.
 
 
   proc_compatibility_mode (optional, str, None)
-    The processor compatibility mode to be configured while creating a partition
+    The processor compatibility mode to be configured while creating a partition.
 
 
   mem (optional, int, None)
@@ -164,7 +166,7 @@ Parameters
 
     Default value is '2048 MB'.
 
-    This parameter can only be used with ``mem``
+    This parameter can only be used with ``mem``.
 
 
   min_mem (optional, int, None)
@@ -172,7 +174,7 @@ Parameters
 
     Default value is '1024 MB'.
 
-    This parameter can only be used with ``mem``
+    This parameter can only be used with ``mem``.
 
 
   os_type (optional, str, None)
@@ -206,7 +208,7 @@ Parameters
 
     If this option provided for AIX/Linux type partition, operation gives a warning and then ignores this option and proceed with the operation.
 
-    This option is valid only for ``poweron`` *action*
+    This option is valid only for ``poweron`` *action*.
 
 
   volume_config (optional, list, None)
@@ -222,24 +224,24 @@ Parameters
     volume_name (optional, str, None)
       Physical volume name visible through VIOS.
 
-      This option is mutually exclusive with *volume_size*
+      This option is mutually exclusive with *volume_size*.
 
 
     vios_name (optional, str, None)
       VIOS name to which mentioned *volume_name* is present.
 
-      This option is mutually exclusive with *volume_size*
+      This option is mutually exclusive with *volume_size*.
 
 
     volume_size (optional, int, None)
-      Physical volume size in MB
+      Physical volume size in MB.
 
 
 
   virt_network_config (optional, list, None)
-    Virtual Network configuration of the partition
+    Virtual Network configuration of the partition.
 
-    This implicitly adds a Virtual Ethernet Adapter with given virtual network to the partition
+    This implicitly adds a Virtual Ethernet Adapter with given virtual network to the partition.
 
     Make sure provided Virtual Network has been attached to an active Network Bridge for external network communication.
 
@@ -247,7 +249,7 @@ Parameters
     network_name (True, str, None)
       Name of the Virtual Network to be attached to the partition.
 
-      This option is mandatory
+      This option is mandatory.
 
 
     slot_number (optional, int, None)
@@ -258,29 +260,29 @@ Parameters
 
 
   npiv_config (optional, list, None)
-    To configure N-Port ID Virtualization is also known as Virtual Fibre of the partition
+    To configure N-Port ID Virtualization is also known as Virtual Fibre of the partition.
 
-    User can provide two fc port configurations and mappings will be created with VIOS implicitly
+    User can provide two fc port configurations and mappings will be created with VIOS implicitly.
 
 
     vios_name (True, str, None)
-      The name of the vios in which fc port available
+      The name of the vios in which fc port available.
 
-      This option is mandatory
+      This option is mandatory.
 
 
     fc_port (True, str, None)
-      The port to be used for npiv. User can specify either port name or fully qualified location code
+      The port to be used for npiv. User can specify either port name or fully qualified location code.
 
-      This option is mandatory
+      This option is mandatory.
 
 
     wwpn_pair (optional, str, None)
       The WWPN pair value to be configured with client FC adapter.
 
-      Both the WWPN value should be separated by semicolon delimiter
+      Both the WWPN value should be separated by semicolon delimiter.
 
-      Optional, if not provided the value will be auto assigned
+      Optional, if not provided the value will be auto assigned.
 
 
     client_adapter_id (optional, int, None)
@@ -341,11 +343,13 @@ Parameters
 
 
   install_settings (optional, dict, None)
-    Settings for installing Operating System on logical partition
+    Settings for installing Operating System on logical partition.
+
+    User expected to have NIM Server with pull install configuration.
 
 
     vm_ip (True, str, None)
-      IP Address to be configured to Logical Partition
+      IP Address to be configured to Logical Partition.
 
 
     nim_ip (True, str, None)
@@ -353,7 +357,7 @@ Parameters
 
 
     nim_gateway (True, str, None)
-      logical Partition gateway IP Address.
+      Logical Partition gateway IP Address.
 
 
     nim_subnetmask (True, str, None)
@@ -369,13 +373,13 @@ Parameters
     nim_vlan_id (optional, str, None)
       Specifies the VLANID(0 to 4094) to use for tagging Ethernet frames during network install for virtual network communication.
 
-      Default value is 0
+      Default value is 0.
 
 
     nim_vlan_priority (optional, str, None)
       Specifies the VLAN priority (0 to 7) to use for tagging Ethernet frames during network install for virtual network communication.
 
-      Default value is 0
+      Default value is 0.
 
 
     timeout (optional, int, None)
@@ -388,39 +392,37 @@ Parameters
 
 
   vnic_config (optional, list, None)
-    Virtual NIC Configuration of the partition
+    Virtual NIC configuration of the partition.
 
 
     vnic_adapter_id (optional, int, None)
-      Virtual Nic Adapter ID to be configured while creating a partition
+      VNIC Adapter ID to be configured while creating a partition.
 
-      Default value is next available
+      Optional, if not provided, next available value will be assigned.
 
 
     backing_devices (optional, list, None)
-      SRIOV physical ports to be used as a backing device of VNIC
+      SRIOV physical ports to be used as a backing device of VNIC.
 
-      If user doesn't provide this option, by default it picks the SRIOV Physical port link status up as backing device
+      If user doesn't provide this option, by default it picks the SRIOV Physical port with link status up as backing device.
 
-      If there are no SRIOV Physical port with link status as up then it randomly picks physical port which has capacity more than 2.0%
+      If there are no SRIOV Physical port with link status as up then it randomly picks physical port which has capacity more than 2.0%.
 
 
       location_code (True, str, None)
-        SRIOV Physical port location code to be used as backing device
+        SRIOV Physical port location code to be used as backing device.
 
         An illustrative pattern for SRIOV physical port location code is XXXXX.XXX.XXXXXXX-P1-T1 or P1-T1.
 
 
       capacity (optional, float, None)
-        Capacity value to be configured for vnic backing device
-
-        default value is 2.0%
+        Capacity value to be configured for vnic backing device. Default value is 2.0%.
 
 
       hosting_partition (optional, str, None)
-        The VIOS name on which SRIOV physical port location code to be configured
+        The VIOS name on which SRIOV physical port location code to be configured.
 
-        by default picks a random VIOS name with RMC state as active
+        By default picks a random VIOS name with RMC state as active.
 
 
 
@@ -440,6 +442,8 @@ Parameters
 
     ``restart`` restart a partition of the specified *vm_name* on specified *system_name*.
 
+    ``install_os`` install Aix/Linux OS through NIM Server on specified *vm_name*.
+
 
 
 
@@ -448,9 +452,10 @@ Notes
 -----
 
 .. note::
-   - The network configuration currently will not support SRIOV or VNIC related configurations.
+   - The network configuration currently will not support SRIOV configurations.
    - *retain_vios_cfg* and *delete_vdisks* options will only be supported from HMC release level on or above V9 R1 M930.
    - Partition creation is not supported for resource role-based user in HMC Version prior to 951.
+   - ``install_os`` action doesn't support installation of IBMi OS.
 
 
 
@@ -578,17 +583,17 @@ Examples
           os_type: aix_linux
           state: present
 
-    - name: Install aix/Linux OS on LPAR from NIM Server
+    - name: Install Aix/Linux OS on LPAR from NIM Server
       powervm_lpar_instance:
           hmc_host: '{{ inventory_hostname }}'
           hmc_auth: "{{ curr_hmc_auth }}"
           system_name: <system_name>
           vm_name: <vm_name>
           install_settings:
-                  vm_ip: <IP_address of the lpar>
-                  nim_ip: <IP_address of the NIM Server>
-                  nim_gateway: <Gateway IP_Addres>
-                  nim_subnetmask: <Subnetmask IP_Address>
+             vm_ip: <IP_address of the lpar>
+             nim_ip: <IP_address of the NIM Server>
+             nim_gateway: <Gateway IP_Addres>
+             nim_subnetmask: <Subnetmask IP_Address>
           action: install_os
 
 

@@ -60,7 +60,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="power_system.html">power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the Managed system</a></li>
-<li class="toctree-l3"><a class="reference internal" href="powervm_lpar_instance.html">powervm_lpar_instance – Create, Delete, Shutdown, Activate, Restart and facts of an AIX/Linux or IBMi partition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="powervm_lpar_instance.html">powervm_lpar_instance – Create, Delete, Shutdown, Activate, Restart, Facts and Install of PowerVM Partitions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="powervm_lpar_migration.html">powervm_lpar_migration – validate, migrate and recover of the LPAR</a></li>
 <li class="toctree-l3"><a class="reference internal" href="vios.html">vios – Creation and management of Virtual I/O Server partition</a></li>
 </ul>
@@ -149,7 +149,7 @@
 </dd>
 <dt>type (optional, str, None)</dt><dd><p>The type of user. During <em>state=updated</em> to change the default settings of HMC user, specify <code class="docutils literal notranslate"><span class="pre">default</span></code> with this option. The values of this option changes during <em>state=absent</em>. Supported values are <code class="docutils literal notranslate"><span class="pre">all|local|kerberos|ldap|automanage</span></code>. During <em>state=facts</em>, valid values are <code class="docutils literal notranslate"><span class="pre">default|user</span></code>.</p>
 </dd>
-<dt>attributes (optional, dict, None)</dt><dd><p>Configuration attributes used during the create and modify of HMC user</p>
+<dt>attributes (optional, dict, None)</dt><dd><p>Configuration attributes used during the create and modify of HMC user.</p>
 <dl class="simple">
 <dt>new_name (optional, str, None)</dt><dd><p>The new name to be updated.</p>
 </dd>
@@ -163,23 +163,23 @@
 </dd>
 <dt>current_passwd (optional, str, None)</dt><dd><p>When changing the password for a Kerberos user, use this attribute to specify the user’s current password.</p>
 </dd>
-<dt>pwage (optional, str, None)</dt><dd><p>Number of days. Valid only for local user. Default value is 99999</p>
+<dt>pwage (optional, str, None)</dt><dd><p>Number of days. Valid only for local user. Default value is 99999.</p>
 </dd>
-<dt>min_pwage (optional, str, None)</dt><dd><p>Number of days. Valid only for local user. Default value is 0</p>
+<dt>min_pwage (optional, str, None)</dt><dd><p>Number of days. Valid only for local user. Default value is 0.</p>
 </dd>
 <dt>authentication_type (optional, str, None)</dt><dd><p>Valid values are <code class="docutils literal notranslate"><span class="pre">local|kerberos|ldap</span></code>.</p>
 </dd>
-<dt>session_timeout (optional, int, None)</dt><dd><p>Number of minutes. Default value is 0</p>
+<dt>session_timeout (optional, int, None)</dt><dd><p>Number of minutes. Default value is 0.</p>
 </dd>
-<dt>verify_timeout (optional, int, None)</dt><dd><p>Number of minutes. Default value is 15</p>
+<dt>verify_timeout (optional, int, None)</dt><dd><p>Number of minutes. Default value is 15.</p>
 </dd>
-<dt>idle_timeout (optional, int, None)</dt><dd><p>Number of minutes. Default value is 120</p>
+<dt>idle_timeout (optional, int, None)</dt><dd><p>Number of minutes. Default value is 120.</p>
 </dd>
-<dt>inactivity_expiration (optional, int, None)</dt><dd><p>Number of days. Default value is 0</p>
+<dt>inactivity_expiration (optional, int, None)</dt><dd><p>Number of days. Default value is 0.</p>
 </dd>
-<dt>remote_webui_access (optional, bool, None)</dt><dd><p>Allow or not allow the user to log in remotely to the HMC Web user interface. Default value is False</p>
+<dt>remote_webui_access (optional, bool, None)</dt><dd><p>Allow or not allow the user to log in remotely to the HMC Web user interface. Default value is False.</p>
 </dd>
-<dt>remote_ssh_access (optional, bool, None)</dt><dd><p>Allow or not allow the user to log in remotely to the HMC using SSH. Default value is True</p>
+<dt>remote_ssh_access (optional, bool, None)</dt><dd><p>Allow or not allow the user to log in remotely to the HMC using SSH. Default value is True.</p>
 </dd>
 <dt>passwd_authentication (optional, bool, None)</dt><dd><p>Allow or not allow the user to log in remotely to the HMC using a password.</p>
 </dd>
