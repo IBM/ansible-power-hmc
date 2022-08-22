@@ -63,7 +63,7 @@ options:
         choices: ['default', 'user', 'all', 'local', 'kerberos', 'ldap', 'automanage']
     attributes:
         description:
-            - Configuration attributes used during the create and modify of HMC user
+            - Configuration attributes used during the create and modify of HMC user.
         type: dict
         suboptions:
             new_name:
@@ -94,11 +94,11 @@ options:
                 type: str
             pwage:
                 description:
-                    - Number of days. Valid only for local user. Default value is 99999
+                    - Number of days. Valid only for local user. Default value is 99999.
                 type: str
             min_pwage:
                 description:
-                    - Number of days. Valid only for local user. Default value is 0
+                    - Number of days. Valid only for local user. Default value is 0.
                 type: str
             authentication_type:
                 description:
@@ -107,29 +107,29 @@ options:
                 choices: ['local', 'kerberos', 'ldap']
             session_timeout:
                 description:
-                    - Number of minutes. Default value is 0
+                    - Number of minutes. Default value is 0.
                 type: int
             verify_timeout:
                 description:
-                    - Number of minutes. Default value is 15
+                    - Number of minutes. Default value is 15.
                 type: int
             idle_timeout:
                 description:
-                    - Number of minutes. Default value is 120
+                    - Number of minutes. Default value is 120.
                 type: int
             inactivity_expiration:
                 description:
-                    - Number of days. Default value is 0
+                    - Number of days. Default value is 0.
                 type: int
             remote_webui_access:
                 description:
                     - Allow or not allow the user to log in remotely to the
-                      HMC Web user interface. Default value is False
+                      HMC Web user interface. Default value is False.
                 type: bool
             remote_ssh_access:
                 description:
                     - Allow or not allow the user to log in remotely to the
-                      HMC using SSH. Default value is True
+                      HMC using SSH. Default value is True.
                 type: bool
             passwd_authentication:
                 description:
