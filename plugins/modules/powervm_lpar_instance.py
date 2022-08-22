@@ -19,7 +19,7 @@ module: powervm_lpar_instance
 author:
     - Anil Vijayan (@AnilVijayan)
     - Navinakumar Kandakur (@nkandak1)
-short_description: Create, Delete, Shutdown, Activate, Restart, Facts of an AIX/Linux or IBMi partition
+short_description: Create, Delete, Shutdown, Activate, Restart, Facts and Install of PowerVM Partitions
 notes:
     - The network configuration currently will not support SRIOV configurations.
     - I(retain_vios_cfg) and I(delete_vdisks) options will only be supported from HMC release level on or above V9 R1 M930.
@@ -33,7 +33,7 @@ description:
     - "Or Facts of the specified AIX/Linux or IBMi partition of specified system"
     - "Or Install of PowerVM Partition"
 
-version_added: "1.1.0"
+version_added: "1.2.0"
 requirements:
 - Python >= 3
 - lxml
@@ -65,7 +65,7 @@ options:
         type: str
     vm_name:
         description:
-            - The name of the powervm partition to create/delete/poweron/shutdown/facts/installos.
+            - The name of the powervm partition.
         required: true
         type: str
     vm_id:
