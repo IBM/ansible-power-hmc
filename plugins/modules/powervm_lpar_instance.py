@@ -19,9 +19,9 @@ module: powervm_lpar_instance
 author:
     - Anil Vijayan (@AnilVijayan)
     - Navinakumar Kandakur (@nkandak1)
-short_description: Create, Delete, Shutdown, Activate, Restart and facts of an AIX/Linux or IBMi partition
+short_description: Create, Delete, Shutdown, Activate, Restart, Facts and Install of PowerVM Partitions
 notes:
-    - The network configuration currently will not support SRIOV or VNIC related configurations.
+    - The network configuration currently will not support SRIOV configurations.
     - I(retain_vios_cfg) and I(delete_vdisks) options will only be supported from HMC release level on or above V9 R1 M930.
     - Partition creation is not supported for resource role-based user in HMC Version prior to 951.
 description:
@@ -30,47 +30,48 @@ description:
     - "Or Shutdown specified AIX/Linux or IBMi partition on specified system"
     - "Or Poweron/Activate specified AIX/Linux or IBMi partition, with provided configuration details on the mentioned system"
     - "Or Restart specified AIX/Linux or IBMi partition on specified system"
-    - "Or facts of the specified AIX/Linux or IBMi partition of specified system"
+    - "Or Facts of the specified AIX/Linux or IBMi partition of specified system"
+    - "Or Install of PowerVM Partition"
 
-version_added: "1.1.0"
+version_added: "1.2.0"
 requirements:
 - Python >= 3
 - lxml
 options:
     hmc_host:
         description:
-            - IPaddress or hostname of the HMC
+            - IPaddress or hostname of the HMC.
         required: true
         type: str
     hmc_auth:
         description:
-            - Username and Password credential of the HMC
+            - Username and Password credential of the HMC.
         required: true
         type: dict
         suboptions:
             username:
                 description:
-                    - HMC username
+                    - HMC username.
                 required: true
                 type: str
             password:
                 description:
-                    - HMC password
+                    - HMC password.
                 type: str
     system_name:
         description:
-            - The name of the managed system
+            - The name of the managed system.
         required: true
         type: str
     vm_name:
         description:
-            - The name of the powervm partition to create/delete/poweron/shutdown/facts
+            - The name of the powervm partition.
         required: true
         type: str
     vm_id:
         description:
-            - The partition ID to be set while creating a Logical Partition
-            - Optional, if not provided, next available value will be assigned
+            - The partition ID to be set while creating a Logical Partition.
+            - Optional, if not provided, next available value will be assigned.
         type: int
     proc:
         description:
@@ -84,16 +85,16 @@ options:
             - The maximum number of dedicated processors to create a partition.
             - If C(proc_unit) parameter is set, then this value will work as max virtual processors for
               shared processor setting.
-            - Default value is C(proc)
-            - This value should be always equal or greater than C(proc)
+            - Default value is C(proc).
+            - This value should be always equal or greater than C(proc).
         type: int
     min_proc:
         description:
             - The minimum number of dedicated processors to create a partition.
             - If C(proc_unit) parameter is set, then this value will work as min virtual processors for
-              shared processor setting
-            - Default value is '1'
-            - This value should be always equal or less than C(proc)
+              shared processor setting.
+            - Default value is '1'.
+            - This value should be always equal or less than C(proc).
         type: int
     proc_unit:
         description:
@@ -101,42 +102,42 @@ options:
         type: float
     shared_proc_pool:
         description:
-            - Shared Processor Pool ID or Name
+            - Shared Processor Pool ID or Name.
             - If numeric value provided to this parameter, it will be considered as Shared Processor Pool ID.
-            - This parameter can be used only with C(proc_unit)
-            - Default value is 'DefaultPool'
+            - This parameter can be used only with C(proc_unit).
+            - Default value is 'DefaultPool'.
         type: str
     max_proc_unit:
         description:
-            - The maximum number of shared processing units to create a partition
-            - This value should be equal or greater than C(proc_unit)
-            - This parameter can be used only with C(proc_unit)
-            - Default value is C(proc_unit)
+            - The maximum number of shared processing units to create a partition.
+            - This value should be equal or greater than C(proc_unit).
+            - This parameter can be used only with C(proc_unit).
+            - Default value is C(proc_unit).
         type: float
     min_proc_unit:
         description:
-            - The minimum number of shared processing units to create a partition
-            - This value should be equal or less than C(proc_unit)
-            - This parameter can be used only with C(proc_unit)
-            - Default value is '0.1'
+            - The minimum number of shared processing units to create a partition.
+            - This value should be equal or less than C(proc_unit).
+            - This parameter can be used only with C(proc_unit).
+            - Default value is '0.1'.
         type: float
     proc_mode:
         description:
-            - The processor mode to be used to create a partition with shared processor settings
-            - Default value is 'uncapped'
-            - This parameter can be used only with C(proc_unit)
+            - The processor mode to be used to create a partition with shared processor settings.
+            - Default value is 'uncapped'.
+            - This parameter can be used only with C(proc_unit).
         type: str
         choices: ['capped', 'uncapped']
     weight:
         description:
-            - The weight to be used for uncapped proc mode while create a partition with shared processor settings
-            - Default value is '128'
-            - This value will be ignored if the C(proc_mode) is set to I(capped)
-            - This parameter can be used only with C(proc_mode)
+            - The weight to be used for uncapped proc mode while create a partition with shared processor settings.
+            - Default value is '128'.
+            - This value will be ignored if the C(proc_mode) is set to I(capped).
+            - This parameter can be used only with C(proc_mode).
         type: int
     proc_compatibility_mode:
         description:
-            - The processor compatibility mode to be configured while creating a partition
+            - The processor compatibility mode to be configured while creating a partition.
         type: str
     mem:
         description:
@@ -147,13 +148,13 @@ options:
         description:
             - The maximum value of dedicated memory value in megabytes to create a partition.
             - Default value is '2048 MB'.
-            - This parameter can only be used with C(mem)
+            - This parameter can only be used with C(mem).
         type: int
     min_mem:
         description:
             - The maximum value of dedicated memory value in megabytes to create a partition.
             - Default value is '1024 MB'.
-            - This parameter can only be used with C(mem)
+            - This parameter can only be used with C(mem).
         type: int
     os_type:
         description:
@@ -180,7 +181,7 @@ options:
             - The initial program load (IPL) source to be used while activating an IBMi partition.
             - If the user doesn't provide this option, current setting of this option in the partition will be considered.
             - If this option provided for AIX/Linux type partition, operation gives a warning and then ignores this option and proceed with the operation.
-            - This option is valid only for C(poweron) I(action)
+            - This option is valid only for C(poweron) I(action).
         type: str
         choices: ['a','b','c','d']
     volume_config:
@@ -196,21 +197,21 @@ options:
             volume_name:
                 description:
                     - Physical volume name visible through VIOS.
-                    - This option is mutually exclusive with I(volume_size)
+                    - This option is mutually exclusive with I(volume_size).
                 type: str
             vios_name:
                 description:
                     - VIOS name to which mentioned I(volume_name) is present.
-                    - This option is mutually exclusive with I(volume_size)
+                    - This option is mutually exclusive with I(volume_size).
                 type: str
             volume_size:
                 description:
-                    - Physical volume size in MB
+                    - Physical volume size in MB.
                 type: int
     virt_network_config:
         description:
-            - Virtual Network configuration of the partition
-            - This implicitly adds a Virtual Ethernet Adapter with given virtual network to the partition
+            - Virtual Network configuration of the partition.
+            - This implicitly adds a Virtual Ethernet Adapter with given virtual network to the partition.
             - Make sure provided Virtual Network has been attached to an active Network Bridge for external network communication.
         type: list
         elements: dict
@@ -218,7 +219,7 @@ options:
             network_name:
                 description:
                     - Name of the Virtual Network to be attached to the partition.
-                    - This option is mandatory
+                    - This option is mandatory.
                 required: true
                 type: str
             slot_number:
@@ -228,28 +229,28 @@ options:
                 type: int
     npiv_config:
         description:
-            - To configure N-Port ID Virtualization is also known as Virtual Fibre of the partition
-            - User can provide two fc port configurations and mappings will be created with VIOS implicitly
+            - To configure N-Port ID Virtualization is also known as Virtual Fibre of the partition.
+            - User can provide two fc port configurations and mappings will be created with VIOS implicitly.
         type: list
         elements: dict
         suboptions:
             vios_name:
                 description:
-                    - The name of the vios in which fc port available
-                    - This option is mandatory
+                    - The name of the vios in which fc port available.
+                    - This option is mandatory.
                 required: true
                 type: str
             fc_port:
                 description:
-                    - The port to be used for npiv. User can specify either port name or fully qualified location code
-                    - This option is mandatory
+                    - The port to be used for npiv. User can specify either port name or fully qualified location code.
+                    - This option is mandatory.
                 required: true
                 type: str
             wwpn_pair:
                 description:
                     - The WWPN pair value to be configured with client FC adapter.
-                    - Both the WWPN value should be separated by semicolon delimiter
-                    - Optional, if not provided the value will be auto assigned
+                    - Both the WWPN value should be separated by semicolon delimiter.
+                    - Optional, if not provided the value will be auto assigned.
                 type: str
             client_adapter_id:
                 description:
@@ -298,12 +299,13 @@ options:
         type: bool
     install_settings:
         description:
-            - Settings for installing Operating System on logical partition
+            - Settings for installing Operating System on logical partition.
+            - User expected to have NIM Server with pull install configuration.
         type: dict
         suboptions:
             vm_ip:
                 description:
-                    - IP Address to be configured to Logical Partition
+                    - IP Address to be configured to Logical Partition.
                 required: True
                 type: str
             nim_ip:
@@ -313,7 +315,7 @@ options:
                 type: str
             nim_gateway:
                 description:
-                    - logical Partition gateway IP Address.
+                    - Logical Partition gateway IP Address.
                 required: True
                 type: str
             nim_subnetmask:
@@ -329,12 +331,12 @@ options:
             nim_vlan_id:
                 description:
                     - Specifies the VLANID(0 to 4094) to use for tagging Ethernet frames during network install for virtual network communication.
-                    - Default value is 0
+                    - Default value is 0.
                 type: str
             nim_vlan_priority:
                 description:
                     - Specifies the VLAN priority (0 to 7) to use for tagging Ethernet frames during network install for virtual network communication.
-                    - Default value is 0
+                    - Default value is 0.
                 type: str
             timeout:
                 description:
@@ -344,38 +346,37 @@ options:
                 type: int
     vnic_config:
         description:
-            - Virtual NIC Configuration of the partition
+            - Virtual NIC configuration of the partition.
         type: list
         elements: dict
         suboptions:
             vnic_adapter_id:
                 description:
-                    - Virtual Nic Adapter ID to be configured while creating a partition
-                    - Default value is next available
+                    - VNIC Adapter ID to be configured while creating a partition.
+                    - Optional, if not provided, next available value will be assigned.
                 type: int
             backing_devices:
                 description:
-                    - SRIOV physical ports to be used as a backing device of VNIC
-                    - If user doesn't provide this option, by default it picks the SRIOV Physical port link status up as backing device
-                    - If there are no SRIOV Physical port with link status as up then it randomly picks physical port which has capacity more than 2.0%
+                    - SRIOV physical ports to be used as a backing device of VNIC.
+                    - If user doesn't provide this option, by default it picks the SRIOV Physical port with link status up as backing device.
+                    - If there are no SRIOV Physical port with link status as up then it randomly picks physical port which has capacity more than 2.0%.
                 type: list
                 elements: dict
                 suboptions:
                     location_code:
                         description:
-                            - SRIOV Physical port location code to be used as backing device
+                            - SRIOV Physical port location code to be used as backing device.
                             - An illustrative pattern for SRIOV physical port location code is XXXXX.XXX.XXXXXXX-P1-T1 or P1-T1.
                         required: True
                         type: str
                     capacity:
                         description:
-                            - Capacity value to be configured for vnic backing device
-                            - default value is 2.0%
+                            - Capacity value to be configured for vnic backing device. Default value is 2.0%.
                         type: float
                     hosting_partition:
                         description:
-                            - The VIOS name on which SRIOV physical port location code to be configured
-                            - by default picks a random VIOS name with RMC state as active
+                            - The VIOS name on which SRIOV physical port location code to be configured.
+                            - By default picks a random VIOS name with RMC state as active.
                         type: str
     state:
         description:
@@ -389,6 +390,7 @@ options:
             - C(shutdown) shutdown a partition of the specified I(vm_name) on specified I(system_name).
             - C(poweron) poweron a partition of the specified I(vm_name) with specified I(prof_name), I(keylock), I(iIPLsource) on specified I(system_name).
             - C(restart) restart a partition of the specified I(vm_name) on specified I(system_name).
+            - C(install_os) install Aix/Linux OS through NIM Server on specified I(vm_name).
         type: str
         choices: ['poweron', 'shutdown', 'restart', 'install_os']
 '''
