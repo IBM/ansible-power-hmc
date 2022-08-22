@@ -24,6 +24,7 @@ notes:
     - The network configuration currently will not support SRIOV configurations.
     - I(retain_vios_cfg) and I(delete_vdisks) options will only be supported from HMC release level on or above V9 R1 M930.
     - Partition creation is not supported for resource role-based user in HMC Version prior to 951.
+    - C(install_os) action doesn't support installation of IBMi OS.
 description:
     - "Creates AIX/Linux or IBMi partition with specified configuration details on mentioned system"
     - "Or Deletes specified AIX/Linux or IBMi partition on specified system"
@@ -513,17 +514,17 @@ EXAMPLES = '''
       os_type: aix_linux
       state: present
 
-- name: Install aix/Linux OS on LPAR from NIM Server
+- name: Install Aix/Linux OS on LPAR from NIM Server
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth: "{{ curr_hmc_auth }}"
       system_name: <system_name>
       vm_name: <vm_name>
       install_settings:
-              vm_ip: <IP_address of the lpar>
-              nim_ip: <IP_address of the NIM Server>
-              nim_gateway: <Gateway IP_Addres>
-              nim_subnetmask: <Subnetmask IP_Address>
+         vm_ip: <IP_address of the lpar>
+         nim_ip: <IP_address of the NIM Server>
+         nim_gateway: <Gateway IP_Addres>
+         nim_subnetmask: <Subnetmask IP_Address>
       action: install_os
 
 '''
