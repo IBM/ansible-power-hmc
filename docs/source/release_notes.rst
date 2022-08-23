@@ -125,3 +125,24 @@ Availability
 
 .. _GitHub v1.5.0:
    https://github.com/IBM/ansible-power-hmc/releases/download/v1.5.0/ibm-power_hmc-1.5.0.tar.gz
+   
+   
+Version 1.6.0
+-------------
+Notes
+  * powervm_lpar_instance: VNIC configuration support
+  * powervm_lpar_instance: Supports install of AIX and Linux partition using netboot
+  * powervm_lpar_instance: Partition ID configuration support
+  * hmc_user: User management of HMC
+  
+  Availability
+    * `Galaxy v1.6.0`_
+    * `GitHub v1.6.0`_
+
+.. _Galaxy v1.6.0:
+   https://galaxy.ansible.com/download/ibm-power_hmc-1.6.0.tar.gz
+
+.. _GitHub v1.6.0:
+   https://github.com/IBM/ansible-power-hmc/releases/download/v1.6.0/ibm-power_hmc-1.6.0.tar.gz
+   
+   
