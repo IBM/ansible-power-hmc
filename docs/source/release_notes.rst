@@ -131,6 +131,7 @@ Version 1.6.0
 -------------
 Notes
   * powervm_lpar_instance: VNIC configuration support
+  * powervm_lpar_instance: Add VNIC info into facts
   * powervm_lpar_instance: Supports install of AIX and Linux partition using netboot
   * powervm_lpar_instance: Partition ID configuration support
   * hmc_user: User management of HMC
