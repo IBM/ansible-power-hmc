@@ -49,7 +49,7 @@ class Hmc():
         return versionDict
 
     def pingTest(self, i_host):
-        pattern = re.compile(r"(\d) received")
+        pattern = re.compile(r"(\d) (packets\s)?received")
         report = ("No response", "Partial Response", "Alive")
         cmd = "ping -c 2 " + i_host.strip()
 
@@ -64,7 +64,7 @@ class Hmc():
 
             igot = re.findall(pattern, stdout_value)
             if igot:
-                result = report[int(igot[0])]
+                result = report[int(igot[0][0])]
 
         return result
 
