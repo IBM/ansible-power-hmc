@@ -578,3 +578,54 @@ class Hmc():
             res = self.getPartitionRefcode(system_name, name)
             ref_code = res['REFCODE']
         return rmcActive, conf_dict, ref_code
+
+    def accept_level(self, system_name):
+        updlic_cmd = self.CMD['UPDLIC'] +\
+            self.OPT['UPDLIC']['-M'] + system_name +\
+            self.OPT['UPDLIC']['-O']['ACCEPT']
+
+        return self.hmcconn.execute(updlic_cmd)
+
+    def update_managed_system(self, system_name, upgrade=False, repo='ibmwebsite', level='latest', remote_repo=None):
+        if upgrade:
+            update_upgrade_flags = self.OPT['UPDLIC']['-O']['UPGRADE']
+        else:
+            update_upgrade_flags = self.OPT['UPDLIC']['-O']['RETINSTACT']
+        # build command
+        updlic_cmd = self.CMD['UPDLIC'] +\
+            self.OPT['UPDLIC']['-M'] + system_name +\
+            update_upgrade_flags +\
+            self.OPT['UPDLIC']['-T']['SYS'] +\
+            self.OPT['UPDLIC']['-R'] + repo +\
+            self.OPT['UPDLIC']['-L'] + level
+        if remote_repo:
+            updlic_cmd += self.OPT['UPDLIC']['-H'] + remote_repo['hostname']
+            updlic_cmd += self.OPT['UPDLIC']['-U'] + remote_repo['userid']
+            updlic_cmd += self.OPT['UPDLIC']['-D'] + remote_repo['directory']
+            passwd = remote_repo['passwd']
+            if passwd:
+                updlic_cmd += self.OPT['UPDLIC']['--PASSWD'] + passwd
+            ssh_key = remote_repo['sshkey_file']
+            if ssh_key:
+                updlic_cmd += self.OPT['UPDLIC']['-K'] + ssh_key
+
+        self.hmcconn.execute(updlic_cmd)
+
+    def get_firmware_level(self, system_name):
+        lslic_cmd = self.CMD['LSLIC'] +\
+            self.OPT['LSLIC']['-M'] + system_name +\
+            self.OPT['LSLIC']['-F']['SPNAMELEVEL']
+        raw_result = self.hmcconn.execute(lslic_cmd)
+        headers = "service_pack,level,ecnumber"
+        res_dict = self.cmdClass.parseAttributes(headers, raw_result)
+        parsed_res = dict((k.lower(), v) for k, v in res_dict.items())
+        return parsed_res
+
+    def list_all_managed_systems(self):
+        lssysconn_cmd = self.CMD['LSSYSCONN'] +\
+            self.OPT['LSSYSCONN']['-R']['ALL'] +\
+            self.OPT['LSSYSCONN']['-F']['MTMS']
+
+        raw_result = self.hmcconn.execute(lssysconn_cmd)
+        lines = raw_result.split()
+        return lines

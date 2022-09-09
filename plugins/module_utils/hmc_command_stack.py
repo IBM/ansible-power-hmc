@@ -39,7 +39,11 @@ class HmcCommandStack():
                'LSHMCUSR': 'lshmcusr',
                'MKHMCUSR': 'mkhmcusr',
                'CHHMCUSR': 'chhmcusr',
-               'RMHMCUSR': 'rmhmcusr'}
+               'RMHMCUSR': 'rmhmcusr',
+               'UPDLIC': 'updlic',
+               'LSLIC': 'lslic',
+               'LSSYSCONN': 'lssysconn',
+               }
 
     HMC_CMD_OPT = {'LSHMC': {'-N': ' -n ',
                              '-v': ' -v ',
@@ -322,6 +326,7 @@ class HmcCommandStack():
                                   '-U': ' -u ',
                                   '--PASSWD': ' --passwd ',
                                   '--TEST': ' --test'},
+<<<<<<< HEAD
                    'LSHMCUSR': {'-T': {'DEFAULT': ' -t default ', 'USER': ' -t user '},
                                 '--FILTER': {'NAMES': 'names', 'RESOURCES': 'resources',
                                              'RESOURCEROLES': 'resourceroles', 'TASKROLES': 'taskroles',
@@ -351,6 +356,26 @@ class HmcCommandStack():
                                        'MAX_WEBUI_LOGIN_SUSPEND_TIME': 'max_webui_login_suspend_time',
                                        'MAX_WEBUI_LOGIN_ATTEMPTS': 'max_webui_login_attempts',
                                        'WEBUI_LOGIN_SUSPEND_TIME': 'webui_login_suspend_time'}},
+=======
+                   'UPDLIC': {'-M': ' -m ',
+                              '-O': {'RETINSTACT': ' -o a',
+                                     'UPGRADE': ' -o u',
+                                     'ACCEPT': ' -o c'},
+                              '-T': {'SYS': ' -t sys',
+                                     'BMC': ' -t bmc'},
+                              '-L': ' -l ',
+                              '-R': ' -r ',
+                              '-H': ' -h ',
+                              '-U': ' -u ',
+                              '--PASSWD': ' --passwd ',
+                              '-K': ' -k ',
+                              '-D': ' -d '},
+                   'LSLIC': {'-M': ' -m ',
+                             '-F': {'SPNAMELEVEL': ' -F activated_spname,activated_level,ecnumber'}},
+                   'LSSYSCONN': {'-R': {'ALL': ' -r all'},
+                                 '-F': {'MTMS': ' -F type_model_serial_num'},
+                                 },
+>>>>>>> devel
                    }
 
     def filterBuilder(self, cmdKey, configOptionsDict):
