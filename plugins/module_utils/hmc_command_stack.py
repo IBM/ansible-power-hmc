@@ -326,7 +326,6 @@ class HmcCommandStack():
                                   '-U': ' -u ',
                                   '--PASSWD': ' --passwd ',
                                   '--TEST': ' --test'},
-<<<<<<< HEAD
                    'LSHMCUSR': {'-T': {'DEFAULT': ' -t default ', 'USER': ' -t user '},
                                 '--FILTER': {'NAMES': 'names', 'RESOURCES': 'resources',
                                              'RESOURCEROLES': 'resourceroles', 'TASKROLES': 'taskroles',
@@ -356,7 +355,6 @@ class HmcCommandStack():
                                        'MAX_WEBUI_LOGIN_SUSPEND_TIME': 'max_webui_login_suspend_time',
                                        'MAX_WEBUI_LOGIN_ATTEMPTS': 'max_webui_login_attempts',
                                        'WEBUI_LOGIN_SUSPEND_TIME': 'webui_login_suspend_time'}},
-=======
                    'UPDLIC': {'-M': ' -m ',
                               '-O': {'RETINSTACT': ' -o a',
                                      'UPGRADE': ' -o u',
@@ -375,7 +373,6 @@ class HmcCommandStack():
                    'LSSYSCONN': {'-R': {'ALL': ' -r all'},
                                  '-F': {'MTMS': ' -F type_model_serial_num'},
                                  },
->>>>>>> devel
                    }
 
     def filterBuilder(self, cmdKey, configOptionsDict):
