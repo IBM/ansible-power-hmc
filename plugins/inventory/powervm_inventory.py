@@ -18,14 +18,12 @@ DOCUMENTATION = '''
     short_description: HMC-based inventory source for Power Systems
     description:
         - This plugin utilizes HMC APIs to build a dynamic inventory
-          of defined partitions (LPAR, VIOS) and Power System. Inventory sources must be structured as *.power_hmc.yml
+          of defined partitions (LPAR, VIOS) and Power Systems. Inventory sources must be structured as *.power_hmc.yml
           or *.power_hmc.yaml.
-        - To create a usable Ansible host for a given LPAR, the IP or hostname
-          of the LPAR must be exposed through the HMC in some way.
+        - To create a usable Ansible host for a given LPAR or Power Server, the IP or hostname
+          of the LPAR or Power Server must be exposed through the HMC in some way.
           Currently there are only two such sources supported by this plugin,
-          either an RMC IP address(not valid for IBMi partition) or the name of the LPAR must be also a valid hostname.
-        - To create a usable Ansible host for a given Power System,
-          the IP of the Power System must be exposed through the HMC in some way.
+          either an RMC IP address(not valid for IBMi partition) or the name of the LPAR or Pwer Server must be also a valid hostname.
         - Valid LPAR/VIOS or Power System properties that can be used for groups, keyed groups, filters(valid only for LPAR/VIOS),
           system_filters(valid only for Power System), unknown partition identification,
           and composite variables can be found in the HMC REST API documentation. By default, valid properties include those
@@ -37,7 +35,8 @@ DOCUMENTATION = '''
         - If a property is used in the inventory source that is unique to a partition type,
           only partitions for which that property is defined may be included. Non-compatible partitions can be
           filtered out by `OperatingSystemVersion` or `PartitionType` as detailed in the second example.
-        - By default, ManagedSystem group created with Power Servers hostname
+        - A group named MaagedSystems gets created with all the Power Server Managed by the HMC
+          only when group_by_managed_system option is set to false in the dynamic inventory playbook.
 
     options:
         hmc_hosts:
@@ -84,19 +83,17 @@ DOCUMENTATION = '''
             type: list
             elements: str
         ansible_display_name:
-            description: By default, partitions names will be used as the name displayed by
+            description: By default, partitions/Power Servers name will be used as the name displayed by
               Ansible in output. If you wish this to display the IP address instead you may
               set this to "ip".
-              This is not valid for Power Servers.
-            default: "lpar_name"
-            choices: [lpar_name, ip]
+            default: "name"
+            choices: [name, ip]
             type: str
         ansible_host_type:
-            description: Determines if the ip address or the LPAR name will be used as
+            description: Determines if the ip address or the LPAR/Power Server name will be used as
               the "ansible_host" variable in playbooks.
-              This is not valid for IBMi LPARs and Power Servers.
             default: "ip"
-            choices: [lpar_name, ip]
+            choices: [name, ip]
             type: str
         advanced_fields:
             description:
@@ -107,7 +104,9 @@ DOCUMENTATION = '''
             default: false
             type: bool
         group_by_managed_system:
-            description: Creates a grouping of partitions by managed system name. This is enabled by default.
+            description:
+                - Creates a grouping of partitions by managed system name. This is enabled by default.
+                - This option should be set to false to enable Power Server grouping feature.
             default: true
             type: bool
         identify_unknown_by:
@@ -115,7 +114,7 @@ DOCUMENTATION = '''
                 - Allows you to include partitions unable to be automatically detected
                   as a valid Ansible target.
                 - By default, Aix/Linux partitions without IP's and IBMi partitions in not running state are omitted from the inventory.
-                  This is not be the case in the event you have lpar_name set for ansible_host_type.
+                  This is not be the case in the event you have name set for ansible_host_type.
                   If not, omitted partitions will be added to a group called "unknown"
                   and will can be identified by any LPAR property of your choosing
                   (PartitionName or UUID are common identifiers).
@@ -224,7 +223,6 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client impo
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import HmcRestClient
 from ansible.config.manager import ensure_type
 from ansible.template import Templar
-import socket
 
 from ansible.utils.display import Display
 display = Display()
@@ -244,6 +242,10 @@ def init_logger():
 
 class LparFieldNotFoundError(Exception):
     '''Raised when a field does not exist in the LPAR data.'''
+
+
+class PowerSystemFieldNotFoundError(Exception):
+    '''Raised when a field does not exist in the Power Server data.'''
 
 
 class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
@@ -290,12 +292,12 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                             ip = self.get_ip(lpar)
                             lpar_name = self.get_lpar_name(lpar)
 
-                            if self.ansible_host_type == "lpar_name":
+                            if self.ansible_host_type == "name":
                                 hostname = lpar_name
                             else:
                                 hostname = ip
 
-                            if self.ansible_display_name == "lpar_name":
+                            if self.ansible_display_name == "name":
                                 entry_name = lpar_name
                             else:
                                 entry_name = ip
@@ -304,7 +306,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                             # cannot be added as a valid Ansible host.
                             partition_type = self.get_lpar_os_type(lpar)
 
-                            if partition_type == 'OS400' and lpar['PartitionState'] == 'running' and self.ansible_display_name == "lpar_name":
+                            if partition_type == 'OS400' and lpar['PartitionState'] == 'running' and self.ansible_display_name == "name":
                                 entry_name = self.get_lpar_name(lpar)
                                 hostname = entry_name
                             elif self.identify_unknown_by.lower() != 'omit':
@@ -337,18 +339,37 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                             continue
 
                 # Creating a group of managed systems
-                ms_hostname = socket.gethostbyaddr(system['IPAddress'])[0]
-                self.inventory.add_group('ManagedSystems')
-                self.inventory.add_host(ms_hostname, 'ManagedSystems')
-
                 del system['lpars']
                 try:
-                    self._set_composite_vars(self.compose, system, ms_hostname, strict=True)
-                    self._add_host_to_composed_groups(self.groups, system, ms_hostname, strict=True)
-                    self._add_host_to_keyed_groups(self.keyed_groups, system, ms_hostname, strict=True)
-                except Exception:
-                    logger.debug("Attribute not found in the Managed System")
+                    ms_ip = system['IPAddress']
+                    ms_name = system['SystemName']
+                    if self.ansible_host_type == "name":
+                        ms_hostname = ms_name
+                    else:
+                        ms_hostname = ms_ip
+                    if self.ansible_display_name == "name":
+                        ms_entry_name = ms_name
+                    else:
+                        ms_entry_name = ms_ip
+                except PowerSystemFieldNotFoundError:
+                    logger.debug("IPAddress or SystemName field not found in the Power Server data")
                     continue
+
+                if not self.group_by_managed_system:
+                    self.inventory.add_group('ManagedSystems')
+                    self.inventory.add_host(ms_entry_name, 'ManagedSystems')
+
+                    # Only add an ansible_host variable if it differs from the displayname in the inventory
+                    if ms_hostname != ms_entry_name:
+                        self.inventory.set_variable(ms_entry_name, "ansible_host", ms_hostname)
+
+                    try:
+                        self._set_composite_vars(self.compose, system, ms_entry_name, strict=True)
+                        self._add_host_to_composed_groups(self.groups, system, ms_entry_name, strict=True)
+                        self._add_host_to_keyed_groups(self.keyed_groups, system, ms_entry_name, strict=True)
+                    except Exception:
+                        logger.debug("Attribute not found in the Managed System")
+                        continue
         # Warn the user if the property they are using to use to identify partitions is invalid in some circumstances
         if invalid_identify_unknown_by:
             msg = ("Could not find property %s for some or all unknown partitions, as a result they will not be included." % self.identify_unknown_by)
@@ -439,8 +460,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             exclude_ip=dict(type='list', value=config.get("exclude_ip", [])),
             exclude_lpar=dict(type='list', value=config.get("exclude_lpar", [])),
             exclude_system=dict(type='list', value=config.get("exclude_system", [])),
-            ansible_display_name=dict(type='str', choices=['lpar_name', 'ip'], value=config.get("ansible_display_name", "lpar_name")),
-            ansible_host_type=dict(type='str', choices=['lpar_name', 'ip'], value=config.get("ansible_host_type", "ip")),
+            ansible_display_name=dict(type='str', choices=['name', 'ip'], value=config.get("ansible_display_name", "name")),
+            ansible_host_type=dict(type='str', choices=['name', 'ip'], value=config.get("ansible_host_type", "ip")),
             advanced_fields=dict(type='bool', value=config.get("advanced_fields", False)),
             group_by_managed_system=dict(type='bool', value=config.get("group_by_managed_system", True)),
             identify_unknown_by=dict(type='str', value=config.get("identify_unknown_by", "omit")),
