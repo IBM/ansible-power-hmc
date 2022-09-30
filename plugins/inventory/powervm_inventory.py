@@ -23,20 +23,23 @@ DOCUMENTATION = '''
         - To create a usable Ansible host for a given LPAR or Power Server, the IP or hostname
           of the LPAR or Power Server must be exposed through the HMC in some way.
           Currently there are only two such sources supported by this plugin,
-          either an RMC IP address(not valid for IBMi partition) or the name of the LPAR or Pwer Server must be also a valid hostname.
-        - Valid LPAR/VIOS or Power System properties that can be used for groups, keyed groups, filters(valid only for LPAR/VIOS),
-          system_filters(valid only for Power System), unknown partition identification,
+          either an RMC IP address(not valid for IBMi partition) or the name of the LPAR or Power Server must be also a valid hostname.
+        - Valid LPAR/VIOS properties that can be used for groups, keyed groups, filters, unknown partition identification,
           and composite variables can be found in the HMC REST API documentation. By default, valid properties include those
           listed as "Quick Properties", but if `advanced_fields` are enabled, you may be able to use more advanced properties of the
           partition. Further information about the LPAR APIs can be found in the
           L(Knowledge Center, https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/LogicalPartition.htm).
-          and Power System APIs can be found in the
-          L(Knowledge Center, https://www.ibm.com/docs/en/power9/9040-MR9?topic=apis-managed-system).
+        - Valid Power Server properties that can be used for system_groups, system_keyed_groups, system_filters
+          and system_composit variables can be found in HMC REST API documentation listed as 'Quick Properties'.
+          (These options works only when group_by_managed_system option set to false)
+          L(Knowledge Center, https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/ManagedSystem.htm).
         - If a property is used in the inventory source that is unique to a partition type,
           only partitions for which that property is defined may be included. Non-compatible partitions can be
           filtered out by `OperatingSystemVersion` or `PartitionType` as detailed in the second example.
-        - A group named MaagedSystems gets created with all the Power Server Managed by the HMC
-          only when group_by_managed_system option is set to false in the dynamic inventory playbook.
+        - A group named 'MaagedSystems' gets created with all the Power Server Managed by the HMC
+          only when group_by_managed_system option set to false in the dynamic inventory playbook.
+        - To create LPAR or Power Server groups using associated groups property 'enable_associated_group'
+          should be set to true.
 
     options:
         hmc_hosts:
@@ -53,22 +56,34 @@ DOCUMENTATION = '''
                 - A key value pair for filtering by various Power System attributes.
                   Results include only system_filter matching Power Systems and LPAR/VIOS belongs to it.
         compose:
-            description: Create vars from Jinja2 expressions.
+            description: Create vars from Jinja2 expressions(Valid only for LPAR or VIOS).
+            default: {}
+            type: dict
+        system_compose:
+            description: Create vars from Jinja2 expressions(Valid only for Power Server).
             default: {}
             type: dict
         groups:
-            description: Add hosts to group based on Jinja2 conditionals.
+            description: Add LPAR or VIOS hosts to group based on Jinja2 conditionals.
+            default: {}
+            type: dict
+        system_groups:
+            description: Add Power Server hosts to group based on Jinja2 conditionals.
             default: {}
             type: dict
         keyed_groups:
-            description: Add hosts to group based on the values of a variable.
+            description: Add LPAR or VIOS hosts to group based on the values of a variable.
+            type: list
+            elements: str
+        system_keyed_groups:
+            description: Add Power Server hosts to group based on the values of a variable.
             type: list
             elements: str
         exclude_ip:
             description: A list of IP addresses to exclude from the inventory.
-              This will be compared to the RMC IP address specified in the HMC.
+              This will be compared to the IP address specified in the HMC.
               Currently, no hostname lookup is performed, so only IP addresses
-              that match the RMC IP address specified in the HMC will be excluded.
+              that match the IP address specified in the HMC will be excluded.
               This is not valid for IBMi LPARs.
             type: list
             elements: str
@@ -77,9 +92,9 @@ DOCUMENTATION = '''
             type: list
             elements: str
         exclude_system:
-            description: A list of HMC managed systems and their partitions (LPAR, VIOS)
+            description: A list of HMC managed Power Server and their partitions (LPAR, VIOS)
               will be excluded from the dynamic inventory.
-              Works only with HMC Discovered managed system name.
+              Works only with HMC Discovered Power Server name.
             type: list
             elements: str
         ansible_display_name:
@@ -90,7 +105,7 @@ DOCUMENTATION = '''
             choices: [name, ip]
             type: str
         ansible_host_type:
-            description: Determines if the ip address or the LPAR/Power Server name will be used as
+            description: Determines if the IP Address or the LPAR/Power Server name will be used as
               the "ansible_host" variable in playbooks.
             default: "ip"
             choices: [name, ip]
@@ -125,6 +140,13 @@ DOCUMENTATION = '''
                 - This is not valid for IBMi LPARs and Power Servers.
             default: omit
             type: str
+        enable_associated_group:
+            description:
+                - Allows you to group LPAR or VIOS by 'PartitionAssociatedGroups' property and Power Server by 'SystemAssociatedGroups' property.
+                - When it is set to true groups, keyed_groups, compose works with 'PartitionAssociatedGroups' property
+                  and system_groups, system_keyed_groups, system_compose works with 'SystemAssociatedGroups' property.
+            default: false
+            type: bool
 '''
 
 EXAMPLES = '''
@@ -210,6 +232,43 @@ exclude_lpar:
 exclude_system:
     - Frame1-XXX-WWWWWW
     - Frame2-XXX-WWWWWW
+
+# Generate an inventory of operating Power Servers and group them by SystemType with a prefix of type_
+# Groups will be created will resemble "type_fsp", "type_ebmc", etc.
+# Additionally, include the following variables as host_vars for a given target host: MaximumPartitions, SystemFirmware, SystemName
+plugin: ibm.power_hmc.powervm_inventory
+hmc_hosts:
+  "hmc_host_name":
+    user: <HMC2_Username>
+    password: <HMC_Password>
+group_by_managed_system: false
+system_filters:
+    State: 'operating'
+system_keyed_groups:
+  - prefix: type
+    key: SystemType
+system_compose:
+  maximum_partitions: MaximumPartitions
+  system_firmware: SystemFirmware
+  name: SystemName
+
+# Generate an inventory of all running partitions and operation Power Servers
+# Create a seperate group for partitions tagged with associated group name 'production_lpars'
+# Create a seperate group for Power Servers tagged with associated group name 'Production_systems'
+plugin: ibm.power_hmc.powervm_inventory
+hmc_hosts:
+  "hmc_host_name":
+    user: <HMC2_Username>
+    password: <HMC_Password>
+group_by_managed_system: false
+enable_associated_group: true
+system_filters:
+    State: 'operating'
+groups:
+    ProductionLpars: "'production_lpars' in PartitionAssociatedGroups"
+system_groups:
+    ProductionSystems: "'Production_systems' in SystemAssociatedGroups"
+
 '''
 
 import xml.etree.ElementTree as ET
@@ -340,6 +399,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
                 # Creating a group of managed systems
                 del system['lpars']
+                print(system)
                 try:
                     ms_ip = system['IPAddress']
                     ms_name = system['SystemName']
@@ -364,9 +424,9 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                         self.inventory.set_variable(ms_entry_name, "ansible_host", ms_hostname)
 
                     try:
-                        self._set_composite_vars(self.compose, system, ms_entry_name, strict=True)
-                        self._add_host_to_composed_groups(self.groups, system, ms_entry_name, strict=True)
-                        self._add_host_to_keyed_groups(self.keyed_groups, system, ms_entry_name, strict=True)
+                        self._set_composite_vars(self.system_compose, system, ms_entry_name, strict=True)
+                        self._add_host_to_composed_groups(self.system_groups, system, ms_entry_name, strict=True)
+                        self._add_host_to_keyed_groups(self.system_keyed_groups, system, ms_entry_name, strict=True)
                     except Exception:
                         logger.debug("Attribute not found in the Managed System")
                         continue
@@ -386,9 +446,12 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                 rest_conn = HmcRestClient(str(hmc_host), str(self.hmc_hosts[hmc_host]["user"]), str(self.hmc_hosts[hmc_host]["password"]))
                 try:
                     managed_systems = json.loads(rest_conn.getManagedSystemsQuick())
+                    if self.enable_associated_group:
+                        associated_groups = rest_conn.fetchTaggedGroupItems()
                 except Exception:
                     logger.debug("Could not retrieve systems from %s it may not have any defined", hmc_host)
                     continue
+
                 for system in managed_systems:
                     lpars = []
                     if system.get("SystemName") not in self.exclude_system:
@@ -397,28 +460,45 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                         if self.advanced_fields:
                             try:
                                 lpar_xml = rest_conn.getLogicalPartitions(system.get("UUID"))
-                                system_lpars = self.parse_lpars_xml(lpar_xml)
-                                lpars.extend(system_lpars)
+                                if self.enable_associated_group:
+                                    system_lpars = self.parse_lpars_xml(lpar_xml, associated_groups)
+                                    lpars.extend(system_lpars)
+                                else:
+                                    system_lpars = self.parse_lpars_xml(lpar_xml)
+                                    lpars.extend(system_lpars)
                             except Exception:
                                 logger.debug("Could not retrieve LPARs from %s it may not have any defined", system.get("SystemName"))
                             try:
                                 vios_xml = rest_conn.getVirtualIOServers(system.get("UUID"))
-                                system_vios = self.parse_lpars_xml(vios_xml)
-                                lpars.extend(system_vios)
+                                if self.enable_associated_group:
+                                    system_vios = self.parse_lpars_xml(vios_xml, associated_groups)
+                                    lpars.extend(system_vios)
+                                else:
+                                    system_vios = self.parse_lpars_xml(vios_xml)
+                                    lpars.extend(system_vios)
                             except Exception:
                                 logger.debug("Could not retrieve VIOS from %s it may not have any defined", system.get("SystemName"))
                         # Call the "quick" JSON API
                         else:
                             try:
                                 system_lpars = json.loads(rest_conn.getLogicalPartitionsQuick(system.get("UUID")))
+                                if self.enable_associated_group:
+                                    for system_lpar in system_lpars:
+                                        system_lpar['PartitionAssociatedGroups'] = self.fetch_associated_groups(system_lpar['UUID'], associated_groups)
                                 lpars.extend(system_lpars)
                             except Exception:
                                 logger.debug("Could not retrieve LPARs from %s it may not have any defined", system.get("SystemName"))
                             try:
                                 system_vios = json.loads(rest_conn.getVirtualIOServersQuick(system.get("UUID")))
+                                if self.enable_associated_group:
+                                    for vios in system_vios:
+                                        vios['PartitionAssociatedGroups'] = self.fetch_associated_groups(vios['UUID'], associated_groups)
                                 lpars.extend(system_vios)
                             except Exception:
                                 logger.debug("Could not retrieve VIOS from %s it may not have any defined", system.get("SystemName"))
+
+                        if self.enable_associated_group:
+                            system['SystemAssociatedGroups'] = self.fetch_associated_groups(system['UUID'], associated_groups)
                     system["lpars"] = lpars
                     systems.append(system)
                 # Logoff HMC
@@ -437,13 +517,15 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                 continue
         return systems
 
-    def parse_lpars_xml(self, xml):
+    def parse_lpars_xml(self, xml, associated_groups={}):
         root = ET.fromstring(xml)
         feed = next(root.iter())
         entries = feed.findall("{http://www.w3.org/2005/Atom}entry")
         lpars = []
         for entry in entries:
             lpar = self.get_tag_text(entry)
+            if associated_groups:
+                lpar['PartitionAssociatedGroups'] = self.fetch_associated_groups(lpar['id'], associated_groups)
             lpars.append(lpar)
         return lpars
 
@@ -455,8 +537,11 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             filters=dict(type='dict', value=config.get("filters", {})),
             system_filters=dict(type='dict', value=config.get("system_filters", {})),
             keyed_groups=dict(type='list', value=config.get("keyed_groups", [])),
+            system_keyed_groups=dict(type='list', value=config.get("system_keyed_groups", [])),
             groups=dict(type='dict', value=config.get("groups", {})),
+            system_groups=dict(type='dict', value=config.get("system_groups", {})),
             compose=dict(type='dict', value=config.get("compose", {})),
+            system_compose=dict(type='dict', value=config.get("system_compose", {})),
             exclude_ip=dict(type='list', value=config.get("exclude_ip", [])),
             exclude_lpar=dict(type='list', value=config.get("exclude_lpar", [])),
             exclude_system=dict(type='list', value=config.get("exclude_system", [])),
@@ -465,6 +550,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             advanced_fields=dict(type='bool', value=config.get("advanced_fields", False)),
             group_by_managed_system=dict(type='bool', value=config.get("group_by_managed_system", True)),
             identify_unknown_by=dict(type='str', value=config.get("identify_unknown_by", "omit")),
+            enable_associated_group=dict(type='bool', value=config.get("enable_associated_group", False))
         )
 
         self.validate_and_set_args(args)
@@ -569,3 +655,10 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         if self.matches_ms_filters(ms) and not self.is_ms_excluded(ms):
             return True
         return False
+
+    def fetch_associated_groups(self, id, tagged_groups):
+        grps = []
+        for group_name, group_ele in tagged_groups.items():
+            if id in group_ele:
+                grps.append(group_name)
+        return grps
