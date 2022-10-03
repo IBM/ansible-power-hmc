@@ -1407,26 +1407,27 @@ class HmcRestClient:
     def fetchTaggedGroupItems(self):
         url = "https://{0}/rest/api/uom/Group".format(self.hmc_ip)
         resp_dom = self.generic_get(url)
-        group_dom_list = resp_dom.xpath("//Group")
         resp_dict = {}
-        for group_dom_raw in group_dom_list:
-            uuid_list = []
-            group_dom = etree.ElementTree(group_dom_raw)
-            group_name = group_dom.xpath("//GroupName")[0].text
-            assc_lpar_links = group_dom.xpath("//AssociatedLogicalPartitions//link")
-            assc_ms_links = group_dom.xpath("//AssociatedManagedSystems//link")
-            assc_vios_links = group_dom.xpath("//AssociatedVirtualIOServers//link")
-            for assc_raw_lpar in assc_lpar_links:
-                assc_lpar = etree.ElementTree(assc_raw_lpar)
-                lpar_uuid = (assc_lpar.xpath('./@href')[0]).split('/')[-1]
-                uuid_list.append(lpar_uuid)
-            for assc_raw_ms in assc_ms_links:
-                assc_ms = etree.ElementTree(assc_raw_ms)
-                ms_uuid = (assc_ms.xpath('./@href')[0]).split('/')[-1]
-                uuid_list.append(ms_uuid)
-            for assc_raw_vios in assc_vios_links:
-                assc_vios = etree.ElementTree(assc_raw_vios)
-                vios_uuid = (assc_vios.xpath('./@href')[0]).split('/')[-1]
-                uuid_list.append(vios_uuid)
-            resp_dict[group_name] = uuid_list
+        if resp_dom is not None:
+            group_dom_list = resp_dom.xpath("//Group")
+            for group_dom_raw in group_dom_list:
+                uuid_list = []
+                group_dom = etree.ElementTree(group_dom_raw)
+                group_name = group_dom.xpath("//GroupName")[0].text
+                assc_lpar_links = group_dom.xpath("//AssociatedLogicalPartitions//link")
+                assc_ms_links = group_dom.xpath("//AssociatedManagedSystems//link")
+                assc_vios_links = group_dom.xpath("//AssociatedVirtualIOServers//link")
+                for assc_raw_lpar in assc_lpar_links:
+                    assc_lpar = etree.ElementTree(assc_raw_lpar)
+                    lpar_uuid = (assc_lpar.xpath('./@href')[0]).split('/')[-1]
+                    uuid_list.append(lpar_uuid)
+                for assc_raw_ms in assc_ms_links:
+                    assc_ms = etree.ElementTree(assc_raw_ms)
+                    ms_uuid = (assc_ms.xpath('./@href')[0]).split('/')[-1]
+                    uuid_list.append(ms_uuid)
+                for assc_raw_vios in assc_vios_links:
+                    assc_vios = etree.ElementTree(assc_raw_vios)
+                    vios_uuid = (assc_vios.xpath('./@href')[0]).split('/')[-1]
+                    uuid_list.append(vios_uuid)
+                resp_dict[group_name] = uuid_list
         return resp_dict

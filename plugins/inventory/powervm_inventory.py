@@ -38,8 +38,6 @@ DOCUMENTATION = '''
           filtered out by `OperatingSystemVersion` or `PartitionType` as detailed in the second example.
         - A group named 'MaagedSystems' gets created with all the Power Server Managed by the HMC
           only when group_by_managed_system option set to false in the dynamic inventory playbook.
-        - To create LPAR or Power Server groups using associated groups property 'enable_associated_group'
-          should be set to true.
 
     options:
         hmc_hosts:
@@ -140,13 +138,6 @@ DOCUMENTATION = '''
                 - This is not valid for IBMi LPARs and Power Servers.
             default: omit
             type: str
-        enable_associated_group:
-            description:
-                - Allows you to group LPAR or VIOS by 'PartitionAssociatedGroups' property and Power Server by 'SystemAssociatedGroups' property.
-                - When it is set to true groups, keyed_groups, compose works with 'PartitionAssociatedGroups' property
-                  and system_groups, system_keyed_groups, system_compose works with 'SystemAssociatedGroups' property.
-            default: false
-            type: bool
 '''
 
 EXAMPLES = '''
@@ -261,13 +252,12 @@ hmc_hosts:
     user: <HMC2_Username>
     password: <HMC_Password>
 group_by_managed_system: false
-enable_associated_group: true
 system_filters:
     State: 'operating'
 groups:
-    ProductionLpars: "'production_lpars' in PartitionAssociatedGroups"
+    ProductionLpars: "'production_lpars' in AssociatedGroups"
 system_groups:
-    ProductionSystems: "'Production_systems' in SystemAssociatedGroups"
+    ProductionSystems: "'Production_systems' in AssociatedGroups"
 
 '''
 
@@ -399,7 +389,6 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
                 # Creating a group of managed systems
                 del system['lpars']
-                print(system)
                 try:
                     ms_ip = system['IPAddress']
                     ms_name = system['SystemName']
@@ -446,8 +435,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                 rest_conn = HmcRestClient(str(hmc_host), str(self.hmc_hosts[hmc_host]["user"]), str(self.hmc_hosts[hmc_host]["password"]))
                 try:
                     managed_systems = json.loads(rest_conn.getManagedSystemsQuick())
-                    if self.enable_associated_group:
-                        associated_groups = rest_conn.fetchTaggedGroupItems()
+                    associated_groups = rest_conn.fetchTaggedGroupItems()
                 except Exception:
                     logger.debug("Could not retrieve systems from %s it may not have any defined", hmc_host)
                     continue
@@ -460,45 +448,33 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                         if self.advanced_fields:
                             try:
                                 lpar_xml = rest_conn.getLogicalPartitions(system.get("UUID"))
-                                if self.enable_associated_group:
-                                    system_lpars = self.parse_lpars_xml(lpar_xml, associated_groups)
-                                    lpars.extend(system_lpars)
-                                else:
-                                    system_lpars = self.parse_lpars_xml(lpar_xml)
-                                    lpars.extend(system_lpars)
+                                system_lpars = self.parse_lpars_xml(lpar_xml, associated_groups)
+                                lpars.extend(system_lpars)
                             except Exception:
                                 logger.debug("Could not retrieve LPARs from %s it may not have any defined", system.get("SystemName"))
                             try:
                                 vios_xml = rest_conn.getVirtualIOServers(system.get("UUID"))
-                                if self.enable_associated_group:
-                                    system_vios = self.parse_lpars_xml(vios_xml, associated_groups)
-                                    lpars.extend(system_vios)
-                                else:
-                                    system_vios = self.parse_lpars_xml(vios_xml)
-                                    lpars.extend(system_vios)
+                                system_vios = self.parse_lpars_xml(vios_xml, associated_groups)
+                                lpars.extend(system_vios)
                             except Exception:
                                 logger.debug("Could not retrieve VIOS from %s it may not have any defined", system.get("SystemName"))
                         # Call the "quick" JSON API
                         else:
                             try:
                                 system_lpars = json.loads(rest_conn.getLogicalPartitionsQuick(system.get("UUID")))
-                                if self.enable_associated_group:
-                                    for system_lpar in system_lpars:
-                                        system_lpar['PartitionAssociatedGroups'] = self.fetch_associated_groups(system_lpar['UUID'], associated_groups)
+                                for system_lpar in system_lpars:
+                                    system_lpar['AssociatedGroups'] = self.fetch_associated_groups(system_lpar['UUID'], associated_groups)
                                 lpars.extend(system_lpars)
                             except Exception:
                                 logger.debug("Could not retrieve LPARs from %s it may not have any defined", system.get("SystemName"))
                             try:
                                 system_vios = json.loads(rest_conn.getVirtualIOServersQuick(system.get("UUID")))
-                                if self.enable_associated_group:
-                                    for vios in system_vios:
-                                        vios['PartitionAssociatedGroups'] = self.fetch_associated_groups(vios['UUID'], associated_groups)
+                                for vios in system_vios:
+                                    vios['AssociatedGroups'] = self.fetch_associated_groups(vios['UUID'], associated_groups)
                                 lpars.extend(system_vios)
                             except Exception:
                                 logger.debug("Could not retrieve VIOS from %s it may not have any defined", system.get("SystemName"))
-
-                        if self.enable_associated_group:
-                            system['SystemAssociatedGroups'] = self.fetch_associated_groups(system['UUID'], associated_groups)
+                        system['AssociatedGroups'] = self.fetch_associated_groups(system['UUID'], associated_groups)
                     system["lpars"] = lpars
                     systems.append(system)
                 # Logoff HMC
@@ -525,7 +501,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         for entry in entries:
             lpar = self.get_tag_text(entry)
             if associated_groups:
-                lpar['PartitionAssociatedGroups'] = self.fetch_associated_groups(lpar['id'], associated_groups)
+                lpar['AssociatedGroups'] = self.fetch_associated_groups(lpar['id'], associated_groups)
             lpars.append(lpar)
         return lpars
 
@@ -550,7 +526,6 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             advanced_fields=dict(type='bool', value=config.get("advanced_fields", False)),
             group_by_managed_system=dict(type='bool', value=config.get("group_by_managed_system", True)),
             identify_unknown_by=dict(type='str', value=config.get("identify_unknown_by", "omit")),
-            enable_associated_group=dict(type='bool', value=config.get("enable_associated_group", False))
         )
 
         self.validate_and_set_args(args)
