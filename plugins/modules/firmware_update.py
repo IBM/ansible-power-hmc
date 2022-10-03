@@ -145,6 +145,7 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_resource import Hmc
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
 
 import logging
 LOG_FILENAME = "/tmp/ansible_power_hmc.log"
@@ -191,7 +192,10 @@ def update_system(module, params):
     except HmcError as on_system_error:
         return False, None, repr(on_system_error)
 
-    changed = True
+    if (initial_level == new_level):
+        changed = False
+    else:
+        changed = True
     ret_dict['diff'] = {'before': initial_level,
                         'after': new_level,
                         }
@@ -212,7 +216,10 @@ def upgrade_system(module, params):
     except HmcError as on_system_error:
         return False, None, repr(on_system_error)
 
-    changed = True
+    if (initial_level == new_level):
+        changed = False
+    else:
+        changed = True
     ret_dict['diff'] = {'before': initial_level,
                         'after': new_level,
                         }
@@ -243,10 +250,21 @@ def perform_task(module):
     if params['action'] is None:
         oper = 'state'
     try:
+        validate_parameters(params)
         return actions[params[oper]](module, params)
     except Exception as error:
-        return False, repr(error), None
+        return False, None, repr(error)
 
+def validate_parameters(params):
+    remote_repo = params['remote_repo']
+    if remote_repo:
+        passwd = remote_repo['passwd']
+        sshkey = remote_repo['sshkey_file']
+        if passwd and sshkey:
+            raise ParameterError("Parameters: 'passwd' and 'sskey_file' are  mutually exclusive")
+        repository = params['repository']
+        if repository == 'ftp' and sshkey != None:
+            raise ParameterError("Parameters: 'repository:ftp' and 'sshkey_file' are  incompatible")
 
 def run_module():
     module_args = dict(
