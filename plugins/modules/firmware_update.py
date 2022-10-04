@@ -255,6 +255,7 @@ def perform_task(module):
     except Exception as error:
         return False, None, repr(error)
 
+
 def validate_parameters(params):
     remote_repo = params['remote_repo']
     if remote_repo:
@@ -263,8 +264,9 @@ def validate_parameters(params):
         if passwd and sshkey:
             raise ParameterError("Parameters: 'passwd' and 'sskey_file' are  mutually exclusive")
         repository = params['repository']
-        if repository == 'ftp' and sshkey != None:
+        if repository == 'ftp' and sshkey is not None:
             raise ParameterError("Parameters: 'repository:ftp' and 'sshkey_file' are  incompatible")
+
 
 def run_module():
     module_args = dict(
