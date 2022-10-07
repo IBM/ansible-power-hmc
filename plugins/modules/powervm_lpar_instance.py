@@ -1440,7 +1440,7 @@ def install_aix_os(module, params):
         if location_code:
             hmc.installOSFromNIM(location_code, nim_ip, nim_gateway, vm_ip, nim_vlan_id, nim_vlan_priority, nim_subnetmask, vm_name, profile_name, system_name)
         else:
-            dvcdictlt = hmc.fetchIODetailsForNetboot(nim_ip, nim_gateway, vm_ip, vm_name, profile_name, system_name)
+            dvcdictlt = hmc.fetchIODetailsForNetboot(nim_ip, nim_gateway, vm_ip, vm_name, profile_name, system_name, nim_subnetmask)
             for dvcdict in dvcdictlt:
                 if dvcdict['Ping Result'] == 'successful':
                     location_code = dvcdict['Location Code']

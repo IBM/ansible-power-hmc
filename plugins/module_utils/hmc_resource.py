@@ -461,7 +461,7 @@ class Hmc():
 
         return res
 
-    def fetchIODetailsForNetboot(self, nimIP, gateway, lparIP, viosName, profName, systemName):
+    def fetchIODetailsForNetboot(self, nimIP, gateway, lparIP, viosName, profName, systemName, submask):
         lpar_netboot = self.CMD['LPAR_NETBOOT'] +\
             self.OPT['LPAR_NETBOOT']['-A'] +\
             self.OPT['LPAR_NETBOOT']['-M'] +\
@@ -471,6 +471,7 @@ class Hmc():
             self.OPT['LPAR_NETBOOT']['-S'] + nimIP +\
             self.OPT['LPAR_NETBOOT']['-G'] + gateway +\
             self.OPT['LPAR_NETBOOT']['-C'] + lparIP +\
+            self.OPT['LPAR_NETBOOT']['-K'] + submask +\
             " " + viosName + " " + profName + " " + systemName
         result = self.hmcconn.execute(lpar_netboot)
         return self._parseIODetailsFromNetboot(result)
