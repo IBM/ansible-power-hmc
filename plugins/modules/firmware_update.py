@@ -214,7 +214,13 @@ def upgrade_system(module, params):
         logger.debug("new_level: %s", new_level)
         ret_dict.update(new_level)
     except HmcError as on_system_error:
-        return False, None, repr(on_system_error)
+        error_text = repr(on_system_error)
+        # HmcAnsible owners suggested to report this as a success since it's due to set up failure
+        no_update_avail_snippet = "No updates available"
+        changed = False
+        if no_update_avail_snippet in error_text.lower():
+            changed = True
+        return changed, None, error_text
 
     if (initial_level == new_level):
         changed = False
@@ -266,6 +272,8 @@ def validate_parameters(params):
         repository = params['repository']
         if repository == 'ftp' and sshkey is not None:
             raise ParameterError("Parameters: 'repository:ftp' and 'sshkey_file' are  incompatible")
+        if repository == 'ibmwebsite':
+            raise ParameterError("Value 'ibmwebsite' is incompatible with any 'remote_repo' arguments")
 
 
 def run_module():
