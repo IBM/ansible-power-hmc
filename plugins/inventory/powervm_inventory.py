@@ -15,10 +15,10 @@ DOCUMENTATION = '''
     version_added: "1.2.0"
     requirements:
         - Python >= 3
-    short_description: HMC-based inventory source for Power Systems
+    short_description: HMC-based inventory source for Power Servers
     description:
         - This plugin utilizes HMC APIs to build a dynamic inventory
-          of defined partitions (LPAR, VIOS) and Power Systems. Inventory sources must be structured as *.power_hmc.yml
+          of defined partitions (LPAR, VIOS) and Power Servers. Inventory sources must be structured as *.power_hmc.yml
           or *.power_hmc.yaml.
         - To create a usable Ansible host for a given LPAR or Power Server, the IP or hostname
           of the LPAR or Power Server must be exposed through the HMC in some way.
@@ -31,13 +31,13 @@ DOCUMENTATION = '''
           L(Knowledge Center, https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/LogicalPartition.htm).
         - Valid Power Server properties that can be used for system_groups, system_keyed_groups, system_filters
           and system_composit variables can be found in HMC REST API documentation listed as 'Quick Properties'.
-          (These options works only when group_by_managed_system option set to false)
+          (These options works only when group_lpars_by_managed_system option set to false)
           L(Knowledge Center, https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/ManagedSystem.htm).
         - If a property is used in the inventory source that is unique to a partition type,
           only partitions for which that property is defined may be included. Non-compatible partitions can be
           filtered out by `OperatingSystemVersion` or `PartitionType` as detailed in the second example.
         - A group named 'MaagedSystems' gets created with all the Power Server Managed by the HMC
-          only when group_by_managed_system option set to false in the dynamic inventory playbook.
+          only when group_lpars_by_managed_system option set to false in the dynamic inventory playbook.
 
     options:
         hmc_hosts:
@@ -51,8 +51,8 @@ DOCUMENTATION = '''
             default: {}
         system_filters:
             description:
-                - A key value pair for filtering by various Power System attributes.
-                  Results include only system_filter matching Power Systems and LPAR/VIOS belongs to it.
+                - A key value pair for filtering by various Power Server attributes.
+                  Results include only system_filter matching Power Servers and LPAR/VIOS belongs to it.
         compose:
             description: Create vars from Jinja2 expressions(Valid only for LPAR or VIOS).
             default: {}
@@ -116,7 +116,7 @@ DOCUMENTATION = '''
                   depending on the size of your environment and the properties to be fetched.
             default: false
             type: bool
-        group_by_managed_system:
+        group_lpars_by_managed_system:
             description:
                 - Creates a grouping of partitions by managed system name. This is enabled by default.
                 - This option should be set to false to enable Power Server grouping feature.
@@ -232,7 +232,7 @@ hmc_hosts:
   "hmc_host_name":
     user: <HMC2_Username>
     password: <HMC_Password>
-group_by_managed_system: false
+group_lpars_by_managed_system: false
 system_filters:
     State: 'operating'
 system_keyed_groups:
@@ -251,7 +251,7 @@ hmc_hosts:
   "hmc_host_name":
     user: <HMC2_Username>
     password: <HMC_Password>
-group_by_managed_system: false
+group_lpars_by_managed_system: false
 system_filters:
     State: 'operating'
 groups:
@@ -370,7 +370,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                                 continue
 
                         # A valid IP address was found for this LPAR
-                        if self.group_by_managed_system:
+                        if self.group_lpars_by_managed_system:
                             self.inventory.add_group(system['SystemName'])
                             self.inventory.add_host(entry_name, system['SystemName'])
                         else:
@@ -404,7 +404,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                     logger.debug("IPAddress or SystemName field not found in the Power Server data")
                     continue
 
-                if not self.group_by_managed_system:
+                if not self.group_lpars_by_managed_system:
                     self.inventory.add_group('ManagedSystems')
                     self.inventory.add_host(ms_entry_name, 'ManagedSystems')
 
@@ -493,7 +493,9 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                 continue
         return systems
 
-    def parse_lpars_xml(self, xml, associated_groups={}):
+    def parse_lpars_xml(self, xml, associated_groups=None):
+        if associated_groups is None:
+            associated_groups = {}
         root = ET.fromstring(xml)
         feed = next(root.iter())
         entries = feed.findall("{http://www.w3.org/2005/Atom}entry")
@@ -524,7 +526,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             ansible_display_name=dict(type='str', choices=['name', 'ip'], value=config.get("ansible_display_name", "name")),
             ansible_host_type=dict(type='str', choices=['name', 'ip'], value=config.get("ansible_host_type", "ip")),
             advanced_fields=dict(type='bool', value=config.get("advanced_fields", False)),
-            group_by_managed_system=dict(type='bool', value=config.get("group_by_managed_system", True)),
+            group_lpars_by_managed_system=dict(type='bool', value=config.get("group_lpars_by_managed_system", True)),
             identify_unknown_by=dict(type='str', value=config.get("identify_unknown_by", "omit")),
         )
 
