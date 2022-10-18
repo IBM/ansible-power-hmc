@@ -342,7 +342,7 @@ def installVios(module, params):
         if location_code:
             hmc.installOSFromNIM(location_code, nim_IP, nim_gateway, vios_IP, nim_vlan_id, nim_vlan_priority, nim_subnetmask, name, prof_name, system_name)
         else:
-            dvcdictlt = hmc.fetchIODetailsForNetboot(nim_IP, nim_gateway, vios_IP, name, prof_name, system_name)
+            dvcdictlt = hmc.fetchIODetailsForNetboot(nim_IP, nim_gateway, vios_IP, name, prof_name, system_name, nim_subnetmask)
             for dvcdict in dvcdictlt:
                 if dvcdict['Ping Result'] == 'successful':
                     location_code = dvcdict['Location Code']
@@ -452,7 +452,7 @@ def run_module():
 
     if sys.version_info < (3, 0):
         py_ver = sys.version_info[0]
-        module.fail_json("Unsupported Python version {0}, supported python version is 3 and above".format(py_ver))
+        module.fail_json(msg="Unsupported Python version {0}, supported python version is 3 and above".format(py_ver))
 
     changed, info, warning = perform_task(module)
 
