@@ -377,7 +377,7 @@ class HmcCommandStack():
                                  },
                    'LSHMCLDAP': {'-R': {'CONFIG': ' -r config',
                                         'USER': ' -r user'},
-                                 '--FILTER': {'NAMES':' names'}
+                                 '--FILTER': {'NAMES': ' names'}
                                  },
                    'CHHMCLDAP': {'-O': {'S': ' -o s',
                                         'R': ' -o r'},
@@ -399,7 +399,7 @@ class HmcCommandStack():
                                  'STARTTLS': {'0': ' --starttls 0',
                                               '1': '--starttls 1'},
                                  'AUTH': {'LDAP': '--auth ldap',
-                                            'KERBEROS': '--auth kerberos'},
+                                          'KERBEROS': '--auth kerberos'},
                                  'TIMELIMIT': ' --timelimit',
                                  'BINDTIMELIMIT': ' --bindtimelimit',
                                  'LOGINATTRIBUTE': ' --loginattribute',
@@ -407,18 +407,18 @@ class HmcCommandStack():
                                  'HMCAUTHATTRIBUTE': ' --hmcauthnameattribute',
                                  'SEARCHFILTER': ' --searchfilter',
                                  'SCOPE': {'ONE': ' --scope one',
-                                             'SUB': ' --scope sub'},
+                                           'SUB': ' --scope sub'},
                                  'REFERRALS': {'1': '--referrals 1',
                                                '0': '--referrals 0'},
                                  'HMCGROUPS': ' --hmcgroups',
                                  'AUTHSEARCH': {'BASE': ' --authsearch base',
-                                                  'NONE': ' --authsearch none'},
+                                                'NONE': ' --authsearch none'},
                                  'TLSREQCERT': {'NEVER': ' --tlsreqcert never',
-                                                  'ALLOW': ' --tlsreqcert allow',
-                                                  'TRY': ' --tlsreqcert try',
-                                                  'DEMAND': ' --tlsreqcert demand'},
+                                                'ALLOW': ' --tlsreqcert allow',
+                                                'TRY': ' --tlsreqcert try',
+                                                'DEMAND': ' --tlsreqcert demand'},
                                  'GROUPATTRIBUTE': ' --groupattribute',
-                                 'MEMBERATTRIBUTE': ' --memberattribute' 
+                                 'MEMBERATTRIBUTE': ' --memberattribute'
                                  },
                    }
 

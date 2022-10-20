@@ -218,7 +218,7 @@ def upgrade_system(module, params):
         # HmcAnsible owners suggested to report this as a success since it's due to set up failure
         no_update_avail_snippet = "No updates available"
         changed = False
-        if no_update_avail_snippet in error_text.lower():
+        if no_update_avail_snippet.lower() in error_text.lower():
             changed = True
         return changed, None, error_text
 
@@ -268,10 +268,10 @@ def validate_parameters(params):
         passwd = remote_repo['passwd']
         sshkey = remote_repo['sshkey_file']
         if passwd and sshkey:
-            raise ParameterError("Parameters: 'passwd' and 'sskey_file' are  mutually exclusive")
+            raise ParameterError("'passwd' and 'sskey_file' are  mutually exclusive")
         repository = params['repository']
         if repository == 'ftp' and sshkey is not None:
-            raise ParameterError("Parameters: 'repository:ftp' and 'sshkey_file' are  incompatible")
+            raise ParameterError("'repository:ftp' and 'sshkey_file' are  incompatible")
         if repository == 'ibmwebsite':
             raise ParameterError("Value 'ibmwebsite' is incompatible with any 'remote_repo' arguments")
 

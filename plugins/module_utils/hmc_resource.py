@@ -630,7 +630,7 @@ class Hmc():
         raw_result = self.hmcconn.execute(lssysconn_cmd)
         lines = raw_result.split()
         return lines
-    
+
     def list_HMC_LDAP(self, resource, filt=None):
         lshmcldap_cmd = self.CMD['LSHMCLDAP'] +\
             self.OPT['LSHMCLDAP']['-R'][resource.upper()]

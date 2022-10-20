@@ -4,7 +4,6 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-import resource
 __metaclass__ = type
 ANSIBLE_METADATA = {
     'metadata_version': '1.1',
@@ -194,13 +193,13 @@ options:
                 description:
                     - Use this option to indicate whether the HMC should automatically manage remotely authenticated LDAP  users.
                     - Valid values are 0 to disable automatic management, or 1 to enable automatic management.
-                type: str        
+                type: str
                 choices: ['1', '0']),
             auth:
                 description:
                     - The type of authentication to use for automatically managed LDAP users.  Valid values are ldap to use  LDAP
-                      authentication, or kerberos to use Kerberos authentication.   
-                type: str            
+                      authentication, or kerberos to use Kerberos authentication.
+                type: str
                 choices: ['ldap','kerberos']
             loginattribute:
                 description:
@@ -221,7 +220,7 @@ options:
             scope:
                 description:
                     -  The search scope starting from base DN.
-                type: str            
+                type: str
                 choices: ['one','sub']),
             referrals:
                 description:
@@ -231,7 +230,7 @@ options:
             starttls:
                 description:
                     - Specifies whether Start Transport Layer Security (TLS) is to be enabled or disabled.
-                type: str            
+                type: str
                 choices: ['0','1']),
             hmcgroups:
                 description:
@@ -246,7 +245,7 @@ options:
             tlsreqcert:
                 description:
                     - Specifies  what  checks to perform on a server-supplied certificate.
-                type: str            
+                type: str
                 choices: ['never', 'allow', 'try', 'demand']),
             groupattribute:
                 description:
@@ -724,9 +723,10 @@ def ldap_facts(module, params):
     try:
         ldap_details = hmc.list_HMC_LDAP(resource, filter_d)
     except HmcError as error:
-            logger.debug(repr(error))
-            return False, None, None
+        logger.debug(repr(error))
+        return False, None, None
     return False, ldap_details, None
+
 
 def configure_ldap(module, params):
     hmc_host = params['hmc_host']
@@ -745,9 +745,10 @@ def configure_ldap(module, params):
         ldap_details = hmc.list_HMC_LDAP("config")
         changed = True
     except HmcError as error:
-            logger.debug(repr(error))
-            return changed, None, None
+        logger.debug(repr(error))
+        return changed, None, None
     return changed, ldap_details, None
+
 
 def remove_ldap_config(module, params):
     hmc_host = params['hmc_host']
@@ -765,9 +766,9 @@ def remove_ldap_config(module, params):
         ldap_details = hmc.list_HMC_LDAP("config")
         changed = True
     except HmcError as error:
-            logger.debug(repr(error))
-            return changed, None, None
-    return changed, ldap_details, None        
+        logger.debug(repr(error))
+        return changed, None, None
+    return changed, ldap_details, None
 
 
 def perform_task(module):
@@ -813,7 +814,7 @@ def run_module():
         state=dict(type='str',
                    choices=['facts', 'present', 'absent', 'updated', 'ldap_facts']),
         action=dict(type='str',
-                    choices=['configure_ldap', 'remove_ldap_config']),         
+                    choices=['configure_ldap', 'remove_ldap_config']),
         attributes=dict(type='dict',
                         options=dict(
                             new_name=dict(type='str'),
@@ -839,29 +840,30 @@ def run_module():
                         )
                         ),
         ldap_settings=dict(type='dict',
-                            options=dict(
-                                primary=dict(type='str'),
-                                backup=dict(type='str'),
-                                basedn=dict(type='str'),
-                                binddn=dict(type='str'),
-                                bindpw=dict(type='str', no_log=True),
-                                timelimit=dict(type='str'),
-                                bindtimelimit=dict(type='str'),
-                                automanage=dict(type='str', choices=['1', '0']),
-                                auth=dict(type='str', choices=['ldap','kerberos']),
-                                loginattribute=dict(type='str'),
-                                hmcuserpropsattribute=dict(type='str'),
-                                hmcauthnameattribute=dict(type='str'),
-                                searchfilter=dict(type='str'),
-                                scope=dict(type='str', choices=['one','sub']),
-                                referrals=dict(type='str', choices=['0','1']),
-                                starttls=dict(type='str', choices=['0','1']),
-                                hmcgroups=dict(type='str'),
-                                authsearch=dict(type='str', choices=['base', 'none']),
-                                tlsreqcert=dict(type='str', choices=['never', 'allow', 'try', 'demand']),
-                                groupattribute=dict(type='str'),
-                                memberattribute=dict(type='str')
-                            )),
+                           options=dict(
+                               primary=dict(type='str'),
+                               backup=dict(type='str'),
+                               basedn=dict(type='str'),
+                               binddn=dict(type='str'),
+                               bindpw=dict(type='str', no_log=True),
+                               timelimit=dict(type='str'),
+                               bindtimelimit=dict(type='str'),
+                               automanage=dict(type='str', choices=['1', '0']),
+                               auth=dict(type='str', choices=['ldap', 'kerberos']),
+                               loginattribute=dict(type='str'),
+                               hmcuserpropsattribute=dict(type='str'),
+                               hmcauthnameattribute=dict(type='str'),
+                               searchfilter=dict(type='str'),
+                               scope=dict(type='str', choices=['one', 'sub']),
+                               referrals=dict(type='str', choices=['0', '1']),
+                               starttls=dict(type='str', choices=['0', '1']),
+                               hmcgroups=dict(type='str'),
+                               authsearch=dict(type='str', choices=['base', 'none']),
+                               tlsreqcert=dict(type='str', choices=['never', 'allow', 'try', 'demand']),
+                               groupattribute=dict(type='str'),
+                               memberattribute=dict(type='str')
+                           )
+                           ),
         resource=dict(type='str', choices=['config', 'user']),
         ldap_resource=dict(type='str', choices=['backup', 'ldap', 'binddn', 'bindpw', 'searchfilter', 'hmcgroups', 'groupmemberattributes']),
     )
