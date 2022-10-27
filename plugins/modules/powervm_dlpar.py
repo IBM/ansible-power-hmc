@@ -13,7 +13,7 @@ ANSIBLE_METADATA = {
 
 DOCUMENTATION = '''
 ---
-module: powervm_dlpar 
+module: powervm_dlpar
 author:
     - Anil Vijayan(@AnilVijayan)
 short_description: Dynamically managing resources of partition
@@ -72,7 +72,7 @@ options:
                 description:
                     - The sharing mode of the partition
                     - Valid values for partitions using dedicated processors are
-                      C(keep_idle_procs), C(share_idle_procs), C(share_idle_procs_active), C(share_idle_procs_always) 
+                      C(keep_idle_procs), C(share_idle_procs), C(share_idle_procs_active), C(share_idle_procs_always)
                     - Valid values for partitions using shared processors are
                       C(capped), C(uncapped)
                 type: str
@@ -155,13 +155,14 @@ def init_logger():
         format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
         level=logging.DEBUG)
 
+
 def fetch_facts(rest_conn, partition_dom):
     proc = None
     proc_unit = None
     uncapped_weight = None
     pool_id = None
-    isDedicated = rest_conn.isDedicatedProcConfig(partition_dom)
 
+    isDedicated = rest_conn.isDedicatedProcConfig(partition_dom)
     sharingMode = rest_conn.getProcSharingMode(partition_dom)
 
     if isDedicated:
@@ -174,7 +175,7 @@ def fetch_facts(rest_conn, partition_dom):
         pool_id = rest_conn.getProcPool(partition_dom)
 
     mem = partition_dom.xpath("//CurrentMemory")[0].text
-    powervm_name = partition_dom.xpath("//PartitionName")[0].text 
+    powervm_name = partition_dom.xpath("//PartitionName")[0].text
     facts = {
         'proc': proc,
         'sharing_mode': sharingMode,
@@ -242,7 +243,7 @@ def update_proc_mem(module, params):
         module.fail_json(msg="Given system is not present")
 
     try:
-        partition_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, vm_name)
+        partition_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, partition_name=vm_name)
     except Exception as error:
         try:
             rest_conn.logoff()
@@ -250,53 +251,54 @@ def update_proc_mem(module, params):
             logger.debug("Logoff error")
         error_msg = parse_error_response(error)
         module.fail_json(msg=error_msg)
-    if partition_uuid == None:
+    if partition_uuid is None:
         module.fail_json(msg="Given powervm instance is not present")
 
     isDedicated = rest_conn.isDedicatedProcConfig(partition_dom)
-    if proc or proc_unit:
-        if isDedicated and proc_unit != None:
-            raise ParameterError("Given parition is in dedicated configuration.\
- Setting proc units is not supported")
+    if isDedicated and proc_unit is not None:
+        raise ParameterError("Given parition is in dedicated configuration.\
+Setting proc units is not supported")
 
-        prevProcValue = rest_conn.getProcs(isDedicated, partition_dom)
-        if not isDedicated:
-            prevProcUnitValue = rest_conn.getProcUnits(partition_dom)
-        if prevProcValue != proc or prevProcUnitValue != proc_unit:
-            logger.debug("prevProcValue: %s" %prevProcValue)
-            logger.debug("prevProcUnitValue: %s" %prevProcUnitValue)
-            partition_dom = rest_conn.updateProc(partition_dom, isDedicated, str(proc), str(proc_unit))
-            difference = True
+    prevProcValue = rest_conn.getProcs(isDedicated, partition_dom)
+    if not isDedicated:
+        prevProcUnitValue = rest_conn.getProcUnits(partition_dom)
+    if (proc is not None and prevProcValue != proc):
+        logger.debug("prevProcValue: %s", prevProcValue)
+        partition_dom = rest_conn.updateProc(partition_dom, isDedicated, proc=str(proc))
+        difference = True
+    elif (proc_unit is not None and prevProcUnitValue != proc_unit):
+        logger.debug("prevProcUnitValue: %s", prevProcUnitValue)
+        partition_dom = rest_conn.updateProc(partition_dom, isDedicated, proc_unit=str(proc_unit))
+        difference = True
 
-    if pool_id != None and pool_id >= 0:
+    if pool_id is not None and pool_id >= 0:
         if isDedicated:
             module.fail_json(msg="Shared processor pool only works with shared processor configuration partition")
         else:
             prevPoolID = rest_conn.getProcPool(partition_dom)
-            logger.debug("prevPoolID: %s" %prevPoolID)
+            logger.debug("prevPoolID: %s", prevPoolID)
             if prevPoolID != pool_id:
                 partition_dom = rest_conn.updateProcPool(partition_dom, str(pool_id))
                 difference = True
 
     if mem:
         prevMem = rest_conn.getMem(partition_dom)
-        logger.debug("prevMem: %s" %prevMem)
+        logger.debug("prevMem: %s", prevMem)
         if prevMem != mem:
             partition_dom = rest_conn.updateMem(partition_dom, str(mem))
             difference = True
 
     if sharing_mode:
         prevSharingMode = rest_conn.getProcSharingMode(partition_dom)
-        logger.debug("prevSharingMode: %s" %prevSharingMode)
+        logger.debug("prevSharingMode: %s", prevSharingMode)
         if isDedicated:
             if sharing_mode in ['capped', 'uncapped']:
                 module.fail_json(msg="Given sharing mode is not supported with dedicated processor configuration")
         else:
             if sharing_mode not in ['capped', 'uncapped']:
                 module.fail_json(msg="Given sharing mode is not supported with shared processor configuration")
-                
         if prevSharingMode != sharing_mode:
-            logger.debug("sharing_mode: %s" %sharing_mode)
+            logger.debug("sharing_mode: %s", sharing_mode)
             partition_dom = rest_conn.updateProcSharingMode(partition_dom, sharing_mode)
             difference = True
 
@@ -306,7 +308,7 @@ def update_proc_mem(module, params):
             module.fail_json(msg="Uncapped weight is not supported with dedicated processor configuration")
         else:
             if rest_conn.getProcSharingMode(partition_dom) != 'uncapped' or \
-                    (sharing_mode != None and sharing_mode != 'uncapped'):
+                    (sharing_mode is not None and sharing_mode != 'uncapped'):
                 module.fail_json(msg="Uncapped weight is not supported in case sharing mode is not uncapped")
         if prevUncappedWeight != uncapped_weight:
             partition_dom = rest_conn.updateProcUncappedWeight(partition_dom, str(uncapped_weight))
@@ -317,9 +319,11 @@ def update_proc_mem(module, params):
             rest_conn.updateLogicalPartition(partition_dom, timeout)
         except Exception as error:
             error_msg = parse_error_response(error)
-            module.fail_json(msg="HmcError: "+error_msg)
+            module.fail_json(msg="HmcError: " + error_msg)
 
-        partition_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, vm_name, partition_uuid)
+        partition_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid,
+                                                                      partition_name=vm_name,
+                                                                      partition_uuid=partition_uuid)
         if proc or proc_unit:
             newProcValue = rest_conn.getProcs(isDedicated, partition_dom)
             if not isDedicated:
@@ -336,25 +340,23 @@ def update_proc_mem(module, params):
 
         if pool_id:
             newPoolID = rest_conn.getProcPool(partition_dom)
-            logger.debug("PoolID: %s" %newPoolID)
 
-        logger.debug("difference: %s" %difference)
-        logger.debug("newProcValue: %s" %newProcValue)
-        logger.debug("newProcUnitValue: %s" %newProcUnitValue)
-        logger.debug("newMem: %s" %newMem)
-        logger.debug("newSharingMode: %s" %newSharingMode)
-        logger.debug("newPoolID: %s" %newPoolID)
+        logger.debug("difference: %s", difference)
+        logger.debug("newProcValue: %s", newProcValue)
+        logger.debug("newProcUnitValue: %s", newProcUnitValue)
+        logger.debug("newMem: %s", newMem)
+        logger.debug("newSharingMode: %s", newSharingMode)
+        logger.debug("newPoolID: %s", newPoolID)
     if difference and \
-        (newProcValue != prevProcValue or \
-        newProcUnitValue != prevProcUnitValue or \
-        newMem != prevMem or \
-        newSharingMode != prevSharingMode or\
-        newUncappedWeight != prevUncappedWeight or \
-        newPoolID != prevPoolID):
+        (newProcValue != prevProcValue or
+         newProcUnitValue != prevProcUnitValue or
+         newMem != prevMem or
+         newSharingMode != prevSharingMode or
+         newUncappedWeight != prevUncappedWeight or
+         newPoolID != prevPoolID):
         changed = True
 
     vm_facts = fetch_facts(rest_conn, partition_dom)
-    logger.debug(vm_facts)
 
     return changed, vm_facts, None
 
@@ -362,6 +364,9 @@ def update_proc_mem(module, params):
 def update_lpar(module, params):
     if any(params['proc_settings'].values()) or any(params['mem_settings'].values()):
         return update_proc_mem(module, params)
+    else:
+        return False, None, "No valid input configuration"
+
 
 def perform_task(module):
 
@@ -396,10 +401,10 @@ def run_module():
                            options=dict(
                                proc=dict(type='int'),
                                proc_unit=dict(type='float'),
-                               sharing_mode=dict(type='str', choices=['keep_idle_procs',\
-                                                                      'share_idle_procs',\
-                                                                      'share_idle_procs_active',\
-                                                                      'share_idle_procs_always',\
+                               sharing_mode=dict(type='str', choices=['keep_idle_procs',
+                                                                      'share_idle_procs',
+                                                                      'share_idle_procs_active',
+                                                                      'share_idle_procs_always',
                                                                       'capped', 'uncapped']),
                                uncapped_weight=dict(type='int'),
                                pool_id=dict(type='int')

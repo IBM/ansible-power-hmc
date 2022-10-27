@@ -26,6 +26,7 @@ LPAR_NS = 'LogicalPartition xmlns:LogicalPartition="http://www.ibm.com/xmlns/\
 systems/power/firmware/uom/mc/2012_10/" xmlns="http://www.ibm.com/xmlns/systems/power\
 /firmware/uom/mc/2012_10/" xmlns:ns2="http://www.w3.org/XML/1998/namespace/k2"'
 
+
 def xml_strip_namespace(xml_str):
     parser = etree.XMLParser(recover=True, encoding='utf-8')
     root = etree.fromstring(xml_str, parser)
@@ -399,7 +400,7 @@ class HmcRestClient:
         response = resp.read()
         return response
 
-    def getLogicalPartition(self, system_uuid, partition_name, partition_uuid=None):
+    def getLogicalPartition(self, system_uuid, partition_name=None, partition_uuid=None):
         lpar_uuid = None
         if partition_uuid is None:
             lpar_quick_list = []
@@ -1377,26 +1378,23 @@ class HmcRestClient:
     def isDedicatedProcConfig(self, partition_dom):
         return True if partition_dom.xpath('//HasDedicatedProcessors')[0].text == 'true' else False
 
-    def updateProc(self, partition_dom, isDedicated, proc, proc_unit=None):
+    def updateProc(self, partition_dom, isDedicated, proc=None, proc_unit=None):
         if isDedicated:
             partition_dom.xpath('//DedicatedProcessorConfiguration/DesiredProcessors')[0].text = proc
         else:
             if proc:
-                partition_dom.\
-                 xpath('//SharedProcessorConfiguration/DesiredVirtualProcessors')[0].text = proc
+                partition_dom.xpath('//SharedProcessorConfiguration/DesiredVirtualProcessors')[0].text = proc
             if proc_unit:
-                partition_dom.\
-                 xpath('//SharedProcessorConfiguration/DesiredProcessingUnits')[0].text = proc_unit
+                partition_dom.xpath('//SharedProcessorConfiguration/DesiredProcessingUnits')[0].text = proc_unit
         return partition_dom
 
     def updateProcSharingMode(self, partition_dom, sharingMode):
-        modeMapping = {
-                          'keep_idle_procs': 'keep idle procs',
-                          'share_idle_procs': 'sre idle proces',
-                          'share_idle_procs_active': 'sre idle procs active',
-                          'share_idle_procs_always': 'sre idle procs always',
-                          'uncapped': 'uncapped',
-                          'capped': 'capped'
+        modeMapping = {'keep_idle_procs': 'keep idle procs',
+                       'share_idle_procs': 'sre idle proces',
+                       'share_idle_procs_active': 'sre idle procs active',
+                       'share_idle_procs_always': 'sre idle procs always',
+                       'uncapped': 'uncapped',
+                       'capped': 'capped'
                        }
         partition_dom.xpath('//SharingMode')[0].text = modeMapping[sharingMode]
         return partition_dom
@@ -1407,7 +1405,7 @@ class HmcRestClient:
     def updateProcUncappedWeight(self, partition_dom, weight):
         sharedProcElement = partition_dom.xpath('//UncappedWeight')
         if isinstance(sharedProcElement, list) and len(sharedProcElement) > 0:
-            partition_dom.xpath('//UncappedWeight')[0].text = weight 
+            partition_dom.xpath('//UncappedWeight')[0].text = weight
         else:
             weightXml = '<UncappedWeight kxe="false" kb="CUD">{0}</UncappedWeight>'.format(weight)
             sharedProcElement = partition_dom.xpath('//SharedProcessorConfiguration/Metadata')[0]
@@ -1424,7 +1422,7 @@ class HmcRestClient:
     def getProcPool(self, partition_dom):
         logger.debug("getProcPool")
         return partition_dom.xpath('//CurrentSharedProcessorPoolID')[0].text
-    
+
     def updateProcPool(self, partition_dom, poolId):
         partition_dom.xpath('//SharedProcessorPoolID')[0].text = poolId
         return partition_dom
@@ -1434,21 +1432,17 @@ class HmcRestClient:
         logger.debug(isDedicated)
         if isDedicated:
             logger.debug("getProcs Ded")
-            procs = partition_dom.\
-                     xpath('//CurrentDedicatedProcessorConfiguration/CurrentProcessors')[0].text
+            procs = partition_dom.xpath('//CurrentDedicatedProcessorConfiguration/CurrentProcessors')[0].text
         else:
             logger.debug("getProcs Shared")
-            procs = partition_dom.\
-                     xpath('//CurrentSharedProcessorConfiguration/AllocatedVirtualProcessors')[0].text
+            procs = partition_dom.xpath('//CurrentSharedProcessorConfiguration/AllocatedVirtualProcessors')[0].text
         return procs
 
     def getProcUnits(self, partition_dom):
-        return partition_dom.\
-                xpath('//CurrentSharedProcessorConfiguration/CurrentProcessingUnits')[0].text
+        return partition_dom.xpath('//CurrentSharedProcessorConfiguration/CurrentProcessingUnits')[0].text
 
     def getMem(self, partition_dom):
-        return partition_dom.\
-                xpath('//CurrentMemory')[0].text
+        return partition_dom.xpath('//CurrentMemory')[0].text
 
     def updateMem(self, partition_dom, mem):
         partition_dom.xpath('//DesiredMemory')[0].text = mem
@@ -1459,19 +1453,19 @@ class HmcRestClient:
                   'Accept': '*/*',
                   'Content-Type': 'application/vnd.ibm.powervm.uom+xml; type=LogicalPartition'}
 
-        partition_uuid =  partition_dom.xpath('//AtomID')[0].text
+        partition_uuid = partition_dom.xpath('//AtomID')[0].text
         if timeout:
-            url = "https://{0}/rest/api/uom/LogicalPartition/{1}?timeout={2}".format(\
-                   self.hmc_ip, partition_uuid, timeout)
+            url = "https://{0}/rest/api/uom/LogicalPartition/{1}?timeout={2}".format(
+                  self.hmc_ip, partition_uuid, timeout)
         else:
-            url = "https://{0}/rest/api/uom/LogicalPartition/{1}".format(\
-                   self.hmc_ip, partition_uuid)
+            url = "https://{0}/rest/api/uom/LogicalPartition/{1}".format(
+                  self.hmc_ip, partition_uuid)
 
         partition_dom = partition_dom.xpath("//LogicalPartition")[0]
 
         partiton_xmlstr = etree.tostring(partition_dom)
         partiton_xmlstr = partiton_xmlstr.decode("utf-8").replace("LogicalPartition", LPAR_NS, 1)
-        logger.debug("INPUT PAYLOAD: \n %s" %partiton_xmlstr)
+        logger.debug("INPUT PAYLOAD: \n %s", partiton_xmlstr)
         resp = open_url(url,
                         headers=header,
                         method='POST',
@@ -1485,11 +1479,11 @@ class HmcRestClient:
         response = resp.read()
         logger.debug(response)
         post_response = xml_strip_namespace(response)
-        return post_response 
-
+        return post_response
 
     def fetchDedicatedVirtualNICs(self, system_uuid, lpar_uuid, vm_name, vios_list):
-        lpar_uuid, partition_dom = self.getLogicalPartition(system_uuid, vm_name, lpar_uuid)
+        lpar_uuid, partition_dom = self.getLogicalPartition(system_uuid,
+                                                            partition_name=vm_name, partition_uuid=lpar_uuid)
         vios_dict = {}
         if vios_list:
             vios_dict = {vios['UUID']: vios['PartitionName'] for vios in vios_list}

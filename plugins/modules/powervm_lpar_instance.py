@@ -1001,7 +1001,7 @@ def create_partition(module, params):
         module.fail_json(msg="Given system is not present")
 
     try:
-        partition_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, vm_name)
+        partition_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, partition_name=vm_name)
     except Exception as error:
         try:
             rest_conn.logoff()
@@ -1513,6 +1513,33 @@ def partition_details(module, params):
             partition_prop['VirtualFiberChannelAdapters'] = rest_conn.fetchFCDetailsFromVIOS(system_uuid, partition_prop['PartitionID'], vios_list)
             partition_prop['VirtualSCSIClientAdapters'] = rest_conn.fetchSCSIDetailsFromVIOS(system_uuid, partition_prop['PartitionID'], vios_list)
             partition_prop['DedicatedVirtualNICs'] = rest_conn.fetchDedicatedVirtualNICs(system_uuid, lpar_uuid, vm_name, vios_list)
+
+            lpar_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, partition_uuid=lpar_uuid)
+            partition_prop['MinimumMemory'] = partition_dom.xpath("//MinimumMemory")[0].text
+            partition_prop['MaximumMemory'] = partition_dom.xpath("//MaximumMemory")[0].text
+            isDedicatedProc = rest_conn.isDedicatedProcConfig(partition_dom)
+            if isDedicatedProc:
+                partition_prop['MinimumProcessors'] = partition_dom.xpath("//MinimumProcessors")[0].text
+                partition_prop['MaximumProcessors'] = partition_dom.xpath("//MaximumProcessors")[0].text
+            else:
+                partition_prop['MinimumProcessingUnits'] = partition_dom.xpath("//MinimumProcessingUnits")[0].text
+                partition_prop['MaximumProcessingUnits'] = partition_dom.xpath("//MaximumProcessingUnits")[0].text
+                partition_prop['MinimumVirtualProcessors'] = partition_dom.xpath("//MinimumVirtualProcessors")[0].text
+                partition_prop['MaximumVirtualProcessors'] = partition_dom.xpath("//MaximumVirtualProcessors")[0].text
+                partition_prop['CurrentSharedProcessorPoolID'] = rest_conn.getProcPool(partition_dom)
+
+            modeMapping = {
+                'keep idle procs': 'keep_idle_procs',
+                'sre idle proces': 'share_idle_procs',
+                'sre idle procs active': 'share_idle_procs_active',
+                'sre idle procs always': 'share_idle_procs_always',
+                'uncapped': 'uncapped',
+                'capped': 'capped'
+            }
+
+            partition_prop['SharingMode'] = modeMapping[partition_dom.xpath("//SharingMode")[0].text]
+            if partition_prop['SharingMode'] == 'uncapped':
+                partition_prop['UncappedWeight'] = rest_conn.getProcUncappedWeight(partition_dom)
 
         if not lpar_uuid:
             module.fail_json(msg="Given Logical Partition is not present on the system")
