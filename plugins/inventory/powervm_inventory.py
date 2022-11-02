@@ -33,6 +33,9 @@ DOCUMENTATION = '''
           and system_composit variables can be found in HMC REST API documentation listed as 'Quick Properties'.
           (These options works only when group_lpars_by_managed_system option set to false)
           L(Knowledge Center, https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/ManagedSystem.htm).
+        - Apart from properties defined in HMC REST API Documentation we can use the following properties also with power Server,
+          and LPAR/VIOS 'AssociatedGroups': Tagged group name, 'AssociatedHMC': HMC IP/Hostname, AssociatedHMCUserName: HMC username
+          for LPAR/VIOS or Power server grouping and compose.
         - If a property is used in the inventory source that is unique to a partition type,
           only partitions for which that property is defined may be included. Non-compatible partitions can be
           filtered out by `OperatingSystemVersion` or `PartitionType` as detailed in the second example.
@@ -205,6 +208,8 @@ compose:
   current_memory: CurrentMemory
   os: OperatingSystemVersion
   name: PartitionName
+  HMCIP: AssociatedHMC
+  HMCUSERNAME: AssociatedHMCUserName
 
 ## Generate an inventory that excludes partitions by ip, name, or the name of managed system on which they run
 plugin: ibm.power_hmc.powervm_inventory
@@ -241,7 +246,8 @@ system_keyed_groups:
 system_compose:
   maximum_partitions: MaximumPartitions
   system_firmware: SystemFirmware
-  name: SystemName
+  HMCIP: AssociatedHMC
+  HMCUSERNAME: AssociatedHMCUserName
 
 # Generate an inventory of all running partitions and operation Power Servers
 # Create a seperate group for partitions tagged with associated group name 'production_lpars'
@@ -448,13 +454,13 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                         if self.advanced_fields:
                             try:
                                 lpar_xml = rest_conn.getLogicalPartitions(system.get("UUID"))
-                                system_lpars = self.parse_lpars_xml(lpar_xml, associated_groups)
+                                system_lpars = self.parse_lpars_xml(lpar_xml, str(hmc_host), str(self.hmc_hosts[hmc_host]["user"]), associated_groups)
                                 lpars.extend(system_lpars)
                             except Exception:
                                 logger.debug("Could not retrieve LPARs from %s it may not have any defined", system.get("SystemName"))
                             try:
                                 vios_xml = rest_conn.getVirtualIOServers(system.get("UUID"))
-                                system_vios = self.parse_lpars_xml(vios_xml, associated_groups)
+                                system_vios = self.parse_lpars_xml(vios_xml, str(hmc_host), str(self.hmc_hosts[hmc_host]["user"]), associated_groups)
                                 lpars.extend(system_vios)
                             except Exception:
                                 logger.debug("Could not retrieve VIOS from %s it may not have any defined", system.get("SystemName"))
@@ -464,6 +470,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                                 system_lpars = json.loads(rest_conn.getLogicalPartitionsQuick(system.get("UUID")))
                                 for system_lpar in system_lpars:
                                     system_lpar['AssociatedGroups'] = self.fetch_associated_groups(system_lpar['UUID'], associated_groups)
+                                    system_lpar['AssociatedHMC'] = str(hmc_host)
+                                    system_lpar['AssociatedHMCUserName'] = str(self.hmc_hosts[hmc_host]["user"])
                                 lpars.extend(system_lpars)
                             except Exception:
                                 logger.debug("Could not retrieve LPARs from %s it may not have any defined", system.get("SystemName"))
@@ -471,10 +479,14 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                                 system_vios = json.loads(rest_conn.getVirtualIOServersQuick(system.get("UUID")))
                                 for vios in system_vios:
                                     vios['AssociatedGroups'] = self.fetch_associated_groups(vios['UUID'], associated_groups)
+                                    vios['AssociatedHMC'] = str(hmc_host)
+                                    vios['AssociatedHMCUserName'] = str(self.hmc_hosts[hmc_host]["user"])
                                 lpars.extend(system_vios)
                             except Exception:
                                 logger.debug("Could not retrieve VIOS from %s it may not have any defined", system.get("SystemName"))
                         system['AssociatedGroups'] = self.fetch_associated_groups(system['UUID'], associated_groups)
+                    system['AssociatedHMC'] = str(hmc_host)
+                    system['AssociatedHMCUserName'] = str(self.hmc_hosts[hmc_host]["user"])
                     system["lpars"] = lpars
                     systems.append(system)
                 # Logoff HMC
@@ -493,7 +505,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                 continue
         return systems
 
-    def parse_lpars_xml(self, xml, associated_groups=None):
+    def parse_lpars_xml(self, xml, hmc, hmcusername, associated_groups=None):
         if associated_groups is None:
             associated_groups = {}
         root = ET.fromstring(xml)
@@ -502,6 +514,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         lpars = []
         for entry in entries:
             lpar = self.get_tag_text(entry)
+            lpar['AssociatedHMC'] = hmc
+            lpar['AssociatedHMCUserName'] = hmcusername
             if associated_groups:
                 lpar['AssociatedGroups'] = self.fetch_associated_groups(lpar['id'], associated_groups)
             lpars.append(lpar)
