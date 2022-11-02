@@ -13,93 +13,100 @@ policy_config = {'min_pwage': "int", 'pwage': "pwage", 'min_length': "min_value"
 test_data = [
     # All Facts related Testdata
     # when enable_user key is mentioned for facts state
-    ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'facts', 'type': None, 'enable_user': True, 'attributes': None},
+    ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'facts', 'type': None, 'enable_user': True, 'attributes': None, 'resource': None,
+      'ldap_settings': None},
      "ParameterError: unsupported parameter: enable_user"),
     # when hmc_host is not mentioned
-    ({'hmc_host': None, 'hmc_auth': hmc_auth, 'state': 'facts', 'name': 'name', 'type': None, 'enable_user': True, 'attributes': None},
+    ({'hmc_host': None, 'hmc_auth': hmc_auth, 'state': 'facts', 'name': 'name', 'type': None, 'enable_user': True, 'attributes': None, 'resource': None,
+      'ldap_settings': None},
      "ParameterError: mandatory parameter 'hmc_host' is missing"),
     # when hmc_auth is not mentioned
     ({'hmc_host': "0.0.0.0", 'hmc_auth': {'username': None, 'password': None}, 'state': 'facts', 'name': 'name', 'type': None, 'enable_user': None,
-     'attributes': None}, "missing required arguments: username found in hmc_auth"),
+     'attributes': None, 'resource': None, 'ldap_settings': None}, "missing required arguments: username found in hmc_auth"),
     # when type option is setted to ldap
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'facts', 'attributes': None, 'type': 'ldap', 'name': None,
-      'enable_user': None}, "ParameterError: facts state will not support type: ldap"),
+      'enable_user': None, 'resource': None, 'ldap_settings': None}, "ParameterError: facts state will not support type: ldap"),
     # when type option is setted to kerberos
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'facts', 'attributes': None, 'type': 'kerberos', 'name': None,
-      'enable_user': None}, "ParameterError: facts state will not support type: kerberos"),
+      'enable_user': None, 'resource': None, 'ldap_settings': None}, "ParameterError: facts state will not support type: kerberos"),
     # when type option is setted to automanage
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'facts', 'attributes': None, 'type': 'automanage', 'name': None,
-      'enable_user': None}, "ParameterError: facts state will not support type: automanage"),
+      'enable_user': None, 'resource': None, 'ldap_settings': None}, "ParameterError: facts state will not support type: automanage"),
     # when type option is setted to all
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'facts', 'attributes': None, 'type': 'all', 'name': None,
-      'enable_user': None}, "ParameterError: facts state will not support type: all"),
+      'enable_user': None, 'resource': None, 'ldap_settings': None}, "ParameterError: facts state will not support type: all"),
     # when type option is setted to local
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'facts', 'attributes': None, 'type': 'local', 'name': None,
-      'enable_user': None}, "ParameterError: facts state will not support type: local"),
+      'enable_user': None, 'resource': None, 'ldap_settings': None}, "ParameterError: facts state will not support type: local"),
     # when name and type: default is mentioned for facts state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'facts', 'attributes': None, 'type': 'default', 'name': 'name',
-      'enable_user': None}, "ParameterError: facts state will not support parameter: name with default type"),
+      'enable_user': None, 'resource': None, 'ldap_settings': None}, "ParameterError: facts state will not support parameter: name with default type"),
     # when attributes key is mentioned for facts state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'type': None, 'state': 'facts',
-     'attributes': {'authentication_type': 'local', 'taskrole': 'taskrole', 'passwd': 'passwd'}, 'name': 'name', 'enable_user': None},
-     "ParameterError: unsupported parameter: attributes")]
+      'attributes': {'authentication_type': 'local', 'taskrole': 'taskrole', 'passwd': 'passwd'}, 'name': 'name', 'enable_user': None, 'resource': None,
+      'ldap_settings': None}, "ParameterError: unsupported parameter: attributes")]
 test_data1 = [
     # All user creation TestData
     # when name is missing for present state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'present', 'attributes': {'authentication_type': 'local'},
-      'type': None, 'name': None}, "ParameterError: mandatory parameter 'name' is missing"),
+      'type': None, 'name': None, 'resource': None, 'ldap_settings': None}, "ParameterError: mandatory parameter 'name' is missing"),
     # when hmc_host is missing for present state
-    ({'hmc_host': None, 'hmc_auth': hmc_auth, 'name': 'name', 'state': 'present', 'attributes': {'authentication_type': 'local'}, 'type': None},
-     "ParameterError: mandatory parameter 'hmc_host' is missing"),
+    ({'hmc_host': None, 'hmc_auth': hmc_auth, 'name': 'name', 'state': 'present', 'attributes': {'authentication_type': 'local'}, 'type': None,
+      'resource': None, 'ldap_settings': None}, "ParameterError: mandatory parameter 'hmc_host' is missing"),
     # when atributes are missing
-    ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'present', 'name': 'name', 'attributes': None},
+    ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'present', 'name': 'name', 'attributes': None, 'resource': None, 'ldap_settings': None},
      "ParameterError: mandatory parameter 'attributes' is missing"),
     # when hmc_auth is missing
     ({'hmc_host': "0.0.0.0", 'hmc_auth': {'username': None, 'password': None}, 'type': None, 'enable_user': None, 'state': 'present',
-      'attributes': {'authentication_type': 'local', 'passwd': 'abcd1234', 'taskrole': 'hmcservicerep'}, 'name': 'name'},
-     "missing required arguments: username found in hmc_auth"),
+      'attributes': {'authentication_type': 'local', 'passwd': 'abcd1234', 'taskrole': 'hmcservicerep'}, 'name': 'name', 'resource': None,
+      'ldap_settings': None}, "missing required arguments: username found in hmc_auth"),
     # when enable_user is  mentioned
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'enable_user': True, 'state': 'present', 'type': None,
-      'attributes': {'authentication_type': 'local', 'passwd': 'abcd1234', 'taskrole': 'hmcservicerep'}, 'name': 'name'},
-     "ParameterError: unsupported parameter: enable_user"),
+      'attributes': {'authentication_type': 'local', 'passwd': 'abcd1234', 'taskrole': 'hmcservicerep'}, 'name': 'name',
+      'resource': None, 'ldap_settings': None}, "ParameterError: unsupported parameter: enable_user"),
     # when passwd is missing in attributes for present state
     ({'hmc_host': "0.0.0.0", 'enable_user': None, 'hmc_auth': hmc_auth, 'name': 'name', 'state': 'present',
-      'attributes': {'authentication_type': 'local'}, 'type': None}, "ParameterError: 'passwd' attribute is mandatory"),
+      'attributes': {'authentication_type': 'local'}, 'type': None, 'resource': None, 'ldap_settings': None},
+     "ParameterError: 'passwd' attribute is mandatory"),
     # when type is mentioned for present state
     ({'hmc_host': "0.0.0.0", 'enable_user': None, 'hmc_auth': hmc_auth, 'name': 'name', 'state': 'present',
-        'attributes': {'authentication_type': 'local', 'passwd': 'passwd'}, 'type': 'type'}, "ParameterError: unsupported parameter: type"),
+      'attributes': {'authentication_type': 'local', 'passwd': 'passwd'}, 'type': 'type', 'resource': None, 'ldap_settings': None},
+     "ParameterError: unsupported parameter: type"),
     # when taskrole is missing in attributes for present state with authentication_type as ldap
     ({'hmc_host': "0.0.0.0", 'enable_user': None, 'hmc_auth': hmc_auth, 'name': 'name', 'state': 'present',
-      'attributes': {'authentication_type': 'ldap', 'passwd': 'abc123'}, 'type': None}, "ParameterError: mandatory parameter taskrole is missing"),
+      'attributes': {'authentication_type': 'ldap', 'passwd': 'abc123'}, 'type': None, 'resource': None, 'ldap_settings': None},
+     "ParameterError: mandatory parameter taskrole is missing"),
     # when taskrole is missing in attributes for present state with authentication_type as kerberos
     ({'hmc_host': "0.0.0.0", 'enable_user': None, 'hmc_auth': hmc_auth, 'name': 'name', 'state': 'present',
-      'attributes': {'authentication_type': 'kerberos', 'passwd': 'abc123'}, 'type': None}, "ParameterError: mandatory parameter taskrole is missing"),
+      'attributes': {'authentication_type': 'kerberos', 'passwd': 'abc123'}, 'type': None, 'resource': None, 'ldap_settings': None},
+     "ParameterError: mandatory parameter taskrole is missing"),
     # when taskrole is missing in attributes for present state with authentication_type as local
     ({'hmc_host': "0.0.0.0", 'enable_user': None, 'hmc_auth': hmc_auth, 'name': 'name', 'state': 'present',
-      'attributes': {'authentication_type': 'local', 'passwd': 'abc123'}, 'type': None}, "ParameterError: mandatory parameter taskrole is missing")]
+      'attributes': {'authentication_type': 'local', 'passwd': 'abc123'}, 'type': None, 'resource': None, 'ldap_settings': None},
+     "ParameterError: mandatory parameter taskrole is missing")]
 test_data2 = [
     # All user deletion testdata
     # when name & type are  missing for absent state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'absent', 'type': None, 'name': None, 'enable_user': None,
-     'attributes': None}, "ParameterError: absent state need either name or type parameter"),
+     'attributes': None, 'resource': None, 'ldap_settings': None}, "ParameterError: absent state need either name or type parameter"),
     # when enable_user is mentioned for absent state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'absent', 'enable_user': True, 'type': None, 'name': 'name',
-     'attributes': None}, "ParameterError: unsupported parameter: enable_user"),
+     'attributes': None, 'resource': None, 'ldap_settings': None}, "ParameterError: unsupported parameter: enable_user"),
     # when type is default for absent state
     ({'hmc_host': "0.0.0.0", 'enable_user': None, 'hmc_auth': hmc_auth, 'name': None, 'state': 'absent',
-     'attributes': None, 'type': 'default'}, "ParameterError: absent state will not support type: default"),
+     'attributes': None, 'type': 'default', 'resource': None, 'ldap_settings': None}, "ParameterError: absent state will not support type: default"),
     # when type is user for absent state
     ({'hmc_host': "0.0.0.0", 'enable_user': None, 'hmc_auth': hmc_auth, 'name': None, 'state': 'absent',
-     'attributes': None, 'type': 'user'}, "ParameterError: absent state will not support type: user"),
+     'attributes': None, 'type': 'user', 'resource': None, 'ldap_settings': None}, "ParameterError: absent state will not support type: user"),
     # when hmc_host is not mentioned
-    ({'hmc_host': None, 'hmc_auth': hmc_auth, 'state': 'absent', 'name': 'name', 'type': None, 'enable_user': None, 'attributes': None},
-     "ParameterError: mandatory parameter 'hmc_host' is missing"),
+    ({'hmc_host': None, 'hmc_auth': hmc_auth, 'state': 'absent', 'name': 'name', 'type': None, 'enable_user': None, 'attributes': None,
+      'resource': None, 'ldap_settings': None}, "ParameterError: mandatory parameter 'hmc_host' is missing"),
     # when hmc_auth is not mentioned
     ({'hmc_host': "0.0.0.0", 'hmc_auth': {'username': None, 'password': None}, 'state': 'absent', 'name': 'name', 'type': None,
-     'enable_user': None, 'attributes': None}, "missing required arguments: username found in hmc_auth"),
+     'enable_user': None, 'attributes': None, 'resource': None, 'ldap_settings': None}, "missing required arguments: username found in hmc_auth"),
     # when attributes dict added for absent state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'absent', 'type': None, 'enable_user': None,
-      'attributes': {'authentication_type': 'name'}}, "ParameterError: unsupported parameter: attributes")]
+      'attributes': {'authentication_type': 'name'}, 'resource': None, 'ldap_settings': None}, "ParameterError: unsupported parameter: attributes")]
 test_data3 = [
     # All user modification testdata
     # when name is missing for updated state
