@@ -29,11 +29,11 @@ description:
       and composite variables can be found in the HMC REST API documentation. By default, valid properties include those
       listed as "Quick Properties", but if `advanced_fields` are enabled, you may be able to use more advanced properties of the
       partition. Further information about the LPAR APIs can be found in the
-      L(Knowledge Center, https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/LogicalPartition.htm).
+      L(Knowledge Center, "https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/LogicalPartition.htm").
     - Valid Power Server properties that can be used for system_groups, system_keyed_groups, system_filters
       and system_composit variables can be found in HMC REST API documentation listed as 'Quick Properties'.
       (These options works only when group_lpars_by_managed_system option set to false)
-      L(Knowledge Center, https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/ManagedSystem.htm).
+      L(Knowledge Center, "https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/ManagedSystem.htm").
     - Apart from properties defined in HMC REST API Documentation we can use the following properties also with power Server,
       and LPAR/VIOS 'AssociatedGroups': Tagged group name, 'AssociatedHMC': HMC IP/Hostname, AssociatedHMCUserName: HMC username
       for LPAR/VIOS or Power server grouping and compose.
