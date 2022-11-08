@@ -47,7 +47,7 @@ options:
     hmc_hosts:
         description: A dictionary of hosts and their associated usernames and passwords.
         required: true
-        type: dict
+        type: list
     filters:
         description:
             - A key value pair for filtering by various LPAR/VIOS attributes.
@@ -148,7 +148,7 @@ EXAMPLES = '''
 # The most minimal example, targeting only a single HMC
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_host_name":
+  - hmc: <hmc_host_name>
     user: <HMC_Username>
     password: <HMC_Password>
 
@@ -156,7 +156,7 @@ hmc_hosts:
 # This may be important if grouping by advanced_fields exclusive to VIOS.
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_host_name":
+  - hmc: <hmc_host_name>
     user: <HMC_Username>
     password: <HMC_Password>
 filters:
@@ -165,10 +165,10 @@ filters:
 # Target multiple HMC hosts and only add running partitions to the inventory
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_host_name":
+  - hmc: <hmc_host_name>
     user: <HMC1_Username>
     password: <HMC1_Password>
-  "hmc_host_name2":
+  - hmc: <hmc_host_name>
     user: <HMC2_Username>
     password: <HMC2_Password>
 filters:
@@ -177,10 +177,10 @@ filters:
 # Generate an inventory of all running partitions and create a separate group for AIX 7.2 and IBMi type of partitions
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_host_name":
+  - hmc: <hmc_host_name>
     user: <HMC1_Username>
     password: <HMC1_Password>
-  "hmc_host_name2":
+  - hmc: <hmc_host_name>
     user: <HMC2_Username>
     password: <HMC2_Password>
 filters:
@@ -194,10 +194,10 @@ groups:
 # Additionally, include the following variables as host_vars for a given target host: CurrentMemory, OperatingSystemVersion, PartitionName
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_host_name":
+  - hmc: <hmc_host_name>
     user: <HMC1_Username>
     password: <HMC1_Password>
-  "hmc_host_name2":
+  - hmc: <hmc_host_name>
     user: <HMC2_Username>
     password: <HMC2_Password>
 filters:
@@ -215,7 +215,7 @@ compose:
 ## Generate an inventory that excludes partitions by ip, name, or the name of managed system on which they run
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_host_name":
+  - hmc: <hmc_host_name>
     user: <HMC2_Username>
     password: <HMC_Password>
 exclude_ip:
@@ -235,7 +235,7 @@ exclude_system:
 # Additionally, include the following variables as host_vars for a given target host: MaximumPartitions, SystemFirmware, SystemName
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_host_name":
+  - hmc: <hmc_host_name>
     user: <HMC2_Username>
     password: <HMC_Password>
 group_lpars_by_managed_system: false
@@ -255,7 +255,7 @@ system_compose:
 # Create a seperate group for Power Servers tagged with associated group name 'Production_systems'
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_host_name":
+  - hmc: <hmc_host_name>
     user: <HMC2_Username>
     password: <HMC_Password>
 group_lpars_by_managed_system: false
@@ -394,6 +394,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                             continue
 
                 # Creating a group of managed systems
+                print(system['lpars'])
                 del system['lpars']
                 try:
                     ms_ip = system['IPAddress']
@@ -438,12 +439,15 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
         for hmc_host in self.hmc_hosts:
             try:
-                rest_conn = HmcRestClient(str(hmc_host), str(self.hmc_hosts[hmc_host]["user"]), str(self.hmc_hosts[hmc_host]["password"]))
+                hmc = str(hmc_host['hmc'])
+                hmc_username = str(hmc_host['user'])
+                hmc_pass = str(hmc_host['password'])
+                rest_conn = HmcRestClient(hmc, hmc_username, hmc_pass)
                 try:
                     managed_systems = json.loads(rest_conn.getManagedSystemsQuick())
                     associated_groups = rest_conn.fetchTaggedGroupItems()
                 except Exception:
-                    logger.debug("Could not retrieve systems from %s it may not have any defined", hmc_host)
+                    logger.debug("Could not retrieve systems from %s it may not have any defined", hmc)
                     continue
 
                 for system in managed_systems:
@@ -452,26 +456,28 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                         # Make calls to full XML APIs which have access to a few additional fields
                         # Note: This call takes nearly 10x as long because it must reach out to each system individually
                         if self.advanced_fields:
+                            system_name = system.get("SystemName")
                             try:
                                 lpar_xml = rest_conn.getLogicalPartitions(system.get("UUID"))
-                                system_lpars = self.parse_lpars_xml(lpar_xml, str(hmc_host), str(self.hmc_hosts[hmc_host]["user"]), associated_groups)
+                                system_lpars = self.parse_lpars_xml(lpar_xml, hmc, hmc_username, system_name, associated_groups)
                                 lpars.extend(system_lpars)
                             except Exception:
-                                logger.debug("Could not retrieve LPARs from %s it may not have any defined", system.get("SystemName"))
+                                logger.debug("Could not retrieve LPARs from %s it may not have any defined", system_name)
                             try:
                                 vios_xml = rest_conn.getVirtualIOServers(system.get("UUID"))
-                                system_vios = self.parse_lpars_xml(vios_xml, str(hmc_host), str(self.hmc_hosts[hmc_host]["user"]), associated_groups)
+                                system_vios = self.parse_lpars_xml(vios_xml, hmc, hmc_username, system_name, associated_groups)
                                 lpars.extend(system_vios)
                             except Exception:
-                                logger.debug("Could not retrieve VIOS from %s it may not have any defined", system.get("SystemName"))
+                                logger.debug("Could not retrieve VIOS from %s it may not have any defined", system_name)
                         # Call the "quick" JSON API
                         else:
                             try:
                                 system_lpars = json.loads(rest_conn.getLogicalPartitionsQuick(system.get("UUID")))
                                 for system_lpar in system_lpars:
                                     system_lpar['AssociatedGroups'] = self.fetch_associated_groups(system_lpar['UUID'], associated_groups)
-                                    system_lpar['AssociatedHMC'] = str(hmc_host)
-                                    system_lpar['AssociatedHMCUserName'] = str(self.hmc_hosts[hmc_host]["user"])
+                                    system_lpar['AssociatedHMC'] = hmc
+                                    system_lpar['AssociatedHMCUserName'] = hmc_username
+                                    system_lpar['SystemName'] = system.get("SystemName")
                                 lpars.extend(system_lpars)
                             except Exception:
                                 logger.debug("Could not retrieve LPARs from %s it may not have any defined", system.get("SystemName"))
@@ -479,14 +485,15 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                                 system_vios = json.loads(rest_conn.getVirtualIOServersQuick(system.get("UUID")))
                                 for vios in system_vios:
                                     vios['AssociatedGroups'] = self.fetch_associated_groups(vios['UUID'], associated_groups)
-                                    vios['AssociatedHMC'] = str(hmc_host)
-                                    vios['AssociatedHMCUserName'] = str(self.hmc_hosts[hmc_host]["user"])
+                                    vios['AssociatedHMC'] = hmc
+                                    vios['AssociatedHMCUserName'] = hmc_username
+                                    vios['SystemName'] = system.get("SystemName")
                                 lpars.extend(system_vios)
                             except Exception:
                                 logger.debug("Could not retrieve VIOS from %s it may not have any defined", system.get("SystemName"))
                         system['AssociatedGroups'] = self.fetch_associated_groups(system['UUID'], associated_groups)
-                    system['AssociatedHMC'] = str(hmc_host)
-                    system['AssociatedHMCUserName'] = str(self.hmc_hosts[hmc_host]["user"])
+                    system['AssociatedHMC'] = hmc
+                    system['AssociatedHMCUserName'] = hmc_username
                     system["lpars"] = lpars
                     systems.append(system)
                 # Logoff HMC
@@ -505,7 +512,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                 continue
         return systems
 
-    def parse_lpars_xml(self, xml, hmc, hmcusername, associated_groups=None):
+    def parse_lpars_xml(self, xml, hmc, hmcusername, system_name, associated_groups=None):
         if associated_groups is None:
             associated_groups = {}
         root = ET.fromstring(xml)
@@ -516,6 +523,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             lpar = self.get_tag_text(entry)
             lpar['AssociatedHMC'] = hmc
             lpar['AssociatedHMCUserName'] = hmcusername
+            lpar['SystemName'] = system_name
             if associated_groups:
                 lpar['AssociatedGroups'] = self.fetch_associated_groups(lpar['id'], associated_groups)
             lpars.append(lpar)
@@ -525,7 +533,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         config = self._read_config_data(path)
 
         args = dict(
-            hmc_hosts=dict(type='dict', value=config.get("hmc_hosts", None), required=True),
+            hmc_hosts=dict(type='list', value=config.get("hmc_hosts", None), required=True),
             filters=dict(type='dict', value=config.get("filters", {})),
             system_filters=dict(type='dict', value=config.get("system_filters", {})),
             keyed_groups=dict(type='list', value=config.get("keyed_groups", [])),
