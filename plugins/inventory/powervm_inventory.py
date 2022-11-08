@@ -45,9 +45,10 @@ description:
 
 options:
     hmc_hosts:
-        description: A dictionary of hosts and their associated usernames and passwords.
+        description: A List of hosts and their associated usernames and passwords.
         required: true
         type: list
+        elements: dict
     filters:
         description:
             - A key value pair for filtering by various LPAR/VIOS attributes.
@@ -57,6 +58,7 @@ options:
         description:
             - A key value pair for filtering by various Power Server attributes.
               Results include only system_filter matching Power Servers and LPAR/VIOS belongs to it.
+        default: {}
     compose:
         description: Create vars from Jinja2 expressions(Valid only for LPAR or VIOS).
         default: {}
