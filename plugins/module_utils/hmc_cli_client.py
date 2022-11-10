@@ -47,9 +47,9 @@ class HmcCliConnection:
 
         logger.debug("COMMAND: %s", cmd)
         if self.pwd:
-            ssh_hmc_cmd = "sshpass -p  {0} ssh {1}@{2} {3} '{4}'".format(self.pwd, self.user, self.ip, host_key_ignore, cmd)
+            ssh_hmc_cmd = "sshpass -p  '{0}' ssh '{1}'@{2} {3} '{4}'".format(self.pwd, self.user, self.ip, host_key_ignore, cmd)
         else:
-            ssh_hmc_cmd = "ssh {0}@{1} {2} '{3}'".format(self.user, self.ip, host_key_ignore, cmd)
+            ssh_hmc_cmd = "ssh '{0}'@{1} {2} '{3}'".format(self.user, self.ip, host_key_ignore, cmd)
 
         logger.debug(ssh_hmc_cmd)
         status_code, stdout, stderr = self.module.run_command(ssh_hmc_cmd, use_unsafe_shell=True)
