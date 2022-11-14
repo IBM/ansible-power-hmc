@@ -62,7 +62,7 @@ options:
     system_name:
         description:
             - The name of the managed system.
-        required: true
+            - Optional for I(state=absent).
         type: str
     vm_name:
         description:
@@ -566,7 +566,7 @@ except ImportError:
 
 # Generic setting for log initializing and log rotation
 import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc.log"
+LOG_FILENAME = "/tmp/ansible_power_hmc_navin1.log"
 logger = logging.getLogger(__name__)
 
 
@@ -668,7 +668,7 @@ def validate_parameters(params):
                            'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'install_settings',
                            'vnic_config']
     elif opr == 'absent':
-        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
+        mandatoryList = ['hmc_host', 'hmc_auth', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
                            'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'install_settings',
@@ -1230,7 +1230,19 @@ def remove_partition(module, params):
     else:
         retainViosCfg = not (retainViosCfg)
     try:
-        hmc.deletePartition(system_name, vm_name, retainViosCfg, deleteVdisks)
+        if system_name:
+            hmc.deletePartition(system_name, vm_name, retainViosCfg, deleteVdisks)
+        else:
+            ms_name = hmc.get_MS_names_by_lpar_name(vm_name)
+            if len(ms_name) == 1:
+                hmc.deletePartition(ms_name[0], vm_name, retainViosCfg, deleteVdisks)
+            elif len(ms_name) > 1:
+                err_msg = "Logical Partition Name: {0} found in more than one managed systems: {1} ,Please provide the system_name paramter" \
+                          " to avoid the confusion".format(vm_name, ms_name)
+                module.fail_json(msg=err_msg)
+            else:
+                err_msg = "Logical Partition Name:{0} not found in any of the managed systems, please provide system_name paramter".format(vm_name)
+                module.fail_json(msg=err_msg)
     except HmcError as del_lpar_error:
         error_msg = parse_error_response(del_lpar_error)
         if 'HSCL8012' in error_msg:
@@ -1597,7 +1609,7 @@ def run_module():
                           password=dict(type='str', no_log=True),
                       )
                       ),
-        system_name=dict(type='str', required=True),
+        system_name=dict(type='str'),
         vm_name=dict(type='str', required=True),
         vm_id=dict(type='int'),
         proc=dict(type='int'),
@@ -1652,7 +1664,7 @@ def run_module():
         mutually_exclusive=[('state', 'action')],
         required_one_of=[('state', 'action')],
         required_if=[['state', 'facts', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
-                     ['state', 'absent', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
+                     ['state', 'absent', ['hmc_host', 'hmc_auth', 'vm_name']],
                      ['state', 'present', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']],
                      ['action', 'shutdown', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
                      ['action', 'poweron', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],

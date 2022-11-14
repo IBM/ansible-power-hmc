@@ -45,9 +45,6 @@ test_data = [
       'os_type': 'ibmi'}, "ParameterError: mandatory parameters 'system_name,vm_name' are missing")]
 test_data1 = [
     # ALL Delete partition testdata
-    # system name is missing
-    ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'absent',
-      'system_name': None, 'vm_name': "vmname"}, "ParameterError: mandatory parameter 'system_name' is missing"),
     # vmname is missing
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'absent',
       'system_name': "systemname", 'vm_name': None}, "ParameterError: mandatory parameter 'vm_name' is missing"),

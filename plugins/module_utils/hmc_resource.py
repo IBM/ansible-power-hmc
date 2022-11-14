@@ -652,3 +652,30 @@ class Hmc():
             chhmcldap += self.OPT['CHHMCLDAP']['-O']['R'] +\
                 self.OPT['CHHMCLDAP']['-R'][resource]
         self.hmcconn.execute(chhmcldap)
+
+    def list_all_managed_system_or_lpar_names(self, sys=False, lpar=False, sys_name=None):
+        lines = []
+        lssyscfgCmd = self.CMD['LSSYSCFG']
+        if sys:
+            lssyscfgCmd += self.OPT['LSSYSCFG']['-R']['SYS'] + \
+                self.OPT['LSSYSCFG']['-F'] + "name"
+        elif lpar and sys_name:
+            lssyscfgCmd += self.OPT['LSSYSCFG']['-R']['LPAR'] + \
+                self.OPT['LSSYSCFG']['-M'] + sys_name +\
+                self.OPT['LSSYSCFG']['-F'] + "name"
+        try:
+            raw_result = self.hmcconn.execute(lssyscfgCmd)
+            lines = raw_result.split()
+        except HmcError as err:
+            err_msg = repr(err)
+            logger.debug(err_msg)
+        return lines
+
+    def get_MS_names_by_lpar_name(self, lpar_name):
+        mss = self.list_all_managed_system_or_lpar_names(sys=True)
+        ms_list = []
+        for ms_name in mss:
+            lpar_names = self.list_all_managed_system_or_lpar_names(lpar=True, sys_name=ms_name)
+            if lpar_name in lpar_names:
+                ms_list.append(ms_name)
+        return ms_list
