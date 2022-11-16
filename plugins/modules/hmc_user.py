@@ -330,6 +330,40 @@ EXAMPLES = '''
       username: <username>
       password: <password>
 
+- name: list the ldap configuration
+  hmc_user:
+    hmc_host: "{{ inventory_hostname }}"
+    hmc_auth:
+      username: <username>
+      password: <password>
+    resource: user
+    name: <hmc_user_name>
+    state: ldap_facts
+
+- name: configure ldap settings
+  hmc_user:
+    hmc_host: "{{ inventory_hostname }}"
+    hmc_auth:
+      username: <username>
+      password: <password>
+    ldap_settings:
+      primary: <primary_url>
+      bindpw: <bind_pwd>
+      basedn: ou=People,dc=<url>
+      hmcauthnameattribute: <attribute>
+      hmcuserpropsattribute: <attribute>
+      binddn: cn=Manager,dc=<url>
+      starttls: 0
+    action: configure_ldap
+
+- name: remove ldap configuration
+  hmc_user:
+    hmc_host: "{{ inventory_hostname }}"
+    hmc_auth:
+      username: <username>
+      password: <password>
+    ldap_resource: <resource_name>
+    action: remove_ldap_config
 '''
 
 RETURN = '''
@@ -476,18 +510,19 @@ def validate_parameters(params):
         unsupportedList = ['enable_user', 'attributes', 'resource', 'ldap_settings', 'ldap_resource']
     elif opr == 'updated':
         mandatoryList = ['hmc_host', 'hmc_auth']
+        unsupportedList = ['resource', 'ldap_settings', 'ldap_resource']
     elif opr == 'facts':
         mandatoryList = ['hmc_host', 'hmc_auth']
         unsupportedList = ['attributes', 'enable_user', 'resource', 'ldap_settings', 'ldap_resource']
     elif opr == 'ldap_facts':
         mandatoryList = ['hmc_host', 'hmc_auth', 'resource']
-        unsupportedList = ['attributes', 'enable_user', 'ldap_settings']
+        unsupportedList = ['attributes', 'enable_user', 'ldap_settings', 'type', 'ldap_resource']
     elif opr == 'configure_ldap':
         mandatoryList = ['hmc_host', 'hmc_auth', 'ldap_settings']
-        unsupportedList = ['attributes', 'enable_user', 'resource', 'ldap_resource', 'name']
+        unsupportedList = ['attributes', 'enable_user', 'resource', 'ldap_resource', 'name', 'type']
     elif opr == 'remove_ldap_config':
         mandatoryList = ['hmc_host', 'hmc_auth', 'ldap_resource']
-        unsupportedList = ['attributes', 'enable_user', 'resource', 'ldap_settings', 'name']
+        unsupportedList = ['attributes', 'enable_user', 'resource', 'ldap_settings', 'name', 'type']
 
     collate = []
     for eachMandatory in mandatoryList:
