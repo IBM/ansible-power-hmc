@@ -55,7 +55,6 @@ options:
     proc_settings:
         description:
             - Processor related settings
-        required: true
         type: dict
         suboptions:
             proc:
@@ -76,6 +75,7 @@ options:
                     - Valid values for partitions using shared processors are
                       C(capped), C(uncapped)
                 type: str
+                choices: ['keep_idle_procs', share_idle_procs', 'share_idle_procs_active', 'share_idle_procs_always', 'capped', 'uncapped']
             uncapped_weight:
                 description:
                     - The uncapped weight of the partition
@@ -87,7 +87,6 @@ options:
     mem_settings:
         description:
             - Memory related settings
-        required: true
         type: dict
         suboptions:
             mem:
@@ -96,8 +95,7 @@ options:
                 type: int
     timeout:
         description:
-            - The maximum time, in seconds, to wait for partition operating system commands issued by the HMC to complete
-        required: true
+            - The maximum time, in minutes, to wait for partition operating system to complete dlpar
         type: int
     action:
         description:
@@ -105,6 +103,7 @@ options:
               the update of processor or memory resources.
         type: str
         choices: ['update']
+        required: true
 
 '''
 
@@ -140,11 +139,7 @@ LOG_FILENAME = "/tmp/ansible_power_hmc.log"
 logger = logging.getLogger(__name__)
 import sys
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
-from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_resource import Hmc
-from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
-from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import Error
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import parse_error_response
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import HmcRestClient
 
@@ -200,7 +195,6 @@ def update_proc_mem(module, params):
     password = params['hmc_auth']['password']
     system_name = params['system_name']
     vm_name = params['vm_name']
-    operation = params['action']
     timeout = params["timeout"]
     proc = params['proc_settings']['proc'] if params.get('proc_settings') else None
     proc_unit = params['proc_settings']['proc_unit'] if params.get('proc_settings') else None
@@ -266,7 +260,7 @@ Setting proc units is not supported")
         logger.debug("prevProcValue: %s", prevProcValue)
         partition_dom = rest_conn.updateProc(partition_dom, isDedicated, proc=str(proc))
         difference = True
-    elif (proc_unit is not None and prevProcUnitValue != proc_unit):
+    if (proc_unit is not None and prevProcUnitValue != proc_unit):
         logger.debug("prevProcUnitValue: %s", prevProcUnitValue)
         partition_dom = rest_conn.updateProc(partition_dom, isDedicated, proc_unit=str(proc_unit))
         difference = True
@@ -307,8 +301,8 @@ Setting proc units is not supported")
         if isDedicated:
             module.fail_json(msg="Uncapped weight is not supported with dedicated processor configuration")
         else:
-            if rest_conn.getProcSharingMode(partition_dom) != 'uncapped' or \
-                    (sharing_mode is not None and sharing_mode != 'uncapped'):
+            if rest_conn.getProcSharingMode(partition_dom) == 'capped' and \
+                    (sharing_mode is None or sharing_mode == 'capped'):
                 module.fail_json(msg="Uncapped weight is not supported in case sharing mode is not uncapped")
         if prevUncappedWeight != uncapped_weight:
             partition_dom = rest_conn.updateProcUncappedWeight(partition_dom, str(uncapped_weight))
@@ -362,7 +356,8 @@ Setting proc units is not supported")
 
 
 def update_lpar(module, params):
-    if any(params['proc_settings'].values()) or any(params['mem_settings'].values()):
+    if (params['proc_settings'] is not None and any(params['proc_settings'].values())) or \
+       (params['mem_settings'] is not None and any(params['mem_settings'].values())):
         return update_proc_mem(module, params)
     else:
         return False, None, "No valid input configuration"
@@ -394,8 +389,8 @@ def run_module():
                           password=dict(type='str', no_log=True),
                       )
                       ),
-        system_name=dict(type='str'),
-        vm_name=dict(type='str'),
+        system_name=dict(type='str', required=True),
+        vm_name=dict(type='str', required=True),
         timeout=dict(type='int'),
         proc_settings=dict(type='dict',
                            options=dict(

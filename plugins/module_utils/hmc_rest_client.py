@@ -1408,8 +1408,8 @@ class HmcRestClient:
             partition_dom.xpath('//UncappedWeight')[0].text = weight
         else:
             weightXml = '<UncappedWeight kxe="false" kb="CUD">{0}</UncappedWeight>'.format(weight)
-            sharedProcElement = partition_dom.xpath('//SharedProcessorConfiguration/Metadata')[0]
-            sharedProcElement.addnext(etree.XML(weightXml))
+            sharedProcessorPoolIDElement = partition_dom.xpath('//SharedProcessorPoolID')[0]
+            sharedProcessorPoolIDElement.addnext(etree.XML(weightXml))
         return partition_dom
 
     def getProcUncappedWeight(self, partition_dom):
