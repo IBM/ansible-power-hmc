@@ -243,12 +243,16 @@ test_data4 = [
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'type': None, 'state': 'ldap_facts',
       'attributes': {'authentication_type': 'local', 'taskrole': 'taskrole', 'passwd': 'passwd'}, 'name': 'name', 'enable_user': None, 'resource': 'config',
       'ldap_settings': None, 'ldap_resource': None}, "ParameterError: unsupported parameter: attributes"),
+    # When resouce paramter is not mentioned for ldap_facts
+    ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'type': None, 'state': 'ldap_facts',
+      'attributes': None, 'name': 'name', 'enable_user': None, 'resource': None,
+      'ldap_settings': None, 'ldap_resource': None}, "ParameterError: mandatory parameter 'resource' is missing"),
     # When ldap_resource key is mentioned for ldap_facts state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'type': None, 'state': 'ldap_facts',
       'attributes': None, 'name': 'name', 'enable_user': None, 'resource': 'config',
       'ldap_settings': None, 'ldap_resource': 'backup'}, "ParameterError: unsupported parameter: ldap_resource")]
 test_data5 = [
-    # All ldap_facts related Testdata
+    # All configure_ldap related Testdata
     # when enable_user key is mentioned for configure_ldap state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'configure_ldap', 'name': None, 'type': None, 'enable_user': True,
       'attributes': None, 'resource': None, 'ldap_settings': ldap_sett, 'ldap_resource': None},
@@ -260,7 +264,7 @@ test_data5 = [
     # when type option is setted to ldap
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'configure_ldap', 'attributes': None, 'type': 'ldap', 'name': None,
       'enable_user': None, 'resource': None, 'ldap_settings': ldap_sett, 'ldap_resource': None}, "ParameterError: unsupported parameter: type"),
-    # when ldap_settings is mentioned for configure_ldap state
+    # when ldap_settings is not mentioned for configure_ldap state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'configure_ldap', 'attributes': None, 'type': None, 'name': None,
       'enable_user': None, 'resource': 'user', 'ldap_settings': None, 'ldap_resource': None},
      "ParameterError: mandatory parameter 'ldap_settings' is missing"),
@@ -272,12 +276,16 @@ test_data5 = [
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'type': None, 'state': 'configure_ldap',
       'attributes': None, 'name': "test", 'enable_user': None, 'resource': None,
       'ldap_settings': ldap_sett, 'ldap_resource': None}, "ParameterError: unsupported parameter: name"),
+    # When resource is mentioned for configure ldap
+    ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'type': None, 'state': 'configure_ldap',
+      'attributes': None, 'name': None, 'enable_user': None, 'resource': 'config',
+      'ldap_settings': ldap_sett, 'ldap_resource': None}, "ParameterError: unsupported parameter: resource"),
     # When ldap_resource key is mentioned for configure_ldap state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'type': None, 'state': 'configure_ldap',
       'attributes': None, 'name': None, 'enable_user': None, 'resource': None,
       'ldap_settings': ldap_sett, 'ldap_resource': 'backup'}, "ParameterError: unsupported parameter: ldap_resource")]
 test_data6 = [
-    # All ldap_facts related Testdata
+    # All remove_ldap_config related Testdata
     # when enable_user key is mentioned for remove_ldap_config state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': 'remove_ldap_config', 'name': None, 'type': None, 'enable_user': True,
       'attributes': None, 'resource': None, 'ldap_settings': None, 'ldap_resource': 'backup'},
@@ -297,6 +305,10 @@ test_data6 = [
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'type': None, 'state': 'remove_ldap_config',
       'attributes': {'authentication_type': 'local', 'taskrole': 'taskrole', 'passwd': 'passwd'}, 'name': None, 'enable_user': None, 'resource': None,
       'ldap_settings': None, 'ldap_resource': 'backup'}, "ParameterError: unsupported parameter: attributes"),
+    # When resource is mentioned for remove ldap
+    ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'type': None, 'state': 'remove_ldap_config',
+      'attributes': None, 'name': None, 'enable_user': None, 'resource': 'config',
+      'ldap_settings': None, 'ldap_resource': 'backup'}, "ParameterError: unsupported parameter: resource"),
     # when name key is mentioned for remove_ldap_config state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'type': None, 'state': 'remove_ldap_config',
       'attributes': None, 'name': "test", 'enable_user': None, 'resource': None,

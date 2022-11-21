@@ -374,7 +374,7 @@ Command_output:
 '''
 
 import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc.log"
+LOG_FILENAME = "/tmp/ansible_power_hmc_navin1.log"
 logger = logging.getLogger(__name__)
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
@@ -794,7 +794,6 @@ def configure_ldap(module, params):
 
     try:
         hmc.configure_LDAP_on_HMC('set', configDict=ldap_settings)
-        ldap_details = hmc.list_HMC_LDAP("config")
         changed = True
     except HmcError as error:
         logger.debug(repr(error))
@@ -814,11 +813,23 @@ def remove_ldap_config(module, params):
     hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(hmc_conn)
     try:
+        ldap_details = hmc.list_HMC_LDAP("config")
+        if ldap_resource in ['binddn', 'searchfilter', 'hmcgroups', 'groupmemberattributes']:
+            ldap_resource = 'MEMBERATTRIBUTE' if ldap_resource == 'groupmemberattributes' else ldap_resource
+            if ldap_details[0][ldap_resource.upper()] == '':
+                return changed, ldap_details, None
+        if ldap_resource == 'bindpw':
+            if ldap_details[0]['BINDPWSET'] == '0':
+                return changed, ldap_details, None
         hmc.configure_LDAP_on_HMC('remove', resource=ldap_resource)
         ldap_details = hmc.list_HMC_LDAP("config")
         changed = True
     except HmcError as error:
-        logger.debug(repr(error))
+        msg = repr(error)
+        logger.debug(msg)
+        if "LDAP is not configured on the Hardware Management Console" in msg:
+            ldap_details = hmc.list_HMC_LDAP("config")
+            return changed, ldap_details, None
         return changed, repr(error), None
     return changed, ldap_details, None
 
