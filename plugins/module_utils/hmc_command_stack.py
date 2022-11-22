@@ -551,7 +551,7 @@ class HmcCommandStack():
                         else:
                             key, value = each.split('=')
                     else:
-                        key, value = each.split('=')
+                        key, value = each.split('=',1)
                     key = key.strip('"').strip('\r\n')
                     value = value.strip('\r\n')
                     dict.update({key.upper(): value})

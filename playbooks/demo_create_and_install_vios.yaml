@@ -21,7 +21,7 @@
     vios:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth: "{{ curr_hmc_auth }}"
-      system_name: d131a
+      system_name: <System_Name>
       name: demo_vios
       settings:
         profile_name: default
@@ -37,12 +37,12 @@
     vios:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth: "{{ curr_hmc_auth }}"
-      system_name: d131a
+      system_name: <System_Name>
       name: demo_vios
-      nim_IP: 9.3.165.16
-      nim_gateway: 9.3.232.1
-      vios_IP: 9.3.232.18
-      nim_subnetmask: 255.255.254.0
+      nim_IP: <NIM Server IP>
+      nim_gateway: <NIM Server Gateway>
+      vios_IP: <VIOS IP>
+      nim_subnetmask: <NIM SUBNETMASK>
       timeout: 70
       action: install
     register: testout
@@ -55,8 +55,8 @@
     vios:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth: "{{ curr_hmc_auth }}"
-      system_name: d131a
-      name: Nov24
+      system_name: <System_Name>
+      name: demo_vios
       action: accept_license
     register: testout
 
