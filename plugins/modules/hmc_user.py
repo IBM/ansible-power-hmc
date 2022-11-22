@@ -794,6 +794,7 @@ def configure_ldap(module, params):
 
     try:
         hmc.configure_LDAP_on_HMC('set', configDict=ldap_settings)
+        ldap_details = hmc.list_HMC_LDAP("config")
         changed = True
     except HmcError as error:
         logger.debug(repr(error))
