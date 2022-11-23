@@ -396,7 +396,6 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                             continue
 
                 # Creating a group of managed systems
-                print(system['lpars'])
                 del system['lpars']
                 try:
                     ms_ip = system['IPAddress']
