@@ -75,7 +75,7 @@ options:
                     - Valid values for partitions using shared processors are
                       C(capped), C(uncapped)
                 type: str
-                choices: ['keep_idle_procs', share_idle_procs', 'share_idle_procs_active', 'share_idle_procs_always', 'capped', 'uncapped']
+                choices: ['keep_idle_procs', 'share_idle_procs', 'share_idle_procs_active', 'share_idle_procs_always', 'capped', 'uncapped']
             uncapped_weight:
                 description:
                     - The uncapped weight of the partition

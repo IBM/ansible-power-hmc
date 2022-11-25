@@ -1452,7 +1452,7 @@ class HmcRestClient:
         timeout_in_sec = 3600
         if timeout:
             if timeout > 60:
-                timeout_in_sec = timeout*60
+                timeout_in_sec = timeout * 60
 
             url = "https://{0}/rest/api/uom/LogicalPartition/{1}?timeout={2}".format(
                   self.hmc_ip, partition_uuid, timeout)
