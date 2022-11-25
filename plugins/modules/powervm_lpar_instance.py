@@ -944,6 +944,16 @@ def fetch_virt_networks(rest_conn, system_uuid, virt_nw_config_list, max_slot_no
     return virt_nws_identified
 
 
+def get_MS_names_by_lpar_name(hmc_obj, lpar_name):
+    mss = hmc_obj.list_all_managed_system_details("name")
+    ms_list = []
+    for ms_name in mss:
+        lpar_names = hmc_obj.list_all_lpars_details(ms_name, "name")
+        if lpar_name in lpar_names:
+            ms_list.append(ms_name)
+    return ms_list
+
+
 def create_partition(module, params):
     changed = False
     cli_conn = None
@@ -1233,15 +1243,15 @@ def remove_partition(module, params):
         if system_name:
             hmc.deletePartition(system_name, vm_name, retainViosCfg, deleteVdisks)
         else:
-            ms_name = hmc.get_MS_names_by_lpar_name(vm_name)
+            ms_name = get_MS_names_by_lpar_name(hmc, vm_name)
             if len(ms_name) == 1:
                 hmc.deletePartition(ms_name[0], vm_name, retainViosCfg, deleteVdisks)
             elif len(ms_name) > 1:
-                err_msg = "Logical Partition Name: {0} found in more than one managed systems: {1} ,Please provide the system_name paramter" \
+                err_msg = "Logical Partition Name:'{0}' found in more than one managed systems:'{1}',Please provide the system_name paramter" \
                           " to avoid the confusion".format(vm_name, ms_name)
                 module.fail_json(msg=err_msg)
             else:
-                err_msg = "Logical Partition Name:{0} not found in any of the managed systems, please provide system_name paramter".format(vm_name)
+                err_msg = "Logical Partition Name:'{0}' not found in any of the managed systems".format(vm_name)
                 module.fail_json(msg=err_msg)
     except HmcError as del_lpar_error:
         error_msg = parse_error_response(del_lpar_error)
