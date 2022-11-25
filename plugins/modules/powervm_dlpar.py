@@ -189,7 +189,6 @@ def fetch_facts(rest_conn, partition_dom):
 
 
 def update_proc_mem(module, params):
-    logger.debug(params)
     hmc_host = params['hmc_host']
     hmc_user = params['hmc_auth']['username']
     password = params['hmc_auth']['password']
@@ -335,19 +334,18 @@ Setting proc units is not supported")
         if pool_id:
             newPoolID = rest_conn.getProcPool(partition_dom)
 
-        logger.debug("difference: %s", difference)
         logger.debug("newProcValue: %s", newProcValue)
         logger.debug("newProcUnitValue: %s", newProcUnitValue)
-        logger.debug("newMem: %s", newMem)
         logger.debug("newSharingMode: %s", newSharingMode)
         logger.debug("newPoolID: %s", newPoolID)
+        logger.debug("newMem: %s", newMem)
     if difference and \
-        (newProcValue != prevProcValue or
-         newProcUnitValue != prevProcUnitValue or
-         newMem != prevMem or
-         newSharingMode != prevSharingMode or
-         newUncappedWeight != prevUncappedWeight or
-         newPoolID != prevPoolID):
+        (newProcValue != prevProcValue
+         or newProcUnitValue != prevProcUnitValue
+         or newMem != prevMem
+         or newSharingMode != prevSharingMode
+         or newUncappedWeight != prevUncappedWeight
+         or newPoolID != prevPoolID):
         changed = True
 
     vm_facts = fetch_facts(rest_conn, partition_dom)

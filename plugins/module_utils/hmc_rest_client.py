@@ -1420,7 +1420,6 @@ class HmcRestClient:
             return None
 
     def getProcPool(self, partition_dom):
-        logger.debug("getProcPool")
         return partition_dom.xpath('//CurrentSharedProcessorPoolID')[0].text
 
     def updateProcPool(self, partition_dom, poolId):
@@ -1428,13 +1427,9 @@ class HmcRestClient:
         return partition_dom
 
     def getProcs(self, isDedicated, partition_dom):
-        logger.debug("getProcs")
-        logger.debug(isDedicated)
         if isDedicated:
-            logger.debug("getProcs Ded")
             procs = partition_dom.xpath('//CurrentDedicatedProcessorConfiguration/CurrentProcessors')[0].text
         else:
-            logger.debug("getProcs Shared")
             procs = partition_dom.xpath('//CurrentSharedProcessorConfiguration/AllocatedVirtualProcessors')[0].text
         return procs
 
@@ -1454,7 +1449,11 @@ class HmcRestClient:
                   'Content-Type': 'application/vnd.ibm.powervm.uom+xml; type=LogicalPartition'}
 
         partition_uuid = partition_dom.xpath('//AtomID')[0].text
+        timeout_in_sec = 3600
         if timeout:
+            if timeout > 60:
+                timeout_in_sec = timeout*60
+
             url = "https://{0}/rest/api/uom/LogicalPartition/{1}?timeout={2}".format(
                   self.hmc_ip, partition_uuid, timeout)
         else:
@@ -1472,12 +1471,12 @@ class HmcRestClient:
                         data=partiton_xmlstr,
                         validate_certs=False,
                         force_basic_auth=True,
-                        timeout=3600)
+                        timeout=timeout_in_sec)
         if resp.code != 200:
             logger.debug("Post operation failed. Respsonse code: %d", resp.code)
             return None
         response = resp.read()
-        logger.debug(response)
+        logger.debug("POST RESPONSE: \n %s", response)
         post_response = xml_strip_namespace(response)
         return post_response
 
