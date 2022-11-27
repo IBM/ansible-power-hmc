@@ -13,7 +13,7 @@
       system_name: '{{ item }}'
       repository: sftp
       remote_repo:
-        hostname: 9.3.147.210
+        hostname: <sftp Server IP/Hostname>
         userid: <sftpuser>
         passwd: <sftpuserpasswd>
         directory: <images dir>

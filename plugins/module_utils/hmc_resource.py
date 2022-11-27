@@ -630,3 +630,54 @@ class Hmc():
         raw_result = self.hmcconn.execute(lssysconn_cmd)
         lines = raw_result.split()
         return lines
+
+    def list_HMC_LDAP(self, resource, filt=None):
+        lshmcldap_cmd = self.CMD['LSHMCLDAP'] +\
+            self.OPT['LSHMCLDAP']['-R'][resource.upper()]
+        if filt:
+            lshmcldap_cmd += self.cmdClass.filterBuilder('LSHMCLDAP', filt)
+        result = self.hmcconn.execute(lshmcldap_cmd)
+        if 'LDAP server is not configured' in result:
+            return []
+        return self.cmdClass.parseMultiLineCSV(result)
+
+    def configure_LDAP_on_HMC(self, operation, configDict=None, resource=None):
+        chhmcldap = self.CMD['CHHMCLDAP']
+        if operation == 'set':
+            chhmcldap += self.OPT['CHHMCLDAP']['-O']['S']
+            config = {each.upper(): str(configDict[each]) for each in configDict if configDict[each] is not None}
+            chhmcldap += self.cmdClass.configBuilder('CHHMCLDAP', config)
+        elif operation == 'remove':
+            resource = resource.upper()
+            chhmcldap += self.OPT['CHHMCLDAP']['-O']['R'] +\
+                self.OPT['CHHMCLDAP']['-R'][resource]
+        self.hmcconn.execute(chhmcldap)
+
+    def list_all_managed_system_details(self, filter=None):
+        lines = []
+        lssyscfgCmd = self.CMD['LSSYSCFG'] +\
+            self.OPT['LSSYSCFG']['-R']['SYS']
+        if filter:
+            lssyscfgCmd += self.OPT['LSSYSCFG']['-F'] + filter
+        try:
+            raw_result = self.hmcconn.execute(lssyscfgCmd)
+            lines = raw_result.split()
+        except HmcError as err:
+            err_msg = repr(err)
+            logger.debug(err_msg)
+        return lines
+
+    def list_all_lpars_details(self, sys_name, filter=None):
+        lines = []
+        lssyscfgCmd = self.CMD['LSSYSCFG'] +\
+            self.OPT['LSSYSCFG']['-R']['LPAR'] +\
+            self.OPT['LSSYSCFG']['-M'] + sys_name
+        if filter:
+            lssyscfgCmd += self.OPT['LSSYSCFG']['-F'] + filter
+        try:
+            raw_result = self.hmcconn.execute(lssyscfgCmd)
+            lines = raw_result.split()
+        except HmcError as err:
+            err_msg = repr(err)
+            logger.debug(err_msg)
+        return lines
