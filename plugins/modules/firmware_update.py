@@ -12,35 +12,35 @@ module: firmware_update
 short_description: Change firmware level on Managed Systems
 version_added: "1.1.0"
 description:
-    - Update/Upgrade a managed system
+    - Update/Upgrade a managed system.
 options:
     hmc_host:
         description:
-            - IPaddress or hostname of the HMC
+            - IP address or hostname of the HMC.
         required: true
         type: str
     hmc_auth:
         description:
-            - Username and Password credential of the HMC
+            - Username and Password credential of the HMC.
         required: true
         type: dict
         suboptions:
             username:
                 description:
-                    - HMC username
+                    - HMC username.
                 required: true
                 type: str
             password:
                 description:
-                    - HMC password
+                    - HMC password.
                 type: str
     system_name:
         description:
-            - The name of the managed system
+            - The name of the managed system.
         required: true
         type: str
     repository:
-        description: Type of image repository for the firmware image
+        description: Type of image repository for the firmware image.
         type: str
         default: ibmwebsite
         choices:
@@ -48,12 +48,12 @@ options:
           - ftp
           - sftp
     remote_repo:
-        description: When the image repository needs credentials to be accessed remotely
+        description: When the image repository needs credentials to be accessed remotely.
         type: dict
         suboptions:
             hostname:
                 description:
-                    - The hostname or IPaddress of the remote server where the
+                    - The hostname or IP address of the remote server where the
                       firmware image is located.
                 required: true
                 type: str
@@ -77,22 +77,22 @@ options:
                 type: str
             directory:
                 description:
-                    - Location where the images are stored on the host
+                    - Location where the images are stored on the host.
                 required: true
                 type: str
     level:
-        description: target level of operation
+        description: target level of operation.
         type: str
         default: latest
     state:
         description:
-            - C(updated) executes an update on target system
-            - C(upgraded) executes an upgrade on target system
+            - C(updated) executes an update on target system.
+            - C(upgraded) executes an upgrade on target system.
         type: str
         choices: ['updated', 'upgraded']
     action:
         description:
-            - C(accept) accepts firmware level for target system
+            - C(accept) accepts firmware level for target system.
         type: str
         choices: ['accept']
 
@@ -101,7 +101,7 @@ author:
 '''
 
 EXAMPLES = r'''
-- name: Update to latest level with default values (latest at ibmwebsite)
+- name: Update to latest level with default values (latest at ibmwebsite).
   ibm.power_hmc.firmware_update:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -109,7 +109,7 @@ EXAMPLES = r'''
          password: '{{ hmc_password }}'
       state: updated
 
-- name: Upgrade system to specific level at an sftp repo
+- name: Upgrade system to specific level at an sftp repo.
   firmware_update:
     hmc_host: '{{ inventory_hostname }}'
     hmc_auth: '{{ curr_hmc_auth }}'

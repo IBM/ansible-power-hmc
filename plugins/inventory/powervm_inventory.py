@@ -41,7 +41,8 @@ description:
       only partitions for which that property is defined may be included. Non-compatible partitions can be
       filtered out by `OperatingSystemVersion` or `PartitionType` as detailed in the second example.
     - A group named 'MaagedSystems' gets created with all the Power Server Managed by the HMC
-      only when group_lpars_by_managed_system option set to false in the dynamic inventory playbook.
+      and Power Server grouping features enables only when group_lpars_by_managed_system option set to false
+      in the dynamic inventory playbook.
 
 options:
     hmc_hosts:

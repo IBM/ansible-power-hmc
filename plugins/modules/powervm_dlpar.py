@@ -54,7 +54,7 @@ options:
         type: str
     proc_settings:
         description:
-            - Processor related settings
+            - Processor related settings.
         type: dict
         suboptions:
             proc:
@@ -69,24 +69,24 @@ options:
                 type: float
             sharing_mode:
                 description:
-                    - The sharing mode of the partition
+                    - The sharing mode of the partition.
                     - Valid values for partitions using dedicated processors are
-                      C(keep_idle_procs), C(share_idle_procs), C(share_idle_procs_active), C(share_idle_procs_always)
+                      C(keep_idle_procs), C(share_idle_procs), C(share_idle_procs_active), C(share_idle_procs_always).
                     - Valid values for partitions using shared processors are
-                      C(capped), C(uncapped)
+                      C(capped), C(uncapped).
                 type: str
                 choices: ['keep_idle_procs', 'share_idle_procs', 'share_idle_procs_active', 'share_idle_procs_always', 'capped', 'uncapped']
             uncapped_weight:
                 description:
-                    - The uncapped weight of the partition
+                    - The uncapped weight of the partition.
                 type: int
             pool_id:
                 description:
-                    - Shared Processor Pool ID to be set
+                    - Shared Processor Pool ID to be set.
                 type: int
     mem_settings:
         description:
-            - Memory related settings
+            - Memory related settings.
         type: dict
         suboptions:
             mem:
@@ -95,7 +95,7 @@ options:
                 type: int
     timeout:
         description:
-            - The maximum time, in minutes, to wait for partition operating system to complete dlpar
+            - The maximum time, in minutes, to wait for partition operating system to complete dlpar.
         type: int
     action:
         description:
@@ -108,7 +108,7 @@ options:
 '''
 
 EXAMPLES = '''
-- name: Dynamically set the processor and memory values
+- name: Dynamically set the processor and memory values.
   powervm_dlpar:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
@@ -129,7 +129,7 @@ EXAMPLES = '''
 
 RETURN = '''
 partition_info:
-    description: Return the proc and memory attributes of the partition
+    description: Return the proc and memory attributes of the partition.
     type: dict
     returned: always
 '''
