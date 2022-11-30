@@ -1059,10 +1059,10 @@ def create_partition(module, params):
         if proc_compatibility_mode not in supp_compat_modes:
             raise HmcError("unsupported proc_compat_mode:{0}, Supported proc_compat_modes are {1}".format(proc_compatibility_mode, supp_compat_modes))
 
-    if params['npiv_config']:
-        fcports_config = fetch_fc_config(rest_conn, system_uuid, params['npiv_config'])
-
     try:
+        if params['npiv_config']:
+            fcports_config = fetch_fc_config(rest_conn, system_uuid, params['npiv_config'])
+
         if os_type in ['aix', 'linux', 'aix_linux']:
             reference_template = "QuickStart_lpar_rpa_2"
         else:
