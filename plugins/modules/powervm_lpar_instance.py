@@ -398,7 +398,7 @@ options:
 
 EXAMPLES = '''
 - name: Create an IBMi logical partition instance with shared proc, volume_config's vios_name and volume_name values, PhysicaIO and
-        max_virtual_slots
+        max_virtual_slots.
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -423,7 +423,7 @@ EXAMPLES = '''
       state: present
 
 - name: Create an AIX/Linux logical partition instance with default proc, mem, virt_network_config, volume_config's volumes_size and
-        npiv_config, vnic_config
+        npiv_config, vnic_config.
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -457,7 +457,7 @@ EXAMPLES = '''
       os_type: aix_linux
       state: present
 
-- name: Delete a logical partition instance with retain_vios_cfg and delete_vdisk options
+- name: Delete a logical partition instance with retain_vios_cfg and delete_vdisk options.
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -469,7 +469,7 @@ EXAMPLES = '''
       delete_vdisks: True
       state: absent
 
-- name: Shutdown a logical partition
+- name: Shutdown a logical partition.
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -479,7 +479,7 @@ EXAMPLES = '''
       vm_name: <vm_name>
       action: shutdown
 
-- name: Activate an AIX/Linux logical partition with user defined profile_name
+- name: Activate an AIX/Linux logical partition with user defined profile_name.
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -490,7 +490,7 @@ EXAMPLES = '''
       prof_name: <profile_name>
       action: poweron
 
-- name: Activate IBMi based on its current configuration with keylock and iIPLsource options
+- name: Activate IBMi based on its current configuration with keylock and iIPLsource options.
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -502,7 +502,7 @@ EXAMPLES = '''
       iIPLsource: 'd'
       action: poweron
 
-- name: Create a partition with all resources
+- name: Create a partition with all resources.
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -514,7 +514,7 @@ EXAMPLES = '''
       os_type: aix_linux
       state: present
 
-- name: Install Aix/Linux OS on LPAR from NIM Server
+- name: Install Aix/Linux OS on LPAR from NIM Server.
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth: "{{ curr_hmc_auth }}"
@@ -1059,10 +1059,10 @@ def create_partition(module, params):
         if proc_compatibility_mode not in supp_compat_modes:
             raise HmcError("unsupported proc_compat_mode:{0}, Supported proc_compat_modes are {1}".format(proc_compatibility_mode, supp_compat_modes))
 
-    if params['npiv_config']:
-        fcports_config = fetch_fc_config(rest_conn, system_uuid, params['npiv_config'])
-
     try:
+        if params['npiv_config']:
+            fcports_config = fetch_fc_config(rest_conn, system_uuid, params['npiv_config'])
+
         if os_type in ['aix', 'linux', 'aix_linux']:
             reference_template = "QuickStart_lpar_rpa_2"
         else:

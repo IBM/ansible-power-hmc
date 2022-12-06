@@ -23,6 +23,9 @@ description:
     - List Hardware Management Console user information
     - Modify a Hardware Management Console user
     - Remove Hardware Management Console users
+    - List LDAP Configurations
+    - Configure LDAP Settings
+    - Remove LDAP Configurations
 version_added: 1.0.0
 options:
     hmc_host:
@@ -66,7 +69,7 @@ options:
     resource:
         description:
             - The LDAP resources to be listed. This option is valid only for I(state=ldap_facts).
-              To filter out the LDAP configuration of perticular user we can use C(name) parameter with I(resource=user)
+              To filter out the LDAP configuration of particular user we can use C(name) parameter with I(resource=user).
         type: str
         choices: ['config', 'user']
     ldap_resource:
@@ -163,7 +166,7 @@ options:
                 type: int
     ldap_settings:
         description:
-            - Configuration attributes used during Configuration LDAP on HMC.
+            - Configuration attributes used during Configuration of LDAP on HMC.
         type: dict
         suboptions:
             primary:
@@ -172,15 +175,15 @@ options:
                 type: str
             backup:
                 description:
-                    - The  backup  LDAP  server.
+                    - The backup LDAP  server.
                 type: str
             basedn:
                 description:
-                    - The  base  DN  for  LDAP  search.
+                    - The base DN for LDAP search.
                 type: str
             binddn:
                 description:
-                    - The DN to use for binding to the LDAP server when the LDAP server is configured to use non-anonymous  binding.
+                    - The DN to use for binding to the LDAP server when the LDAP server is configured to use non-anonymous binding.
                 type: str
             bindpw:
                 description:
@@ -193,18 +196,17 @@ options:
                 type: str
             bindtimelimit:
                 description:
-                    - The  LDAP  server bind time limit in seconds.
+                    - The LDAP server bind time limit in seconds.
                 type: str
             automanage:
                 description:
-                    - Use this option to indicate whether the HMC should automatically manage remotely authenticated LDAP  users.
+                    - Use this option to indicate whether the HMC should automatically manage remotely authenticated LDAP users.
                     - Valid values are 0 to disable automatic management, or 1 to enable automatic management.
                 type: str
                 choices: ['1', '0']
             auth:
                 description:
-                    - The type of authentication to use for automatically managed LDAP users.  Valid values are ldap to use  LDAP
-                      authentication, or kerberos to use Kerberos authentication.
+                    - The type of authentication to use for automatically managed LDAP users.
                 type: str
                 choices: ['ldap','kerberos']
             loginattribute:
@@ -230,7 +232,7 @@ options:
                 choices: ['one','sub']
             referrals:
                 description:
-                    - Specifies  whether  automatic  referral chasing is to be enabled or disabled.
+                    - Specifies whether automatic referral chasing is to be enabled or disabled.
                 type: str
                 choices: ['0','1']
             starttls:
@@ -244,13 +246,13 @@ options:
                 type: str
             authsearch:
                 description:
-                    - Specifies  whether  the HMC will attempt an LDAP search, with the user's credentials, as an additional con-
+                    - Specifies whether  the HMC will attempt an LDAP search, with the user's credentials, as an additional con-
                       firmation that the bind operation was successful.
                 type: str
                 choices: ['base', 'none']
             tlsreqcert:
                 description:
-                    - Specifies  what  checks to perform on a server-supplied certificate.
+                    - Specifies what checks to perform on a server-supplied certificate.
                 type: str
                 choices: ['never', 'allow', 'try', 'demand']
             groupattribute:
@@ -260,7 +262,7 @@ options:
                 type: str
             memberattribute:
                 description:
-                    - Specifies  the  name  of the group Member attribute on the LDAP server.
+                    - Specifies the name of the group Member attribute on the LDAP server.
                     - When this option is specified, the 'groupattribute' option must also be specified.
                 type: str
     state:
@@ -287,7 +289,7 @@ options:
 '''
 
 EXAMPLES = '''
-- name: List the properties of hmc user
+- name: List the properties of hmc user.
   hmc_user:
     state: facts
     hmc_host: "{{ inventory_hostname }}"
@@ -296,7 +298,7 @@ EXAMPLES = '''
       username: <username>
       password: <password>
 
-- name: Create hmc user
+- name: Create hmc user.
   hmc_user:
     state: present
     hmc_host: "{{ inventory_hostname }}"
@@ -309,7 +311,7 @@ EXAMPLES = '''
       taskrole: hmcsuperadmin
       passwd: <new_user_password>
 
-- name: Modify hmc user
+- name: Modify hmc user.
   hmc_user:
     state: updated
     hmc_host: "{{ inventory_hostname }}"
@@ -321,7 +323,7 @@ EXAMPLES = '''
       new_name: <new_user_name>
       max_webui_login_attempts: 20
 
-- name: Remove hmc user
+- name: Remove hmc user.
   hmc_user:
     state: absent
     hmc_host: "{{ inventory_hostname }}"
@@ -330,7 +332,7 @@ EXAMPLES = '''
       username: <username>
       password: <password>
 
-- name: list the ldap configuration
+- name: List the ldap configuration.
   hmc_user:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
@@ -340,7 +342,7 @@ EXAMPLES = '''
     name: <hmc_user_name>
     state: ldap_facts
 
-- name: configure ldap settings
+- name: Configure ldap settings.
   hmc_user:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
@@ -356,7 +358,7 @@ EXAMPLES = '''
       starttls: 0
     action: configure_ldap
 
-- name: remove ldap configuration
+- name: Remove ldap configuration.
   hmc_user:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
