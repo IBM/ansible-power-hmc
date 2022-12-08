@@ -269,7 +269,7 @@ def validate_parameters(params):
         passwd = remote_repo['passwd']
         sshkey = remote_repo['sshkey_file']
         if passwd and sshkey:
-            raise ParameterError("'passwd' and 'sskey_file' are  mutually exclusive")
+            raise ParameterError("'passwd' and 'sshkey_file' are  mutually exclusive")
         repository = params['repository']
         if repository == 'ftp' and sshkey is not None:
             raise ParameterError("'repository:ftp' and 'sshkey_file' are  incompatible")
