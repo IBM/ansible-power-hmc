@@ -279,10 +279,10 @@ options:
         choices: ['facts', 'present', 'absent', 'updated', ldap_facts]
     action:
         description:
-            - C(configure_ldap) Configure Hardware Management Console (HMC) Light weight Directory Access Protocol (LDAP) client con-
-              figuration.
-            - C(remove_ldap_config) Remove the Hardware Management Console (HMC) Light weight Directory Access Protocol (LDAP) client con-
-              figuration.
+            - C(configure_ldap) Configure Hardware Management Console (HMC) Light weight Directory Access Protocol (LDAP) client
+              configuration.
+            - C(remove_ldap_config) Remove the Hardware Management Console (HMC) Light weight Directory Access Protocol (LDAP) client
+              configuration.
         type: str
         choices: ['configure_ldap', 'remove_ldap_config']
 

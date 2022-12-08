@@ -382,7 +382,7 @@ options:
     state:
         description:
             - C(present) creates a partition of the specified I(os_type), I(vm_name), I(proc) and I(memory) on specified I(system_name).
-            - C(absent) deletes a partition of the specified I(vm_name) on specified I(system_name).
+            - C(absent) deletes a partition of the specified I(vm_name).
             - C(facts) fetch the details of the specified I(vm_name) on specified I(system_name).
         type: str
         choices: ['present', 'absent', 'facts']

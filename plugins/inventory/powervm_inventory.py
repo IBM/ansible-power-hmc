@@ -32,7 +32,7 @@ description:
       L(Knowledge Center, https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/LogicalPartition.htm).
     - Valid Power Server properties that can be used for system_groups, system_keyed_groups, system_filters
       and system_composit variables can be found in HMC REST API documentation listed as 'Quick Properties'.
-      (These options works only when group_lpars_by_managed_system option set to false)
+      (These options works only when `group_lpars_by_managed_system` option set to false)
       L(Knowledge Center, https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/ManagedSystem.htm').
     - Apart from properties defined in HMC REST API Documentation we can use the following properties also with Power Server,
       and LPAR/VIOS 'AssociatedGroups' (Tagged group name), 'AssociatedHMC' (HMC IP/Hostname), 'AssociatedHMCUserName' (HMC username)
@@ -41,7 +41,7 @@ description:
       only partitions for which that property is defined may be included. Non-compatible partitions can be
       filtered out by `OperatingSystemVersion` or `PartitionType` as detailed in the second example.
     - A group named 'MaagedSystems' gets created with all the Power Server Managed by the HMC
-      and Power Server grouping features enables only when group_lpars_by_managed_system option set to false
+      and Power Server grouping features enables only when `group_lpars_by_managed_system` option set to false
       in the dynamic inventory playbook.
 
 options:
@@ -142,7 +142,7 @@ options:
               targeting groups that include them. To avoid this, you can specify a host pattern
               in a playbooks such as `targetgroup:!unknown`.
               This will your playbook to run against all known hosts in your target group.
-            - This is not valid for IBMi LPARs and Power Servers.
+            - This is not valid for Power Servers.
         default: omit
         type: str
 '''
