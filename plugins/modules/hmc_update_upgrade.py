@@ -579,7 +579,7 @@ def run_module():
 
     if sys.version_info < (3, 0):
         py_ver = sys.version_info[0]
-        module.fail_json("Unsupported Python version {0}, supported python version is 3 and above".format(py_ver))
+        module.fail_json(msg="Unsupported Python version {0}, supported python version is 3 and above".format(py_ver))
 
     changed, build_info, warning = perform_task(module)
 

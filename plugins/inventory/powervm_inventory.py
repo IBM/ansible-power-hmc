@@ -5,121 +5,153 @@ from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
 DOCUMENTATION = '''
-    name: powervm_inventory
-    author:
-        - Torin Reilly (@torinreilly)
-        - Michael Cohoon (@mtcohoon)
-        - Ozzie Rodriguez (@OzzieRodriguez)
-        - Anil Vijayan (@AnilVijayan)
-        - Navinakumar Kandakur (@nkandak1)
-    version_added: "1.1.0"
-    requirements:
-        - Python >= 3
-    short_description: HMC-based inventory source for Power Systems
-    description:
-        - This plugin utilizes HMC APIs to build a dynamic inventory
-          of defined partitions (LPAR, VIOS). Inventory sources must be structured as *.power_hmc.yml
-          or *.power_hmc.yaml.
-        - To create a usable Ansible host for a given LPAR, the IP or hostname
-          of the LPAR must be exposed through the HMC in some way.
-          Currently there are only two such sources supported by this plugin,
-          either an RMC IP address(not valid for IBMi partition) or the name of the LPAR must be also a valid hostname.
-        - Valid LPAR/VIOS properties that can be used for groups, keyed groups, filters, unknown partition identification,
-          and composite variables can be found in the HMC REST API documentation. By default, valid properties include those
-          listed as "Quick Properties", but if `advanced_fields` are enabled, you may be able to use more advanced properties of the
-          partition. Further information about the APIs can be found in the
-          L(Knowledge Center, https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/LogicalPartition.htm).
-        - If a property is used in the inventory source that is unique to a partition type,
-          only partitions for which that property is defined may be included. Non-compatible partitions can be
-          filtered out by `OperatingSystemVersion` or `PartitionType` as detailed in the second example.
+---
+name: powervm_inventory
+author:
+    - Torin Reilly (@torinreilly)
+    - Michael Cohoon (@mtcohoon)
+    - Ozzie Rodriguez (@OzzieRodriguez)
+    - Anil Vijayan (@AnilVijayan)
+    - Navinakumar Kandakur (@nkandak1)
+version_added: "1.2.0"
+requirements:
+    - Python >= 3
+short_description: HMC-based inventory source for Power Servers
+description:
+    - This plugin utilizes HMC APIs to build a dynamic inventory
+      of defined partitions (LPAR, VIOS) and Power Servers. Inventory sources must be structured as *.power_hmc.yml
+      or *.power_hmc.yaml.
+    - To create a usable Ansible host for a given LPAR or Power Server, the IP or hostname
+      of the LPAR or Power Server must be exposed through the HMC in some way.
+      Currently there are only two such sources supported by this plugin,
+      either an RMC IP address(not valid for IBMi partition) or the name of the LPAR or Power Server must be also a valid hostname.
+    - Valid LPAR/VIOS properties that can be used for groups, keyed groups, filters, unknown partition identification,
+      and composite variables can be found in the HMC REST API documentation. By default, valid properties include those
+      listed as "Quick Properties", but if `advanced_fields` are enabled, you may be able to use more advanced properties of the
+      partition. Further information about the LPAR APIs can be found in the
+      L(Knowledge Center, https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/LogicalPartition.htm).
+    - Valid Power Server properties that can be used for system_groups, system_keyed_groups, system_filters
+      and system_composit variables can be found in HMC REST API documentation listed as 'Quick Properties'.
+      (These options works only when `group_lpars_by_managed_system` option set to false)
+      L(Knowledge Center, https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/ManagedSystem.htm').
+    - Apart from properties defined in HMC REST API Documentation we can use the following properties also with Power Server,
+      and LPAR/VIOS 'AssociatedGroups' (Tagged group name), 'AssociatedHMC' (HMC IP/Hostname), 'AssociatedHMCUserName' (HMC username)
+      for LPAR/VIOS or Power server grouping and compose.
+    - If a property is used in the inventory source that is unique to a partition type,
+      only partitions for which that property is defined may be included. Non-compatible partitions can be
+      filtered out by `OperatingSystemVersion` or `PartitionType` as detailed in the second example.
+    - A group named 'MaagedSystems' gets created with all the Power Server Managed by the HMC
+      and Power Server grouping features enables only when `group_lpars_by_managed_system` option set to false
+      in the dynamic inventory playbook.
 
-    options:
-        hmc_hosts:
-          description: A dictionary of hosts and their associated usernames and passwords.
-          required: true
-          type: dict
-        filters:
-            description:
-                - A key value pair for filtering by various LPAR/VIOS attributes.
-                  Only results matching the filter will be included in the inventory.
-            default: {}
-        compose:
-            description: Create vars from Jinja2 expressions.
-            default: {}
-            type: dict
-        groups:
-            description: Add hosts to group based on Jinja2 conditionals.
-            default: {}
-            type: dict
-        keyed_groups:
-            description: Add hosts to group based on the values of a variable.
-            type: list
-            elements: str
-        exclude_ip:
-            description: A list of IP addresses to exclude from the inventory.
-              This will be compared to the RMC IP address specified in the HMC.
-              Currently, no hostname lookup is performed, so only IP addresses
-              that match the RMC IP address specified in the HMC will be excluded.
-              This is not valid for IBMi LPARs
-            type: list
-            elements: str
-        exclude_lpar:
-            description: A list of partitions (LPAR, VIOS) to exclude by partition name.
-            type: list
-            elements: str
-        exclude_system:
-            description: A list of HMC managed systems whose partitions (LPAR, VIOS)
-              will be excluded from the dynamic inventory.
-            type: list
-            elements: str
-        ansible_display_name:
-            description: By default, partitions names will be used as the name displayed by
-              Ansible in output. If you wish this to display the IP address instead you may
-              set this to "ip".
-            default: "lpar_name"
-            choices: [lpar_name, ip]
-            type: str
-        ansible_host_type:
-            description: Determines if the ip address or the LPAR name will be used as
-              the "ansible_host" variable in playbooks.
-              This is not valid for IBMi LPARs
-            default: "ip"
-            choices: [lpar_name, ip]
-            type: str
-        advanced_fields:
-            description:
-                - Allows for additional LPAR/VIOS properties to be used for
-                  the purposes of grouping and filtering.
-                - Retrieving these properties could increase dynamic inventory generation run time,
-                  depending on the size of your environment and the properties to be fetched.
-            default: false
-            type: bool
-        group_by_managed_system:
-            description: Creates a grouping of partitions by managed system name. This is enabled by default.
-            default: true
-            type: bool
-        identify_unknown_by:
-            description:
-                - Allows you to include partitions unable to be automatically detected
-                  as a valid Ansible target.
-                - By default, Aix/Linux partitions without IP's and IBMi partitions in not running state are omitted from the inventory.
-                  This is not be the case in the event you have lpar_name set for ansible_host_type.
-                  If not, omitted partitions will be added to a group called "unknown"
-                  and will can be identified by any LPAR property of your choosing
-                  (PartitionName or UUID are common identifiers).
-                - If you do not omit unknown partitions, you may run into issues
-                  targeting groups that include them. To avoid this, you can specify a host pattern
-                  in a playbooks such as `targetgroup:!unknown`.
-                  This will your playbook to run against all known hosts in your target group.
-            default: omit
-            type: str
+options:
+    hmc_hosts:
+        description: A List of hosts and their associated usernames and passwords.
+        required: true
+        type: list
+        elements: dict
+    filters:
+        description:
+            - A key value pair for filtering by various LPAR/VIOS attributes.
+              Only results matching the filter will be included in the inventory.
+        default: {}
+    system_filters:
+        description:
+            - A key value pair for filtering by various Power Server attributes.
+              Results include only system_filter matching Power Servers and LPAR/VIOS belongs to it.
+        default: {}
+    compose:
+        description: Create vars from Jinja2 expressions(Valid only for LPAR or VIOS).
+        default: {}
+        type: dict
+    system_compose:
+        description: Create vars from Jinja2 expressions(Valid only for Power Server).
+        default: {}
+        type: dict
+    groups:
+        description: Add LPAR or VIOS hosts to group based on Jinja2 conditionals.
+        default: {}
+        type: dict
+    system_groups:
+        description: Add Power Server hosts to group based on Jinja2 conditionals.
+        default: {}
+        type: dict
+    keyed_groups:
+        description: Add LPAR or VIOS hosts to group based on the values of a variable.
+        type: list
+        elements: str
+    system_keyed_groups:
+        description: Add Power Server hosts to group based on the values of a variable.
+        type: list
+        elements: str
+    exclude_ip:
+        description: A list of IP addresses to exclude from the inventory.
+          This will be compared to the IP address specified in the HMC.
+          Currently, no hostname lookup is performed, so only IP addresses
+          that match the IP address specified in the HMC will be excluded.
+          This is not valid for IBMi LPARs.
+        type: list
+        elements: str
+    exclude_lpar:
+        description: A list of partitions (LPAR, VIOS) to exclude by partition name.
+        type: list
+        elements: str
+    exclude_system:
+        description: A list of HMC managed Power Server and their partitions (LPAR, VIOS)
+          will be excluded from the dynamic inventory.
+          Works only with HMC Discovered Power Server name.
+        type: list
+        elements: str
+    ansible_display_name:
+        description: By default, partitions/Power Servers name will be used as the name displayed by
+          Ansible in output. If you wish this to display the IP address instead you may
+          set this to "ip".
+        default: "name"
+        choices: [name, ip]
+        type: str
+    ansible_host_type:
+        description: Determines if the IP Address or the LPAR/Power Server name will be used as
+          the "ansible_host" variable in playbooks.
+        default: "ip"
+        choices: [name, ip]
+        type: str
+    advanced_fields:
+        description:
+            - Allows for additional LPAR/VIOS properties to be used for
+              the purposes of grouping and filtering.
+            - Retrieving these properties could increase dynamic inventory generation run time,
+              depending on the size of your environment and the properties to be fetched.
+        default: false
+        type: bool
+    group_lpars_by_managed_system:
+        description:
+            - Creates a grouping of partitions by managed system name. This is enabled by default.
+            - This option should be set to false to enable Power Server grouping feature.
+        default: true
+        type: bool
+    identify_unknown_by:
+        description:
+            - Allows you to include partitions unable to be automatically detected
+              as a valid Ansible target.
+            - By default, Aix/Linux partitions without IP's and IBMi partitions in not running state are omitted from the inventory.
+              This is not be the case in the event you have name set for ansible_host_type.
+              If not, omitted partitions will be added to a group called "unknown"
+              and will can be identified by any LPAR property of your choosing
+              (PartitionName or UUID are common identifiers).
+            - If you do not omit unknown partitions, you may run into issues
+              targeting groups that include them. To avoid this, you can specify a host pattern
+              in a playbooks such as `targetgroup:!unknown`.
+              This will your playbook to run against all known hosts in your target group.
+            - This is not valid for Power Servers.
+        default: omit
+        type: str
 '''
 
 EXAMPLES = '''
 # The most minimal example, targeting only a single HMC
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_host_name":
+  - hmc: <hmc_host_name>
     user: <HMC_Username>
     password: <HMC_Password>
 
@@ -127,7 +159,7 @@ hmc_hosts:
 # This may be important if grouping by advanced_fields exclusive to VIOS.
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_host_name":
+  - hmc: <hmc_host_name>
     user: <HMC_Username>
     password: <HMC_Password>
 filters:
@@ -136,10 +168,10 @@ filters:
 # Target multiple HMC hosts and only add running partitions to the inventory
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_host_name":
+  - hmc: <hmc_host_name>
     user: <HMC1_Username>
     password: <HMC1_Password>
-  "hmc_host_name2":
+  - hmc: <hmc_host_name>
     user: <HMC2_Username>
     password: <HMC2_Password>
 filters:
@@ -148,10 +180,10 @@ filters:
 # Generate an inventory of all running partitions and create a separate group for AIX 7.2 and IBMi type of partitions
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_host_name":
+  - hmc: <hmc_host_name>
     user: <HMC1_Username>
     password: <HMC1_Password>
-  "hmc_host_name2":
+  - hmc: <hmc_host_name>
     user: <HMC2_Username>
     password: <HMC2_Password>
 filters:
@@ -165,10 +197,10 @@ groups:
 # Additionally, include the following variables as host_vars for a given target host: CurrentMemory, OperatingSystemVersion, PartitionName
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_host_name":
+  - hmc: <hmc_host_name>
     user: <HMC1_Username>
     password: <HMC1_Password>
-  "hmc_host_name2":
+  - hmc: <hmc_host_name>
     user: <HMC2_Username>
     password: <HMC2_Password>
 filters:
@@ -180,11 +212,13 @@ compose:
   current_memory: CurrentMemory
   os: OperatingSystemVersion
   name: PartitionName
+  HMCIP: AssociatedHMC
+  HMCUSERNAME: AssociatedHMCUserName
 
 ## Generate an inventory that excludes partitions by ip, name, or the name of managed system on which they run
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "hmc_host_name":
+  - hmc: <hmc_host_name>
     user: <HMC2_Username>
     password: <HMC_Password>
 exclude_ip:
@@ -198,6 +232,42 @@ exclude_lpar:
 exclude_system:
     - Frame1-XXX-WWWWWW
     - Frame2-XXX-WWWWWW
+
+# Generate an inventory of operating Power Servers and group them by SystemType with a prefix of type_
+# Groups will be created will resemble "type_fsp", "type_ebmc", etc.
+# Additionally, include the following variables as host_vars for a given target host: MaximumPartitions, SystemFirmware, SystemName
+plugin: ibm.power_hmc.powervm_inventory
+hmc_hosts:
+  - hmc: <hmc_host_name>
+    user: <HMC2_Username>
+    password: <HMC_Password>
+group_lpars_by_managed_system: false
+system_filters:
+    State: 'operating'
+system_keyed_groups:
+  - prefix: type
+    key: SystemType
+system_compose:
+  maximum_partitions: MaximumPartitions
+  system_firmware: SystemFirmware
+  HMCIP: AssociatedHMC
+  HMCUSERNAME: AssociatedHMCUserName
+
+# Generate an inventory of all running partitions and operation Power Servers
+# Create a seperate group for partitions tagged with associated group name 'production_lpars'
+# Create a seperate group for Power Servers tagged with associated group name 'Production_systems'
+plugin: ibm.power_hmc.powervm_inventory
+hmc_hosts:
+  - hmc: <hmc_host_name>
+    user: <HMC2_Username>
+    password: <HMC_Password>
+group_lpars_by_managed_system: false
+system_filters:
+    State: 'operating'
+groups:
+    ProductionLpars: "'production_lpars' in AssociatedGroups"
+system_groups:
+    ProductionSystems: "'Production_systems' in AssociatedGroups"
 '''
 
 import xml.etree.ElementTree as ET
@@ -230,6 +300,10 @@ def init_logger():
 
 class LparFieldNotFoundError(Exception):
     '''Raised when a field does not exist in the LPAR data.'''
+
+
+class PowerSystemFieldNotFoundError(Exception):
+    '''Raised when a field does not exist in the Power Server data.'''
 
 
 class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
@@ -268,56 +342,92 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         if not systems:
             raise HmcError("There are no systems defined to any valid HMCs provided or no valid connections were established.")
         for system in systems:
-            for lpar in systems[system]:
-                if self.lpar_should_be_included(lpar):
-                    try:
-                        # Lookup the IP address for LPAR
-                        ip = self.get_ip(lpar)
-                        lpar_name = self.get_lpar_name(lpar)
+            if self.ms_should_be_included(system):
+                for lpar in system["lpars"]:
+                    if self.lpar_should_be_included(lpar):
+                        try:
+                            # Lookup the IP address for LPAR
+                            ip = self.get_ip(lpar)
+                            lpar_name = self.get_lpar_name(lpar)
 
-                        if self.ansible_host_type == "lpar_name":
-                            hostname = lpar_name
-                        else:
-                            hostname = ip
-
-                        if self.ansible_display_name == "lpar_name":
-                            entry_name = lpar_name
-                        else:
-                            entry_name = ip
-                    except LparFieldNotFoundError:
-                        # If the IP address was missing, this LPAR is 'unknown' and
-                        # cannot be added as a valid Ansible host.
-                        partition_type = self.get_lpar_os_type(lpar)
-
-                        if partition_type == 'OS400' and lpar['PartitionState'] == 'running' and self.ansible_display_name == "lpar_name":
-                            entry_name = self.get_lpar_name(lpar)
-                            hostname = entry_name
-                        elif self.identify_unknown_by.lower() != 'omit':
-                            value_for_unknown = self.get_value_for_unknown_lpar(lpar)
-                            if value_for_unknown:
-                                self.inventory.add_group('unknowns')
-                                self.inventory.add_host(value_for_unknown, 'unknowns')
+                            if self.ansible_host_type == "name":
+                                hostname = lpar_name
                             else:
-                                invalid_identify_unknown_by = True
-                            continue
+                                hostname = ip
+
+                            if self.ansible_display_name == "name":
+                                entry_name = lpar_name
+                            else:
+                                entry_name = ip
+                        except LparFieldNotFoundError:
+                            # If the IP address was missing, this LPAR is 'unknown' and
+                            # cannot be added as a valid Ansible host.
+                            partition_type = self.get_lpar_os_type(lpar)
+
+                            if partition_type == 'OS400' and lpar['PartitionState'] == 'running' and self.ansible_display_name == "name":
+                                entry_name = self.get_lpar_name(lpar)
+                                hostname = entry_name
+                            elif self.identify_unknown_by.lower() != 'omit':
+                                value_for_unknown = self.get_value_for_unknown_lpar(lpar)
+                                if value_for_unknown:
+                                    self.inventory.add_group('unknowns')
+                                    self.inventory.add_host(value_for_unknown, 'unknowns')
+                                else:
+                                    invalid_identify_unknown_by = True
+                                continue
+                            else:
+                                continue
+
+                        # A valid IP address was found for this LPAR
+                        if self.group_lpars_by_managed_system:
+                            self.inventory.add_group(system['SystemName'])
+                            self.inventory.add_host(entry_name, system['SystemName'])
                         else:
+                            self.inventory.add_host(entry_name)
+
+                        # Only add an ansible_host variable if it differs from the displayname in the inventory
+                        if hostname != entry_name:
+                            self.inventory.set_variable(entry_name, "ansible_host", hostname)
+                        try:
+                            self._set_composite_vars(self.compose, lpar, entry_name, strict=True)
+                            self._add_host_to_composed_groups(self.groups, lpar, entry_name, strict=True)
+                            self._add_host_to_keyed_groups(self.keyed_groups, lpar, entry_name, strict=True)
+                        except Exception:
+                            logger.debug("Attribute not found in the lpar")
                             continue
 
-                    # A valid IP address was found for this LPAR
-                    if self.group_by_managed_system:
-                        self.inventory.add_group(system)
-                        self.inventory.add_host(entry_name, system)
+                # Creating a group of managed systems
+                del system['lpars']
+                try:
+                    ms_ip = system['IPAddress']
+                    ms_name = system['SystemName']
+                    if self.ansible_host_type == "name":
+                        ms_hostname = ms_name
                     else:
-                        self.inventory.add_host(entry_name)
+                        ms_hostname = ms_ip
+                    if self.ansible_display_name == "name":
+                        ms_entry_name = ms_name
+                    else:
+                        ms_entry_name = ms_ip
+                except PowerSystemFieldNotFoundError:
+                    logger.debug("IPAddress or SystemName field not found in the Power Server data")
+                    continue
+
+                if not self.group_lpars_by_managed_system:
+                    self.inventory.add_group('ManagedSystems')
+                    self.inventory.add_host(ms_entry_name, 'ManagedSystems')
 
                     # Only add an ansible_host variable if it differs from the displayname in the inventory
-                    if hostname != entry_name:
-                        self.inventory.set_variable(entry_name, "ansible_host", hostname)
+                    if ms_hostname != ms_entry_name:
+                        self.inventory.set_variable(ms_entry_name, "ansible_host", ms_hostname)
 
-                    self._set_composite_vars(self.compose, lpar, entry_name, strict=True)
-                    self._add_host_to_composed_groups(self.groups, lpar, entry_name, strict=True)
-                    self._add_host_to_keyed_groups(self.keyed_groups, lpar, entry_name, strict=True)
-
+                    try:
+                        self._set_composite_vars(self.system_compose, system, ms_entry_name, strict=True)
+                        self._add_host_to_composed_groups(self.system_groups, system, ms_entry_name, strict=True)
+                        self._add_host_to_keyed_groups(self.system_keyed_groups, system, ms_entry_name, strict=True)
+                    except Exception:
+                        logger.debug("Attribute not found in the Managed System")
+                        continue
         # Warn the user if the property they are using to use to identify partitions is invalid in some circumstances
         if invalid_identify_unknown_by:
             msg = ("Could not find property %s for some or all unknown partitions, as a result they will not be included." % self.identify_unknown_by)
@@ -325,50 +435,69 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             logger.warning(msg)
 
     def get_lpars_by_system(self):
-        systems = {}
-
+        systems = []
         if self.template_handle.is_template(self.get_option('hmc_hosts')):
             self.hmc_hosts = self.template_handle.template(variable=self.get_option('hmc_hosts'))
 
         for hmc_host in self.hmc_hosts:
             try:
-                rest_conn = HmcRestClient(str(hmc_host), str(self.hmc_hosts[hmc_host]["user"]), str(self.hmc_hosts[hmc_host]["password"]))
+                hmc = str(hmc_host['hmc'])
+                hmc_username = str(hmc_host['user'])
+                hmc_pass = str(hmc_host['password'])
+                rest_conn = HmcRestClient(hmc, hmc_username, hmc_pass)
                 try:
                     managed_systems = json.loads(rest_conn.getManagedSystemsQuick())
+                    associated_groups = rest_conn.fetchTaggedGroupItems()
                 except Exception:
-                    logger.debug("Could not retrieve systems from %s it may not have any defined", hmc_host)
+                    logger.debug("Could not retrieve systems from %s it may not have any defined", hmc)
                     continue
+
                 for system in managed_systems:
                     lpars = []
                     if system.get("SystemName") not in self.exclude_system:
                         # Make calls to full XML APIs which have access to a few additional fields
                         # Note: This call takes nearly 10x as long because it must reach out to each system individually
                         if self.advanced_fields:
+                            system_name = system.get("SystemName")
                             try:
                                 lpar_xml = rest_conn.getLogicalPartitions(system.get("UUID"))
-                                system_lpars = self.parse_lpars_xml(lpar_xml)
+                                system_lpars = self.parse_lpars_xml(lpar_xml, hmc, hmc_username, system_name, associated_groups)
                                 lpars.extend(system_lpars)
                             except Exception:
-                                logger.debug("Could not retrieve LPARs from %s it may not have any defined", system.get("SystemName"))
+                                logger.debug("Could not retrieve LPARs from %s it may not have any defined", system_name)
                             try:
                                 vios_xml = rest_conn.getVirtualIOServers(system.get("UUID"))
-                                system_vios = self.parse_lpars_xml(vios_xml)
+                                system_vios = self.parse_lpars_xml(vios_xml, hmc, hmc_username, system_name, associated_groups)
                                 lpars.extend(system_vios)
                             except Exception:
-                                logger.debug("Could not retrieve VIOS from %s it may not have any defined", system.get("SystemName"))
+                                logger.debug("Could not retrieve VIOS from %s it may not have any defined", system_name)
                         # Call the "quick" JSON API
                         else:
                             try:
                                 system_lpars = json.loads(rest_conn.getLogicalPartitionsQuick(system.get("UUID")))
+                                for system_lpar in system_lpars:
+                                    system_lpar['AssociatedGroups'] = self.fetch_associated_groups(system_lpar['UUID'], associated_groups)
+                                    system_lpar['AssociatedHMC'] = hmc
+                                    system_lpar['AssociatedHMCUserName'] = hmc_username
+                                    system_lpar['SystemName'] = system.get("SystemName")
                                 lpars.extend(system_lpars)
                             except Exception:
                                 logger.debug("Could not retrieve LPARs from %s it may not have any defined", system.get("SystemName"))
                             try:
                                 system_vios = json.loads(rest_conn.getVirtualIOServersQuick(system.get("UUID")))
+                                for vios in system_vios:
+                                    vios['AssociatedGroups'] = self.fetch_associated_groups(vios['UUID'], associated_groups)
+                                    vios['AssociatedHMC'] = hmc
+                                    vios['AssociatedHMCUserName'] = hmc_username
+                                    vios['SystemName'] = system.get("SystemName")
                                 lpars.extend(system_vios)
                             except Exception:
                                 logger.debug("Could not retrieve VIOS from %s it may not have any defined", system.get("SystemName"))
-                        systems[system.get("SystemName")] = lpars
+                        system['AssociatedGroups'] = self.fetch_associated_groups(system['UUID'], associated_groups)
+                    system['AssociatedHMC'] = hmc
+                    system['AssociatedHMCUserName'] = hmc_username
+                    system["lpars"] = lpars
+                    systems.append(system)
                 # Logoff HMC
                 try:
                     rest_conn.logoff()
@@ -385,13 +514,20 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                 continue
         return systems
 
-    def parse_lpars_xml(self, xml):
+    def parse_lpars_xml(self, xml, hmc, hmcusername, system_name, associated_groups=None):
+        if associated_groups is None:
+            associated_groups = {}
         root = ET.fromstring(xml)
         feed = next(root.iter())
         entries = feed.findall("{http://www.w3.org/2005/Atom}entry")
         lpars = []
         for entry in entries:
             lpar = self.get_tag_text(entry)
+            lpar['AssociatedHMC'] = hmc
+            lpar['AssociatedHMCUserName'] = hmcusername
+            lpar['SystemName'] = system_name
+            if associated_groups:
+                lpar['AssociatedGroups'] = self.fetch_associated_groups(lpar['id'], associated_groups)
             lpars.append(lpar)
         return lpars
 
@@ -399,18 +535,22 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         config = self._read_config_data(path)
 
         args = dict(
-            hmc_hosts=dict(type='dict', value=config.get("hmc_hosts", None), required=True),
+            hmc_hosts=dict(type='list', value=config.get("hmc_hosts", None), required=True),
             filters=dict(type='dict', value=config.get("filters", {})),
+            system_filters=dict(type='dict', value=config.get("system_filters", {})),
             keyed_groups=dict(type='list', value=config.get("keyed_groups", [])),
+            system_keyed_groups=dict(type='list', value=config.get("system_keyed_groups", [])),
             groups=dict(type='dict', value=config.get("groups", {})),
+            system_groups=dict(type='dict', value=config.get("system_groups", {})),
             compose=dict(type='dict', value=config.get("compose", {})),
+            system_compose=dict(type='dict', value=config.get("system_compose", {})),
             exclude_ip=dict(type='list', value=config.get("exclude_ip", [])),
             exclude_lpar=dict(type='list', value=config.get("exclude_lpar", [])),
             exclude_system=dict(type='list', value=config.get("exclude_system", [])),
-            ansible_display_name=dict(type='str', choices=['lpar_name', 'ip'], value=config.get("ansible_display_name", "lpar_name")),
-            ansible_host_type=dict(type='str', choices=['lpar_name', 'ip'], value=config.get("ansible_host_type", "ip")),
+            ansible_display_name=dict(type='str', choices=['name', 'ip'], value=config.get("ansible_display_name", "name")),
+            ansible_host_type=dict(type='str', choices=['name', 'ip'], value=config.get("ansible_host_type", "ip")),
             advanced_fields=dict(type='bool', value=config.get("advanced_fields", False)),
-            group_by_managed_system=dict(type='bool', value=config.get("group_by_managed_system", True)),
+            group_lpars_by_managed_system=dict(type='bool', value=config.get("group_lpars_by_managed_system", True)),
             identify_unknown_by=dict(type='str', value=config.get("identify_unknown_by", "omit")),
         )
 
@@ -492,11 +632,34 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             return True
         return False
 
-    def matches_filters(self, lpar):
+    def matches_filters(self, itm):
         # Our filter should be a subset of our LPAR if the LPAR matches the filter items
-        return viewitems(self.filters) <= viewitems(lpar)
+        return viewitems(self.filters) <= viewitems(itm)
+
+    def matches_ms_filters(self, itm):
+        # Our filter should be a subset of our managed_system if the managed_system matches the filter items
+        return viewitems(self.system_filters) <= viewitems(itm)
 
     def lpar_should_be_included(self, lpar):
         if self.matches_filters(lpar) and not self.is_lpar_excluded(lpar):
             return True
         return False
+
+    def is_ms_excluded(self, ms):
+        if "IPAddress" in ms and ms['IPAddress'] in self.exclude_ip:
+            return True
+        if "SystemName" in ms and ms["SystemName"] in self.exclude_system:
+            return True
+        return False
+
+    def ms_should_be_included(self, ms):
+        if self.matches_ms_filters(ms) and not self.is_ms_excluded(ms):
+            return True
+        return False
+
+    def fetch_associated_groups(self, id, tagged_groups):
+        grps = []
+        for group_name, group_ele in tagged_groups.items():
+            if id in group_ele:
+                grps.append(group_name)
+        return grps

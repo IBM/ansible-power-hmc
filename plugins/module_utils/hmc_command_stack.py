@@ -39,7 +39,13 @@ class HmcCommandStack():
                'LSHMCUSR': 'lshmcusr',
                'MKHMCUSR': 'mkhmcusr',
                'CHHMCUSR': 'chhmcusr',
-               'RMHMCUSR': 'rmhmcusr'}
+               'RMHMCUSR': 'rmhmcusr',
+               'UPDLIC': 'updlic',
+               'LSLIC': 'lslic',
+               'LSSYSCONN': 'lssysconn',
+               'LSHMCLDAP': 'lshmcldap',
+               'CHHMCLDAP': 'chhmcldap',
+               }
 
     HMC_CMD_OPT = {'LSHMC': {'-N': ' -n ',
                              '-v': ' -v ',
@@ -351,6 +357,69 @@ class HmcCommandStack():
                                        'MAX_WEBUI_LOGIN_SUSPEND_TIME': 'max_webui_login_suspend_time',
                                        'MAX_WEBUI_LOGIN_ATTEMPTS': 'max_webui_login_attempts',
                                        'WEBUI_LOGIN_SUSPEND_TIME': 'webui_login_suspend_time'}},
+                   'UPDLIC': {'-M': ' -m ',
+                              '-O': {'RETINSTACT': ' -o a',
+                                     'UPGRADE': ' -o u',
+                                     'ACCEPT': ' -o c'},
+                              '-T': {'SYS': ' -t sys',
+                                     'BMC': ' -t bmc'},
+                              '-L': ' -l ',
+                              '-R': ' -r ',
+                              '-H': ' -h ',
+                              '-U': ' -u ',
+                              '--PASSWD': ' --passwd ',
+                              '-K': ' -k ',
+                              '-D': ' -d '},
+                   'LSLIC': {'-M': ' -m ',
+                             '-F': {'SPNAMELEVEL': ' -F activated_spname,activated_level,ecnumber'}},
+                   'LSSYSCONN': {'-R': {'ALL': ' -r all'},
+                                 '-F': {'MTMS': ' -F type_model_serial_num'},
+                                 },
+                   'LSHMCLDAP': {'-R': {'CONFIG': ' -r config',
+                                        'USER': ' -r user'},
+                                 '--FILTER': {'NAMES': ' names'}
+                                 },
+                   'CHHMCLDAP': {'-O': {'S': ' -o s',
+                                        'R': ' -o r'},
+                                 '-R': {'BACKUP': ' -r backup',
+                                        'LDAP': ' -r ldap',
+                                        'BINDDN': ' -r binddn',
+                                        'BINDPW': ' -r bindpw',
+                                        'SEARCHFILTER': ' -r searchfilter',
+                                        'HMCGROUPS': ' -r hmcgroups',
+                                        'GROUPMEMBERATTRIBUTES': ' -r groupmemberattributes'},
+                                 'PRIMARY': ' --primary',
+                                 'BACKUP': ' --backup',
+                                 'AUTOMANAGE': {'0': ' --automanage 0',
+                                                '1': ' --automanage 1'},
+                                 'BINDPW': ' --bindpw',
+                                 'BASEDN': ' --basedn',
+                                 'BINDDN': ' --binddn',
+                                 'HMCAUTHNAMEATTRIBUTE': ' --hmcauthnameattribute',
+                                 'STARTTLS': {'0': ' --starttls 0',
+                                              '1': '--starttls 1'},
+                                 'AUTH': {'LDAP': '--auth ldap',
+                                          'KERBEROS': '--auth kerberos'},
+                                 'TIMELIMIT': ' --timelimit',
+                                 'BINDTIMELIMIT': ' --bindtimelimit',
+                                 'LOGINATTRIBUTE': ' --loginattribute',
+                                 'HMCUSERPROPSATTRIBUTE': ' --hmcuserpropsattribute',
+                                 'HMCAUTHATTRIBUTE': ' --hmcauthnameattribute',
+                                 'SEARCHFILTER': ' --searchfilter',
+                                 'SCOPE': {'ONE': ' --scope one',
+                                           'SUB': ' --scope sub'},
+                                 'REFERRALS': {'1': '--referrals 1',
+                                               '0': '--referrals 0'},
+                                 'HMCGROUPS': ' --hmcgroups',
+                                 'AUTHSEARCH': {'BASE': ' --authsearch base',
+                                                'NONE': ' --authsearch none'},
+                                 'TLSREQCERT': {'NEVER': ' --tlsreqcert never',
+                                                'ALLOW': ' --tlsreqcert allow',
+                                                'TRY': ' --tlsreqcert try',
+                                                'DEMAND': ' --tlsreqcert demand'},
+                                 'GROUPATTRIBUTE': ' --groupattribute',
+                                 'MEMBERATTRIBUTE': ' --memberattribute'
+                                 },
                    }
 
     def filterBuilder(self, cmdKey, configOptionsDict):
@@ -482,7 +551,7 @@ class HmcCommandStack():
                         else:
                             key, value = each.split('=')
                     else:
-                        key, value = each.split('=')
+                        key, value = each.split('=', 1)
                     key = key.strip('"').strip('\r\n')
                     value = value.strip('\r\n')
                     dict.update({key.upper(): value})

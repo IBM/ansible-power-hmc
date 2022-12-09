@@ -62,7 +62,7 @@ options:
     system_name:
         description:
             - The name of the managed system.
-        required: true
+            - Optional for I(state=absent).
         type: str
     vm_name:
         description:
@@ -382,7 +382,7 @@ options:
     state:
         description:
             - C(present) creates a partition of the specified I(os_type), I(vm_name), I(proc) and I(memory) on specified I(system_name).
-            - C(absent) deletes a partition of the specified I(vm_name) on specified I(system_name).
+            - C(absent) deletes a partition of the specified I(vm_name).
             - C(facts) fetch the details of the specified I(vm_name) on specified I(system_name).
         type: str
         choices: ['present', 'absent', 'facts']
@@ -398,7 +398,7 @@ options:
 
 EXAMPLES = '''
 - name: Create an IBMi logical partition instance with shared proc, volume_config's vios_name and volume_name values, PhysicaIO and
-        max_virtual_slots
+        max_virtual_slots.
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -423,7 +423,7 @@ EXAMPLES = '''
       state: present
 
 - name: Create an AIX/Linux logical partition instance with default proc, mem, virt_network_config, volume_config's volumes_size and
-        npiv_config, vnic_config
+        npiv_config, vnic_config.
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -457,7 +457,7 @@ EXAMPLES = '''
       os_type: aix_linux
       state: present
 
-- name: Delete a logical partition instance with retain_vios_cfg and delete_vdisk options
+- name: Delete a logical partition instance with retain_vios_cfg and delete_vdisk options.
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -469,7 +469,7 @@ EXAMPLES = '''
       delete_vdisks: True
       state: absent
 
-- name: Shutdown a logical partition
+- name: Shutdown a logical partition.
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -479,7 +479,7 @@ EXAMPLES = '''
       vm_name: <vm_name>
       action: shutdown
 
-- name: Activate an AIX/Linux logical partition with user defined profile_name
+- name: Activate an AIX/Linux logical partition with user defined profile_name.
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -490,7 +490,7 @@ EXAMPLES = '''
       prof_name: <profile_name>
       action: poweron
 
-- name: Activate IBMi based on its current configuration with keylock and iIPLsource options
+- name: Activate IBMi based on its current configuration with keylock and iIPLsource options.
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -502,7 +502,7 @@ EXAMPLES = '''
       iIPLsource: 'd'
       action: poweron
 
-- name: Create a partition with all resources
+- name: Create a partition with all resources.
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -514,7 +514,7 @@ EXAMPLES = '''
       os_type: aix_linux
       state: present
 
-- name: Install Aix/Linux OS on LPAR from NIM Server
+- name: Install Aix/Linux OS on LPAR from NIM Server.
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth: "{{ curr_hmc_auth }}"
@@ -668,7 +668,7 @@ def validate_parameters(params):
                            'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'install_settings',
                            'vnic_config']
     elif opr == 'absent':
-        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
+        mandatoryList = ['hmc_host', 'hmc_auth', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
                            'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'install_settings',
@@ -944,6 +944,16 @@ def fetch_virt_networks(rest_conn, system_uuid, virt_nw_config_list, max_slot_no
     return virt_nws_identified
 
 
+def get_MS_names_by_lpar_name(hmc_obj, lpar_name):
+    mss = hmc_obj.list_all_managed_system_details("name")
+    ms_list = []
+    for ms_name in mss:
+        lpar_names = hmc_obj.list_all_lpars_details(ms_name, "name")
+        if lpar_name in lpar_names:
+            ms_list.append(ms_name)
+    return ms_list
+
+
 def create_partition(module, params):
     changed = False
     cli_conn = None
@@ -1001,7 +1011,7 @@ def create_partition(module, params):
         module.fail_json(msg="Given system is not present")
 
     try:
-        partition_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, vm_name)
+        partition_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, partition_name=vm_name)
     except Exception as error:
         try:
             rest_conn.logoff()
@@ -1049,10 +1059,10 @@ def create_partition(module, params):
         if proc_compatibility_mode not in supp_compat_modes:
             raise HmcError("unsupported proc_compat_mode:{0}, Supported proc_compat_modes are {1}".format(proc_compatibility_mode, supp_compat_modes))
 
-    if params['npiv_config']:
-        fcports_config = fetch_fc_config(rest_conn, system_uuid, params['npiv_config'])
-
     try:
+        if params['npiv_config']:
+            fcports_config = fetch_fc_config(rest_conn, system_uuid, params['npiv_config'])
+
         if os_type in ['aix', 'linux', 'aix_linux']:
             reference_template = "QuickStart_lpar_rpa_2"
         else:
@@ -1230,7 +1240,19 @@ def remove_partition(module, params):
     else:
         retainViosCfg = not (retainViosCfg)
     try:
-        hmc.deletePartition(system_name, vm_name, retainViosCfg, deleteVdisks)
+        if system_name:
+            hmc.deletePartition(system_name, vm_name, retainViosCfg, deleteVdisks)
+        else:
+            ms_name = get_MS_names_by_lpar_name(hmc, vm_name)
+            if len(ms_name) == 1:
+                hmc.deletePartition(ms_name[0], vm_name, retainViosCfg, deleteVdisks)
+            elif len(ms_name) > 1:
+                err_msg = "Logical Partition Name:'{0}' found in more than one managed systems:'{1}',Please provide the system_name paramter" \
+                          " to avoid the confusion".format(vm_name, ms_name)
+                module.fail_json(msg=err_msg)
+            else:
+                err_msg = "Logical Partition Name:'{0}' not found in any of the managed systems".format(vm_name)
+                module.fail_json(msg=err_msg)
     except HmcError as del_lpar_error:
         error_msg = parse_error_response(del_lpar_error)
         if 'HSCL8012' in error_msg:
@@ -1440,7 +1462,7 @@ def install_aix_os(module, params):
         if location_code:
             hmc.installOSFromNIM(location_code, nim_ip, nim_gateway, vm_ip, nim_vlan_id, nim_vlan_priority, nim_subnetmask, vm_name, profile_name, system_name)
         else:
-            dvcdictlt = hmc.fetchIODetailsForNetboot(nim_ip, nim_gateway, vm_ip, vm_name, profile_name, system_name)
+            dvcdictlt = hmc.fetchIODetailsForNetboot(nim_ip, nim_gateway, vm_ip, vm_name, profile_name, system_name, nim_subnetmask)
             for dvcdict in dvcdictlt:
                 if dvcdict['Ping Result'] == 'successful':
                     location_code = dvcdict['Location Code']
@@ -1513,6 +1535,33 @@ def partition_details(module, params):
             partition_prop['VirtualFiberChannelAdapters'] = rest_conn.fetchFCDetailsFromVIOS(system_uuid, partition_prop['PartitionID'], vios_list)
             partition_prop['VirtualSCSIClientAdapters'] = rest_conn.fetchSCSIDetailsFromVIOS(system_uuid, partition_prop['PartitionID'], vios_list)
             partition_prop['DedicatedVirtualNICs'] = rest_conn.fetchDedicatedVirtualNICs(system_uuid, lpar_uuid, vm_name, vios_list)
+
+            lpar_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, partition_uuid=lpar_uuid)
+            partition_prop['MinimumMemory'] = partition_dom.xpath("//MinimumMemory")[0].text
+            partition_prop['MaximumMemory'] = partition_dom.xpath("//MaximumMemory")[0].text
+            isDedicatedProc = rest_conn.isDedicatedProcConfig(partition_dom)
+            if isDedicatedProc:
+                partition_prop['MinimumProcessors'] = partition_dom.xpath("//MinimumProcessors")[0].text
+                partition_prop['MaximumProcessors'] = partition_dom.xpath("//MaximumProcessors")[0].text
+            else:
+                partition_prop['MinimumProcessingUnits'] = partition_dom.xpath("//MinimumProcessingUnits")[0].text
+                partition_prop['MaximumProcessingUnits'] = partition_dom.xpath("//MaximumProcessingUnits")[0].text
+                partition_prop['MinimumVirtualProcessors'] = partition_dom.xpath("//MinimumVirtualProcessors")[0].text
+                partition_prop['MaximumVirtualProcessors'] = partition_dom.xpath("//MaximumVirtualProcessors")[0].text
+                partition_prop['CurrentSharedProcessorPoolID'] = rest_conn.getProcPool(partition_dom)
+
+            modeMapping = {
+                'keep idle procs': 'keep_idle_procs',
+                'sre idle proces': 'share_idle_procs',
+                'sre idle procs active': 'share_idle_procs_active',
+                'sre idle procs always': 'share_idle_procs_always',
+                'uncapped': 'uncapped',
+                'capped': 'capped'
+            }
+
+            partition_prop['SharingMode'] = modeMapping[partition_dom.xpath("//SharingMode")[0].text]
+            if partition_prop['SharingMode'] == 'uncapped':
+                partition_prop['UncappedWeight'] = rest_conn.getProcUncappedWeight(partition_dom)
 
         if not lpar_uuid:
             module.fail_json(msg="Given Logical Partition is not present on the system")
@@ -1597,7 +1646,7 @@ def run_module():
                           password=dict(type='str', no_log=True),
                       )
                       ),
-        system_name=dict(type='str', required=True),
+        system_name=dict(type='str'),
         vm_name=dict(type='str', required=True),
         vm_id=dict(type='int'),
         proc=dict(type='int'),
@@ -1652,7 +1701,7 @@ def run_module():
         mutually_exclusive=[('state', 'action')],
         required_one_of=[('state', 'action')],
         required_if=[['state', 'facts', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
-                     ['state', 'absent', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
+                     ['state', 'absent', ['hmc_host', 'hmc_auth', 'vm_name']],
                      ['state', 'present', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']],
                      ['action', 'shutdown', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
                      ['action', 'poweron', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
@@ -1678,7 +1727,7 @@ def run_module():
 
     if sys.version_info < (3, 0):
         py_ver = sys.version_info[0]
-        module.fail_json("Unsupported Python version {0}, supported python version is 3 and above".format(py_ver))
+        module.fail_json(msg="Unsupported Python version {0}, supported python version is 3 and above".format(py_ver))
 
     changed, info, warning = perform_task(module)
 

@@ -1,6 +1,6 @@
 plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
-  "9.3.147.104":
+  - hmc: "9.3.147.104"
     user: hscroot
     password: !vault |
           $ANSIBLE_VAULT;1.1;AES256

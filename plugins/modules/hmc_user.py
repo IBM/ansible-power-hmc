@@ -16,12 +16,16 @@ DOCUMENTATION = '''
 module: hmc_user
 author:
     - Anil Vijayan(@AnilVijayan)
+    - Navinakumar Kandaur(@nkandak1)
 short_description: Manage the hmc users
 description:
     - Create a Hardware Management Console user
     - List Hardware Management Console user information
     - Modify a Hardware Management Console user
     - Remove Hardware Management Console users
+    - List LDAP Configurations
+    - Configure LDAP Settings
+    - Remove LDAP Configurations
 version_added: 1.0.0
 options:
     hmc_host:
@@ -46,7 +50,8 @@ options:
                 type: str
     name:
         description:
-            -  The user name of the HMC user.
+            -  The user name of the HMC user. This option is valid for I(state=present),
+               I(state=absent), I(state=updated), I(state=facts) and I(state=ldap_facts).
         type: str
     enable_user:
         description:
@@ -61,6 +66,17 @@ options:
                During I(state=facts), valid values are C(default|user).
         type: str
         choices: ['default', 'user', 'all', 'local', 'kerberos', 'ldap', 'automanage']
+    resource:
+        description:
+            - The LDAP resources to be listed. This option is valid only for I(state=ldap_facts).
+              To filter out the LDAP configuration of particular user we can use C(name) parameter with I(resource=user).
+        type: str
+        choices: ['config', 'user']
+    ldap_resource:
+        description:
+            - LDAP configuration to be removed. This is valid only for I(action=remove_ldap_config).
+        type: str
+        choices: ['backup', 'ldap', 'binddn', 'bindpw', 'searchfilter', 'hmcgroups', 'groupmemberattributes']
     attributes:
         description:
             - Configuration attributes used during the create and modify of HMC user.
@@ -148,22 +164,132 @@ options:
                 description:
                     - Number of minutes.
                 type: int
+    ldap_settings:
+        description:
+            - Configuration attributes used during Configuration of LDAP on HMC.
+        type: dict
+        suboptions:
+            primary:
+                description:
+                    - The primary LDAP server.
+                type: str
+            backup:
+                description:
+                    - The backup LDAP  server.
+                type: str
+            basedn:
+                description:
+                    - The base DN for LDAP search.
+                type: str
+            binddn:
+                description:
+                    - The DN to use for binding to the LDAP server when the LDAP server is configured to use non-anonymous binding.
+                type: str
+            bindpw:
+                description:
+                    - The password to use when binding to the LDAP server when the LDAP server is configured to use non-anonymous
+                      binding.
+                type: str
+            timelimit:
+                description:
+                    - The LDAP search time limit in seconds.
+                type: str
+            bindtimelimit:
+                description:
+                    - The LDAP server bind time limit in seconds.
+                type: str
+            automanage:
+                description:
+                    - Use this option to indicate whether the HMC should automatically manage remotely authenticated LDAP users.
+                    - Valid values are 0 to disable automatic management, or 1 to enable automatic management.
+                type: str
+                choices: ['1', '0']
+            auth:
+                description:
+                    - The type of authentication to use for automatically managed LDAP users.
+                type: str
+                choices: ['ldap','kerberos']
+            loginattribute:
+                description:
+                    - The login attribute to use to authenticate LDAP users on the HMC.
+                type: str
+            hmcuserpropsattribute:
+                description:
+                    -  The attribute to use to retrieve the user roles and properties from the LDAP server.
+                type: str
+            hmcauthnameattribute:
+                description:
+                    - The attribute to use to retrieve the remote user ID used in Kerberos authentication.
+                type: str
+            searchfilter:
+                description:
+                    - The filter to use for limiting the search of the LDAP server for user information.
+                type: str
+            scope:
+                description:
+                    -  The search scope starting from base DN.
+                type: str
+                choices: ['one','sub']
+            referrals:
+                description:
+                    - Specifies whether automatic referral chasing is to be enabled or disabled.
+                type: str
+                choices: ['0','1']
+            starttls:
+                description:
+                    - Specifies whether Start Transport Layer Security (TLS) is to be enabled or disabled.
+                type: str
+                choices: ['0','1']
+            hmcgroups:
+                description:
+                    - Specifies the name of one or more user groups allowed to log in to this HMC.
+                type: str
+            authsearch:
+                description:
+                    - Specifies whether  the HMC will attempt an LDAP search, with the user's credentials, as an additional con-
+                      firmation that the bind operation was successful.
+                type: str
+                choices: ['base', 'none']
+            tlsreqcert:
+                description:
+                    - Specifies what checks to perform on a server-supplied certificate.
+                type: str
+                choices: ['never', 'allow', 'try', 'demand']
+            groupattribute:
+                description:
+                    - Specifies the name of the Group attribute on the LDAP server.
+                    - When this option is specified, the member-attribute option must also be specified.
+                type: str
+            memberattribute:
+                description:
+                    - Specifies the name of the group Member attribute on the LDAP server.
+                    - When this option is specified, the 'groupattribute' option must also be specified.
+                type: str
     state:
         description:
-            - The desired state of the HMC user.
+            - The desired state of the HMC user and ldap.
             - C(facts) does not change anything on the HMC and returns the HMC user information or
               the default settings of HMC user attributes.
+            - C(ldap_facts) does not change anything on the HMC and returns LDAP configuration or
+              LDAP user details.
             - C(updated) ensures the HMC user is updated with provided configuration.
             - C(present) ensures the HMC user is created with provided configuration.
             - C(absent) ensures the HMC user is removed.
-        required: true
         type: str
-        choices: ['facts', 'present', 'absent', 'updated']
+        choices: ['facts', 'present', 'absent', 'updated', ldap_facts]
+    action:
+        description:
+            - C(configure_ldap) Configure Hardware Management Console (HMC) Light weight Directory Access Protocol (LDAP) client
+              configuration.
+            - C(remove_ldap_config) Remove the Hardware Management Console (HMC) Light weight Directory Access Protocol (LDAP) client
+              configuration.
+        type: str
+        choices: ['configure_ldap', 'remove_ldap_config']
 
 '''
 
 EXAMPLES = '''
-- name: List the properties of hmc user
+- name: List the properties of hmc user.
   hmc_user:
     state: facts
     hmc_host: "{{ inventory_hostname }}"
@@ -172,7 +298,7 @@ EXAMPLES = '''
       username: <username>
       password: <password>
 
-- name: Create hmc user
+- name: Create hmc user.
   hmc_user:
     state: present
     hmc_host: "{{ inventory_hostname }}"
@@ -185,7 +311,7 @@ EXAMPLES = '''
       taskrole: hmcsuperadmin
       passwd: <new_user_password>
 
-- name: Modify hmc user
+- name: Modify hmc user.
   hmc_user:
     state: updated
     hmc_host: "{{ inventory_hostname }}"
@@ -197,7 +323,7 @@ EXAMPLES = '''
       new_name: <new_user_name>
       max_webui_login_attempts: 20
 
-- name: Remove hmc user
+- name: Remove hmc user.
   hmc_user:
     state: absent
     hmc_host: "{{ inventory_hostname }}"
@@ -206,6 +332,40 @@ EXAMPLES = '''
       username: <username>
       password: <password>
 
+- name: List the ldap configuration.
+  hmc_user:
+    hmc_host: "{{ inventory_hostname }}"
+    hmc_auth:
+      username: <username>
+      password: <password>
+    resource: user
+    name: <hmc_user_name>
+    state: ldap_facts
+
+- name: Configure ldap settings.
+  hmc_user:
+    hmc_host: "{{ inventory_hostname }}"
+    hmc_auth:
+      username: <username>
+      password: <password>
+    ldap_settings:
+      primary: <primary_url>
+      bindpw: <bind_pwd>
+      basedn: ou=People,dc=<url>
+      hmcauthnameattribute: <attribute>
+      hmcuserpropsattribute: <attribute>
+      binddn: cn=Manager,dc=<url>
+      starttls: 0
+    action: configure_ldap
+
+- name: Remove ldap configuration.
+  hmc_user:
+    hmc_host: "{{ inventory_hostname }}"
+    hmc_auth:
+      username: <username>
+      password: <password>
+    ldap_resource: <resource_name>
+    action: remove_ldap_config
 '''
 
 RETURN = '''
@@ -248,6 +408,10 @@ def validate_sub_params(params):
         supportedList = ['default', 'user']
         if params['type'] == 'default' and params['name']:
             raise ParameterError("%s state will not support parameter: name with default type"
+                                 % state)
+    elif state == 'ldap_facts':
+        if params['resource'] == 'config' and params['name']:
+            raise ParameterError("%s state will not support parameter: name with config resource"
                                  % state)
     elif state == 'present':
         mandatoryList = ['taskrole']
@@ -337,18 +501,30 @@ def validate_parameters(params):
 
     if params['state'] is not None:
         opr = params['state']
+    else:
+        opr = params['action']
 
     if opr == 'present':
         mandatoryList = ['hmc_host', 'hmc_auth', 'name', 'attributes']
-        unsupportedList = ['enable_user', 'type']
+        unsupportedList = ['enable_user', 'type', 'resource', 'ldap_settings', 'ldap_resource']
     elif opr == 'absent':
         mandatoryList = ['hmc_host', 'hmc_auth']
-        unsupportedList = ['enable_user', 'attributes']
+        unsupportedList = ['enable_user', 'attributes', 'resource', 'ldap_settings', 'ldap_resource']
     elif opr == 'updated':
         mandatoryList = ['hmc_host', 'hmc_auth']
+        unsupportedList = ['resource', 'ldap_settings', 'ldap_resource']
     elif opr == 'facts':
         mandatoryList = ['hmc_host', 'hmc_auth']
-        unsupportedList = ['attributes', 'enable_user']
+        unsupportedList = ['attributes', 'enable_user', 'resource', 'ldap_settings', 'ldap_resource']
+    elif opr == 'ldap_facts':
+        mandatoryList = ['hmc_host', 'hmc_auth', 'resource']
+        unsupportedList = ['attributes', 'enable_user', 'ldap_settings', 'type', 'ldap_resource']
+    elif opr == 'configure_ldap':
+        mandatoryList = ['hmc_host', 'hmc_auth', 'ldap_settings']
+        unsupportedList = ['attributes', 'enable_user', 'resource', 'ldap_resource', 'name', 'type']
+    elif opr == 'remove_ldap_config':
+        mandatoryList = ['hmc_host', 'hmc_auth', 'ldap_resource']
+        unsupportedList = ['attributes', 'enable_user', 'resource', 'ldap_settings', 'name', 'type']
 
     collate = []
     for eachMandatory in mandatoryList:
@@ -580,20 +756,108 @@ def ensure_update(module, params):
     return changed, None, None
 
 
+def ldap_facts(module, params):
+    hmc_host = params['hmc_host']
+    hmc_user = params['hmc_auth']['username']
+    password = params['hmc_auth']['password']
+    filter_d = {}
+    ldap_details = []
+    logger.debug(params['name'])
+    validate_parameters(params)
+    hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
+    hmc = Hmc(hmc_conn)
+
+    if params.get('name'):
+        filter_d = {"NAMES": params['name']}
+    resource = params.get('resource')
+
+    hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
+    hmc = Hmc(hmc_conn)
+
+    try:
+        ldap_details = hmc.list_HMC_LDAP(resource, filter_d)
+    except HmcError as error:
+        logger.debug(repr(error))
+        return False, repr(error), None
+    return False, ldap_details, None
+
+
+def configure_ldap(module, params):
+    hmc_host = params['hmc_host']
+    hmc_user = params['hmc_auth']['username']
+    password = params['hmc_auth']['password']
+    ldap_settings = params['ldap_settings']
+    ldap_details = []
+    changed = False
+
+    validate_parameters(params)
+    hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
+    hmc = Hmc(hmc_conn)
+
+    try:
+        hmc.configure_LDAP_on_HMC('set', configDict=ldap_settings)
+        ldap_details = hmc.list_HMC_LDAP("config")
+        changed = True
+    except HmcError as error:
+        logger.debug(repr(error))
+        return changed, repr(error), None
+    return changed, ldap_details, None
+
+
+def remove_ldap_config(module, params):
+    hmc_host = params['hmc_host']
+    hmc_user = params['hmc_auth']['username']
+    password = params['hmc_auth']['password']
+    ldap_resource = params['ldap_resource']
+    ldap_details = []
+    changed = False
+
+    validate_parameters(params)
+    hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
+    hmc = Hmc(hmc_conn)
+    try:
+        ldap_details = hmc.list_HMC_LDAP("config")
+        if ldap_resource in ['binddn', 'searchfilter', 'hmcgroups', 'groupmemberattributes', 'backup']:
+            resou = 'MEMBERATTRIBUTE' if ldap_resource == 'groupmemberattributes' else ldap_resource
+            if ldap_details[0][resou.upper()] == '':
+                return changed, ldap_details, None
+        if ldap_resource == 'bindpw':
+            if ldap_details[0]['BINDPWSET'] == '0':
+                return changed, ldap_details, None
+        hmc.configure_LDAP_on_HMC('remove', resource=ldap_resource)
+        ldap_details = hmc.list_HMC_LDAP("config")
+        changed = True
+    except HmcError as error:
+        msg = repr(error)
+        logger.debug(msg)
+        if "LDAP is not configured on the Hardware Management Console" in msg:
+            ldap_details = hmc.list_HMC_LDAP("config")
+            return changed, ldap_details, None
+        return changed, repr(error), None
+    return changed, ldap_details, None
+
+
 def perform_task(module):
     params = module.params
     actions = {
         "facts": facts,
         "present": ensure_present,
         "absent": ensure_absent,
-        "updated": ensure_update
+        "updated": ensure_update,
+        "configure_ldap": configure_ldap,
+        "ldap_facts": ldap_facts,
+        "remove_ldap_config": remove_ldap_config,
     }
 
     if not params['hmc_auth']:
         return False, "missing credential info", None
 
+    oper = 'state'
+    if params['state'] is None:
+        oper = 'action'
+
     try:
-        return actions[params['state']](module, params)
+        return actions[params[oper]](module, params)
     except Exception as error:
         return False, repr(error), None
 
@@ -613,8 +877,10 @@ def run_module():
         enable_user=dict(type='bool'),
         type=dict(type='str', choices=['default', 'user', 'all', 'local',
                                        'kerberos', 'ldap', 'automanage']),
-        state=dict(required=True, type='str',
-                   choices=['facts', 'present', 'absent', 'updated']),
+        state=dict(type='str',
+                   choices=['facts', 'present', 'absent', 'updated', 'ldap_facts']),
+        action=dict(type='str',
+                    choices=['configure_ldap', 'remove_ldap_config']),
         attributes=dict(type='dict',
                         options=dict(
                             new_name=dict(type='str'),
@@ -639,10 +905,39 @@ def run_module():
                             webui_login_suspend_time=dict(type='int')
                         )
                         ),
+        ldap_settings=dict(type='dict',
+                           options=dict(
+                               primary=dict(type='str'),
+                               backup=dict(type='str'),
+                               basedn=dict(type='str'),
+                               binddn=dict(type='str'),
+                               bindpw=dict(type='str', no_log=True),
+                               timelimit=dict(type='str'),
+                               bindtimelimit=dict(type='str'),
+                               automanage=dict(type='str', choices=['1', '0']),
+                               auth=dict(type='str', choices=['ldap', 'kerberos']),
+                               loginattribute=dict(type='str'),
+                               hmcuserpropsattribute=dict(type='str'),
+                               hmcauthnameattribute=dict(type='str'),
+                               searchfilter=dict(type='str'),
+                               scope=dict(type='str', choices=['one', 'sub']),
+                               referrals=dict(type='str', choices=['0', '1']),
+                               starttls=dict(type='str', choices=['0', '1']),
+                               hmcgroups=dict(type='str'),
+                               authsearch=dict(type='str', choices=['base', 'none']),
+                               tlsreqcert=dict(type='str', choices=['never', 'allow', 'try', 'demand']),
+                               groupattribute=dict(type='str'),
+                               memberattribute=dict(type='str')
+                           )
+                           ),
+        resource=dict(type='str', choices=['config', 'user']),
+        ldap_resource=dict(type='str', choices=['backup', 'ldap', 'binddn', 'bindpw', 'searchfilter', 'hmcgroups', 'groupmemberattributes']),
     )
 
     module = AnsibleModule(
-        argument_spec=module_args
+        argument_spec=module_args,
+        mutually_exclusive=[('state', 'action')],
+        required_one_of=[('state', 'action')],
     )
 
     if module._verbosity >= 5:
@@ -650,15 +945,15 @@ def run_module():
 
     if sys.version_info < (3, 0):
         py_ver = sys.version_info[0]
-        module.fail_json("Unsupported Python version {0}, supported python version is 3 and above".format(py_ver))
+        module.fail_json(msg="Unsupported Python version {0}, supported python version is 3 and above".format(py_ver))
 
-    changed, user_info, warning = perform_task(module)
-    if isinstance(user_info, str):
-        module.fail_json(msg=user_info)
+    changed, info, warning = perform_task(module)
+    if isinstance(info, str):
+        module.fail_json(msg=info)
 
     result = {}
     result['changed'] = changed
-    result['user_info'] = user_info
+    result['info'] = info
     if warning:
         result['warning'] = warning
 
