@@ -20,6 +20,12 @@ Modify a Hardware Management Console user
 
 Remove Hardware Management Console users
 
+List LDAP Configurations
+
+Configure LDAP Settings
+
+Remove LDAP Configurations
+
 
 
 
@@ -46,7 +52,7 @@ Parameters
 
 
   name (optional, str, None)
-    The user name of the HMC user.
+    The user name of the HMC user. This option is valid for *state=present*, *state=absent*, *state=updated*, *state=facts* and *state=ldap_facts*.
 
 
   enable_user (optional, bool, None)
@@ -57,6 +63,14 @@ Parameters
 
   type (optional, str, None)
     The type of user. During *state=updated* to change the default settings of HMC user, specify ``default`` with this option. The values of this option changes during *state=absent*. Supported values are ``all|local|kerberos|ldap|automanage``. During *state=facts*, valid values are ``default|user``.
+
+
+  resource (optional, str, None)
+    The LDAP resources to be listed. This option is valid only for *state=ldap_facts*. To filter out the LDAP configuration of particular user we can use ``name`` parameter with *resource=user*.
+
+
+  ldap_resource (optional, str, None)
+    LDAP configuration to be removed. This is valid only for *action=remove_ldap_config*.
 
 
   attributes (optional, dict, None)
@@ -140,16 +154,119 @@ Parameters
 
 
 
-  state (True, str, None)
-    The desired state of the HMC user.
+  ldap_settings (optional, dict, None)
+    Configuration attributes used during Configuration of LDAP on HMC.
+
+
+    primary (optional, str, None)
+      The primary LDAP server.
+
+
+    backup (optional, str, None)
+      The backup LDAP  server.
+
+
+    basedn (optional, str, None)
+      The base DN for LDAP search.
+
+
+    binddn (optional, str, None)
+      The DN to use for binding to the LDAP server when the LDAP server is configured to use non-anonymous binding.
+
+
+    bindpw (optional, str, None)
+      The password to use when binding to the LDAP server when the LDAP server is configured to use non-anonymous binding.
+
+
+    timelimit (optional, str, None)
+      The LDAP search time limit in seconds.
+
+
+    bindtimelimit (optional, str, None)
+      The LDAP server bind time limit in seconds.
+
+
+    automanage (optional, str, None)
+      Use this option to indicate whether the HMC should automatically manage remotely authenticated LDAP users.
+
+      Valid values are 0 to disable automatic management, or 1 to enable automatic management.
+
+
+    auth (optional, str, None)
+      The type of authentication to use for automatically managed LDAP users.
+
+
+    loginattribute (optional, str, None)
+      The login attribute to use to authenticate LDAP users on the HMC.
+
+
+    hmcuserpropsattribute (optional, str, None)
+      The attribute to use to retrieve the user roles and properties from the LDAP server.
+
+
+    hmcauthnameattribute (optional, str, None)
+      The attribute to use to retrieve the remote user ID used in Kerberos authentication.
+
+
+    searchfilter (optional, str, None)
+      The filter to use for limiting the search of the LDAP server for user information.
+
+
+    scope (optional, str, None)
+      The search scope starting from base DN.
+
+
+    referrals (optional, str, None)
+      Specifies whether automatic referral chasing is to be enabled or disabled.
+
+
+    starttls (optional, str, None)
+      Specifies whether Start Transport Layer Security (TLS) is to be enabled or disabled.
+
+
+    hmcgroups (optional, str, None)
+      Specifies the name of one or more user groups allowed to log in to this HMC.
+
+
+    authsearch (optional, str, None)
+      Specifies whether  the HMC will attempt an LDAP search, with the user's credentials, as an additional con- firmation that the bind operation was successful.
+
+
+    tlsreqcert (optional, str, None)
+      Specifies what checks to perform on a server-supplied certificate.
+
+
+    groupattribute (optional, str, None)
+      Specifies the name of the Group attribute on the LDAP server.
+
+      When this option is specified, the member-attribute option must also be specified.
+
+
+    memberattribute (optional, str, None)
+      Specifies the name of the group Member attribute on the LDAP server.
+
+      When this option is specified, the 'groupattribute' option must also be specified.
+
+
+
+  state (optional, str, None)
+    The desired state of the HMC user and ldap.
 
     ``facts`` does not change anything on the HMC and returns the HMC user information or the default settings of HMC user attributes.
+
+    ``ldap_facts`` does not change anything on the HMC and returns LDAP configuration or LDAP user details.
 
     ``updated`` ensures the HMC user is updated with provided configuration.
 
     ``present`` ensures the HMC user is created with provided configuration.
 
     ``absent`` ensures the HMC user is removed.
+
+
+  action (optional, str, None)
+    ``configure_ldap`` Configure Hardware Management Console (HMC) Light weight Directory Access Protocol (LDAP) client configuration.
+
+    ``remove_ldap_config`` Remove the Hardware Management Console (HMC) Light weight Directory Access Protocol (LDAP) client configuration.
 
 
 
@@ -165,7 +282,7 @@ Examples
 .. code-block:: yaml+jinja
 
     
-    - name: List the properties of hmc user
+    - name: List the properties of hmc user.
       hmc_user:
         state: facts
         hmc_host: "{{ inventory_hostname }}"
@@ -174,7 +291,7 @@ Examples
           username: <username>
           password: <password>
 
-    - name: Create hmc user
+    - name: Create hmc user.
       hmc_user:
         state: present
         hmc_host: "{{ inventory_hostname }}"
@@ -187,7 +304,7 @@ Examples
           taskrole: hmcsuperadmin
           passwd: <new_user_password>
 
-    - name: Modify hmc user
+    - name: Modify hmc user.
       hmc_user:
         state: updated
         hmc_host: "{{ inventory_hostname }}"
@@ -199,7 +316,7 @@ Examples
           new_name: <new_user_name>
           max_webui_login_attempts: 20
 
-    - name: Remove hmc user
+    - name: Remove hmc user.
       hmc_user:
         state: absent
         hmc_host: "{{ inventory_hostname }}"
@@ -208,6 +325,40 @@ Examples
           username: <username>
           password: <password>
 
+    - name: List the ldap configuration.
+      hmc_user:
+        hmc_host: "{{ inventory_hostname }}"
+        hmc_auth:
+          username: <username>
+          password: <password>
+        resource: user
+        name: <hmc_user_name>
+        state: ldap_facts
+
+    - name: Configure ldap settings.
+      hmc_user:
+        hmc_host: "{{ inventory_hostname }}"
+        hmc_auth:
+          username: <username>
+          password: <password>
+        ldap_settings:
+          primary: <primary_url>
+          bindpw: <bind_pwd>
+          basedn: ou=People,dc=<url>
+          hmcauthnameattribute: <attribute>
+          hmcuserpropsattribute: <attribute>
+          binddn: cn=Manager,dc=<url>
+          starttls: 0
+        action: configure_ldap
+
+    - name: Remove ldap configuration.
+      hmc_user:
+        hmc_host: "{{ inventory_hostname }}"
+        hmc_auth:
+          username: <username>
+          password: <password>
+        ldap_resource: <resource_name>
+        action: remove_ldap_config
 
 
 
@@ -238,4 +389,5 @@ Authors
 ~~~~~~~
 
 - Anil Vijayan(@AnilVijayan)
+- Navinakumar Kandaur(@nkandak1)
 

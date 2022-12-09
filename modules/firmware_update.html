@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hmc_command – Execute HMC command &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
+  <title>firmware_update – Change firmware level on Managed Systems &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
@@ -21,8 +21,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="hmc_pwdpolicy – Manages the list, create, change and remove password policies of the HMC" href="hmc_pwdpolicy.html" />
-    <link rel="prev" title="firmware_update – Change firmware level on Managed Systems" href="firmware_update.html" /> 
+    <link rel="next" title="hmc_command – Execute HMC command" href="hmc_command.html" />
+    <link rel="prev" title="Modules" href="../modules.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -49,8 +49,7 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../modules.html">Modules</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../modules.html#module-reference">Module reference</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="firmware_update.html">firmware_update – Change firmware level on Managed Systems</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">hmc_command – Execute HMC command</a><ul>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">firmware_update – Change firmware level on Managed Systems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#synopsis">Synopsis</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#parameters">Parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
@@ -58,6 +57,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#status">Status</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="hmc_command.html">hmc_command – Execute HMC command</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hmc_pwdpolicy.html">hmc_pwdpolicy – Manages the list, create, change and remove password policies of the HMC</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hmc_update_upgrade.html">hmc_update_upgrade – Manages the update and upgrade of the HMC</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hmc_user.html">hmc_user – Manage the hmc users</a></li>
@@ -103,9 +103,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a></li>
           <li class="breadcrumb-item"><a href="../modules.html">Modules</a></li>
-      <li class="breadcrumb-item active">hmc_command – Execute HMC command</li>
+      <li class="breadcrumb-item active">firmware_update – Change firmware level on Managed Systems</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/IBM/ansible-power-hmc/blob/dev-collection/docs/source/modules/hmc_command.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/IBM/ansible-power-hmc/blob/dev-collection/docs/source/modules/firmware_update.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -113,8 +113,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="hmc-command-execute-hmc-command">
-<span id="hmc-command-module"></span><h1>hmc_command – Execute HMC command<a class="headerlink" href="#hmc-command-execute-hmc-command" title="Permalink to this heading"></a></h1>
+  <section id="firmware-update-change-firmware-level-on-managed-systems">
+<span id="firmware-update-module"></span><h1>firmware_update – Change firmware level on Managed Systems<a class="headerlink" href="#firmware-update-change-firmware-level-on-managed-systems" title="Permalink to this heading"></a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
 <li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
@@ -126,58 +126,93 @@
 </div>
 <section id="synopsis">
 <h2><a class="toc-backref" href="#id1">Synopsis</a><a class="headerlink" href="#synopsis" title="Permalink to this heading"></a></h2>
-<p>Generic module that can execute any HMC CLI command</p>
-<p>The given command will be executed on all selected HMC</p>
-<p>Information about the HMC CLI commands can be found in the <a class="reference external" href="https://www.ibm.com/docs/en/power10/7063-CR1?topic=hmc-commands">https://www.ibm.com/docs/en/power10/7063-CR1?topic=hmc-commands</a></p>
+<p>Update/Upgrade a managed system.</p>
 </section>
 <section id="parameters">
 <h2><a class="toc-backref" href="#id2">Parameters</a><a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h2>
 <blockquote>
 <div><dl>
-<dt>hmc_host (True, str, None)</dt><dd><p>The IP address or hostname of the HMC.</p>
+<dt>hmc_host (True, str, None)</dt><dd><p>IP address or hostname of the HMC.</p>
 </dd>
 <dt>hmc_auth (True, dict, None)</dt><dd><p>Username and Password credential of the HMC.</p>
 <dl class="simple">
-<dt>username (True, str, None)</dt><dd><p>Username of the HMC to login.</p>
+<dt>username (True, str, None)</dt><dd><p>HMC username.</p>
 </dd>
-<dt>password (optional, str, None)</dt><dd><p>Password of the HMC.</p>
+<dt>password (optional, str, None)</dt><dd><p>HMC password.</p>
 </dd>
 </dl>
 </dd>
-<dt>cmd (True, str, None)</dt><dd><p>The command to be executed on HMC.</p>
+<dt>system_name (True, str, None)</dt><dd><p>The name of the managed system.</p>
+</dd>
+<dt>repository (optional, str, ibmwebsite)</dt><dd><p>Type of image repository for the firmware image.</p>
+</dd>
+<dt>remote_repo (optional, dict, None)</dt><dd><p>When the image repository needs credentials to be accessed remotely.</p>
+<dl class="simple">
+<dt>hostname (True, str, None)</dt><dd><p>The hostname or IP address of the remote server where the firmware image is located.</p>
+</dd>
+<dt>userid (True, str, None)</dt><dd><p>The user ID to use to log in to the remote FTP or SFTP server. This option is required when the firmware image is located on a remote FTP or SFTP server Otherwise, this option is not valid.</p>
+</dd>
+<dt>passwd (optional, str, None)</dt><dd><p>The password to use to log in to the remote FTP or SFTP server. The <em>passwd</em> and <em>sshkey</em> options are mutually exclusive in case if <em>location_type=sftp</em>. This option is only valid when the firmware image is located on a remote FTP or SFTP server.</p>
+</dd>
+<dt>sshkey_file (optional, str, None)</dt><dd><p>The name of the file that contains the SSH private key. This option is only valid if <em>location_type=sftp</em>.</p>
+</dd>
+<dt>directory (True, str, None)</dt><dd><p>Location where the images are stored on the host.</p>
+</dd>
+</dl>
+</dd>
+<dt>level (optional, str, latest)</dt><dd><p>target level of operation.</p>
+</dd>
+<dt>state (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">updated</span></code> executes an update on target system.</p>
+<p><code class="docutils literal notranslate"><span class="pre">upgraded</span></code> executes an upgrade on target system.</p>
+</dd>
+<dt>action (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">accept</span></code> accepts firmware level for target system.</p>
 </dd>
 </dl>
 </div></blockquote>
 </section>
 <section id="examples">
 <h2><a class="toc-backref" href="#id3">Examples</a><a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
-<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Execute a command on HMC</span><span class="w"></span>
-<span class="w">  </span><span class="nt">hmc_command</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span><span class="w"></span>
+<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Update to latest level with default values (latest at ibmwebsite).</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ibm.power_hmc.firmware_update</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&#39;</span><span class="w"></span>
+<span class="w">      </span><span class="nt">hmc_auth</span><span class="p">:</span><span class="w"></span>
 <span class="w">         </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span><span class="w"></span>
 <span class="w">         </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cmd</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;cmd&gt;</span><span class="w"></span>
+<span class="w">      </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">updated</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Upgrade system to specific level at an sftp repo.</span><span class="w"></span>
+<span class="w">  </span><span class="nt">firmware_update</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&#39;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">curr_hmc_auth</span> <span class="cp">}}</span><span class="s">&#39;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">system_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;System name/mtms&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">repository</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sftp</span><span class="w"></span>
+<span class="w">    </span><span class="nt">remote_repo</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9.3.147.210</span><span class="w"></span>
+<span class="w">      </span><span class="nt">userid</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;user&gt;</span><span class="w"></span>
+<span class="w">      </span><span class="nt">passwd</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;password&gt;</span><span class="w"></span>
+<span class="w">      </span><span class="nt">directory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/repo/images/</span><span class="w"></span>
+<span class="w">    </span><span class="nt">level</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">01VL941_047</span><span class="w"></span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">upgraded</span><span class="w"></span>
 </pre></div>
 </div>
 </section>
 <section id="return-values">
 <h2><a class="toc-backref" href="#id4">Return Values</a><a class="headerlink" href="#return-values" title="Permalink to this heading"></a></h2>
 <dl class="simple">
-<dt>Command_output (always, str, )</dt><dd><p>Respective command output</p>
+<dt>service_pack (always, str, FW940.20)</dt><dd><p>The service pack representation of the system</p>
+</dd>
+<dt>level (always, str, 55)</dt><dd><p>The specific level active on the system</p>
+</dd>
+<dt>ecnumber (always, str, 01VL940)</dt><dd><p>The engineering change (EC) number associated with the firmware update</p>
 </dd>
 </dl>
 </section>
 <section id="status">
 <h2><a class="toc-backref" href="#id5">Status</a><a class="headerlink" href="#status" title="Permalink to this heading"></a></h2>
-<ul class="simple">
-<li><p>This module is not guaranteed to have a backwards compatible interface. <em>[preview]</em></p></li>
-<li><p>This module is maintained by community.</p></li>
-</ul>
 <section id="authors">
 <h3>Authors<a class="headerlink" href="#authors" title="Permalink to this heading"></a></h3>
 <ul class="simple">
-<li><p>Navinakumar Kandakur (&#64;nkandak1)</p></li>
+<li><p>Mario Maldonado (&#64;Mariomds)</p></li>
 </ul>
 </section>
 </section>
@@ -187,8 +222,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="firmware_update.html" class="btn btn-neutral float-left" title="firmware_update – Change firmware level on Managed Systems" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="hmc_pwdpolicy.html" class="btn btn-neutral float-right" title="hmc_pwdpolicy – Manages the list, create, change and remove password policies of the HMC" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../modules.html" class="btn btn-neutral float-left" title="Modules" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hmc_command.html" class="btn btn-neutral float-right" title="hmc_command – Execute HMC command" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

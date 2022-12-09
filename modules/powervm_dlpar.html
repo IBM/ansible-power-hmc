@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hmc_command – Execute HMC command &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
+  <title>powervm_dlpar – Dynamically managing resources of partition &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
@@ -21,8 +21,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="hmc_pwdpolicy – Manages the list, create, change and remove password policies of the HMC" href="hmc_pwdpolicy.html" />
-    <link rel="prev" title="firmware_update – Change firmware level on Managed Systems" href="firmware_update.html" /> 
+    <link rel="next" title="powervm_lpar_instance – Create, Delete, Shutdown, Activate, Restart, Facts and Install of PowerVM Partitions" href="powervm_lpar_instance.html" />
+    <link rel="prev" title="power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the Managed system" href="power_system.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -50,7 +50,12 @@
 <li class="toctree-l1 current"><a class="reference internal" href="../modules.html">Modules</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../modules.html#module-reference">Module reference</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="firmware_update.html">firmware_update – Change firmware level on Managed Systems</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">hmc_command – Execute HMC command</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hmc_command.html">hmc_command – Execute HMC command</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hmc_pwdpolicy.html">hmc_pwdpolicy – Manages the list, create, change and remove password policies of the HMC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hmc_update_upgrade.html">hmc_update_upgrade – Manages the update and upgrade of the HMC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hmc_user.html">hmc_user – Manage the hmc users</a></li>
+<li class="toctree-l3"><a class="reference internal" href="power_system.html">power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the Managed system</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">powervm_dlpar – Dynamically managing resources of partition</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#synopsis">Synopsis</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#parameters">Parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
@@ -58,11 +63,6 @@
 <li class="toctree-l4"><a class="reference internal" href="#status">Status</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="hmc_pwdpolicy.html">hmc_pwdpolicy – Manages the list, create, change and remove password policies of the HMC</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hmc_update_upgrade.html">hmc_update_upgrade – Manages the update and upgrade of the HMC</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hmc_user.html">hmc_user – Manage the hmc users</a></li>
-<li class="toctree-l3"><a class="reference internal" href="power_system.html">power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the Managed system</a></li>
-<li class="toctree-l3"><a class="reference internal" href="powervm_dlpar.html">powervm_dlpar – Dynamically managing resources of partition</a></li>
 <li class="toctree-l3"><a class="reference internal" href="powervm_lpar_instance.html">powervm_lpar_instance – Create, Delete, Shutdown, Activate, Restart, Facts and Install of PowerVM Partitions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="powervm_lpar_migration.html">powervm_lpar_migration – validate, migrate and recover of the LPAR</a></li>
 <li class="toctree-l3"><a class="reference internal" href="vios.html">vios – Creation and management of Virtual I/O Server partition</a></li>
@@ -103,9 +103,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a></li>
           <li class="breadcrumb-item"><a href="../modules.html">Modules</a></li>
-      <li class="breadcrumb-item active">hmc_command – Execute HMC command</li>
+      <li class="breadcrumb-item active">powervm_dlpar – Dynamically managing resources of partition</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/IBM/ansible-power-hmc/blob/dev-collection/docs/source/modules/hmc_command.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/IBM/ansible-power-hmc/blob/dev-collection/docs/source/modules/powervm_dlpar.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -113,8 +113,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="hmc-command-execute-hmc-command">
-<span id="hmc-command-module"></span><h1>hmc_command – Execute HMC command<a class="headerlink" href="#hmc-command-execute-hmc-command" title="Permalink to this heading"></a></h1>
+  <section id="powervm-dlpar-dynamically-managing-resources-of-partition">
+<span id="powervm-dlpar-module"></span><h1>powervm_dlpar – Dynamically managing resources of partition<a class="headerlink" href="#powervm-dlpar-dynamically-managing-resources-of-partition" title="Permalink to this heading"></a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
 <li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
@@ -126,15 +126,14 @@
 </div>
 <section id="synopsis">
 <h2><a class="toc-backref" href="#id1">Synopsis</a><a class="headerlink" href="#synopsis" title="Permalink to this heading"></a></h2>
-<p>Generic module that can execute any HMC CLI command</p>
-<p>The given command will be executed on all selected HMC</p>
-<p>Information about the HMC CLI commands can be found in the <a class="reference external" href="https://www.ibm.com/docs/en/power10/7063-CR1?topic=hmc-commands">https://www.ibm.com/docs/en/power10/7063-CR1?topic=hmc-commands</a></p>
+<p>Managing processor resources dynamically</p>
+<p>Managing memory resources dynamically</p>
 </section>
 <section id="parameters">
 <h2><a class="toc-backref" href="#id2">Parameters</a><a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h2>
 <blockquote>
 <div><dl>
-<dt>hmc_host (True, str, None)</dt><dd><p>The IP address or hostname of the HMC.</p>
+<dt>hmc_host (True, str, None)</dt><dd><p>The IP Address or hostname of the HMC.</p>
 </dd>
 <dt>hmc_auth (True, dict, None)</dt><dd><p>Username and Password credential of the HMC.</p>
 <dl class="simple">
@@ -144,27 +143,66 @@
 </dd>
 </dl>
 </dd>
-<dt>cmd (True, str, None)</dt><dd><p>The command to be executed on HMC.</p>
+<dt>system_name (True, str, None)</dt><dd><p>The name of the managed system.</p>
+</dd>
+<dt>vm_name (True, str, None)</dt><dd><p>The name of the powervm partition.</p>
+</dd>
+<dt>proc_settings (optional, dict, None)</dt><dd><p>Processor related settings.</p>
+<dl>
+<dt>proc (optional, int, None)</dt><dd><p>The number of dedicated processors to create a partition.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">proc_unit</span></code> parameter is set, then this value will work as virtual processors for shared processor setting.</p>
+</dd>
+<dt>proc_unit (optional, float, None)</dt><dd><p>The number of shared processing units to create a partition.</p>
+</dd>
+<dt>sharing_mode (optional, str, None)</dt><dd><p>The sharing mode of the partition.</p>
+<p>Valid values for partitions using dedicated processors are <code class="docutils literal notranslate"><span class="pre">keep_idle_procs</span></code>, <code class="docutils literal notranslate"><span class="pre">share_idle_procs</span></code>, <code class="docutils literal notranslate"><span class="pre">share_idle_procs_active</span></code>, <code class="docutils literal notranslate"><span class="pre">share_idle_procs_always</span></code>.</p>
+<p>Valid values for partitions using shared processors are <code class="docutils literal notranslate"><span class="pre">capped</span></code>, <code class="docutils literal notranslate"><span class="pre">uncapped</span></code>.</p>
+</dd>
+<dt>uncapped_weight (optional, int, None)</dt><dd><p>The uncapped weight of the partition.</p>
+</dd>
+<dt>pool_id (optional, int, None)</dt><dd><p>Shared Processor Pool ID to be set.</p>
+</dd>
+</dl>
+</dd>
+<dt>mem_settings (optional, dict, None)</dt><dd><p>Memory related settings.</p>
+<dl class="simple">
+<dt>mem (optional, int, None)</dt><dd><p>The value of dedicated memory value in megabytes to create a partition.</p>
+</dd>
+</dl>
+</dd>
+<dt>timeout (optional, int, None)</dt><dd><p>The maximum time, in minutes, to wait for partition operating system to complete dlpar.</p>
+</dd>
+<dt>action (True, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">update</span></code> updates the resources of the partition. Currently it supports the update of processor or memory resources.</p>
 </dd>
 </dl>
 </div></blockquote>
 </section>
 <section id="examples">
 <h2><a class="toc-backref" href="#id3">Examples</a><a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
-<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Execute a command on HMC</span><span class="w"></span>
-<span class="w">  </span><span class="nt">hmc_command</span><span class="p">:</span><span class="w"></span>
+<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Dynamically set the processor and memory values.</span><span class="w"></span>
+<span class="w">  </span><span class="nt">powervm_dlpar</span><span class="p">:</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span><span class="w"></span>
 <span class="w">         </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span><span class="w"></span>
 <span class="w">         </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cmd</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;cmd&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">system_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;server name&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">vm_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;vm name&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">proc_settings</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">proc</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span><span class="w"></span>
+<span class="w">      </span><span class="nt">proc_unit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.5</span><span class="w"></span>
+<span class="w">      </span><span class="nt">sharing_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;uncapped&#39;</span><span class="w"></span>
+<span class="w">      </span><span class="nt">uncapped_weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">131</span><span class="w"></span>
+<span class="w">      </span><span class="nt">pool_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span><span class="w"></span>
+<span class="w">    </span><span class="nt">mem_settings</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">mem</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3072</span><span class="w"></span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">update</span><span class="w"></span>
 </pre></div>
 </div>
 </section>
 <section id="return-values">
 <h2><a class="toc-backref" href="#id4">Return Values</a><a class="headerlink" href="#return-values" title="Permalink to this heading"></a></h2>
 <dl class="simple">
-<dt>Command_output (always, str, )</dt><dd><p>Respective command output</p>
+<dt>partition_info (always, dict, )</dt><dd><p>Return the proc and memory attributes of the partition.</p>
 </dd>
 </dl>
 </section>
@@ -177,7 +215,7 @@
 <section id="authors">
 <h3>Authors<a class="headerlink" href="#authors" title="Permalink to this heading"></a></h3>
 <ul class="simple">
-<li><p>Navinakumar Kandakur (&#64;nkandak1)</p></li>
+<li><p>Anil Vijayan(&#64;AnilVijayan)</p></li>
 </ul>
 </section>
 </section>
@@ -187,8 +225,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="firmware_update.html" class="btn btn-neutral float-left" title="firmware_update – Change firmware level on Managed Systems" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="hmc_pwdpolicy.html" class="btn btn-neutral float-right" title="hmc_pwdpolicy – Manages the list, create, change and remove password policies of the HMC" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="power_system.html" class="btn btn-neutral float-left" title="power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the Managed system" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="powervm_lpar_instance.html" class="btn btn-neutral float-right" title="powervm_lpar_instance – Create, Delete, Shutdown, Activate, Restart, Facts and Install of PowerVM Partitions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

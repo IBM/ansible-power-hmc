@@ -17,6 +17,7 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -48,6 +49,7 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../modules.html">Modules</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../modules.html#module-reference">Module reference</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="firmware_update.html">firmware_update – Change firmware level on Managed Systems</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hmc_command.html">hmc_command – Execute HMC command</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hmc_pwdpolicy.html">hmc_pwdpolicy – Manages the list, create, change and remove password policies of the HMC</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hmc_update_upgrade.html">hmc_update_upgrade – Manages the update and upgrade of the HMC</a></li>
@@ -60,6 +62,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="power_system.html">power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the Managed system</a></li>
+<li class="toctree-l3"><a class="reference internal" href="powervm_dlpar.html">powervm_dlpar – Dynamically managing resources of partition</a></li>
 <li class="toctree-l3"><a class="reference internal" href="powervm_lpar_instance.html">powervm_lpar_instance – Create, Delete, Shutdown, Activate, Restart, Facts and Install of PowerVM Partitions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="powervm_lpar_migration.html">powervm_lpar_migration – validate, migrate and recover of the LPAR</a></li>
 <li class="toctree-l3"><a class="reference internal" href="vios.html">vios – Creation and management of Virtual I/O Server partition</a></li>
@@ -98,9 +101,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../modules.html">Modules</a> &raquo;</li>
-      <li>hmc_user – Manage the hmc users</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../modules.html">Modules</a></li>
+      <li class="breadcrumb-item active">hmc_user – Manage the hmc users</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/IBM/ansible-power-hmc/blob/dev-collection/docs/source/modules/hmc_user.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -127,6 +130,9 @@
 <p>List Hardware Management Console user information</p>
 <p>Modify a Hardware Management Console user</p>
 <p>Remove Hardware Management Console users</p>
+<p>List LDAP Configurations</p>
+<p>Configure LDAP Settings</p>
+<p>Remove LDAP Configurations</p>
 </section>
 <section id="parameters">
 <h2><a class="toc-backref" href="#id2">Parameters</a><a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h2>
@@ -142,12 +148,16 @@
 </dd>
 </dl>
 </dd>
-<dt>name (optional, str, None)</dt><dd><p>The user name of the HMC user.</p>
+<dt>name (optional, str, None)</dt><dd><p>The user name of the HMC user. This option is valid for <em>state=present</em>, <em>state=absent</em>, <em>state=updated</em>, <em>state=facts</em> and <em>state=ldap_facts</em>.</p>
 </dd>
 <dt>enable_user (optional, bool, None)</dt><dd><p>To enable an HMC user that was disabled due to inactivity.</p>
 <p>This option is only valid if <em>state=updated</em>.</p>
 </dd>
 <dt>type (optional, str, None)</dt><dd><p>The type of user. During <em>state=updated</em> to change the default settings of HMC user, specify <code class="docutils literal notranslate"><span class="pre">default</span></code> with this option. The values of this option changes during <em>state=absent</em>. Supported values are <code class="docutils literal notranslate"><span class="pre">all|local|kerberos|ldap|automanage</span></code>. During <em>state=facts</em>, valid values are <code class="docutils literal notranslate"><span class="pre">default|user</span></code>.</p>
+</dd>
+<dt>resource (optional, str, None)</dt><dd><p>The LDAP resources to be listed. This option is valid only for <em>state=ldap_facts</em>. To filter out the LDAP configuration of particular user we can use <code class="docutils literal notranslate"><span class="pre">name</span></code> parameter with <em>resource=user</em>.</p>
+</dd>
+<dt>ldap_resource (optional, str, None)</dt><dd><p>LDAP configuration to be removed. This is valid only for <em>action=remove_ldap_config</em>.</p>
 </dd>
 <dt>attributes (optional, dict, None)</dt><dd><p>Configuration attributes used during the create and modify of HMC user.</p>
 <dl class="simple">
@@ -191,18 +201,71 @@
 </dd>
 </dl>
 </dd>
-<dt>state (True, str, None)</dt><dd><p>The desired state of the HMC user.</p>
+<dt>ldap_settings (optional, dict, None)</dt><dd><p>Configuration attributes used during Configuration of LDAP on HMC.</p>
+<dl>
+<dt>primary (optional, str, None)</dt><dd><p>The primary LDAP server.</p>
+</dd>
+<dt>backup (optional, str, None)</dt><dd><p>The backup LDAP  server.</p>
+</dd>
+<dt>basedn (optional, str, None)</dt><dd><p>The base DN for LDAP search.</p>
+</dd>
+<dt>binddn (optional, str, None)</dt><dd><p>The DN to use for binding to the LDAP server when the LDAP server is configured to use non-anonymous binding.</p>
+</dd>
+<dt>bindpw (optional, str, None)</dt><dd><p>The password to use when binding to the LDAP server when the LDAP server is configured to use non-anonymous binding.</p>
+</dd>
+<dt>timelimit (optional, str, None)</dt><dd><p>The LDAP search time limit in seconds.</p>
+</dd>
+<dt>bindtimelimit (optional, str, None)</dt><dd><p>The LDAP server bind time limit in seconds.</p>
+</dd>
+<dt>automanage (optional, str, None)</dt><dd><p>Use this option to indicate whether the HMC should automatically manage remotely authenticated LDAP users.</p>
+<p>Valid values are 0 to disable automatic management, or 1 to enable automatic management.</p>
+</dd>
+<dt>auth (optional, str, None)</dt><dd><p>The type of authentication to use for automatically managed LDAP users.</p>
+</dd>
+<dt>loginattribute (optional, str, None)</dt><dd><p>The login attribute to use to authenticate LDAP users on the HMC.</p>
+</dd>
+<dt>hmcuserpropsattribute (optional, str, None)</dt><dd><p>The attribute to use to retrieve the user roles and properties from the LDAP server.</p>
+</dd>
+<dt>hmcauthnameattribute (optional, str, None)</dt><dd><p>The attribute to use to retrieve the remote user ID used in Kerberos authentication.</p>
+</dd>
+<dt>searchfilter (optional, str, None)</dt><dd><p>The filter to use for limiting the search of the LDAP server for user information.</p>
+</dd>
+<dt>scope (optional, str, None)</dt><dd><p>The search scope starting from base DN.</p>
+</dd>
+<dt>referrals (optional, str, None)</dt><dd><p>Specifies whether automatic referral chasing is to be enabled or disabled.</p>
+</dd>
+<dt>starttls (optional, str, None)</dt><dd><p>Specifies whether Start Transport Layer Security (TLS) is to be enabled or disabled.</p>
+</dd>
+<dt>hmcgroups (optional, str, None)</dt><dd><p>Specifies the name of one or more user groups allowed to log in to this HMC.</p>
+</dd>
+<dt>authsearch (optional, str, None)</dt><dd><p>Specifies whether  the HMC will attempt an LDAP search, with the user’s credentials, as an additional con- firmation that the bind operation was successful.</p>
+</dd>
+<dt>tlsreqcert (optional, str, None)</dt><dd><p>Specifies what checks to perform on a server-supplied certificate.</p>
+</dd>
+<dt>groupattribute (optional, str, None)</dt><dd><p>Specifies the name of the Group attribute on the LDAP server.</p>
+<p>When this option is specified, the member-attribute option must also be specified.</p>
+</dd>
+<dt>memberattribute (optional, str, None)</dt><dd><p>Specifies the name of the group Member attribute on the LDAP server.</p>
+<p>When this option is specified, the ‘groupattribute’ option must also be specified.</p>
+</dd>
+</dl>
+</dd>
+<dt>state (optional, str, None)</dt><dd><p>The desired state of the HMC user and ldap.</p>
 <p><code class="docutils literal notranslate"><span class="pre">facts</span></code> does not change anything on the HMC and returns the HMC user information or the default settings of HMC user attributes.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ldap_facts</span></code> does not change anything on the HMC and returns LDAP configuration or LDAP user details.</p>
 <p><code class="docutils literal notranslate"><span class="pre">updated</span></code> ensures the HMC user is updated with provided configuration.</p>
 <p><code class="docutils literal notranslate"><span class="pre">present</span></code> ensures the HMC user is created with provided configuration.</p>
 <p><code class="docutils literal notranslate"><span class="pre">absent</span></code> ensures the HMC user is removed.</p>
+</dd>
+<dt>action (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">configure_ldap</span></code> Configure Hardware Management Console (HMC) Light weight Directory Access Protocol (LDAP) client configuration.</p>
+<p><code class="docutils literal notranslate"><span class="pre">remove_ldap_config</span></code> Remove the Hardware Management Console (HMC) Light weight Directory Access Protocol (LDAP) client configuration.</p>
 </dd>
 </dl>
 </div></blockquote>
 </section>
 <section id="examples">
 <h2><a class="toc-backref" href="#id3">Examples</a><a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
-<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">List the properties of hmc user</span><span class="w"></span>
+<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">List the properties of hmc user.</span><span class="w"></span>
 <span class="w">  </span><span class="nt">hmc_user</span><span class="p">:</span><span class="w"></span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">facts</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span><span class="w"></span>
@@ -211,7 +274,7 @@
 <span class="w">      </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;username&gt;</span><span class="w"></span>
 <span class="w">      </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;password&gt;</span><span class="w"></span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create hmc user</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create hmc user.</span><span class="w"></span>
 <span class="w">  </span><span class="nt">hmc_user</span><span class="p">:</span><span class="w"></span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span><span class="w"></span>
@@ -224,7 +287,7 @@
 <span class="w">      </span><span class="nt">taskrole</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hmcsuperadmin</span><span class="w"></span>
 <span class="w">      </span><span class="nt">passwd</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;new_user_password&gt;</span><span class="w"></span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Modify hmc user</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Modify hmc user.</span><span class="w"></span>
 <span class="w">  </span><span class="nt">hmc_user</span><span class="p">:</span><span class="w"></span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">updated</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span><span class="w"></span>
@@ -236,7 +299,7 @@
 <span class="w">      </span><span class="nt">new_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;new_user_name&gt;</span><span class="w"></span>
 <span class="w">      </span><span class="nt">max_webui_login_attempts</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span><span class="w"></span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Remove hmc user</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Remove hmc user.</span><span class="w"></span>
 <span class="w">  </span><span class="nt">hmc_user</span><span class="p">:</span><span class="w"></span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">absent</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span><span class="w"></span>
@@ -244,6 +307,41 @@
 <span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span><span class="w"></span>
 <span class="w">      </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;username&gt;</span><span class="w"></span>
 <span class="w">      </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;password&gt;</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">List the ldap configuration.</span><span class="w"></span>
+<span class="w">  </span><span class="nt">hmc_user</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;username&gt;</span><span class="w"></span>
+<span class="w">      </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;password&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">resource</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">user</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;hmc_user_name&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ldap_facts</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Configure ldap settings.</span><span class="w"></span>
+<span class="w">  </span><span class="nt">hmc_user</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;username&gt;</span><span class="w"></span>
+<span class="w">      </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;password&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">ldap_settings</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">primary</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;primary_url&gt;</span><span class="w"></span>
+<span class="w">      </span><span class="nt">bindpw</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;bind_pwd&gt;</span><span class="w"></span>
+<span class="w">      </span><span class="nt">basedn</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ou=People,dc=&lt;url&gt;</span><span class="w"></span>
+<span class="w">      </span><span class="nt">hmcauthnameattribute</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;attribute&gt;</span><span class="w"></span>
+<span class="w">      </span><span class="nt">hmcuserpropsattribute</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;attribute&gt;</span><span class="w"></span>
+<span class="w">      </span><span class="nt">binddn</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cn=Manager,dc=&lt;url&gt;</span><span class="w"></span>
+<span class="w">      </span><span class="nt">starttls</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w"></span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">configure_ldap</span><span class="w"></span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Remove ldap configuration.</span><span class="w"></span>
+<span class="w">  </span><span class="nt">hmc_user</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;username&gt;</span><span class="w"></span>
+<span class="w">      </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;password&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">ldap_resource</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;resource_name&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">remove_ldap_config</span><span class="w"></span>
 </pre></div>
 </div>
 </section>
@@ -264,6 +362,7 @@
 <h3>Authors<a class="headerlink" href="#authors" title="Permalink to this heading"></a></h3>
 <ul class="simple">
 <li><p>Anil Vijayan(&#64;AnilVijayan)</p></li>
+<li><p>Navinakumar Kandaur(&#64;nkandak1)</p></li>
 </ul>
 </section>
 </section>

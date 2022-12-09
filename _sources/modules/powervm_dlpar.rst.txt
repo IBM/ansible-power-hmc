@@ -1,0 +1,160 @@
+.. _powervm_dlpar_module:
+
+
+powervm_dlpar -- Dynamically managing resources of partition
+============================================================
+
+.. contents::
+   :local:
+   :depth: 1
+
+
+Synopsis
+--------
+
+Managing processor resources dynamically
+
+Managing memory resources dynamically
+
+
+
+
+
+
+Parameters
+----------
+
+  hmc_host (True, str, None)
+    The IP Address or hostname of the HMC.
+
+
+  hmc_auth (True, dict, None)
+    Username and Password credential of the HMC.
+
+
+    username (True, str, None)
+      Username of the HMC to login.
+
+
+    password (optional, str, None)
+      Password of the HMC.
+
+
+
+  system_name (True, str, None)
+    The name of the managed system.
+
+
+  vm_name (True, str, None)
+    The name of the powervm partition.
+
+
+  proc_settings (optional, dict, None)
+    Processor related settings.
+
+
+    proc (optional, int, None)
+      The number of dedicated processors to create a partition.
+
+      If ``proc_unit`` parameter is set, then this value will work as virtual processors for shared processor setting.
+
+
+    proc_unit (optional, float, None)
+      The number of shared processing units to create a partition.
+
+
+    sharing_mode (optional, str, None)
+      The sharing mode of the partition.
+
+      Valid values for partitions using dedicated processors are ``keep_idle_procs``, ``share_idle_procs``, ``share_idle_procs_active``, ``share_idle_procs_always``.
+
+      Valid values for partitions using shared processors are ``capped``, ``uncapped``.
+
+
+    uncapped_weight (optional, int, None)
+      The uncapped weight of the partition.
+
+
+    pool_id (optional, int, None)
+      Shared Processor Pool ID to be set.
+
+
+
+  mem_settings (optional, dict, None)
+    Memory related settings.
+
+
+    mem (optional, int, None)
+      The value of dedicated memory value in megabytes to create a partition.
+
+
+
+  timeout (optional, int, None)
+    The maximum time, in minutes, to wait for partition operating system to complete dlpar.
+
+
+  action (True, str, None)
+    ``update`` updates the resources of the partition. Currently it supports the update of processor or memory resources.
+
+
+
+
+
+
+
+
+
+Examples
+--------
+
+.. code-block:: yaml+jinja
+
+    
+    - name: Dynamically set the processor and memory values.
+      powervm_dlpar:
+        hmc_host: "{{ inventory_hostname }}"
+        hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+        system_name: <server name>
+        vm_name: <vm name>
+        proc_settings:
+          proc: 3
+          proc_unit: 2.5
+          sharing_mode: 'uncapped'
+          uncapped_weight: 131
+          pool_id: 2
+        mem_settings:
+          mem: 3072
+        action: update
+
+
+
+Return Values
+-------------
+
+partition_info (always, dict, )
+  Return the proc and memory attributes of the partition.
+
+
+
+
+
+Status
+------
+
+
+
+
+- This module is not guaranteed to have a backwards compatible interface. *[preview]*
+
+
+- This module is maintained by community.
+
+
+
+Authors
+~~~~~~~
+
+- Anil Vijayan(@AnilVijayan)
+

@@ -1,0 +1,155 @@
+.. _firmware_update_module:
+
+
+firmware_update -- Change firmware level on Managed Systems
+===========================================================
+
+.. contents::
+   :local:
+   :depth: 1
+
+
+Synopsis
+--------
+
+Update/Upgrade a managed system.
+
+
+
+
+
+
+Parameters
+----------
+
+  hmc_host (True, str, None)
+    IP address or hostname of the HMC.
+
+
+  hmc_auth (True, dict, None)
+    Username and Password credential of the HMC.
+
+
+    username (True, str, None)
+      HMC username.
+
+
+    password (optional, str, None)
+      HMC password.
+
+
+
+  system_name (True, str, None)
+    The name of the managed system.
+
+
+  repository (optional, str, ibmwebsite)
+    Type of image repository for the firmware image.
+
+
+  remote_repo (optional, dict, None)
+    When the image repository needs credentials to be accessed remotely.
+
+
+    hostname (True, str, None)
+      The hostname or IP address of the remote server where the firmware image is located.
+
+
+    userid (True, str, None)
+      The user ID to use to log in to the remote FTP or SFTP server. This option is required when the firmware image is located on a remote FTP or SFTP server Otherwise, this option is not valid.
+
+
+    passwd (optional, str, None)
+      The password to use to log in to the remote FTP or SFTP server. The *passwd* and *sshkey* options are mutually exclusive in case if *location_type=sftp*. This option is only valid when the firmware image is located on a remote FTP or SFTP server.
+
+
+    sshkey_file (optional, str, None)
+      The name of the file that contains the SSH private key. This option is only valid if *location_type=sftp*.
+
+
+    directory (True, str, None)
+      Location where the images are stored on the host.
+
+
+
+  level (optional, str, latest)
+    target level of operation.
+
+
+  state (optional, str, None)
+    ``updated`` executes an update on target system.
+
+    ``upgraded`` executes an upgrade on target system.
+
+
+  action (optional, str, None)
+    ``accept`` accepts firmware level for target system.
+
+
+
+
+
+
+
+
+
+Examples
+--------
+
+.. code-block:: yaml+jinja
+
+    
+    - name: Update to latest level with default values (latest at ibmwebsite).
+      ibm.power_hmc.firmware_update:
+          hmc_host: '{{ inventory_hostname }}'
+          hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+          state: updated
+
+    - name: Upgrade system to specific level at an sftp repo.
+      firmware_update:
+        hmc_host: '{{ inventory_hostname }}'
+        hmc_auth: '{{ curr_hmc_auth }}'
+        system_name: <System name/mtms>
+        repository: sftp
+        remote_repo:
+          hostname: 9.3.147.210
+          userid: <user>
+          passwd: <password>
+          directory: /repo/images/
+        level: 01VL941_047
+        state: upgraded
+
+
+
+Return Values
+-------------
+
+service_pack (always, str, FW940.20)
+  The service pack representation of the system
+
+
+level (always, str, 55)
+  The specific level active on the system
+
+
+ecnumber (always, str, 01VL940)
+  The engineering change (EC) number associated with the firmware update
+
+
+
+
+
+Status
+------
+
+
+
+
+
+Authors
+~~~~~~~
+
+- Mario Maldonado (@Mariomds)
+
