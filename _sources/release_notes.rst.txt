@@ -146,4 +146,24 @@ Notes
 .. _GitHub v1.6.0:
    https://github.com/IBM/ansible-power-hmc/releases/download/v1.6.0/ibm-power_hmc-1.6.0.tar.gz
    
-   
+Version 1.7.0
+-------------
+Notes
+  * firmware_update: Update/Upgrade firmware level on Managed System
+  * powervm_dlpar: Dynamically managing proc/mem resources of partition
+  * hmc_user: LDAP configuration support
+  * powervm_lpar_instance: Managed Sytem made optional for removal of partition
+  * powervm_inventory: Support for managed system group
+  * powervm_inventory: Introduced new properties like `AssociatedGroups` (Tagged group name), `AssociatedHMC` (HMC IP/Hostname), `AssociatedHMCUserName` (HMC username), `SystemName`
+  * powervm_inventory: Renamed parameter value from lpar_name to name for paramters like ansible_host_type and ansible_display_name
+  * powervm_inventory: Added more flexible yaml friendly format for configuration input (hmc_hosts as list)
+  
+  Availability
+    * `Galaxy v1.7.0`_
+    * `GitHub v1.7.0`_
+
+.. _Galaxy v1.7.0:
+   https://galaxy.ansible.com/download/ibm-power_hmc-1.7.0.tar.gz
+
+.. _GitHub v1.7.0:
+   https://github.com/IBM/ansible-power-hmc/releases/download/v1.7.0/ibm-power_hmc-1.7.0.tar.gz
