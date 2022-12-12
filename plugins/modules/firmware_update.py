@@ -107,6 +107,7 @@ EXAMPLES = r'''
       hmc_auth:
          username: '{{ ansible_user }}'
          password: '{{ hmc_password }}'
+      system_name: <System name/mtms>
       state: updated
 
 - name: Upgrade system to specific level at an sftp repo.
