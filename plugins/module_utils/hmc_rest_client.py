@@ -825,22 +825,23 @@ class HmcRestClient:
                          'ProgressType': 'DISCRETE'}
         immediate = 'false'
         operation = 'shutdown'
-        if(shutdown_option == 'Delayed'):
+
+        if shutdown_option == 'Delayed':
             immediate = 'false'
             operation = 'shutdown'
-        elif(shutdown_option == 'Immediate'):
+        elif shutdown_option == 'Immediate':
             immediate = 'true'
             operation = 'shutdown'
-        elif(shutdown_option == 'OperatingSystem'):
+        elif shutdown_option == 'OperatingSystem':
             immediate = 'false'
             operation = 'osshutdown'
-        elif(shutdown_option == 'OSImmediate'):
+        elif shutdown_option == 'OSImmediate':
             immediate = 'true'
             operation = 'osshutdown'
-        elif(shutdown_option == 'Dump'):
+        elif shutdown_option == 'Dump':
             immediate = 'false'
             operation = 'dumprestart'
-        elif(shutdown_option == 'DumpRetry'):
+        elif shutdown_option == 'DumpRetry':
             immediate = 'false'
             operation = 'retrydump'
 
