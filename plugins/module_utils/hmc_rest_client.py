@@ -816,13 +816,33 @@ class HmcRestClient:
         jobID = transform_resp.xpath('//JobID')[0].text
         return self.fetchJobStatus(jobID, template=True)
 
-    def poweroffPartition(self, vm_uuid, operation, restart='false', immediate='false'):
+    def poweroffPartition(self, vm_uuid, restart, shutdown_option):
         url = "https://{0}/rest/api/uom/LogicalPartition/{1}/do/PowerOff".format(self.hmc_ip, vm_uuid)
         header = _jobHeader(self.session)
 
         reqdOperation = {'OperationName': 'PowerOff',
                          'GroupName': 'LogicalPartition',
                          'ProgressType': 'DISCRETE'}
+        immediate = 'false'
+        operation = 'shutdown'
+        if(shutdown_option == 'Delayed'):
+            immediate = 'false'
+            operation = 'shutdown'
+        elif(shutdown_option == 'Immediate'):
+            immediate = 'true'
+            operation = 'shutdown'
+        elif(shutdown_option == 'OperatingSystem'):
+            immediate = 'false'
+            operation = 'osshutdown'
+        elif(shutdown_option == 'OSImmediate'):
+            immediate = 'true'
+            operation = 'osshutdown'
+        elif(shutdown_option == 'Dump'):
+            immediate = 'false'
+            operation = 'dumprestart'
+        elif(shutdown_option == 'DumpRetry'):
+            immediate = 'false'
+            operation = 'retrydump'
 
         jobParams = {'immediate': immediate,
                      'restart': restart,

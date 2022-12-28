@@ -379,6 +379,20 @@ options:
                             - The VIOS name on which SRIOV physical port location code to be configured.
                             - By default picks a random VIOS name with RMC state as active.
                         type: str
+    shutdown_option:
+        description:
+            - Option to shutdown Logical Partition
+            - This option is valid only for C(shutdown) I(action).
+            - Default value is C(Delayed).
+        type: str
+        choices: ['Delayed', 'Immediate', 'OperatingSystem', 'OSImmediate']
+    restart_option:
+        description:
+            - Option to reboot Logical Partition
+            - This option is valid only for C(restart) I(action).
+            - Default value is C(Immediate).
+        type: str
+        choices: ['Immediate', 'OperatingSystem', 'OSImmediate', 'Dump', 'DumpRetry']
     state:
         description:
             - C(present) creates a partition of the specified I(os_type), I(vm_name), I(proc) and I(memory) on specified I(system_name).
@@ -660,36 +674,44 @@ def validate_parameters(params):
 
     if opr == 'present':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']
-        unsupportedList = ['prof_name', 'keylock', 'iIPLsource', 'retain_vios_cfg', 'delete_vdisks', 'advanced_info', 'install_settings']
+        unsupportedList = ['prof_name', 'keylock', 'iIPLsource', 'retain_vios_cfg', 'delete_vdisks', 'advanced_info', 'install_settings',
+                           'shutdown_option', 'restart_option']
     elif opr == 'poweron':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'volume_config', 'virt_network_config', 'retain_vios_cfg', 'delete_vdisks',
                            'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
                            'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'install_settings',
-                           'vnic_config']
+                           'vnic_config', 'shutdown_option', 'restart_option']
     elif opr == 'absent':
         mandatoryList = ['hmc_host', 'hmc_auth', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
                            'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'install_settings',
-                           'vnic_config']
+                           'vnic_config', 'shutdown_option', 'restart_option']
     elif opr == 'facts':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
                            'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'install_settings',
-                           'vnic_config']
+                           'vnic_config', 'shutdown_options', 'restart_option']
     elif opr == 'install_os':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'install_settings']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config', 'retain_vios_cfg',
                            'delete_vdisks', 'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
-                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'vnic_config']
+                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'vnic_config',
+                           'shutdown_option', 'restart_option']
+    elif opr == 'shutdown':
+        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
+        unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
+                           'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc',
+                           'min_proc_unit', 'max_proc_unit', 'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem',
+                           'vm_id', 'install_settings', 'vnic_config', 'restart_option']
     else:
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc',
                            'min_proc_unit', 'max_proc_unit', 'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem',
-                           'vm_id', 'install_settings', 'vnic_config']
+                           'vm_id', 'install_settings', 'vnic_config', 'shutdown_option']
 
     collate = []
     for eachMandatory in mandatoryList:
@@ -1275,6 +1297,8 @@ def poweroff_partition(module, params):
     password = params['hmc_auth']['password']
     system_name = params['system_name']
     vm_name = params['vm_name']
+    shutdown_option = params['shutdown_option'] or 'Delayed'
+    restart_option = params['restart_option'] or 'Immediate'
     operation = params['action']
 
     try:
@@ -1312,10 +1336,10 @@ def poweroff_partition(module, params):
             return False, None, None
         else:
             if operation == 'restart':
-                rest_conn.poweroffPartition(lpar_uuid, 'shutdown', 'true')
+                rest_conn.poweroffPartition(lpar_uuid, 'true', restart_option)
                 changed = True
             elif operation == 'shutdown':
-                rest_conn.poweroffPartition(lpar_uuid, 'shutdown')
+                rest_conn.poweroffPartition(lpar_uuid, 'false', shutdown_option)
                 changed = True
 
     except (Exception, HmcError) as error:
@@ -1690,6 +1714,8 @@ def run_module():
                          elements='dict',
                          options=vnic_args
                          ),
+        shutdown_option=dict(type='str', choices=['Delayed', 'Immediate', 'OperatingSystem', 'OSImmediate']),
+        restart_option=dict(type='str', choices=['Immediate', 'OperatingSystem', 'OSImmediate', 'Dump', 'DumpRetry']),
         state=dict(type='str',
                    choices=['present', 'absent', 'facts']),
         action=dict(type='str',
