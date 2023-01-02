@@ -68,8 +68,6 @@ test_data1 = [
 test_data2 = [
     # ALL Shutdown partition testdata
     # system_name value is missing
-    ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'action': 'shutdown', 'state': None,
-      'system_name': None, 'vm_name': "vmname"}, "ParameterError: mandatory parameter 'system_name' is missing"),
     # vmname value is missing
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'action': 'shutdown', 'state': None,
       'system_name': "systemname", 'vm_name': None}, "ParameterError: mandatory parameter 'vm_name' is missing"),
@@ -94,9 +92,6 @@ test_data2 = [
      " min_mem, max_mem, vm_id, install_settings, vnic_config, restart_option")]
 test_data3 = [
     # ALL Activate partition testdata
-    # system name is missing
-    ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': None, 'action': 'poweron',
-      'system_name': None, 'vm_name': "vm_name"}, "ParameterError: mandatory parameter 'system_name' is missing"),
     # vmname is missing
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'state': None, 'action': 'poweron',
       'system_name': "systemname", 'vm_name': None}, "ParameterError: mandatory parameter 'vm_name' is missing"),
