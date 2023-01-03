@@ -306,6 +306,10 @@ class PowerSystemFieldNotFoundError(Exception):
     '''Raised when a field does not exist in the Power Server data.'''
 
 
+class PythonVersionCheck(Exception):
+    '''Raised when the python version is less than 3.'''
+
+
 class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
     NAME = 'ibm.power_hmc.powervm_inventory'
@@ -315,6 +319,9 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
         self.group_prefix = 'power_hmc_'
         self.template_handle = None
+        if sys.version_info < (3, 0):
+            py_ver = sys.version_info[0]
+            raise PythonVersionCheck("Unsupported Python version {0}, supported python version is 3 and above".format(py_ver))
 
     def verify_file(self, path):
         """
