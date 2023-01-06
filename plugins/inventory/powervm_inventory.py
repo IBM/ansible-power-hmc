@@ -315,13 +315,13 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
     NAME = 'ibm.power_hmc.powervm_inventory'
 
     def __init__(self):
+        if sys.version_info < (3, 0):
+            py_ver = sys.version_info[0]
+            raise PythonVersionCheck("Unsupported Python version {0}, supported python version is 3 and above".format(py_ver))
         super().__init__()
 
         self.group_prefix = 'power_hmc_'
         self.template_handle = None
-        if sys.version_info < (3, 0):
-            py_ver = sys.version_info[0]
-            raise PythonVersionCheck("Unsupported Python version {0}, supported python version is 3 and above".format(py_ver))
 
     def verify_file(self, path):
         """
