@@ -985,7 +985,7 @@ def identify_ManagedSystem_of_lpar(hmc, vm_name):
         system_name = ms_name[0]
     elif len(ms_name) > 1:
         err_msg = "Logical Partition Name:'{0}' found in more than one managed systems:'{1}'," \
-                  " Please provide the system_name paramter to avoid the confusion".format(vm_name, ms_name)
+                  " Please provide the system_name parameter to avoid the confusion".format(vm_name, ms_name)
         raise ParameterError(err_msg)
     else:
         err_msg = "Logical Partition Name:'{0}' not found in any of the managed systems".format(vm_name)
