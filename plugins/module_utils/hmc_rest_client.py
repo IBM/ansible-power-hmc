@@ -334,7 +334,7 @@ class HmcRestClient:
         return result
 
     def getManagedSystem(self, system_name):
-        url = "https://{0}/rest/api/uom/ManagedSystem/search/(SystemName=={1})".format(self.hmc_ip, system_name)
+        url = "https://{0}/rest/api/uom/ManagedSystem/search/(SystemName=='{1}')".format(self.hmc_ip, system_name)
         header = {'X-API-Session': self.session,
                   'Accept': 'application/vnd.ibm.powervm.uom+xml; type=ManagedSystem'}
         response = open_url(url,
