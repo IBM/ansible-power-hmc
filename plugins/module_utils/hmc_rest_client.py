@@ -841,9 +841,11 @@ class HmcRestClient:
         elif shutdown_option == 'Dump':
             immediate = 'false'
             operation = 'dumprestart'
+            restart = 'false'
         elif shutdown_option == 'DumpRetry':
             immediate = 'false'
             operation = 'retrydump'
+            restart = 'false'
 
         jobParams = {'immediate': immediate,
                      'restart': restart,
