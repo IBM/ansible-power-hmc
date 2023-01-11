@@ -311,7 +311,7 @@ class HmcRestClient:
                 resp_msg = doc.xpath("//ParameterName[text()='result']/following-sibling::ParameterValue")
                 if resp_msg:
                     logger.debug("debugger: %s", resp_msg[0].text)
-                    raise HmcError(resp_msg[0].text)
+                    raise HmcError(resp_msg[0].text.strip('\n'))
                 else:
                     err_msg = "Failed: Job completed with error"
                     raise HmcError(err_msg)
