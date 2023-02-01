@@ -659,12 +659,10 @@ class Hmc():
             self.OPT['LSSYSCFG']['-R']['SYS']
         if filter:
             lssyscfgCmd += self.OPT['LSSYSCFG']['-F'] + filter
-        try:
-            raw_result = self.hmcconn.execute(lssyscfgCmd)
-            lines = raw_result.split()
-        except HmcError as err:
-            err_msg = repr(err)
-            logger.debug(err_msg)
+
+        raw_result = self.hmcconn.execute(lssyscfgCmd)
+        lines = raw_result.split()
+
         return lines
 
     def list_all_lpars_details(self, sys_name, filter=None):
@@ -674,10 +672,8 @@ class Hmc():
             self.OPT['LSSYSCFG']['-M'] + sys_name
         if filter:
             lssyscfgCmd += self.OPT['LSSYSCFG']['-F'] + filter
-        try:
-            raw_result = self.hmcconn.execute(lssyscfgCmd)
-            lines = raw_result.split()
-        except HmcError as err:
-            err_msg = repr(err)
-            logger.debug(err_msg)
+
+        raw_result = self.hmcconn.execute(lssyscfgCmd)
+        lines = raw_result.split()
+
         return lines

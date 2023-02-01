@@ -311,7 +311,7 @@ class HmcRestClient:
                 resp_msg = doc.xpath("//ParameterName[text()='result']/following-sibling::ParameterValue")
                 if resp_msg:
                     logger.debug("debugger: %s", resp_msg[0].text)
-                    raise HmcError(resp_msg[0].text)
+                    raise HmcError(resp_msg[0].text.strip('\n'))
                 else:
                     err_msg = "Failed: Job completed with error"
                     raise HmcError(err_msg)
@@ -334,7 +334,7 @@ class HmcRestClient:
         return result
 
     def getManagedSystem(self, system_name):
-        url = "https://{0}/rest/api/uom/ManagedSystem/search/(SystemName=={1})".format(self.hmc_ip, system_name)
+        url = "https://{0}/rest/api/uom/ManagedSystem/search/(SystemName=='{1}')".format(self.hmc_ip, system_name)
         header = {'X-API-Session': self.session,
                   'Accept': 'application/vnd.ibm.powervm.uom+xml; type=ManagedSystem'}
         response = open_url(url,
@@ -816,13 +816,36 @@ class HmcRestClient:
         jobID = transform_resp.xpath('//JobID')[0].text
         return self.fetchJobStatus(jobID, template=True)
 
-    def poweroffPartition(self, vm_uuid, operation, restart='false', immediate='false'):
+    def poweroffPartition(self, vm_uuid, restart, shutdown_option):
         url = "https://{0}/rest/api/uom/LogicalPartition/{1}/do/PowerOff".format(self.hmc_ip, vm_uuid)
         header = _jobHeader(self.session)
 
         reqdOperation = {'OperationName': 'PowerOff',
                          'GroupName': 'LogicalPartition',
                          'ProgressType': 'DISCRETE'}
+        immediate = 'false'
+        operation = 'shutdown'
+
+        if shutdown_option == 'Delayed':
+            immediate = 'false'
+            operation = 'shutdown'
+        elif shutdown_option == 'Immediate':
+            immediate = 'true'
+            operation = 'shutdown'
+        elif shutdown_option == 'OperatingSystem':
+            immediate = 'false'
+            operation = 'osshutdown'
+        elif shutdown_option == 'OSImmediate':
+            immediate = 'true'
+            operation = 'osshutdown'
+        elif shutdown_option == 'Dump':
+            immediate = 'false'
+            operation = 'dumprestart'
+            restart = 'false'
+        elif shutdown_option == 'DumpRetry':
+            immediate = 'false'
+            operation = 'retrydump'
+            restart = 'false'
 
         jobParams = {'immediate': immediate,
                      'restart': restart,
