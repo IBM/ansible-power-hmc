@@ -25,6 +25,9 @@ firmware/templates/mc/2012_10/" xmlns:ns2="http://www.w3.org/XML/1998/namespace/
 LPAR_NS = 'LogicalPartition xmlns:LogicalPartition="http://www.ibm.com/xmlns/\
 systems/power/firmware/uom/mc/2012_10/" xmlns="http://www.ibm.com/xmlns/systems/power\
 /firmware/uom/mc/2012_10/" xmlns:ns2="http://www.w3.org/XML/1998/namespace/k2"'
+VIOS_NS = 'VirtualIOServer xmlns:VirtualIOServer="http://www.ibm.com/xmlns/\
+systems/power/firmware/uom/mc/2012_10/" xmlns="http://www.ibm.com/xmlns/systems/power\
+/firmware/uom/mc/2012_10/" xmlns:ns2="http://www.w3.org/XML/1998/namespace/k2"'
 
 
 def xml_strip_namespace(xml_str):
@@ -347,6 +350,7 @@ class HmcRestClient:
             return None, None
 
         managedsystem_root = xml_strip_namespace(response.read())
+
         uuid = managedsystem_root.xpath("//AtomID")[0].text
         return uuid, managedsystem_root.xpath("//ManagedSystem")[0]
 
@@ -1563,3 +1567,159 @@ class HmcRestClient:
                     uuid_list.append(vios_uuid)
                 resp_dict[group_name] = uuid_list
         return resp_dict
+
+    def fetchPVsFromVIOSDOM(self, vios_dom, vios_name):
+        # Generate the list of PhysicalVolumes available in the VIOS DOM
+        pvs_raw = []
+        pvs = []
+        fc_ports_dom = vios_dom.xpath("//PhysicalFibreChannelPorts/PhysicalFibreChannelPort")
+        for fc_port_raw in fc_ports_dom:
+            fc_port_dom = etree.ElementTree(fc_port_raw)
+            pvs_raw = pvs_raw + fc_port_dom.xpath("//PhysicalVolumes/PhysicalVolume")
+        if pvs_raw:
+            pvs = [etree.ElementTree(pv_raw) for pv_raw in pvs_raw]
+        else:
+            raise HmcError("There are no Physical Volumes Available in VIOS: {0}".format(vios_name))
+        return pvs
+
+    def build_SCSI_MappingPayload(self, pv_dom_list, pv_setting, lpar_UUID, lpar_id, vios_id):
+        payload = ""
+        target_name_payload = ""
+        server_adapter_id_payload = ""
+        client_adapter_id_payload = ""
+        pv_payload = ""
+
+        for pv_dom in pv_dom_list:
+            disk_name = pv_dom.xpath("//VolumeName")[0].text
+            if disk_name == pv_setting['disk_name']:
+                pv_payload = pv_dom
+                break
+        else:
+            raise HmcError("Disk_Name provided: {0} not found in the vios {1}".format(pv_setting['disk_name'], pv_setting['vios_name']))
+
+        # build a payload for target name, if user provides
+        if pv_setting['target_name']:
+            target_name_payload = '''
+            <TargetDevice kb="CUR" kxe="false">
+                <PhysicalVolumeVirtualTargetDevice schemaVersion="V1_0">
+                    <Metadata>
+                        <Atom/>
+                    </Metadata>
+                <TargetName kb="CUR" kxe="false">{0}</TargetName>
+                </PhysicalVolumeVirtualTargetDevice>
+            </TargetDevice>
+            '''.format(pv_setting['target_name'])
+
+        # build a payload for client adapter id, if user provides
+        if pv_setting['server_adapter_id']:
+            server_adapter_id_payload = '''
+            <ClientAdapter kb="CUR" kxe="false" schemaVersion="V1_0">
+                <Metadata>
+                    <Atom/>
+                </Metadata>
+                <LocalPartitionID kxe="false" kb="CUR">{0}</LocalPartitionID>
+                <VirtualSlotNumber kb="COD" kxe="false">{1}</VirtualSlotNumber>
+                <RemoteLogicalPartitionID kxe="false" kb="CUR">{2}</RemoteLogicalPartitionID>
+            </ClientAdapter>
+            '''.format(lpar_id, str(pv_setting['server_adapter_id']), vios_id)
+
+        # build a payload for server adapter id, if user provides
+        if pv_setting['client_adapter_id']:
+            client_adapter_id_payload = '''
+            <ServerAdapter kb="CUR" kxe="false" schemaVersion="V1_0">
+                <Metadata>
+                    <Atom/>
+                </Metadata>
+                <LocalPartitionID kxe="false" kb="CUR">{0}</LocalPartitionID>
+                <VirtualSlotNumber kb="COD" kxe="false">{1}</VirtualSlotNumber>
+                <RemoteLogicalPartitionID kxe="false" kb="CUR">{2}</RemoteLogicalPartitionID>
+            </ServerAdapter>
+            '''.format(vios_id, str(pv_setting['client_adapter_id']), lpar_id)
+
+        payload = '''
+        <VirtualSCSIMapping schemaVersion="V1_0">
+            <Metadata>
+                <Atom/>
+            </Metadata>
+            <AssociatedLogicalPartition kxe="false" kb="CUR" href="https://localhost:443/rest/api/uom/LogicalPartition/{0}" rel="related"/>
+            {1}
+            {2}
+            <Storage kb="CUR" kxe="false">
+            {3}
+            </Storage>
+            {4}
+        </VirtualSCSIMapping>
+        '''.format(lpar_UUID, server_adapter_id_payload, client_adapter_id_payload, (etree.tostring(pv_payload)).decode("utf-8"), target_name_payload)
+
+        return payload.replace('\n\n', '').replace('\n', '')
+
+    def getVIOSSCSCIMappings_dictionary(self, vios_uuid):
+        vscsis = []
+        try:
+            vios_scsi_xml = self.getVirtualIOServer(vios_uuid, 'ViosSCSIMapping')
+            vios_scsis = vios_scsi_xml.xpath('//VirtualSCSIMapping')
+            for vios_scsi_raw in vios_scsis:
+                vscsi_dict = {}
+                vios_scsi = etree.ElementTree(vios_scsi_raw)
+                vscsi_dict['BackingDeviceName'] = vios_scsi.xpath('//ServerAdapter/BackingDeviceName')[0].text
+                # Will add more key value pairs based on the req
+                vscsis.append(vscsi_dict)
+        except Exception:
+            pass
+        return vscsis
+
+    def updateVIOSwithSCSIMappings(self, vios_UUID, pv_settings_list, lpar_UUID, vios_name, partition_dom, timeout):
+        payload = ""
+        flag = False
+        vios_dom = self.getVirtualIOServer(vios_UUID)
+        vios_vscsi_dict = self.getVIOSSCSCIMappings_dictionary(vios_UUID)
+        mapped_dvc_names = [item['BackingDeviceName'] for item in vios_vscsi_dict]
+        pv_dom_list = self.fetchPVsFromVIOSDOM(vios_dom, vios_name)
+        lpar_id = partition_dom.xpath("//PartitionID")[0].text
+        vios_id = vios_dom.xpath("//PartitionID")[0].text
+        for pv_settings in pv_settings_list:
+            if pv_settings['disk_name'] not in mapped_dvc_names:
+                payload = self.build_SCSI_MappingPayload(pv_dom_list, pv_settings, lpar_UUID, lpar_id, vios_id)
+                vSCSIMappingsTag = vios_dom.xpath("//VirtualSCSIMappings")[0]
+                vSCSIMappingsTag.append(etree.XML(payload))
+                flag = True
+        if flag:
+            self.updateVirtualIOServer(vios_dom, timeout)
+        return flag
+
+    def updateVirtualIOServer(self, vios_dom, timeout=None):
+        header = {'X-API-Session': self.session,
+                  'Accept': '*/*',
+                  'Content-Type': 'application/vnd.ibm.powervm.uom+xml; type=VirtualIOServer'}
+
+        vios_uuid = vios_dom.xpath('//AtomID')[0].text
+        timeout_in_sec = 3600
+        if timeout:
+            if timeout > 60:
+                timeout_in_sec = timeout * 60
+
+            url = "https://{0}/rest/api/uom/VirtualIOServer/{1}?timeout={2}".format(
+                  self.hmc_ip, vios_uuid, timeout)
+        else:
+            url = "https://{0}/rest/api/uom/VirtualIOServer/{1}".format(
+                  self.hmc_ip, vios_uuid)
+
+        vios_dom = vios_dom.xpath("//VirtualIOServer")[0]
+
+        vios_xmlstr = etree.tostring(vios_dom)
+        vios_xmlstr = vios_xmlstr.decode("utf-8").replace("VirtualIOServer", VIOS_NS, 1)
+        logger.debug("INPUT PAYLOAD: \n %s", vios_xmlstr)
+        resp = open_url(url,
+                        headers=header,
+                        method='POST',
+                        data=vios_xmlstr,
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=timeout_in_sec)
+        if resp.code != 200:
+            logger.debug("Post operation failed. Respsonse code: %d", resp.code)
+            return None
+        response = resp.read()
+        logger.debug("POST RESPONSE: \n %s", response)
+        post_response = xml_strip_namespace(response)
+        return post_response

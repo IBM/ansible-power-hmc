@@ -97,14 +97,41 @@ options:
         description:
             - The maximum time, in minutes, to wait for partition operating system to complete dlpar.
         type: int
+    pv_settings:
+        description:
+            - List of Physical Volumes settings to be configured
+        type: list
+        elements: dict
+        suboptions:
+            disk_name:
+                description:
+                    - Physical Volume name
+                type: str
+                required: True
+            vios_name:
+                description:
+                    - Virtual IO Server name of the disk connected.
+                type: str
+                required: True
+            target_name:
+                description:
+                    - Target Device name
+                type: str
+            server_adapter_id:
+                description:
+                    - Adapter id to be used in VIOS
+                type: int
+            client_adapter_id:
+                description:
+                    - Adapter id to be used in Partition
+                type: int
     action:
         description:
-            - C(update) updates the resources of the partition. Currently it supports
-              the update of processor or memory resources.
+            - C(update_proc_mem) updates the processor and memory resources of the partition.
+            - C(update_pv) Attach Physical Volumes via Virtual SCSI.
         type: str
-        choices: ['update']
+        choices: ['update_proc_mem', 'update_pv']
         required: true
-
 '''
 
 EXAMPLES = '''
@@ -125,6 +152,27 @@ EXAMPLES = '''
     mem_settings:
       mem: 3072
     action: update
+
+  - name: update PV on lpar
+    powervm_dlpar:
+      hmc_host: '{{ inventory_hostname }}'
+      hmc_auth:
+           username: '{{ ansible_user }}'
+           password: '{{ hmc_password }}'
+      system_name: <server name>
+      vm_name: <vm name>
+      pv_settings:
+        - vios_name: <vios1>
+          disk_name: <hdiskA>
+        - vios_name:  <vios2>
+          disk_name:  <hdiskB>
+          target_name: <TargetName>
+        - vios_name: <vios1>
+          disk_name: <hdiskC>
+          target_name: <TargetName>
+          server_adapter_id: <Adapter_ID>
+          client_adapter_id: <Adapter_ID>
+      action: update_pv
 '''
 
 RETURN = '''
@@ -138,10 +186,13 @@ import logging
 LOG_FILENAME = "/tmp/ansible_power_hmc.log"
 logger = logging.getLogger(__name__)
 import sys
+import json
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import parse_error_response
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import HmcRestClient
+from itertools import groupby
+from operator import itemgetter
 
 
 def init_logger():
@@ -149,6 +200,43 @@ def init_logger():
         filename=LOG_FILENAME,
         format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
         level=logging.DEBUG)
+
+
+def validate_parameters(params):
+    '''Check that the input parameters satisfy the mutual exclusiveness of HMC'''
+    opr = None
+    if params['state'] is not None:
+        opr = params['state']
+    else:
+        opr = params['action']
+
+    if opr == 'update_proc_mem':
+        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
+        unsupportedList = ['pv_settings']
+    elif opr == 'update_pv':
+        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'pv_settings']
+        unsupportedList = ['proc_settings', 'mem_settings']
+
+    collate = []
+    for eachMandatory in mandatoryList:
+        if not params[eachMandatory]:
+            collate.append(eachMandatory)
+    if collate:
+        if len(collate) == 1:
+            raise ParameterError("mandatory parameter '%s' is missing" % (collate[0]))
+        else:
+            raise ParameterError("mandatory parameters '%s' are missing" % (','.join(collate)))
+
+    collate = []
+    for eachUnsupported in unsupportedList:
+        if params[eachUnsupported]:
+            collate.append(eachUnsupported)
+
+    if collate:
+        if len(collate) == 1:
+            raise ParameterError("unsupported parameter: %s" % (collate[0]))
+        else:
+            raise ParameterError("unsupported parameters: %s" % (', '.join(collate)))
 
 
 def fetch_facts(rest_conn, partition_dom):
@@ -361,11 +449,118 @@ def update_lpar(module, params):
         return False, None, "No valid input configuration"
 
 
+def build_group_by_key(list_of_dicts, group_by_key):
+    group_dict = {}
+    # Sort dict data by key.
+    list_of_dicts = sorted(list_of_dicts, key=itemgetter(group_by_key))
+
+    # Return data grouped by group_by_key
+    for key, value in groupby(list_of_dicts, key=itemgetter(group_by_key)):
+        li = []
+        for k in value:
+            li.append(k)
+        group_dict[key] = li
+    return group_dict
+
+
+def update_pv(module, params):
+    hmc_host = params['hmc_host']
+    hmc_user = params['hmc_auth']['username']
+    password = params['hmc_auth']['password']
+    system_name = params['system_name']
+    vm_name = params['vm_name']
+    pv_settings = params['pv_settings']
+    timeout = params['timeout']
+    partition_uuid = ""
+    update_status_msg = ""
+    lpar_id = ""
+    counter = 0
+    changed = False
+
+    try:
+        rest_conn = HmcRestClient(hmc_host, hmc_user, password)
+    except Exception as error:
+        error_msg = parse_error_response(error)
+        module.fail_json(msg=error_msg)
+
+    try:
+        system_uuid, server_dom = rest_conn.getManagedSystem(system_name)
+
+    except Exception as error:
+        try:
+            rest_conn.logoff()
+        except Exception:
+            logger.debug("Logoff error")
+        error_msg = parse_error_response(error)
+        module.fail_json(msg=error_msg)
+    if not system_uuid:
+        module.fail_json(msg="Given system is not present")
+
+    try:
+        partition_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, partition_name=vm_name)
+        lpar_id = partition_dom.xpath("//PartitionID")[0].text
+    except Exception as error:
+        try:
+            rest_conn.logoff()
+        except Exception:
+            logger.debug("Logoff error")
+        error_msg = parse_error_response(error)
+        module.fail_json(msg=error_msg)
+    if partition_uuid is None:
+        module.fail_json(msg="Given powervm instance is not present")
+
+    try:
+        # Group pv_settings based on the vios name
+        pv_sett_group = build_group_by_key(pv_settings, 'vios_name')
+
+        # Get all vios names and their UUID of the Managed System
+        vios_quick_response = rest_conn.getVirtualIOServersQuick(system_uuid)
+        vios_list = []
+        vios_dict = {}
+        if vios_quick_response is not None:
+            vios_list = json.loads(vios_quick_response)
+        if vios_list:
+            vios_dict = {vios['PartitionName']: vios['UUID'] for vios in vios_list}
+            for vios_name, pv_sett_list in pv_sett_group.items():
+                if vios_name in vios_dict.keys():
+                    try:
+                        status_flag = rest_conn.updateVIOSwithSCSIMappings(vios_dict[vios_name], pv_sett_list, partition_uuid,
+                                                                           vios_name, partition_dom, timeout)
+                        if status_flag:
+                            counter = counter + 1
+                    except (Exception) as error:
+                        msg = "Failed to update PV Settings of VIOS: {0}".format(vios_name)
+                        update_status_msg = update_status_msg + " " + msg + " " + parse_error_response(error)
+                else:
+                    module.warn("{0} VIOS not found in the Managed System {1}".format(vios_name, system_name))
+        else:
+            module.fail_json(msg="There are no VIOS available in the Managed system: {0}".format(system_name))
+
+        pv_facts = rest_conn.fetchSCSIDetailsFromVIOS(system_uuid, lpar_id, vios_list)
+    except (Exception) as error:
+        error_msg = parse_error_response(error)
+        module.fail_json(msg=error_msg)
+    finally:
+        try:
+            rest_conn.logoff()
+        except Exception as logoff_error:
+            error_msg = parse_error_response(logoff_error)
+            module.warn(error_msg)
+    if counter >= 1:
+        changed = True
+        module.warn(update_status_msg)
+    elif update_status_msg and counter < 1:
+        module.fail_json(msg=update_status_msg)
+
+    return changed, pv_facts, None
+
+
 def perform_task(module):
 
     params = module.params
     actions = {
-        "update": update_lpar,
+        "update_proc_mem": update_lpar,
+        "update_pv": update_pv,
     }
 
     try:
@@ -375,7 +570,6 @@ def perform_task(module):
 
 
 def run_module():
-
     # define available arguments/parameters a user can pass to the module
     module_args = dict(
         hmc_host=dict(type='str', required=True),
@@ -408,7 +602,16 @@ def run_module():
                               mem=dict(type='int'),
                           )
                           ),
-        action=dict(type='str', choices=['update'], required=True),
+        pv_settings=dict(type='list',
+                         elements='dict',
+                         options=dict(
+                             vios_name=dict(type='str', required=True),
+                             disk_name=dict(type='str', required=True),
+                             target_name=dict(type='str'),
+                             server_adapter_id=dict(type='int'),
+                             client_adapter_id=dict(type='int')
+                         )),
+        action=dict(type='str', choices=['update_proc_mem', 'update_pv'], required=True),
     )
 
     module = AnsibleModule(
