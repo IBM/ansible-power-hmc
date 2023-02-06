@@ -1661,9 +1661,13 @@ class HmcRestClient:
             for vios_scsi_raw in vios_scsis:
                 vscsi_dict = {}
                 vios_scsi = etree.ElementTree(vios_scsi_raw)
-                vscsi_dict['BackingDeviceName'] = vios_scsi.xpath('//ServerAdapter/BackingDeviceName')[0].text
-                # Will add more key value pairs based on the req
-                vscsis.append(vscsi_dict)
+                try:
+                    # Will add more key value pairs based on the req
+                    vscsi_dict['BackingDeviceName'] = vios_scsi.xpath('//ServerAdapter/BackingDeviceName')[0].text
+                    vscsi_dict['RemoteLogicalPartitionID'] = vios_scsi.xpath('//ServerAdapter/RemoteLogicalPartitionID')[0].text
+                    vscsis.append(vscsi_dict)
+                except Exception:
+                    pass
         except Exception:
             pass
         return vscsis
@@ -1671,6 +1675,7 @@ class HmcRestClient:
     def updateVIOSwithSCSIMappings(self, vios_UUID, pv_settings_list, lpar_UUID, vios_name, partition_dom, timeout):
         payload = ""
         flag = False
+
         vios_dom = self.getVirtualIOServer(vios_UUID)
         vios_vscsi_dict = self.getVIOSSCSCIMappings_dictionary(vios_UUID)
         mapped_dvc_names = [item['BackingDeviceName'] for item in vios_vscsi_dict]
@@ -1705,7 +1710,6 @@ class HmcRestClient:
                   self.hmc_ip, vios_uuid)
 
         vios_dom = vios_dom.xpath("//VirtualIOServer")[0]
-
         vios_xmlstr = etree.tostring(vios_dom)
         vios_xmlstr = vios_xmlstr.decode("utf-8").replace("VirtualIOServer", VIOS_NS, 1)
         logger.debug("INPUT PAYLOAD: \n %s", vios_xmlstr)

@@ -183,7 +183,7 @@ partition_info:
 '''
 
 import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc.log"
+LOG_FILENAME = "/tmp/ansible_power_hmc2.log"
 logger = logging.getLogger(__name__)
 import sys
 import json
@@ -498,7 +498,6 @@ def update_pv(module, params):
 
     try:
         partition_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, partition_name=vm_name)
-        lpar_id = partition_dom.xpath("//PartitionID")[0].text
     except Exception as error:
         try:
             rest_conn.logoff()
@@ -507,7 +506,7 @@ def update_pv(module, params):
         error_msg = parse_error_response(error)
         module.fail_json(msg=error_msg)
     if partition_uuid is None:
-        module.fail_json(msg="Given powervm instance is not present")
+        module.fail_json(msg="Given partition name: {0} not found in the Managed System: {1}".format(vm_name, system_name))
 
     try:
         # Group pv_settings based on the vios name
@@ -517,6 +516,7 @@ def update_pv(module, params):
         vios_quick_response = rest_conn.getVirtualIOServersQuick(system_uuid)
         vios_list = []
         vios_dict = {}
+        lpar_id = partition_dom.xpath("//PartitionID")[0].text
         if vios_quick_response is not None:
             vios_list = json.loads(vios_quick_response)
         if vios_list:
@@ -529,7 +529,7 @@ def update_pv(module, params):
                         if status_flag:
                             counter = counter + 1
                     except (Exception) as error:
-                        msg = "Failed to update PV Settings of VIOS: {0}".format(vios_name)
+                        msg = "Failed to update PV Settings of VIOS: {0} =>".format(vios_name)
                         update_status_msg = update_status_msg + " " + msg + " " + parse_error_response(error)
                 else:
                     module.warn("{0} VIOS not found in the Managed System {1}".format(vios_name, system_name))
@@ -548,7 +548,8 @@ def update_pv(module, params):
             module.warn(error_msg)
     if counter >= 1:
         changed = True
-        module.warn(update_status_msg)
+        if update_status_msg:
+            module.warn(update_status_msg)
     elif update_status_msg and counter < 1:
         module.fail_json(msg=update_status_msg)
 
