@@ -229,7 +229,6 @@ EXAMPLES = '''
         client_adapter_id: 9
         server_adapter_id: 15
     action: update_npiv
->>>>>>> FC configuration code
 '''
 
 RETURN = '''
