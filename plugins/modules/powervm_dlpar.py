@@ -189,46 +189,47 @@ EXAMPLES = '''
       mem: 3072
     action: update
 
-  - name: update PV on lpar
-    powervm_dlpar:
-      hmc_host: '{{ inventory_hostname }}'
-      hmc_auth:
-           username: '{{ ansible_user }}'
-           password: '{{ hmc_password }}'
-      system_name: <server name>
-      vm_name: <vm name>
-      pv_settings:
-        - vios_name: <vios1>
-          disk_name: <hdiskA>
-        - vios_name:  <vios2>
-          disk_name:  <hdiskB>
-          target_name: <TargetName>
-        - vios_name: <vios1>
-          disk_name: <hdiskC>
-          target_name: <TargetName>
-          server_adapter_id: <Adapter_ID>
-          client_adapter_id: <Adapter_ID>
-      action: update_pv
+- name: update PV on lpar
+  powervm_dlpar:
+    hmc_host: '{{ inventory_hostname }}'
+    hmc_auth:
+         username: '{{ ansible_user }}'
+         password: '{{ hmc_password }}'
+    system_name: <server name>
+    vm_name: <vm name>
+    pv_settings:
+      - vios_name: <vios1>
+        disk_name: <hdiskA>
+      - vios_name:  <vios2>
+        disk_name:  <hdiskB>
+        target_name: <TargetName>
+      - vios_name: <vios1>
+        disk_name: <hdiskC>
+        target_name: <TargetName>
+        server_adapter_id: <Adapter_ID>
+        client_adapter_id: <Adapter_ID>
+    action: update_pv
 
-  - name: update npiv on lpar
-    powervm_dlpar:
-      hmc_host: '{{ inventory_hostname }}'
-      hmc_auth:
-           username: '{{ ansible_user }}'
-           password: '{{ hmc_password }}'
-      system_name: <server name>
-      vm_name: <vm name>
-      npiv_settings:
-        - vios_name: 'b76-vios1'
-          fc_port_name: 'fcs0'
-          wwpn_pair: c0507607577aefc0,c0507607577aefc1
-          client_adapter_id: 6
-          server_adapter_id: 9
-        - vios_name: 'b76-vios2'
-          fc_port_name: 'fcs0'
-          client_adapter_id: 9
-          server_adapter_id: 15
-      action: update_npiv
+- name: update npiv on lpar
+  powervm_dlpar:
+    hmc_host: '{{ inventory_hostname }}'
+    hmc_auth:
+         username: '{{ ansible_user }}'
+         password: '{{ hmc_password }}'
+    system_name: <server name>
+    vm_name: <vm name>
+    npiv_settings:
+      - vios_name: 'b76-vios1'
+        fc_port_name: 'fcs0'
+        wwpn_pair: c0507607577aefc0,c0507607577aefc1
+        client_adapter_id: 6
+        server_adapter_id: 9
+      - vios_name: 'b76-vios2'
+        fc_port_name: 'fcs0'
+        client_adapter_id: 9
+        server_adapter_id: 15
+    action: update_npiv
+>>>>>>> FC configuration code
 '''
 
 RETURN = '''
