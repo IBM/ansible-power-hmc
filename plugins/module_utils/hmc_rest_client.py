@@ -1675,7 +1675,6 @@ class HmcRestClient:
     def updateVIOSwithSCSIMappings(self, vios_UUID, pv_settings_list, lpar_UUID, vios_name, partition_dom, timeout):
         payload = ""
         flag = False
-
         vios_dom = self.getVirtualIOServer(vios_UUID)
         vios_vscsi_dict = self.getVIOSSCSCIMappings_dictionary(vios_UUID)
         mapped_dvc_names = [item['BackingDeviceName'] for item in vios_vscsi_dict]
@@ -1688,6 +1687,108 @@ class HmcRestClient:
                 vSCSIMappingsTag = vios_dom.xpath("//VirtualSCSIMappings")[0]
                 vSCSIMappingsTag.append(etree.XML(payload))
                 flag = True
+        if flag:
+            self.updateVirtualIOServer(vios_dom, timeout)
+        return flag
+
+    def fetchVIOSFcDetails(self, vios_dom):
+        fc_ports_list = []
+        fc_ports = vios_dom.xpath("//PhysicalFibreChannelAdapter/PhysicalFibreChannelPorts/PhysicalFibreChannelPort")
+        for fc_port_raw in fc_ports:
+            fc_dict = {}
+            fc_dict['AvailablePorts'] = "0"
+            fc_dict['TotalPorts'] = "0"
+            fc_port = etree.ElementTree(fc_port_raw)
+            try:
+                fc_dict['PortName'] = fc_port.xpath("//PortName")[0].text
+                fc_dict['AvailablePorts'] = fc_port.xpath("//AvailablePorts")[0].text
+                fc_dict['TotalPorts'] = fc_port.xpath("//TotalPorts")[0].text
+                fc_dict['LocationCode'] = fc_port.xpath("//LocationCode")[0].text
+            except Exception:
+                pass
+            finally:
+                fc_ports_list.append(fc_dict)
+
+        return fc_ports_list
+
+    def build_FC_MappingPayload(self, location_code, npiv_setting, lpar_UUID, lpar_id, vios_id):
+        payload = ""
+        server_adapter_id_payload = ""
+        client_adapter_id_payload = ""
+        wwpn_pair_payload = ""
+        client_adapter_payload = ""
+        # build client adapter_id payload
+        if npiv_setting['wwpn_pair']:
+            wwpn_pair = npiv_setting['wwpn_pair'].replace(",", " ")
+            wwpn_pair_payload = '''
+            <WWPNs kb="CUR" kxe="false">{0}</WWPNs>'''.format(wwpn_pair)
+        if npiv_setting['client_adapter_id']:
+            client_adapter_payload = '''
+            <VirtualSlotNumber kb="COD" kxe="false">{0}</VirtualSlotNumber>
+            <ConnectingPartitionID kxe="false" kb="CUR">{1}</ConnectingPartitionID>'''.format(str(npiv_setting['client_adapter_id']), vios_id)
+        if wwpn_pair_payload or client_adapter_payload:
+            client_adapter_id_payload = '''
+            <ClientAdapter kxe="false" kb="CUR" schemaVersion="V1_0">
+                <Metadata>
+                    <Atom/>
+                </Metadata>
+                <LocalPartitionID kxe="false" kb="CUR">{0}</LocalPartitionID>
+                {1}
+                {2}
+            </ClientAdapter>
+            '''.format(lpar_id, client_adapter_payload, wwpn_pair_payload)
+        # build server adapter id payload
+        if npiv_setting['server_adapter_id']:
+            server_adapter_id_payload = '''
+            <ServerAdapter kxe="false" kb="CUR" schemaVersion="V1_0">
+                <Metadata>
+                    <Atom/>
+                </Metadata>
+                <VirtualSlotNumber kb="COD" kxe="false">{0}</VirtualSlotNumber>
+                <ConnectingPartitionID kxe="false" kb="CUR">{1}</ConnectingPartitionID>
+            </ServerAdapter>
+            '''.format(str(npiv_setting['server_adapter_id']), lpar_id)
+        # build Virtual Fibre Channel Mapping payload
+        payload = '''
+        <VirtualFibreChannelMapping schemaVersion="V1_0">
+            <Metadata>
+                <Atom/>
+            </Metadata>
+            <AssociatedLogicalPartition kxe="false" kb="CUR" href="https://localhost:443/rest/api/uom/LogicalPartition/{0}" rel="related"/>
+            {1}
+            <Port kxe="false" kb="CUR" schemaVersion="V1_0">
+                <Metadata>
+                    <Atom/>
+                </Metadata>
+                <LocationCode kb="ROR" kxe="false">{2}</LocationCode>
+                <PortName kxe="false" kb="CUR">{3}</PortName>
+            </Port>
+            {4}
+        </VirtualFibreChannelMapping>
+        '''.format(lpar_UUID, client_adapter_id_payload, location_code, npiv_setting['fc_port_name'], server_adapter_id_payload)
+        return payload
+
+    def updateVIOSwithNPIVMappings(self, vios_UUID, npiv_settings_list, lpar_UUID, vios_name, partition_dom, timeout):
+        payload = ""
+        flag = False
+        vios_dom = self.getVirtualIOServer(vios_UUID)
+        vios_npiv_dict_list = self.fetchVIOSFcDetails(vios_dom)
+        lpar_id = partition_dom.xpath("//PartitionID")[0].text
+        vios_id = vios_dom.xpath("//PartitionID")[0].text
+        for npiv_settings in npiv_settings_list:
+            for vios_npiv_dict in vios_npiv_dict_list:
+                if npiv_settings['fc_port_name'] == vios_npiv_dict['PortName']:
+                    if int(vios_npiv_dict['AvailablePorts']) > 0:
+                        payload = self.build_FC_MappingPayload(vios_npiv_dict['LocationCode'], npiv_settings, lpar_UUID, lpar_id, vios_id)
+                        FCMappingsTag = vios_dom.xpath("//VirtualFibreChannelMappings")[0]
+                        FCMappingsTag.append(etree.XML(payload))
+                        flag = True
+                        break
+                    else:
+                        raise HmcError("There are only {0} available ports in the fc_port_name: {1}"
+                                       .format(vios_npiv_dict['AvailablePorts'], npiv_settings['fc_port_name']))
+            else:
+                raise HmcError("fc_port_name: {0} provided is not found in the vios: {1}".format(npiv_settings['fc_port_name'], vios_name, ))
         if flag:
             self.updateVirtualIOServer(vios_dom, timeout)
         return flag

@@ -116,21 +116,57 @@ options:
             target_name:
                 description:
                     - Target Device name
+                    - Optional, if not provided auto assigns <vtscsi*>
                 type: str
             server_adapter_id:
                 description:
-                    - Adapter id to be used in VIOS
+                    - The Server adapter slot number to be configured with SCSI adapter.
+                    - Optional, if not provided next available value will be assigned.
                 type: int
             client_adapter_id:
                 description:
-                    - Adapter id to be used in Partition
+                    - The client adapter slot number to be configured with SCSI adapter.
+                    - Optional, if not provided next available value will be assigned.
+                type: int
+    npiv_settings:
+        description:
+            - List of Virtual Fibre Channel port settings to be configured
+        type: list
+        elements: dict
+        suboptions:
+            fc_port_name:
+                description:
+                    - Fibre Channel Port name
+                type: str
+                required: True
+            vios_name:
+                description:
+                    - Virtual IO Server name of the disk connected.
+                type: str
+                required: True
+            wwpn_pair:
+                description:
+                    - The WWPN pair value to be configured with client FC adapter.
+                    - Both the WWPN value should be separated by comma delimiter.
+                    - Optional, if not provided the value will be auto assigned.
+                type: str
+            server_adapter_id:
+                description:
+                    - The Server adapter slot number to be configured with FC adapter.
+                    - Optional, if not provided next available value will be assigned.
+                type: int
+            client_adapter_id:
+                description:
+                    - The client adapter slot number to be configured with FC adapter.
+                    - Optional, if not provided next available value will be assigned.
                 type: int
     action:
         description:
             - C(update_proc_mem) updates the processor and memory resources of the partition.
             - C(update_pv) Attach Physical Volumes via Virtual SCSI.
+            - C(update_npiv) Configure FC Port
         type: str
-        choices: ['update_proc_mem', 'update_pv']
+        choices: ['update_proc_mem', 'update_pv', update_npiv]
         required: true
 '''
 
@@ -173,6 +209,26 @@ EXAMPLES = '''
           server_adapter_id: <Adapter_ID>
           client_adapter_id: <Adapter_ID>
       action: update_pv
+
+  - name: update npiv on lpar
+    powervm_dlpar:
+      hmc_host: '{{ inventory_hostname }}'
+      hmc_auth:
+           username: '{{ ansible_user }}'
+           password: '{{ hmc_password }}'
+      system_name: <server name>
+      vm_name: <vm name>
+      npiv_settings:
+        - vios_name: 'b76-vios1'
+          fc_port_name: 'fcs0'
+          wwpn_pair: c0507607577aefc0,c0507607577aefc1
+          client_adapter_id: 6
+          server_adapter_id: 9
+        - vios_name: 'b76-vios2'
+          fc_port_name: 'fcs0'
+          client_adapter_id: 9
+          server_adapter_id: 15
+      action: update_npiv
 '''
 
 RETURN = '''
@@ -183,7 +239,7 @@ partition_info:
 '''
 
 import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc2.log"
+LOG_FILENAME = "/tmp/ansible_power_hmc.log"
 logger = logging.getLogger(__name__)
 import sys
 import json
@@ -204,18 +260,17 @@ def init_logger():
 
 def validate_parameters(params):
     '''Check that the input parameters satisfy the mutual exclusiveness of HMC'''
-    opr = None
-    if params['state'] is not None:
-        opr = params['state']
-    else:
-        opr = params['action']
+    opr = params['action']
 
     if opr == 'update_proc_mem':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
         unsupportedList = ['pv_settings']
     elif opr == 'update_pv':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'pv_settings']
-        unsupportedList = ['proc_settings', 'mem_settings']
+        unsupportedList = ['proc_settings', 'mem_settings', 'npiv_settings']
+    elif opr == 'update_npiv':
+        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'npiv_settings']
+        unsupportedList = ['proc_settings', 'mem_settings', 'pv_settings']
 
     collate = []
     for eachMandatory in mandatoryList:
@@ -289,6 +344,7 @@ def update_proc_mem(module, params):
     uncapped_weight = params['proc_settings']['uncapped_weight'] if params.get('proc_settings') else None
     pool_id = params['proc_settings']['pool_id'] if params.get('proc_settings') else None
     mem = params['mem_settings']['mem'] if params.get('mem_settings') else None
+    validate_parameters(params)
     changed = False
     difference = False
     isDedicated = None
@@ -471,6 +527,7 @@ def update_pv(module, params):
     vm_name = params['vm_name']
     pv_settings = params['pv_settings']
     timeout = params['timeout']
+    validate_parameters(params)
     partition_uuid = ""
     update_status_msg = ""
     lpar_id = ""
@@ -485,7 +542,6 @@ def update_pv(module, params):
 
     try:
         system_uuid, server_dom = rest_conn.getManagedSystem(system_name)
-
     except Exception as error:
         try:
             rest_conn.logoff()
@@ -556,12 +612,106 @@ def update_pv(module, params):
     return changed, pv_facts, None
 
 
+def update_npiv(module, params):
+    hmc_host = params['hmc_host']
+    hmc_user = params['hmc_auth']['username']
+    password = params['hmc_auth']['password']
+    system_name = params['system_name']
+    vm_name = params['vm_name']
+    npiv_settings = params['npiv_settings']
+    timeout = params['timeout']
+    validate_parameters(params)
+    partition_uuid = ""
+    update_status_msg = ""
+    lpar_id = ""
+    counter = 0
+    changed = False
+
+    try:
+        rest_conn = HmcRestClient(hmc_host, hmc_user, password)
+    except Exception as error:
+        error_msg = parse_error_response(error)
+        module.fail_json(msg=error_msg)
+
+    try:
+        system_uuid, server_dom = rest_conn.getManagedSystem(system_name)
+    except Exception as error:
+        try:
+            rest_conn.logoff()
+        except Exception:
+            logger.debug("Logoff error")
+        error_msg = parse_error_response(error)
+        module.fail_json(msg=error_msg)
+    if not system_uuid:
+        module.fail_json(msg="Given system is not present")
+
+    try:
+        partition_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, partition_name=vm_name)
+    except Exception as error:
+        try:
+            rest_conn.logoff()
+        except Exception:
+            logger.debug("Logoff error")
+        error_msg = parse_error_response(error)
+        module.fail_json(msg=error_msg)
+    if partition_uuid is None:
+        module.fail_json(msg="Given partition name: {0} not found in the Managed System: {1}".format(vm_name, system_name))
+
+    try:
+        # Group npiv_settings based on the vios name
+        npiv_sett_group = build_group_by_key(npiv_settings, 'vios_name')
+
+        # Get all vios names and their UUID of the Managed System
+        vios_quick_response = rest_conn.getVirtualIOServersQuick(system_uuid)
+        vios_list = []
+        vios_dict = {}
+        lpar_id = partition_dom.xpath("//PartitionID")[0].text
+        if vios_quick_response is not None:
+            vios_list = json.loads(vios_quick_response)
+        if vios_list:
+            vios_dict = {vios['PartitionName']: vios['UUID'] for vios in vios_list}
+            for vios_name, npiv_sett_list in npiv_sett_group.items():
+                if vios_name in vios_dict.keys():
+                    try:
+                        status_flag = rest_conn.updateVIOSwithNPIVMappings(vios_dict[vios_name], npiv_sett_list, partition_uuid,
+                                                                           vios_name, partition_dom, timeout)
+                        if status_flag:
+                            counter = counter + 1
+                    except (Exception) as error:
+                        msg = "Failed to update NPIV Settings of VIOS: {0} =>".format(vios_name)
+                        update_status_msg = update_status_msg + " " + msg + " " + parse_error_response(error) + "."
+                else:
+                    module.warn("{0} VIOS not found in the Managed System {1}".format(vios_name, system_name))
+        else:
+            module.fail_json(msg="There are no VIOS available in the Managed system: {0}".format(system_name))
+
+        npiv_facts = rest_conn.fetchFCDetailsFromVIOS(system_uuid, lpar_id, vios_list)
+    except (Exception) as error:
+        error_msg = parse_error_response(error)
+        module.fail_json(msg=error_msg)
+    finally:
+        try:
+            rest_conn.logoff()
+        except Exception as logoff_error:
+            error_msg = parse_error_response(logoff_error)
+            module.warn(error_msg)
+    if counter >= 1:
+        changed = True
+        if update_status_msg:
+            module.warn(update_status_msg)
+    elif update_status_msg and counter < 1:
+        module.fail_json(msg=update_status_msg)
+
+    return changed, npiv_facts, None
+
+
 def perform_task(module):
 
     params = module.params
     actions = {
         "update_proc_mem": update_lpar,
         "update_pv": update_pv,
+        "update_npiv": update_npiv,
     }
 
     try:
@@ -612,7 +762,16 @@ def run_module():
                              server_adapter_id=dict(type='int'),
                              client_adapter_id=dict(type='int')
                          )),
-        action=dict(type='str', choices=['update_proc_mem', 'update_pv'], required=True),
+        npiv_settings=dict(type='list',
+                           elements='dict',
+                           options=dict(
+                               vios_name=dict(type='str', required=True),
+                               fc_port_name=dict(type='str', required=True),
+                               wwpn_pair=dict(type='str'),
+                               server_adapter_id=dict(type='int'),
+                               client_adapter_id=dict(type='int')
+                           )),
+        action=dict(type='str', choices=['update_proc_mem', 'update_pv', 'update_npiv'], required=True),
     )
 
     module = AnsibleModule(
