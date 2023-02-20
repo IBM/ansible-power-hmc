@@ -160,13 +160,40 @@ options:
                     - The client adapter slot number to be configured with FC adapter.
                     - Optional, if not provided next available value will be assigned.
                 type: int
+    vod_settings:
+        description:
+            - List of Virtual optical device settings to be configured
+        type: list
+        elements: dict
+        suboptions:
+            device_name:
+                description:
+                    - Name of the device
+                type: str
+                required: True
+            vios_name:
+                description:
+                    - Virtual IO Server name.
+                type: str
+                required: True
+            server_adapter_id:
+                description:
+                    - The Server adapter slot number to be configured.
+                    - Optional, if not provided next available value will be assigned.
+                type: int
+            client_adapter_id:
+                description:
+                    - The client adapter slot number to be configured.
+                    - Optional, if not provided next available value will be assigned.
+                type: int
     action:
         description:
             - C(update_proc_mem) updates the processor and memory resources of the partition.
             - C(update_pv) Attach Physical Volumes via Virtual SCSI.
-            - C(update_npiv) Configure FC Port
+            - C(update_npiv) Configure FC Port.
+            - C(update_vod) Configure Virtual Optical Device.
         type: str
-        choices: ['update_proc_mem', 'update_pv', update_npiv]
+        choices: ['update_proc_mem', 'update_pv', update_npiv, update_vod]
         required: true
 '''
 
@@ -219,16 +246,33 @@ EXAMPLES = '''
     system_name: <server name>
     vm_name: <vm name>
     npiv_settings:
-      - vios_name: 'b76-vios1'
+      - vios_name: '<VIOS_NAME1>'
         fc_port_name: 'fcs0'
         wwpn_pair: c0507607577aefc0,c0507607577aefc1
         client_adapter_id: 6
         server_adapter_id: 9
-      - vios_name: 'b76-vios2'
+      - vios_name: '<VIOS_NAME2>'
         fc_port_name: 'fcs0'
         client_adapter_id: 9
         server_adapter_id: 15
     action: update_npiv
+
+- name: update vod on lpar
+  powervm_dlpar:
+    hmc_host: '{{ inventory_hostname }}'
+    hmc_auth:
+         username: '{{ ansible_user }}'
+         password: '{{ hmc_password }}'
+    system_name: <server name>
+    vm_name: <vm name>
+    npiv_settings:
+      - vios_name: '<VIOS_Name1>'
+        device_name: '<test>'
+      - vios_name: '<VIOS_Name2>'
+        device_name: '<test1>'
+        client_adapter_id: 9
+        server_adapter_id: 15
+    action: update_vod
 '''
 
 RETURN = '''
@@ -264,13 +308,16 @@ def validate_parameters(params):
 
     if opr == 'update_proc_mem':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
-        unsupportedList = ['pv_settings']
+        unsupportedList = ['pv_settings', 'npiv_settings', 'vod_settings']
     elif opr == 'update_pv':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'pv_settings']
-        unsupportedList = ['proc_settings', 'mem_settings', 'npiv_settings']
+        unsupportedList = ['proc_settings', 'mem_settings', 'npiv_settings', 'vod_settings']
     elif opr == 'update_npiv':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'npiv_settings']
-        unsupportedList = ['proc_settings', 'mem_settings', 'pv_settings']
+        unsupportedList = ['proc_settings', 'mem_settings', 'pv_settings', 'vod_settings']
+    elif opr == 'update_vod':
+        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'vod_settings']
+        unsupportedList = ['proc_settings', 'mem_settings', 'pv_settings', 'npiv_settings']
 
     collate = []
     for eachMandatory in mandatoryList:
@@ -576,7 +623,7 @@ def update_pv(module, params):
         if vios_quick_response is not None:
             vios_list = json.loads(vios_quick_response)
         if vios_list:
-            vios_dict = {vios['PartitionName']: vios['UUID'] for vios in vios_list}
+            vios_dict = {vios['PartitionName']: vios['UUID'] for vios in vios_list if vios['RMCState'] == 'active'}
             for vios_name, pv_sett_list in pv_sett_group.items():
                 if vios_name in vios_dict.keys():
                     try:
@@ -588,7 +635,9 @@ def update_pv(module, params):
                         msg = "Failed to update PV Settings of VIOS: {0} =>".format(vios_name)
                         update_status_msg = update_status_msg + " " + msg + " " + parse_error_response(error)
                 else:
-                    module.warn("{0} VIOS not found in the Managed System {1}".format(vios_name, system_name))
+                    update_status_msg = update_status_msg + ". " + \
+                        "{0} VIOS not found or RMC is not active in the Managed System {1}".format(
+                            vios_name, system_name)
         else:
             module.fail_json(msg="There are no VIOS available in the Managed system: {0}".format(system_name))
 
@@ -669,7 +718,7 @@ def update_npiv(module, params):
         if vios_quick_response is not None:
             vios_list = json.loads(vios_quick_response)
         if vios_list:
-            vios_dict = {vios['PartitionName']: vios['UUID'] for vios in vios_list}
+            vios_dict = {vios['PartitionName']: vios['UUID'] for vios in vios_list if vios['RMCState'] == 'active'}
             for vios_name, npiv_sett_list in npiv_sett_group.items():
                 if vios_name in vios_dict.keys():
                     try:
@@ -681,7 +730,104 @@ def update_npiv(module, params):
                         msg = "Failed to update NPIV Settings of VIOS: {0} =>".format(vios_name)
                         update_status_msg = update_status_msg + " " + msg + " " + parse_error_response(error) + "."
                 else:
-                    module.warn("{0} VIOS not found in the Managed System {1}".format(vios_name, system_name))
+                    update_status_msg = update_status_msg + ". " + \
+                        "{0} VIOS not found or RMC is not active in the Managed System {1}".format(
+                            vios_name, system_name)
+        else:
+            module.fail_json(msg="There are no VIOS available in the Managed system: {0}".format(system_name))
+
+        npiv_facts = rest_conn.fetchFCDetailsFromVIOS(system_uuid, lpar_id, vios_list)
+    except (Exception) as error:
+        error_msg = parse_error_response(error)
+        module.fail_json(msg=error_msg)
+    finally:
+        try:
+            rest_conn.logoff()
+        except Exception as logoff_error:
+            error_msg = parse_error_response(logoff_error)
+            module.warn(error_msg)
+    if counter >= 1:
+        changed = True
+        if update_status_msg:
+            module.warn(update_status_msg)
+    elif update_status_msg and counter < 1:
+        module.fail_json(msg=update_status_msg)
+
+    return changed, npiv_facts, None
+
+
+def update_vod(module, params):
+    hmc_host = params['hmc_host']
+    hmc_user = params['hmc_auth']['username']
+    password = params['hmc_auth']['password']
+    system_name = params['system_name']
+    vm_name = params['vm_name']
+    vod_settings = params['vod_settings']
+    timeout = params['timeout']
+    validate_parameters(params)
+    partition_uuid = ""
+    update_status_msg = ""
+    lpar_id = ""
+    counter = 0
+    changed = False
+
+    try:
+        rest_conn = HmcRestClient(hmc_host, hmc_user, password)
+    except Exception as error:
+        error_msg = parse_error_response(error)
+        module.fail_json(msg=error_msg)
+
+    try:
+        system_uuid, server_dom = rest_conn.getManagedSystem(system_name)
+    except Exception as error:
+        try:
+            rest_conn.logoff()
+        except Exception:
+            logger.debug("Logoff error")
+        error_msg = parse_error_response(error)
+        module.fail_json(msg=error_msg)
+    if not system_uuid:
+        module.fail_json(msg="Given system is not present")
+
+    try:
+        partition_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, partition_name=vm_name)
+    except Exception as error:
+        try:
+            rest_conn.logoff()
+        except Exception:
+            logger.debug("Logoff error")
+        error_msg = parse_error_response(error)
+        module.fail_json(msg=error_msg)
+    if partition_uuid is None:
+        module.fail_json(msg="Given partition name: {0} not found in the Managed System: {1}".format(vm_name, system_name))
+
+    try:
+        # Group vod_settings based on the vios name
+        vod_sett_group = build_group_by_key(vod_settings, 'vios_name')
+
+        # Get all vios names and their UUID of the Managed System
+        vios_quick_response = rest_conn.getVirtualIOServersQuick(system_uuid)
+        vios_list = []
+        vios_dict = {}
+        lpar_id = partition_dom.xpath("//PartitionID")[0].text
+        if vios_quick_response is not None:
+            vios_list = json.loads(vios_quick_response)
+        if vios_list:
+            vios_dict = {vios['PartitionName']: vios['UUID'] for vios in vios_list if vios['RMCState'] == 'active'}
+            for vios_name, vod_sett_list in vod_sett_group.items():
+                if vios_name in vios_dict.keys():
+                    try:
+                        status_flag = rest_conn.updateVIOSwithVODMappings(vios_dict[vios_name], vod_sett_list, partition_uuid,
+                                                                          partition_dom, timeout)
+                        if status_flag:
+                            counter = counter + 1
+                    except (Exception) as error:
+                        msg = "Failed to update Virtual Optical Device Settings of VIOS: {0} =>".format(vios_name)
+                        update_status_msg = update_status_msg + " " + msg + " " + parse_error_response(error) + "."
+                else:
+                    update_status_msg = update_status_msg + ". " + \
+                        "{0} VIOS not found or RMC is not active in the Managed System {1}".format(
+                            vios_name, system_name)
         else:
             module.fail_json(msg="There are no VIOS available in the Managed system: {0}".format(system_name))
 
@@ -712,6 +858,7 @@ def perform_task(module):
         "update_proc_mem": update_lpar,
         "update_pv": update_pv,
         "update_npiv": update_npiv,
+        "update_vod": update_vod,
     }
 
     try:
@@ -771,7 +918,15 @@ def run_module():
                                server_adapter_id=dict(type='int'),
                                client_adapter_id=dict(type='int')
                            )),
-        action=dict(type='str', choices=['update_proc_mem', 'update_pv', 'update_npiv'], required=True),
+        vod_settings=dict(type='list',
+                          elements='dict',
+                          options=dict(
+                              vios_name=dict(type='str', required=True),
+                              device_name=dict(type='str', required=True),
+                              server_adapter_id=dict(type='int'),
+                              client_adapter_id=dict(type='int')
+                          )),
+        action=dict(type='str', choices=['update_proc_mem', 'update_pv', 'update_npiv', 'update_vod'], required=True),
     )
 
     module = AnsibleModule(

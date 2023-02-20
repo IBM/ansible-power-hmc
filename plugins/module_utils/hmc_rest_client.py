@@ -1654,7 +1654,8 @@ class HmcRestClient:
         return payload.replace('\n\n', '').replace('\n', '')
 
     def getVIOSSCSCIMappings_dictionary(self, vios_uuid):
-        vscsis = []
+        vscsis_pv = []
+        vscsis_vod = []
         try:
             vios_scsi_xml = self.getVirtualIOServer(vios_uuid, 'ViosSCSIMapping')
             vios_scsis = vios_scsi_xml.xpath('//VirtualSCSIMapping')
@@ -1662,22 +1663,28 @@ class HmcRestClient:
                 vscsi_dict = {}
                 vios_scsi = etree.ElementTree(vios_scsi_raw)
                 try:
-                    # Will add more key value pairs based on the req
+                    # Fills the vscsi_pv dictionary
                     vscsi_dict['BackingDeviceName'] = vios_scsi.xpath('//ServerAdapter/BackingDeviceName')[0].text
                     vscsi_dict['RemoteLogicalPartitionID'] = vios_scsi.xpath('//ServerAdapter/RemoteLogicalPartitionID')[0].text
-                    vscsis.append(vscsi_dict)
+                    vscsis_pv.append(vscsi_dict)
+                except Exception:
+                    pass
+                try:
+                    # Fills the vscsi_vod dictionary
+                    vscsi_dict['TargetName'] = vios_scsi.xpath('//TargetDevice/VirtualOpticalTargetDevice/TargetName')[0].text
+                    vscsis_vod.append(vscsi_dict)
                 except Exception:
                     pass
         except Exception:
             pass
-        return vscsis
+        return vscsis_pv, vscsis_vod
 
     def updateVIOSwithSCSIMappings(self, vios_UUID, pv_settings_list, lpar_UUID, vios_name, partition_dom, timeout):
         payload = ""
         flag = False
         vios_dom = self.getVirtualIOServer(vios_UUID)
         vios_vscsi_dict = self.getVIOSSCSCIMappings_dictionary(vios_UUID)
-        mapped_dvc_names = [item['BackingDeviceName'] for item in vios_vscsi_dict]
+        mapped_dvc_names = [item['BackingDeviceName'] for item in vios_vscsi_dict[0]]
         pv_dom_list = self.fetchPVsFromVIOSDOM(vios_dom, vios_name)
         lpar_id = partition_dom.xpath("//PartitionID")[0].text
         vios_id = vios_dom.xpath("//PartitionID")[0].text
@@ -1789,6 +1796,76 @@ class HmcRestClient:
                                        .format(vios_npiv_dict['AvailablePorts'], npiv_settings['fc_port_name']))
             else:
                 raise HmcError("fc_port_name: {0} provided is not found in the vios: {1}".format(npiv_settings['fc_port_name'], vios_name, ))
+        if flag:
+            self.updateVirtualIOServer(vios_dom, timeout)
+        return flag
+
+    def build_SCSI_VOD_MappingPayload(self, vod_setting, lpar_UUID, lpar_id, vios_id):
+        payload = ""
+        server_adapter_id_payload = ""
+        client_adapter_id_payload = ""
+
+        # build a payload for client adapter id, if user provides
+        if vod_setting['server_adapter_id']:
+            server_adapter_id_payload = '''
+            <ClientAdapter kb="CUR" kxe="false" schemaVersion="V1_0">
+                <Metadata>
+                    <Atom/>
+                </Metadata>
+                <LocalPartitionID kxe="false" kb="CUR">{0}</LocalPartitionID>
+                <VirtualSlotNumber kb="COD" kxe="false">{1}</VirtualSlotNumber>
+                <RemoteLogicalPartitionID kxe="false" kb="CUR">{2}</RemoteLogicalPartitionID>
+            </ClientAdapter>
+            '''.format(lpar_id, str(vod_setting['server_adapter_id']), vios_id)
+
+        # build a payload for server adapter id, if user provides
+        if vod_setting['client_adapter_id']:
+            client_adapter_id_payload = '''
+            <ServerAdapter kb="CUR" kxe="false" schemaVersion="V1_0">
+                <Metadata>
+                    <Atom/>
+                </Metadata>
+                <LocalPartitionID kxe="false" kb="CUR">{0}</LocalPartitionID>
+                <VirtualSlotNumber kb="COD" kxe="false">{1}</VirtualSlotNumber>
+                <RemoteLogicalPartitionID kxe="false" kb="CUR">{2}</RemoteLogicalPartitionID>
+            </ServerAdapter>
+            '''.format(vios_id, str(vod_setting['client_adapter_id']), lpar_id)
+
+        payload = '''
+        <VirtualSCSIMapping schemaVersion="V1_0">
+            <Metadata>
+                <Atom/>
+            </Metadata>
+            <AssociatedLogicalPartition kxe="false" kb="CUR" href="https://localhost:443/rest/api/uom/LogicalPartition/{0}" rel="related"/>
+            {1}
+            {2}
+            <TargetDevice kb="CUR" kxe="false">
+                <VirtualOpticalTargetDevice schemaVersion="V1_0">
+                    <Metadata>
+                        <Atom/>
+                    </Metadata>
+                    <TargetName kb="CUR" kxe="false">{3}</TargetName>
+                </VirtualOpticalTargetDevice>
+            </TargetDevice>
+        </VirtualSCSIMapping>
+        '''.format(lpar_UUID, server_adapter_id_payload, client_adapter_id_payload, vod_setting['device_name'])
+
+        return payload.replace('\n\n', '').replace('\n', '')
+
+    def updateVIOSwithVODMappings(self, vios_UUID, vod_settings_list, lpar_UUID, partition_dom, timeout):
+        payload = ""
+        flag = False
+        vios_dom = self.getVirtualIOServer(vios_UUID)
+        vios_vscsi_dict = self.getVIOSSCSCIMappings_dictionary(vios_UUID)
+        mapped_dvc_names = [item['TargetName'] for item in vios_vscsi_dict[1]]
+        lpar_id = partition_dom.xpath("//PartitionID")[0].text
+        vios_id = vios_dom.xpath("//PartitionID")[0].text
+        for vod_settings in vod_settings_list:
+            if vod_settings['device_name'] not in mapped_dvc_names:
+                payload = self.build_SCSI_VOD_MappingPayload(vod_settings, lpar_UUID, lpar_id, vios_id)
+                vSCSIMappingsTag = vios_dom.xpath("//VirtualSCSIMappings")[0]
+                vSCSIMappingsTag.append(etree.XML(payload))
+                flag = True
         if flag:
             self.updateVirtualIOServer(vios_dom, timeout)
         return flag
