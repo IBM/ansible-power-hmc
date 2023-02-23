@@ -16,10 +16,12 @@ DOCUMENTATION = '''
 module: powervm_dlpar
 author:
     - Anil Vijayan(@AnilVijayan)
+    - Navinakumar Kandakur(@nkandak1)
 short_description: Dynamically managing resources of partition
 description:
     - "Managing processor resources dynamically"
     - "Managing memory resources dynamically"
+    - "Managing Storage resources dynamically"
 version_added: 1.0.0
 options:
     hmc_host:
@@ -186,6 +188,11 @@ options:
                     - The client adapter slot number to be configured.
                     - Optional, if not provided next available value will be assigned.
                 type: int
+            media_name:
+                description:
+                    - Name of the media to be loaded.
+                    - Optional, if not provided no media will be loaded.
+                type: str
     action:
         description:
             - C(update_proc_mem) updates the processor and memory resources of the partition.
@@ -265,11 +272,12 @@ EXAMPLES = '''
          password: '{{ hmc_password }}'
     system_name: <server name>
     vm_name: <vm name>
-    npiv_settings:
+    vod_settings:
       - vios_name: '<VIOS_Name1>'
-        device_name: '<test>'
+        device_name: '<device_name1>'
+        media_name: '<media_name1>'
       - vios_name: '<VIOS_Name2>'
-        device_name: '<test1>'
+        device_name: '<device_name2>'
         client_adapter_id: 9
         server_adapter_id: 15
     action: update_vod
@@ -831,7 +839,7 @@ def update_vod(module, params):
         else:
             module.fail_json(msg="There are no VIOS available in the Managed system: {0}".format(system_name))
 
-        npiv_facts = rest_conn.fetchFCDetailsFromVIOS(system_uuid, lpar_id, vios_list)
+        npiv_facts = rest_conn.fetchSCSIDetailsFromVIOS(system_uuid, lpar_id, vios_list)
     except (Exception) as error:
         error_msg = parse_error_response(error)
         module.fail_json(msg=error_msg)
@@ -924,7 +932,8 @@ def run_module():
                               vios_name=dict(type='str', required=True),
                               device_name=dict(type='str', required=True),
                               server_adapter_id=dict(type='int'),
-                              client_adapter_id=dict(type='int')
+                              client_adapter_id=dict(type='int'),
+                              media_name=dict(type='str')
                           )),
         action=dict(type='str', choices=['update_proc_mem', 'update_pv', 'update_npiv', 'update_vod'], required=True),
     )

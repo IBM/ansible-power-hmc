@@ -1161,29 +1161,41 @@ class HmcRestClient:
             for vios_scsi_raw in vios_scsis:
                 vscsi_dict = {}
                 vios_scsi = etree.ElementTree(vios_scsi_raw)
-                # This code is to handle stale adapters and shared storage
-                if vios_scsi.find('//ClientAdapter') is None or vios_scsi.find('//Storage') is None:
+                # This code is to handle stale adapters
+                if len(vios_scsi.xpath('//ClientAdapter')) < 1:
                     continue
                 part_id = vios_scsi.xpath('//ClientAdapter/LocalPartitionID')[0].text
                 if str(lpar_id) == str(part_id):
-                    volumeUniqueID = vios_scsi.xpath('//Storage/PhysicalVolume/VolumeUniqueID')[0].text
-                    vscsi_dict['VolumeUniqueID'] = volumeUniqueID
-                    vios_id = int(vios_scsi.xpath('//ClientAdapter/RemoteLogicalPartitionID')[0].text)
-                    vol_dict = {"name": vios_dict[vios_id], 'vios': vios_scsi.xpath('//Storage/PhysicalVolume/VolumeName')[0].text}
-                    vscsi_dict['Volume'] = [vol_dict]
-                    flag = False
-                    for vscsi in vscsis:
-                        if vscsi['VolumeUniqueID'] == volumeUniqueID:
-                            vscsi['Volume'].append(vol_dict)
-                            flag = True
-                    if not flag:
+                    # Adds the PVs
+                    if len(vios_scsi.xpath('//Storage/PhysicalVolume/VolumeUniqueID')) >= 1:
+                        volumeUniqueID = vios_scsi.xpath('//Storage/PhysicalVolume/VolumeUniqueID')[0].text
+                        vscsi_dict['VolumeUniqueID'] = volumeUniqueID
+                        vios_id = int(vios_scsi.xpath('//ClientAdapter/RemoteLogicalPartitionID')[0].text)
+                        vol_dict = {"vios": vios_dict[vios_id], 'name': vios_scsi.xpath('//Storage/PhysicalVolume/VolumeName')[0].text}
+                        vscsi_dict['Volume'] = [vol_dict]
+                        flag = False
+                        for vscsi in vscsis:
+                            if 'VolumeUniqueID' in vscsi and vscsi['VolumeUniqueID'] == volumeUniqueID:
+                                vscsi['Volume'].append(vol_dict)
+                                flag = True
+                        if not flag:
+                            vscsi_dict['ClientVirtualSlotNumber'] = vios_scsi.xpath('//ClientAdapter/VirtualSlotNumber')[0].text
+                            vscsi_dict['ServerVirtualSlotNumber'] = vios_scsi.xpath('//ClientAdapter/RemoteSlotNumber')[0].text
+                            vscsi_dict['TargetDeviceName'] = vios_scsi.xpath('//TargetDevice//TargetName')[0].text
+                            vscsi_dict['VolumeCapacity'] = vios_scsi.xpath('//Storage/PhysicalVolume/VolumeCapacity')[0].text
+                            vscsis.append(vscsi_dict)
+                    # Adds the VOD
+                    elif len(vios_scsi.xpath('//TargetDevice/VirtualOpticalTargetDevice')) >= 1:
                         vscsi_dict['ClientVirtualSlotNumber'] = vios_scsi.xpath('//ClientAdapter/VirtualSlotNumber')[0].text
                         vscsi_dict['ServerVirtualSlotNumber'] = vios_scsi.xpath('//ClientAdapter/RemoteSlotNumber')[0].text
-                        vscsi_dict['TargetDeviceName'] = vios_scsi.xpath('//TargetDevice//TargetName')[0].text
+                        vscsi_dict['TargetName'] = vios_scsi.xpath('//TargetDevice/VirtualOpticalTargetDevice/TargetName')[0].text
+                        if len(vios_scsi.xpath('//Storage')) >= 1:
+                            vscsi_dict['MediaName'] = vios_scsi.xpath('//Storage//MediaName')[0].text
+                            vscsi_dict['MountType'] = vios_scsi.xpath('//Storage//MountType')[0].text
+                            vscsi_dict['Size'] = vios_scsi.xpath('//Storage//Size')[0].text
                         vscsis.append(vscsi_dict)
         except Exception:
             pass
-
         return vscsis
 
     def getSharedProcessorPools(self, system_uuid):
@@ -1807,6 +1819,7 @@ class HmcRestClient:
         payload = ""
         server_adapter_id_payload = ""
         client_adapter_id_payload = ""
+        media_name_payload = ""
 
         # build a payload for client adapter id, if user provides
         if vod_setting['server_adapter_id']:
@@ -1834,6 +1847,19 @@ class HmcRestClient:
             </ServerAdapter>
             '''.format(vios_id, str(vod_setting['client_adapter_id']), lpar_id)
 
+        # build payload for loading media
+        if vod_setting['media_name']:
+            media_name_payload = '''
+            <Storage kb="CUR" kxe="false">
+                <VirtualOpticalMedia schemaVersion="V1_0">
+                    <Metadata>
+                        <Atom/>
+                    </Metadata>
+                    <MediaName kxe="false" kb="CUR">{0}</MediaName>
+                </VirtualOpticalMedia>
+            </Storage>
+            '''.format(vod_setting['media_name'])
+
         payload = '''
         <VirtualSCSIMapping schemaVersion="V1_0">
             <Metadata>
@@ -1842,16 +1868,17 @@ class HmcRestClient:
             <AssociatedLogicalPartition kxe="false" kb="CUR" href="https://localhost:443/rest/api/uom/LogicalPartition/{0}" rel="related"/>
             {1}
             {2}
+            {3}
             <TargetDevice kb="CUR" kxe="false">
                 <VirtualOpticalTargetDevice schemaVersion="V1_0">
                     <Metadata>
                         <Atom/>
                     </Metadata>
-                    <TargetName kb="CUR" kxe="false">{3}</TargetName>
+                    <TargetName kb="CUR" kxe="false">{4}</TargetName>
                 </VirtualOpticalTargetDevice>
             </TargetDevice>
         </VirtualSCSIMapping>
-        '''.format(lpar_UUID, server_adapter_id_payload, client_adapter_id_payload, vod_setting['device_name'])
+        '''.format(lpar_UUID, server_adapter_id_payload, client_adapter_id_payload, media_name_payload, vod_setting['device_name'])
 
         return payload.replace('\n\n', '').replace('\n', '')
 
