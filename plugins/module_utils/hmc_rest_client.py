@@ -1726,9 +1726,12 @@ class HmcRestClient:
         client_adapter_payload = ""
         # build client adapter_id payload
         if npiv_setting['wwpn_pair']:
-            wwpn_pair = npiv_setting['wwpn_pair'].replace(",", " ")
-            wwpn_pair_payload = '''
-            <WWPNs kb="CUR" kxe="false">{0}</WWPNs>'''.format(wwpn_pair)
+            if ';' in npiv_setting['wwpn_pair']:
+                wwpn_pair = npiv_setting['wwpn_pair'].replace(";", " ")
+                wwpn_pair_payload = '''
+                <WWPNs kb="CUR" kxe="false">{0}</WWPNs>'''.format(wwpn_pair)
+            else:
+                raise ParameterError("Invalid WWPN pair format: {0}, Correct format is <wwpn1;wwpn2>".format(npiv_setting['wwpn_pair']))
         if npiv_setting['client_adapter_id']:
             client_adapter_payload = '''
             <VirtualSlotNumber kb="COD" kxe="false">{0}</VirtualSlotNumber>

@@ -147,7 +147,7 @@ options:
             wwpn_pair:
                 description:
                     - The WWPN pair value to be configured with client FC adapter.
-                    - Both the WWPN value should be separated by comma delimiter.
+                    - Both the WWPN value should be separated by semicolon(;) delimiter ex: c0507607577aefc0;c0507607577aefc1.
                     - Optional, if not provided the value will be auto assigned.
                 type: str
             server_adapter_id:
@@ -248,7 +248,7 @@ EXAMPLES = '''
     npiv_settings:
       - vios_name: '<VIOS_NAME1>'
         fc_port_name: 'fcs0'
-        wwpn_pair: c0507607577aefc0,c0507607577aefc1
+        wwpn_pair: <wwpn1>;<wwpn2>
         client_adapter_id: 6
         server_adapter_id: 9
       - vios_name: '<VIOS_NAME2>'
