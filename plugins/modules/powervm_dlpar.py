@@ -149,7 +149,7 @@ options:
             wwpn_pair:
                 description:
                     - The WWPN pair value to be configured with client FC adapter.
-                    - Both the WWPN value should be separated by semicolon(;) delimiter ex: c0507607577aefc0;c0507607577aefc1.
+                    - Both the WWPN value should be separated by semicolon delimiter example 'c0507607577aefc0;c0507607577aefc1'.
                     - Optional, if not provided the value will be auto assigned.
                 type: str
             server_adapter_id:
