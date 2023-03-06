@@ -1815,7 +1815,7 @@ class HmcRestClient:
             self.updateVirtualIOServer(vios_dom, timeout)
         return flag
 
-    def build_SCSI_VOD_MappingPayload(self, vod_setting, lpar_UUID, lpar_id, vios_id):
+    def build_SCSI_VOD_MappingPayload(self, vod_setting, lpar_UUID, lpar_id, vios_id, vom_dict):
         payload = ""
         server_adapter_id_payload = ""
         client_adapter_id_payload = ""
@@ -1849,16 +1849,19 @@ class HmcRestClient:
 
         # build payload for loading media
         if vod_setting['media_name']:
-            media_name_payload = '''
-            <Storage kb="CUR" kxe="false">
-                <VirtualOpticalMedia schemaVersion="V1_0">
-                    <Metadata>
-                        <Atom/>
-                    </Metadata>
-                    <MediaName kxe="false" kb="CUR">{0}</MediaName>
-                </VirtualOpticalMedia>
-            </Storage>
-            '''.format(vod_setting['media_name'])
+            if vod_setting['media_name'] in vom_dict:
+                media_name_payload = '''
+                <Storage kb="CUR" kxe="false">
+                    <VirtualOpticalMedia schemaVersion="V1_0">
+                        <Metadata>
+                            <Atom/>
+                        </Metadata>
+                        <MediaName kxe="false" kb="CUR">{0}</MediaName>
+                    </VirtualOpticalMedia>
+                </Storage>
+                '''.format(vod_setting['media_name'])
+            else:
+                raise HmcError("MediaName: {0} not found in the VIOS".format(vod_setting['media_name']))
 
         payload = '''
         <VirtualSCSIMapping schemaVersion="V1_0">
@@ -1882,6 +1885,20 @@ class HmcRestClient:
 
         return payload.replace('\n\n', '').replace('\n', '')
 
+    def getVIOSVirtualOpticalMediaDetails(self, vios_dom):
+        voms_dict = {}
+        if len(vios_dom.xpath("//MediaRepositories/VirtualMediaRepository/OpticalMedia/VirtualOpticalMedia")) >= 1:
+            voms = vios_dom.xpath("//MediaRepositories/VirtualMediaRepository/OpticalMedia/VirtualOpticalMedia")
+            for vom_raw in voms:
+                vom_dict = {}
+                vom = etree.ElementTree(vom_raw)
+                media_name = vom.xpath('//MediaName')[0].text
+                vom_dict['MediaUDID'] = vom.xpath('//MediaUDID')[0].text
+                vom_dict['MountType'] = vom.xpath('//MountType')[0].text
+                vom_dict['Size'] = vom.xpath('//Size')[0].text
+                voms_dict[media_name] = vom_dict
+        return voms_dict
+
     def updateVIOSwithVODMappings(self, vios_UUID, vod_settings_list, lpar_UUID, partition_dom, timeout):
         payload = ""
         flag = False
@@ -1890,9 +1907,10 @@ class HmcRestClient:
         mapped_dvc_names = [item['TargetName'] for item in vios_vscsi_dict[1]]
         lpar_id = partition_dom.xpath("//PartitionID")[0].text
         vios_id = vios_dom.xpath("//PartitionID")[0].text
+        vom_dict = self.getVIOSVirtualOpticalMediaDetails(vios_dom)
         for vod_settings in vod_settings_list:
             if vod_settings['device_name'] not in mapped_dvc_names:
-                payload = self.build_SCSI_VOD_MappingPayload(vod_settings, lpar_UUID, lpar_id, vios_id)
+                payload = self.build_SCSI_VOD_MappingPayload(vod_settings, lpar_UUID, lpar_id, vios_id, vom_dict)
                 vSCSIMappingsTag = vios_dom.xpath("//VirtualSCSIMappings")[0]
                 vSCSIMappingsTag.append(etree.XML(payload))
                 flag = True

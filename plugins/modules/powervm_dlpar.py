@@ -18,6 +18,9 @@ author:
     - Anil Vijayan(@AnilVijayan)
     - Navinakumar Kandakur(@nkandak1)
 short_description: Dynamically managing resources of partition
+notes:
+    - In case of update_pv action if updation of settings belongs to atleast one VIOS is successful then
+      changed status shown as 1 and failed updates are shown as warning, This behavior is same for update_npiv and update_vod also.
 description:
     - "Managing processor resources dynamically"
     - "Managing memory resources dynamically"
@@ -98,10 +101,12 @@ options:
     timeout:
         description:
             - The maximum time, in minutes, to wait for partition operating system to complete dlpar.
+            - This option is valid for following actions I(update_proc_mem), I(update_pv), I(update_npiv) and I(update_vod)
         type: int
     pv_settings:
         description:
             - List of Physical Volumes settings to be configured
+            - This option is valid only for I(update_pv) action.
         type: list
         elements: dict
         suboptions:
@@ -133,6 +138,7 @@ options:
     npiv_settings:
         description:
             - List of Virtual Fibre Channel port settings to be configured
+            - This option is valid only for I(update_npiv) action.
         type: list
         elements: dict
         suboptions:
@@ -164,7 +170,8 @@ options:
                 type: int
     vod_settings:
         description:
-            - List of Virtual optical device settings to be configured
+            - List of Virtual optical device settings to be configured.
+            - This option is valid only for I(update_vod) action.
         type: list
         elements: dict
         suboptions:
@@ -197,8 +204,8 @@ options:
         description:
             - C(update_proc_mem) updates the processor and memory resources of the partition.
             - C(update_pv) Attach Physical Volumes via Virtual SCSI.
-            - C(update_npiv) Configure FC Port.
-            - C(update_vod) Configure Virtual Optical Device.
+            - C(update_npiv) Attach FC Port.
+            - C(update_vod) Attach Virtual Optical Device.
         type: str
         choices: ['update_proc_mem', 'update_pv', update_npiv, update_vod]
         required: true
@@ -285,13 +292,13 @@ EXAMPLES = '''
 
 RETURN = '''
 partition_info:
-    description: Return the proc and memory attributes of the partition.
+    description: Return the attributes of the partition.
     type: dict
     returned: always
 '''
 
 import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc.log"
+LOG_FILENAME = "/tmp/ansible_power_hmc2.log"
 logger = logging.getLogger(__name__)
 import sys
 import json
