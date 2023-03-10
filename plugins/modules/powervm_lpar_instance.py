@@ -1321,9 +1321,6 @@ def poweroff_partition(module, params):
             hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
             hmc = Hmc(hmc_conn)
             system_name = identify_ManagedSystem_of_lpar(hmc, vm_name)
-            logger.debug("***************")
-            logger.debug(system_name)
-            logger.debug("***************")
 
         system_uuid, server_dom = rest_conn.getManagedSystem(system_name)
         if not system_uuid:

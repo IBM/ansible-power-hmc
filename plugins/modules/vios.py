@@ -192,7 +192,10 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client impor
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_resource import Hmc
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import parse_error_response
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import HmcRestClient
 import sys
+import json
 
 
 def init_logger():
@@ -212,10 +215,15 @@ def validate_parameters(params):
 
     if opr == 'install':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'name', 'nim_IP', 'nim_gateway', 'vios_IP', 'nim_subnetmask']
-        unsupportedList = ['settings']
+        unsupportedList = ['settings', 'virtual_optical_media']
     elif opr == 'present':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'name']
-        unsupportedList = ['nim_IP', 'nim_gateway', 'vios_IP', 'nim_subnetmask', 'prof_name', 'location_code', 'nim_vlan_id', 'nim_vlan_priority', 'timeout']
+        unsupportedList = ['nim_IP', 'nim_gateway', 'vios_IP', 'nim_subnetmask', 'prof_name',
+                           'location_code', 'nim_vlan_id', 'nim_vlan_priority', 'timeout', 'virtual_optical_media']
+    elif opr == 'accept_license':
+        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'name']
+        unsupportedList = ['nim_IP', 'nim_gateway', 'vios_IP', 'nim_subnetmask', 'prof_name', 'location_code', 'nim_vlan_id', 'nim_vlan_priority',
+                           'timeout', 'settings', 'virtual_optical_media']
     else:
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'name']
         unsupportedList = ['nim_IP', 'nim_gateway', 'vios_IP', 'nim_subnetmask', 'prof_name', 'location_code', 'nim_vlan_id', 'nim_vlan_priority',
@@ -249,11 +257,43 @@ def fetchViosInfo(module, params):
     password = params['hmc_auth']['password']
     system_name = params['system_name']
     name = params['name']
+    virtual_optical_media = params['virtual_optical_media']
     validate_parameters(params)
     hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(hmc_conn)
 
     lpar_config = hmc.getPartitionConfig(system_name, name)
+
+    if virtual_optical_media:
+        try:
+            rest_conn = HmcRestClient(hmc_host, hmc_user, password)
+        except Exception as error:
+            error_msg = parse_error_response(error)
+            module.fail_json(msg=error_msg)
+
+        try:
+            system_uuid, server_dom = rest_conn.getManagedSystem(system_name)
+            vios_quick_response = rest_conn.getVirtualIOServersQuick(system_uuid)
+            vios_list = []
+            if vios_quick_response is not None:
+                vios_list = json.loads(vios_quick_response)
+            if vios_list:
+                for vios in vios_list:
+                    if vios['PartitionName'] == name:
+                        vios_dom = rest_conn.getVirtualIOServer(vios['UUID'])
+                        vom_dict = rest_conn.getVIOSVirtualOpticalMediaDetails(vios_dom)
+                        break
+                else:
+                    module.fail_json("VIOS: {0} not found in the Managed System: {1}".format(name, system_name))
+            lpar_config['virtual_optical_media'] = vom_dict
+        except Exception as error:
+            try:
+                rest_conn.logoff()
+            except Exception:
+                logger.debug("Logoff error")
+            error_msg = parse_error_response(error)
+            module.fail_json(msg=error_msg)
+
     if lpar_config:
         return False, lpar_config, None
     else:
@@ -432,6 +472,7 @@ def run_module():
         nim_vlan_id=dict(type='str'),
         nim_vlan_priority=dict(type='str'),
         timeout=dict(type='int'),
+        virtual_optical_media=dict(type='bool'),
         state=dict(type='str', choices=['facts', 'present']),
         action=dict(type='str', choices=['install', 'accept_license']),
     )
