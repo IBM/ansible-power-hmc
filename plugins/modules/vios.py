@@ -197,7 +197,7 @@ vios_info:
 '''
 
 import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc.log"
+LOG_FILENAME = "/tmp/ansible_power_hmc2.log"
 logger = logging.getLogger(__name__)
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
@@ -305,18 +305,20 @@ def fetchViosInfo(module, params):
                     lpar_config['virtual_optical_media'] = vom_dict
                 if free_pvs:
                     pv_list = []
-                    pv_xml_list = rest_conn.getFreePhyVolume(vios_UUID)
-                    for each in pv_xml_list:
-                        pv_dict = {}
-                        pv_dict['VolumeName'] = each.xpath("VolumeName")[0].text
-                        pv_dict['VolumeCapacity'] = each.xpath("VolumeCapacity")[0].text
-                        pv_dict['VolumeState'] = each.xpath("VolumeState")[0].text
-                        pv_dict['VolumeUniqueID'] = each.xpath("VolumeUniqueID")[0].text
-                        pv_dict['ReservePolicy'] = each.xpath("ReservePolicy")[0].text
-                        pv_dict['ReservePolicyAlgorithm'] = each.xpath("ReservePolicyAlgorithm")[0].text
-                        pv_list.append(pv_dict)
-                    lpar_config['free_physical_volumes'] = pv_list
-
+                    try:
+                        pv_xml_list = rest_conn.getFreePhyVolume(vios_UUID)
+                        for each in pv_xml_list:
+                            pv_dict = {}
+                            pv_dict['VolumeName'] = each.xpath("VolumeName")[0].text
+                            pv_dict['VolumeCapacity'] = each.xpath("VolumeCapacity")[0].text
+                            pv_dict['VolumeState'] = each.xpath("VolumeState")[0].text
+                            pv_dict['VolumeUniqueID'] = each.xpath("VolumeUniqueID")[0].text
+                            pv_dict['ReservePolicy'] = each.xpath("ReservePolicy")[0].text
+                            pv_dict['ReservePolicyAlgorithm'] = each.xpath("ReservePolicyAlgorithm")[0].text
+                            pv_list.append(pv_dict)
+                        lpar_config['free_physical_volumes'] = pv_list
+                    except Exception as error:
+                        logger.debug(error)
         except Exception as error:
             try:
                 rest_conn.logoff()
