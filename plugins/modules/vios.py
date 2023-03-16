@@ -119,6 +119,11 @@ options:
             - Default value is False.
             - Valid only for C(state) = I(facts)
         type: bool
+    free_pvs:
+        description:
+            - Provides the Unassigned Physical Volume details.
+            - Default value is False
+            - Valid only for C(state) = I(facts)
     state:
         description:
             - C(facts) fetch details of specified I(virtualioserver)
@@ -221,15 +226,15 @@ def validate_parameters(params):
 
     if opr == 'install':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'name', 'nim_IP', 'nim_gateway', 'vios_IP', 'nim_subnetmask']
-        unsupportedList = ['settings', 'virtual_optical_media']
+        unsupportedList = ['settings', 'virtual_optical_media', 'free_pvs']
     elif opr == 'present':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'name']
         unsupportedList = ['nim_IP', 'nim_gateway', 'vios_IP', 'nim_subnetmask', 'prof_name',
-                           'location_code', 'nim_vlan_id', 'nim_vlan_priority', 'timeout', 'virtual_optical_media']
+                           'location_code', 'nim_vlan_id', 'nim_vlan_priority', 'timeout', 'virtual_optical_media', 'free_pvs']
     elif opr == 'accept_license':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'name']
         unsupportedList = ['nim_IP', 'nim_gateway', 'vios_IP', 'nim_subnetmask', 'prof_name', 'location_code', 'nim_vlan_id', 'nim_vlan_priority',
-                           'timeout', 'settings', 'virtual_optical_media']
+                           'timeout', 'settings', 'virtual_optical_media', 'free_pvs']
     else:
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'name']
         unsupportedList = ['nim_IP', 'nim_gateway', 'vios_IP', 'nim_subnetmask', 'prof_name', 'location_code', 'nim_vlan_id', 'nim_vlan_priority',
@@ -264,13 +269,14 @@ def fetchViosInfo(module, params):
     system_name = params['system_name']
     name = params['name']
     virtual_optical_media = params['virtual_optical_media']
+    free_pvs = params['free_pvs']
     validate_parameters(params)
     hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
     hmc = Hmc(hmc_conn)
 
     lpar_config = hmc.getPartitionConfig(system_name, name)
 
-    if virtual_optical_media:
+    if virtual_optical_media or free_pvs:
         try:
             rest_conn = HmcRestClient(hmc_host, hmc_user, password)
         except Exception as error:
@@ -281,17 +287,35 @@ def fetchViosInfo(module, params):
             system_uuid, server_dom = rest_conn.getManagedSystem(system_name)
             vios_quick_response = rest_conn.getVirtualIOServersQuick(system_uuid)
             vios_list = []
+            vios_dom = None
+            vios_UUID = None
             if vios_quick_response is not None:
                 vios_list = json.loads(vios_quick_response)
             if vios_list:
                 for vios in vios_list:
                     if vios['PartitionName'] == name:
-                        vios_dom = rest_conn.getVirtualIOServer(vios['UUID'])
-                        vom_dict = rest_conn.getVIOSVirtualOpticalMediaDetails(vios_dom)
+                        vios_UUID = vios['UUID']
+                        vios_dom = rest_conn.getVirtualIOServer(vios_UUID)
                         break
                 else:
                     module.fail_json("VIOS: {0} not found in the Managed System: {1}".format(name, system_name))
-            lpar_config['virtual_optical_media'] = vom_dict
+                if virtual_optical_media:
+                    vom_dict = rest_conn.getVIOSVirtualOpticalMediaDetails(vios_dom)
+                    lpar_config['virtual_optical_media'] = vom_dict
+                if free_pvs:
+                    pv_list = []
+                    pv_xml_list = rest_conn.getFreePhyVolume(vios_UUID)
+                    for each in pv_xml_list:
+                        pv_dict = {}
+                        pv_dict['VolumeName'] = each.xpath("VolumeName")[0].text
+                        pv_dict['VolumeCapacity'] = each.xpath("VolumeCapacity")[0].text
+                        pv_dict['VolumeState'] = each.xpath("VolumeState")[0].text
+                        pv_dict['VolumeUniqueID'] = each.xpath("VolumeUniqueID")[0].text
+                        pv_dict['ReservePolicy'] = each.xpath("ReservePolicy")[0].text
+                        pv_dict['ReservePolicyAlgorithm'] = each.xpath("ReservePolicyAlgorithm")[0].text
+                        pv_list.append(pv_dict)
+                    lpar_config['free_physical_volumes'] = pv_list
+
         except Exception as error:
             try:
                 rest_conn.logoff()
@@ -479,6 +503,7 @@ def run_module():
         nim_vlan_priority=dict(type='str'),
         timeout=dict(type='int'),
         virtual_optical_media=dict(type='bool'),
+        free_pvs=dict(type='bool'),
         state=dict(type='str', choices=['facts', 'present']),
         action=dict(type='str', choices=['install', 'accept_license']),
     )
