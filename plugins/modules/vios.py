@@ -124,6 +124,7 @@ options:
             - Provides the Unassigned Physical Volume details.
             - Default value is False
             - Valid only for C(state) = I(facts)
+        type: bool
     state:
         description:
             - C(facts) fetch details of specified I(virtualioserver)
