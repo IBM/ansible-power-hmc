@@ -329,6 +329,8 @@ def fetchViosInfo(module, params):
                 lpar_config['VirtualOpticalMedia'] = vom_dict
             if free_pvs:
                 pv_list = []
+                # Initialize with empty list
+                lpar_config['FreePhysicalVolumes'] = []
                 try:
                     pv_xml_list = rest_conn.getFreePhyVolume(vios_UUID)
                     for each in pv_xml_list:
