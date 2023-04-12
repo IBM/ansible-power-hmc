@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Quickstart &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
@@ -13,9 +13,6 @@
   <![endif]-->
   
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/js/theme.js"></script>
@@ -30,11 +27,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> IBM Power Systems HMC
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            IBM Power Systems HMC
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -84,7 +85,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Quickstart</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/IBM/ansible-power-hmc/blob/dev-collection/docs/source/quickstart.rst" class="fa fa-github"> Edit on GitHub</a>
@@ -104,31 +105,31 @@ can access the collection and the ansible-doc covered in the following topics:</
 <p>After the collection is installed, you can access the collection content for a
 playbook by referencing the namespace <code class="docutils literal notranslate"><span class="pre">ibm</span></code> and the collection’s fully
 qualified name <code class="docutils literal notranslate"><span class="pre">power_hmc</span></code>. For example:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">hosts</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">all</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">hosts</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">all</span>
 
-<span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Query HMC current build level</span><span class="w"></span>
-<span class="w">  </span><span class="nt">ibm.power_hmc.hmc_update_upgrade</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">facts</span><span class="w"></span>
-<span class="w">      </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{{</span><span class="nv"> </span><span class="s">inventory_hostname</span><span class="nv"> </span><span class="s">}}&#39;</span><span class="w"></span>
-<span class="w">      </span><span class="nt">hmc_auth</span><span class="p">:</span><span class="w"></span>
-<span class="w">          </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{{</span><span class="nv"> </span><span class="s">ansible_user</span><span class="nv"> </span><span class="s">}}&#39;</span><span class="w"></span>
+<span class="nt">tasks</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Query HMC current build level</span>
+<span class="w">  </span><span class="nt">ibm.power_hmc.hmc_update_upgrade</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">facts</span>
+<span class="w">      </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{{</span><span class="nv"> </span><span class="s">inventory_hostname</span><span class="nv"> </span><span class="s">}}&#39;</span>
+<span class="w">      </span><span class="nt">hmc_auth</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{{</span><span class="nv"> </span><span class="s">ansible_user</span><span class="nv"> </span><span class="s">}}&#39;</span>
 </pre></div>
 </div>
 <p>In Ansible 2.9, the <code class="docutils literal notranslate"><span class="pre">collections</span></code> keyword was added to reduce the need
 to refer to the collection repeatedly. For example, you can use the
 <code class="docutils literal notranslate"><span class="pre">collections</span></code> keyword in your playbook:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">hosts</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">all</span><span class="w"></span>
-<span class="w">  </span><span class="nt">collections</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ibm.power_hmc</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">hosts</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">all</span>
+<span class="w">  </span><span class="nt">collections</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ibm.power_hmc</span>
 
-<span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Query HMC current build level</span><span class="w"></span>
-<span class="w">  </span><span class="nt">hmc_update_upgrade</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">facts</span><span class="w"></span>
-<span class="w">      </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{{</span><span class="nv"> </span><span class="s">inventory_hostname</span><span class="nv"> </span><span class="s">}}&#39;</span><span class="w"></span>
-<span class="w">      </span><span class="nt">hmc_auth</span><span class="p">:</span><span class="w"></span>
-<span class="w">          </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{{</span><span class="nv"> </span><span class="s">ansible_user</span><span class="nv"> </span><span class="s">}}&#39;</span><span class="w"></span>
+<span class="nt">tasks</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Query HMC current build level</span>
+<span class="w">  </span><span class="nt">hmc_update_upgrade</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">facts</span>
+<span class="w">      </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{{</span><span class="nv"> </span><span class="s">inventory_hostname</span><span class="nv"> </span><span class="s">}}&#39;</span>
+<span class="w">      </span><span class="nt">hmc_auth</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{{</span><span class="nv"> </span><span class="s">ansible_user</span><span class="nv"> </span><span class="s">}}&#39;</span>
 </pre></div>
 </div>
 </section>
@@ -140,12 +141,12 @@ documentation can be accessed from the command line by using the
 <code class="docutils literal notranslate"><span class="pre">ansible-doc</span></code> command.</p>
 <p>Here’s how to use the <code class="docutils literal notranslate"><span class="pre">ansible-doc</span></code> command after you install the
 <strong>IBM Power Systems HMC collection</strong>: <code class="docutils literal notranslate"><span class="pre">ansible-doc</span> <span class="pre">ibm.power_hmc.hmc_update_upgrade</span></code></p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>&gt; HMC_UPDATE_UPGRADE <span class="o">(</span>ansible_collections/ibm/power_hmc/plugins/modules/hmc_update_upgrade.py<span class="o">)</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>&gt;<span class="w"> </span>HMC_UPDATE_UPGRADE<span class="w"> </span><span class="o">(</span>ansible_collections/ibm/power_hmc/plugins/modules/hmc_update_upgrade.py<span class="o">)</span>
 
-   Updates the HMC by installing a corrective service package located on an FTP/SFTP/NFS server or HMC hard disk
-   Upgrades the HMC by obtaining  the required  files  from a remote server or from the HMC hard disk. The files are
-   transferred onto a special partition on the HMC hard disk. After the files have been transferred, HMC will boot from
-   this partition and perform the upgrade
+<span class="w">   </span>Updates<span class="w"> </span>the<span class="w"> </span>HMC<span class="w"> </span>by<span class="w"> </span>installing<span class="w"> </span>a<span class="w"> </span>corrective<span class="w"> </span>service<span class="w"> </span>package<span class="w"> </span>located<span class="w"> </span>on<span class="w"> </span>an<span class="w"> </span>FTP/SFTP/NFS<span class="w"> </span>server<span class="w"> </span>or<span class="w"> </span>HMC<span class="w"> </span>hard<span class="w"> </span>disk
+<span class="w">   </span>Upgrades<span class="w"> </span>the<span class="w"> </span>HMC<span class="w"> </span>by<span class="w"> </span>obtaining<span class="w">  </span>the<span class="w"> </span>required<span class="w">  </span>files<span class="w">  </span>from<span class="w"> </span>a<span class="w"> </span>remote<span class="w"> </span>server<span class="w"> </span>or<span class="w"> </span>from<span class="w"> </span>the<span class="w"> </span>HMC<span class="w"> </span>hard<span class="w"> </span>disk.<span class="w"> </span>The<span class="w"> </span>files<span class="w"> </span>are
+<span class="w">   </span>transferred<span class="w"> </span>onto<span class="w"> </span>a<span class="w"> </span>special<span class="w"> </span>partition<span class="w"> </span>on<span class="w"> </span>the<span class="w"> </span>HMC<span class="w"> </span>hard<span class="w"> </span>disk.<span class="w"> </span>After<span class="w"> </span>the<span class="w"> </span>files<span class="w"> </span>have<span class="w"> </span>been<span class="w"> </span>transferred,<span class="w"> </span>HMC<span class="w"> </span>will<span class="w"> </span>boot<span class="w"> </span>from
+<span class="w">   </span>this<span class="w"> </span>partition<span class="w"> </span>and<span class="w"> </span>perform<span class="w"> </span>the<span class="w"> </span>upgrade
 </pre></div>
 </div>
 <p>For more information on using the <code class="docutils literal notranslate"><span class="pre">ansible-doc</span></code> command, refer

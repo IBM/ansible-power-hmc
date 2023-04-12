@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>powervm_dlpar – Dynamically managing resources of partition &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
@@ -13,9 +13,6 @@
   <![endif]-->
   
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
         <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -30,11 +27,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> IBM Power Systems HMC
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            IBM Power Systems HMC
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -58,6 +59,7 @@
 <li class="toctree-l3 current"><a class="current reference internal" href="#">powervm_dlpar – Dynamically managing resources of partition</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#synopsis">Synopsis</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#parameters">Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#notes">Notes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#return-values">Return Values</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#status">Status</a></li>
@@ -101,7 +103,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../modules.html">Modules</a></li>
       <li class="breadcrumb-item active">powervm_dlpar – Dynamically managing resources of partition</li>
       <li class="wy-breadcrumbs-aside">
@@ -115,22 +117,24 @@
              
   <section id="powervm-dlpar-dynamically-managing-resources-of-partition">
 <span id="powervm-dlpar-module"></span><h1>powervm_dlpar – Dynamically managing resources of partition<a class="headerlink" href="#powervm-dlpar-dynamically-managing-resources-of-partition" title="Permalink to this heading"></a></h1>
-<div class="contents local topic" id="contents">
+<nav class="contents local" id="contents">
 <ul class="simple">
 <li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
 <li><p><a class="reference internal" href="#parameters" id="id2">Parameters</a></p></li>
-<li><p><a class="reference internal" href="#examples" id="id3">Examples</a></p></li>
-<li><p><a class="reference internal" href="#return-values" id="id4">Return Values</a></p></li>
-<li><p><a class="reference internal" href="#status" id="id5">Status</a></p></li>
+<li><p><a class="reference internal" href="#notes" id="id3">Notes</a></p></li>
+<li><p><a class="reference internal" href="#examples" id="id4">Examples</a></p></li>
+<li><p><a class="reference internal" href="#return-values" id="id5">Return Values</a></p></li>
+<li><p><a class="reference internal" href="#status" id="id6">Status</a></p></li>
 </ul>
-</div>
+</nav>
 <section id="synopsis">
-<h2><a class="toc-backref" href="#id1">Synopsis</a><a class="headerlink" href="#synopsis" title="Permalink to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Synopsis</a><a class="headerlink" href="#synopsis" title="Permalink to this heading"></a></h2>
 <p>Managing processor resources dynamically</p>
 <p>Managing memory resources dynamically</p>
+<p>Managing Storage resources dynamically</p>
 </section>
 <section id="parameters">
-<h2><a class="toc-backref" href="#id2">Parameters</a><a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Parameters</a><a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h2>
 <blockquote>
 <div><dl>
 <dt>hmc_host (True, str, None)</dt><dd><p>The IP Address or hostname of the HMC.</p>
@@ -171,43 +175,170 @@
 </dl>
 </dd>
 <dt>timeout (optional, int, None)</dt><dd><p>The maximum time, in minutes, to wait for partition operating system to complete dlpar.</p>
+<p>This option is valid for following actions <em>update_proc_mem</em>, <em>update_pv</em>, <em>update_npiv</em> and <em>update_vod</em></p>
 </dd>
-<dt>action (True, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">update</span></code> updates the resources of the partition. Currently it supports the update of processor or memory resources.</p>
+<dt>pv_settings (optional, list, None)</dt><dd><p>List of Physical Volumes settings to be configured</p>
+<p>This option is valid only for <em>update_pv</em> action.</p>
+<dl>
+<dt>disk_name (True, str, None)</dt><dd><p>Physical Volume name</p>
+</dd>
+<dt>vios_name (True, str, None)</dt><dd><p>Virtual IO Server name of the disk connected.</p>
+</dd>
+<dt>target_name (optional, str, None)</dt><dd><p>Target Device name</p>
+<p>Optional, if not provided auto assigns &lt;vtscsi*&gt;</p>
+</dd>
+<dt>server_adapter_id (optional, int, None)</dt><dd><p>The Server adapter slot number to be configured with SCSI adapter.</p>
+<p>Optional, if not provided next available value will be assigned.</p>
+</dd>
+<dt>client_adapter_id (optional, int, None)</dt><dd><p>The client adapter slot number to be configured with SCSI adapter.</p>
+<p>Optional, if not provided next available value will be assigned.</p>
+</dd>
+</dl>
+</dd>
+<dt>npiv_settings (optional, list, None)</dt><dd><p>List of Virtual Fibre Channel port settings to be configured</p>
+<p>This option is valid only for <em>update_npiv</em> action.</p>
+<dl>
+<dt>fc_port_name (True, str, None)</dt><dd><p>Fibre Channel Port name</p>
+</dd>
+<dt>vios_name (True, str, None)</dt><dd><p>Virtual IO Server name of the disk connected.</p>
+</dd>
+<dt>wwpn_pair (optional, str, None)</dt><dd><p>The WWPN pair value to be configured with client FC adapter.</p>
+<p>Both the WWPN value should be separated by semicolon delimiter example ‘c0507607577aefc0;c0507607577aefc1’.</p>
+<p>Optional, if not provided the value will be auto assigned.</p>
+</dd>
+<dt>server_adapter_id (optional, int, None)</dt><dd><p>The Server adapter slot number to be configured with FC adapter.</p>
+<p>Optional, if not provided next available value will be assigned.</p>
+</dd>
+<dt>client_adapter_id (optional, int, None)</dt><dd><p>The client adapter slot number to be configured with FC adapter.</p>
+<p>Optional, if not provided next available value will be assigned.</p>
+</dd>
+</dl>
+</dd>
+<dt>vod_settings (optional, list, None)</dt><dd><p>List of Virtual optical device settings to be configured.</p>
+<p>This option is valid only for <em>update_vod</em> action.</p>
+<dl>
+<dt>device_name (True, str, None)</dt><dd><p>Name of the device</p>
+</dd>
+<dt>vios_name (True, str, None)</dt><dd><p>Virtual IO Server name.</p>
+</dd>
+<dt>server_adapter_id (optional, int, None)</dt><dd><p>The Server adapter slot number to be configured.</p>
+<p>Optional, if not provided next available value will be assigned.</p>
+</dd>
+<dt>client_adapter_id (optional, int, None)</dt><dd><p>The client adapter slot number to be configured.</p>
+<p>Optional, if not provided next available value will be assigned.</p>
+</dd>
+<dt>media_name (optional, str, None)</dt><dd><p>Name of the media to be loaded.</p>
+<p>Optional, if not provided no media will be loaded.</p>
+</dd>
+</dl>
+</dd>
+<dt>action (True, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">update_proc_mem</span></code> updates the processor and memory resources of the partition.</p>
+<p><code class="docutils literal notranslate"><span class="pre">update_pv</span></code> Attach Physical Volumes via Virtual SCSI.</p>
+<p><code class="docutils literal notranslate"><span class="pre">update_npiv</span></code> Attach FC Port.</p>
+<p><code class="docutils literal notranslate"><span class="pre">update_vod</span></code> Attach Virtual Optical Device.</p>
 </dd>
 </dl>
 </div></blockquote>
 </section>
+<section id="notes">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Notes</a><a class="headerlink" href="#notes" title="Permalink to this heading"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>In case of update_pv action if updation of settings belongs to atleast one VIOS is successful then changed status shown as 1 and failed updates are shown as warning, This behavior is same for update_npiv and update_vod also.</p></li>
+</ul>
+</div>
+</section>
 <section id="examples">
-<h2><a class="toc-backref" href="#id3">Examples</a><a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
-<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Dynamically set the processor and memory values.</span><span class="w"></span>
-<span class="w">  </span><span class="nt">powervm_dlpar</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span><span class="w"></span>
-<span class="w">         </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span><span class="w"></span>
-<span class="w">         </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">system_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;server name&gt;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">vm_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;vm name&gt;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">proc_settings</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">proc</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span><span class="w"></span>
-<span class="w">      </span><span class="nt">proc_unit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.5</span><span class="w"></span>
-<span class="w">      </span><span class="nt">sharing_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;uncapped&#39;</span><span class="w"></span>
-<span class="w">      </span><span class="nt">uncapped_weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">131</span><span class="w"></span>
-<span class="w">      </span><span class="nt">pool_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span><span class="w"></span>
-<span class="w">    </span><span class="nt">mem_settings</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">mem</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3072</span><span class="w"></span>
-<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">update</span><span class="w"></span>
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Examples</a><a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
+<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Dynamically set the processor and memory values.</span>
+<span class="w">  </span><span class="nt">powervm_dlpar</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span>
+<span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">         </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">    </span><span class="nt">system_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;server name&gt;</span>
+<span class="w">    </span><span class="nt">vm_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;vm name&gt;</span>
+<span class="w">    </span><span class="nt">proc_settings</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">proc</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="w">      </span><span class="nt">proc_unit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.5</span>
+<span class="w">      </span><span class="nt">sharing_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;uncapped&#39;</span>
+<span class="w">      </span><span class="nt">uncapped_weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">131</span>
+<span class="w">      </span><span class="nt">pool_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">    </span><span class="nt">mem_settings</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">mem</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3072</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">update</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">update PV on lpar</span>
+<span class="w">  </span><span class="nt">powervm_dlpar</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">         </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">    </span><span class="nt">system_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;server name&gt;</span>
+<span class="w">    </span><span class="nt">vm_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;vm name&gt;</span>
+<span class="w">    </span><span class="nt">pv_settings</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">vios_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;vios1&gt;</span>
+<span class="w">        </span><span class="nt">disk_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;hdiskA&gt;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">vios_name</span><span class="p">:</span><span class="w">  </span><span class="l l-Scalar l-Scalar-Plain">&lt;vios2&gt;</span>
+<span class="w">        </span><span class="nt">disk_name</span><span class="p">:</span><span class="w">  </span><span class="l l-Scalar l-Scalar-Plain">&lt;hdiskB&gt;</span>
+<span class="w">        </span><span class="nt">target_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;TargetName&gt;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">vios_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;vios1&gt;</span>
+<span class="w">        </span><span class="nt">disk_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;hdiskC&gt;</span>
+<span class="w">        </span><span class="nt">target_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;TargetName&gt;</span>
+<span class="w">        </span><span class="nt">server_adapter_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;Adapter_ID&gt;</span>
+<span class="w">        </span><span class="nt">client_adapter_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;Adapter_ID&gt;</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">update_pv</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">update npiv on lpar</span>
+<span class="w">  </span><span class="nt">powervm_dlpar</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">         </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">    </span><span class="nt">system_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;server name&gt;</span>
+<span class="w">    </span><span class="nt">vm_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;vm name&gt;</span>
+<span class="w">    </span><span class="nt">npiv_settings</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">vios_name</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;VIOS_NAME1&gt;&#39;</span>
+<span class="w">        </span><span class="nt">fc_port_name</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;fcs0&#39;</span>
+<span class="w">        </span><span class="nt">wwpn_pair</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;wwpn1&gt;;&lt;wwpn2&gt;</span>
+<span class="w">        </span><span class="nt">client_adapter_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">6</span>
+<span class="w">        </span><span class="nt">server_adapter_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">vios_name</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;VIOS_NAME2&gt;&#39;</span>
+<span class="w">        </span><span class="nt">fc_port_name</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;fcs0&#39;</span>
+<span class="w">        </span><span class="nt">client_adapter_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9</span>
+<span class="w">        </span><span class="nt">server_adapter_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">update_npiv</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">update vod on lpar</span>
+<span class="w">  </span><span class="nt">powervm_dlpar</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">         </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">    </span><span class="nt">system_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;server name&gt;</span>
+<span class="w">    </span><span class="nt">vm_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;vm name&gt;</span>
+<span class="w">    </span><span class="nt">vod_settings</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">vios_name</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;VIOS_Name1&gt;&#39;</span>
+<span class="w">        </span><span class="nt">device_name</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;device_name1&gt;&#39;</span>
+<span class="w">        </span><span class="nt">media_name</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;media_name1&gt;&#39;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">vios_name</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;VIOS_Name2&gt;&#39;</span>
+<span class="w">        </span><span class="nt">device_name</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;device_name2&gt;&#39;</span>
+<span class="w">        </span><span class="nt">client_adapter_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9</span>
+<span class="w">        </span><span class="nt">server_adapter_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">update_vod</span>
 </pre></div>
 </div>
 </section>
 <section id="return-values">
-<h2><a class="toc-backref" href="#id4">Return Values</a><a class="headerlink" href="#return-values" title="Permalink to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Return Values</a><a class="headerlink" href="#return-values" title="Permalink to this heading"></a></h2>
 <dl class="simple">
-<dt>partition_info (always, dict, )</dt><dd><p>Return the proc and memory attributes of the partition.</p>
+<dt>partition_info (always, dict, )</dt><dd><p>Return the attributes of the partition.</p>
 </dd>
 </dl>
 </section>
 <section id="status">
-<h2><a class="toc-backref" href="#id5">Status</a><a class="headerlink" href="#status" title="Permalink to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Status</a><a class="headerlink" href="#status" title="Permalink to this heading"></a></h2>
 <ul class="simple">
 <li><p>This module is not guaranteed to have a backwards compatible interface. <em>[preview]</em></p></li>
 <li><p>This module is maintained by community.</p></li>
@@ -216,6 +347,7 @@
 <h3>Authors<a class="headerlink" href="#authors" title="Permalink to this heading"></a></h3>
 <ul class="simple">
 <li><p>Anil Vijayan(&#64;AnilVijayan)</p></li>
+<li><p>Navinakumar Kandakur(&#64;nkandak1)</p></li>
 </ul>
 </section>
 </section>

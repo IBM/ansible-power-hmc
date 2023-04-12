@@ -60,7 +60,7 @@ Parameters
   system_name (optional, str, None)
     The name of the managed system.
 
-    Optional for *state=absent*.
+    Optional for *state=absent*, *state=facts*, *action=poweron*, *action=shutdown* and *action=restart*.
 
 
   vm_name (True, str, None)
@@ -427,6 +427,22 @@ Parameters
         By default picks a random VIOS name with RMC state as active.
 
 
+
+
+  shutdown_option (optional, str, None)
+    Option to shutdown Logical Partition
+
+    This option is valid only for ``shutdown`` *action*.
+
+    Default value is ``Delayed``.
+
+
+  restart_option (optional, str, None)
+    Option to reboot Logical Partition
+
+    This option is valid only for ``restart`` *action*.
+
+    Default value is ``Immediate``.
 
 
   state (optional, str, None)

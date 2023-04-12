@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Installation &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
@@ -13,9 +13,6 @@
   <![endif]-->
   
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/js/theme.js"></script>
@@ -30,11 +27,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> IBM Power Systems HMC
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            IBM Power Systems HMC
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -84,7 +85,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Installation</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/IBM/ansible-power-hmc/blob/dev-collection/docs/source/installation.rst" class="fa fa-github"> Edit on GitHub</a>
@@ -119,41 +120,41 @@ dot separated identifiers immediately following the patch version. The
 <strong>IBM Power Systems HMC collection</strong> releases collections with the pre-release
 naming convention such as <strong>1.0.0-beta1</strong> that would require a range identifier.</p>
 <p>Here is an example of installing a pre-release collection:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$ ansible-galaxy collection install ibm.power_hmc:<span class="o">==</span><span class="m">1</span>.0.0-beta1
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>ansible-galaxy<span class="w"> </span>collection<span class="w"> </span>install<span class="w"> </span>ibm.power_hmc:<span class="o">==</span><span class="m">1</span>.0.0-beta1
 </pre></div>
 </div>
 <p>If you have installed a prior version, you must overwrite an existing
 collection with the <code class="docutils literal notranslate"><span class="pre">--force</span></code> option.</p>
 <p>Here are a few examples of installing the <strong>IBM Power Systems HMC collection</strong>:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$ ansible-galaxy collection install ibm.power_hmc
-$ ansible-galaxy collection install -f ibm.power_hmc
-$ ansible-galaxy collection install --force ibm.power_hmc
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>ansible-galaxy<span class="w"> </span>collection<span class="w"> </span>install<span class="w"> </span>ibm.power_hmc
+$<span class="w"> </span>ansible-galaxy<span class="w"> </span>collection<span class="w"> </span>install<span class="w"> </span>-f<span class="w"> </span>ibm.power_hmc
+$<span class="w"> </span>ansible-galaxy<span class="w"> </span>collection<span class="w"> </span>install<span class="w"> </span>--force<span class="w"> </span>ibm.power_hmc
 </pre></div>
 </div>
 <p>The collection installation progress will be output to the console. Note the
 location of the installation so that you can review other content included with
 the collection, such as the sample playbook. By default, collections are
 installed in <code class="docutils literal notranslate"><span class="pre">~/.ansible/collections</span></code>; see the sample output.</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>Process install dependency map
-Starting collection install process
-Installing <span class="s1">&#39;ibm.power_hmc:1.0.0&#39;</span> to <span class="s1">&#39;/Users/user/.ansible/collections/ansible_collections/ibm/power_hmc&#39;</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>Process<span class="w"> </span>install<span class="w"> </span>dependency<span class="w"> </span>map
+Starting<span class="w"> </span>collection<span class="w"> </span>install<span class="w"> </span>process
+Installing<span class="w"> </span><span class="s1">&#39;ibm.power_hmc:1.0.0&#39;</span><span class="w"> </span>to<span class="w"> </span><span class="s1">&#39;/Users/user/.ansible/collections/ansible_collections/ibm/power_hmc&#39;</span>
 </pre></div>
 </div>
 <p>After installation, the collection content will resemble this hierarchy: :</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>├── collections/
-│  ├── ansible_collections/
-│      ├── ibm/
-│          ├── power_hmc/
-│              ├── docs/
-│              ├── playbooks/
-│              ├── plugins/
-│                  ├── module_utils/
-│                  ├── modules/
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>├──<span class="w"> </span>collections/
+│<span class="w">  </span>├──<span class="w"> </span>ansible_collections/
+│<span class="w">      </span>├──<span class="w"> </span>ibm/
+│<span class="w">          </span>├──<span class="w"> </span>power_hmc/
+│<span class="w">              </span>├──<span class="w"> </span>docs/
+│<span class="w">              </span>├──<span class="w"> </span>playbooks/
+│<span class="w">              </span>├──<span class="w"> </span>plugins/
+│<span class="w">                  </span>├──<span class="w"> </span>module_utils/
+│<span class="w">                  </span>├──<span class="w"> </span>modules/
 </pre></div>
 </div>
 <p>You can use the <cite>-p</cite> option with <cite>ansible-galaxy</cite> to specify the installation
 path, such as:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$ ansible-galaxy collection install ibm.power_hmc -p /home/ansible/collections
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>ansible-galaxy<span class="w"> </span>collection<span class="w"> </span>install<span class="w"> </span>ibm.power_hmc<span class="w"> </span>-p<span class="w"> </span>/home/ansible/collections
 </pre></div>
 </div>
 <p>When using the <cite>-p</cite> option to specify the install path, use one of the values
@@ -181,13 +182,13 @@ installed locally without having to Galaxy.</p>
 </div>
 </li>
 <li><p>Install the local collection archive:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$ ansible-galaxy collection install ibm-power_hmc-1.0.0.tar.gz
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>ansible-galaxy<span class="w"> </span>collection<span class="w"> </span>install<span class="w"> </span>ibm-power_hmc-1.0.0.tar.gz
 </pre></div>
 </div>
 <p>In the output of collection installation, note the installation path to access the sample playbook:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>Process install dependency map
-Starting collection install process
-Installing <span class="s1">&#39;ibm.power_hmc:1.0.0&#39;</span> to <span class="s1">&#39;/Users/user/.ansible/collections/ansible_collections/ibm/power_hmc&#39;</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>Process<span class="w"> </span>install<span class="w"> </span>dependency<span class="w"> </span>map
+Starting<span class="w"> </span>collection<span class="w"> </span>install<span class="w"> </span>process
+Installing<span class="w"> </span><span class="s1">&#39;ibm.power_hmc:1.0.0&#39;</span><span class="w"> </span>to<span class="w"> </span><span class="s1">&#39;/Users/user/.ansible/collections/ansible_collections/ibm/power_hmc&#39;</span>
 </pre></div>
 </div>
 <p>You can use the <code class="docutils literal notranslate"><span class="pre">-p</span></code> option with <code class="docutils literal notranslate"><span class="pre">ansible-galaxy</span></code> to specify the
@@ -208,7 +209,7 @@ the HMC collection along with base universal ee image.</p>
 </ol>
 <ol class="arabic" start="2">
 <li><p>Build the ee image using the <a class="reference external" href="https://github.com/IBM/ansible-power-hmc/blob/dev-collection/execution-environment.yml">execution environment configuration yaml</a>. Make sure the command is executed from the home path where yaml file is present.</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nv">$ansible</span>-builder build –t &lt;image_tag&gt;
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nv">$ansible</span>-builder<span class="w"> </span>build<span class="w"> </span>–t<span class="w"> </span>&lt;image_tag&gt;
 </pre></div>
 </div>
 </li>

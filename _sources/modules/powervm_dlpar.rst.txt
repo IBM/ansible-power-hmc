@@ -16,6 +16,8 @@ Managing processor resources dynamically
 
 Managing memory resources dynamically
 
+Managing Storage resources dynamically
+
 
 
 
@@ -92,14 +94,128 @@ Parameters
   timeout (optional, int, None)
     The maximum time, in minutes, to wait for partition operating system to complete dlpar.
 
+    This option is valid for following actions *update_proc_mem*, *update_pv*, *update_npiv* and *update_vod*
+
+
+  pv_settings (optional, list, None)
+    List of Physical Volumes settings to be configured
+
+    This option is valid only for *update_pv* action.
+
+
+    disk_name (True, str, None)
+      Physical Volume name
+
+
+    vios_name (True, str, None)
+      Virtual IO Server name of the disk connected.
+
+
+    target_name (optional, str, None)
+      Target Device name
+
+      Optional, if not provided auto assigns <vtscsi*>
+
+
+    server_adapter_id (optional, int, None)
+      The Server adapter slot number to be configured with SCSI adapter.
+
+      Optional, if not provided next available value will be assigned.
+
+
+    client_adapter_id (optional, int, None)
+      The client adapter slot number to be configured with SCSI adapter.
+
+      Optional, if not provided next available value will be assigned.
+
+
+
+  npiv_settings (optional, list, None)
+    List of Virtual Fibre Channel port settings to be configured
+
+    This option is valid only for *update_npiv* action.
+
+
+    fc_port_name (True, str, None)
+      Fibre Channel Port name
+
+
+    vios_name (True, str, None)
+      Virtual IO Server name of the disk connected.
+
+
+    wwpn_pair (optional, str, None)
+      The WWPN pair value to be configured with client FC adapter.
+
+      Both the WWPN value should be separated by semicolon delimiter example 'c0507607577aefc0;c0507607577aefc1'.
+
+      Optional, if not provided the value will be auto assigned.
+
+
+    server_adapter_id (optional, int, None)
+      The Server adapter slot number to be configured with FC adapter.
+
+      Optional, if not provided next available value will be assigned.
+
+
+    client_adapter_id (optional, int, None)
+      The client adapter slot number to be configured with FC adapter.
+
+      Optional, if not provided next available value will be assigned.
+
+
+
+  vod_settings (optional, list, None)
+    List of Virtual optical device settings to be configured.
+
+    This option is valid only for *update_vod* action.
+
+
+    device_name (True, str, None)
+      Name of the device
+
+
+    vios_name (True, str, None)
+      Virtual IO Server name.
+
+
+    server_adapter_id (optional, int, None)
+      The Server adapter slot number to be configured.
+
+      Optional, if not provided next available value will be assigned.
+
+
+    client_adapter_id (optional, int, None)
+      The client adapter slot number to be configured.
+
+      Optional, if not provided next available value will be assigned.
+
+
+    media_name (optional, str, None)
+      Name of the media to be loaded.
+
+      Optional, if not provided no media will be loaded.
+
+
 
   action (True, str, None)
-    ``update`` updates the resources of the partition. Currently it supports the update of processor or memory resources.
+    ``update_proc_mem`` updates the processor and memory resources of the partition.
+
+    ``update_pv`` Attach Physical Volumes via Virtual SCSI.
+
+    ``update_npiv`` Attach FC Port.
+
+    ``update_vod`` Attach Virtual Optical Device.
 
 
 
 
 
+Notes
+-----
+
+.. note::
+   - In case of update_pv action if updation of settings belongs to atleast one VIOS is successful then changed status shown as 1 and failed updates are shown as warning, This behavior is same for update_npiv and update_vod also.
 
 
 
@@ -128,13 +244,72 @@ Examples
           mem: 3072
         action: update
 
+    - name: update PV on lpar
+      powervm_dlpar:
+        hmc_host: '{{ inventory_hostname }}'
+        hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+        system_name: <server name>
+        vm_name: <vm name>
+        pv_settings:
+          - vios_name: <vios1>
+            disk_name: <hdiskA>
+          - vios_name:  <vios2>
+            disk_name:  <hdiskB>
+            target_name: <TargetName>
+          - vios_name: <vios1>
+            disk_name: <hdiskC>
+            target_name: <TargetName>
+            server_adapter_id: <Adapter_ID>
+            client_adapter_id: <Adapter_ID>
+        action: update_pv
+
+    - name: update npiv on lpar
+      powervm_dlpar:
+        hmc_host: '{{ inventory_hostname }}'
+        hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+        system_name: <server name>
+        vm_name: <vm name>
+        npiv_settings:
+          - vios_name: '<VIOS_NAME1>'
+            fc_port_name: 'fcs0'
+            wwpn_pair: <wwpn1>;<wwpn2>
+            client_adapter_id: 6
+            server_adapter_id: 9
+          - vios_name: '<VIOS_NAME2>'
+            fc_port_name: 'fcs0'
+            client_adapter_id: 9
+            server_adapter_id: 15
+        action: update_npiv
+
+    - name: update vod on lpar
+      powervm_dlpar:
+        hmc_host: '{{ inventory_hostname }}'
+        hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+        system_name: <server name>
+        vm_name: <vm name>
+        vod_settings:
+          - vios_name: '<VIOS_Name1>'
+            device_name: '<device_name1>'
+            media_name: '<media_name1>'
+          - vios_name: '<VIOS_Name2>'
+            device_name: '<device_name2>'
+            client_adapter_id: 9
+            server_adapter_id: 15
+        action: update_vod
+
 
 
 Return Values
 -------------
 
 partition_info (always, dict, )
-  Return the proc and memory attributes of the partition.
+  Return the attributes of the partition.
 
 
 
@@ -157,4 +332,5 @@ Authors
 ~~~~~~~
 
 - Anil Vijayan(@AnilVijayan)
+- Navinakumar Kandakur(@nkandak1)
 

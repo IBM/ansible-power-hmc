@@ -127,6 +127,22 @@ Parameters
     valid only for ``action`` = *install*
 
 
+  virtual_optical_media (optional, bool, None)
+    Provides the virtual optical media details.
+
+    Default value is False.
+
+    Valid only for ``state`` = *facts*
+
+
+  free_pvs (optional, bool, None)
+    Provides the Unassigned Physical Volume details.
+
+    Default value is False
+
+    Valid only for ``state`` = *facts*
+
+
   state (optional, str, None)
     ``facts`` fetch details of specified *virtualioserver*
 
