@@ -113,6 +113,18 @@ options:
             - Default value is 60 min.
             - valid only for C(action) = I(install)
         type: int
+    virtual_optical_media:
+        description:
+            - Provides the virtual optical media details.
+            - Default value is False.
+            - Valid only for C(state) = I(facts)
+        type: bool
+    free_pvs:
+        description:
+            - Provides the Unassigned Physical Volume details.
+            - Default value is False
+            - Valid only for C(state) = I(facts)
+        type: bool
     state:
         description:
             - C(facts) fetch details of specified I(virtualioserver)
@@ -192,7 +204,10 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client impor
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_resource import Hmc
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import parse_error_response
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import HmcRestClient
 import sys
+import json
 
 
 def init_logger():
@@ -212,10 +227,15 @@ def validate_parameters(params):
 
     if opr == 'install':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'name', 'nim_IP', 'nim_gateway', 'vios_IP', 'nim_subnetmask']
-        unsupportedList = ['settings']
+        unsupportedList = ['settings', 'virtual_optical_media', 'free_pvs']
     elif opr == 'present':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'name']
-        unsupportedList = ['nim_IP', 'nim_gateway', 'vios_IP', 'nim_subnetmask', 'prof_name', 'location_code', 'nim_vlan_id', 'nim_vlan_priority', 'timeout']
+        unsupportedList = ['nim_IP', 'nim_gateway', 'vios_IP', 'nim_subnetmask', 'prof_name',
+                           'location_code', 'nim_vlan_id', 'nim_vlan_priority', 'timeout', 'virtual_optical_media', 'free_pvs']
+    elif opr == 'accept_license':
+        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'name']
+        unsupportedList = ['nim_IP', 'nim_gateway', 'vios_IP', 'nim_subnetmask', 'prof_name', 'location_code', 'nim_vlan_id', 'nim_vlan_priority',
+                           'timeout', 'settings', 'virtual_optical_media', 'free_pvs']
     else:
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'name']
         unsupportedList = ['nim_IP', 'nim_gateway', 'vios_IP', 'nim_subnetmask', 'prof_name', 'location_code', 'nim_vlan_id', 'nim_vlan_priority',
@@ -249,11 +269,90 @@ def fetchViosInfo(module, params):
     password = params['hmc_auth']['password']
     system_name = params['system_name']
     name = params['name']
+    virtual_optical_media = params['virtual_optical_media']
+    free_pvs = params['free_pvs']
     validate_parameters(params)
-    hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
-    hmc = Hmc(hmc_conn)
+    lpar_config = {}
 
-    lpar_config = hmc.getPartitionConfig(system_name, name)
+    try:
+        rest_conn = HmcRestClient(hmc_host, hmc_user, password)
+    except Exception as error:
+        error_msg = parse_error_response(error)
+        module.fail_json(msg=error_msg)
+
+    try:
+        system_uuid, server_dom = rest_conn.getManagedSystem(system_name)
+        if not system_uuid:
+            module.fail_json(msg="Given system is not present")
+        ms_state = server_dom.xpath("//DetailedState")[0].text
+        if ms_state != 'None':
+            module.fail_json(msg="Given system is in " + ms_state + " state")
+        vios_quick_response = rest_conn.getVirtualIOServersQuick(system_uuid)
+        vios_list = []
+        vios_dom = None
+        vios_UUID = None
+        if vios_quick_response is not None:
+            vios_list = json.loads(vios_quick_response)
+        if vios_list:
+            for vios in vios_list:
+                if vios['PartitionName'] == name:
+                    lpar_config = vios
+                    vios_UUID = vios['UUID']
+                    vios_dom = rest_conn.getVirtualIOServer(vios_UUID)
+                    break
+            else:
+                module.fail_json("VIOS: {0} not found in the Managed System: {1}".format(name, system_name))
+            lpar_config['MaximumMemory'] = vios_dom.xpath(
+                '//PartitionMemoryConfiguration//MaximumMemory')[0].text
+            lpar_config['MinimumMemory'] = vios_dom.xpath(
+                '//PartitionMemoryConfiguration//MinimumMemory')[0].text
+            lpar_config['CurrentHasDedicatedProcessors'] = vios_dom.xpath(
+                '//PartitionProcessorConfiguration//CurrentHasDedicatedProcessors')[0].text
+
+            if lpar_config['CurrentHasDedicatedProcessors'] == 'false':
+                lpar_config['MaximumProcessingUnits'] = vios_dom.xpath(
+                    '//PartitionProcessorConfiguration//MaximumProcessingUnits')[0].text
+                lpar_config['MaximumVirtualProcessors'] = vios_dom.xpath(
+                    '//PartitionProcessorConfiguration//MaximumVirtualProcessors')[0].text
+                lpar_config['MinimumProcessingUnits'] = vios_dom.xpath(
+                    '//PartitionProcessorConfiguration//MinimumProcessingUnits')[0].text
+                lpar_config['MinimumVirtualProcessors'] = vios_dom.xpath(
+                    '//PartitionProcessorConfiguration//MinimumVirtualProcessors')[0].text
+            else:
+                lpar_config['MaximumProcessors'] = vios_dom.xpath(
+                    '//PartitionProcessorConfiguration//MaximumProcessors')[0].text
+                lpar_config['MinimumProcessors'] = vios_dom.xpath(
+                    '//PartitionProcessorConfiguration//MinimumProcessors')[0].text
+
+            if virtual_optical_media:
+                vom_dict = rest_conn.getVIOSVirtualOpticalMediaDetails(vios_dom)
+                lpar_config['VirtualOpticalMedia'] = vom_dict
+            if free_pvs:
+                pv_list = []
+                # Initialize with empty list
+                lpar_config['FreePhysicalVolumes'] = []
+                try:
+                    pv_xml_list = rest_conn.getFreePhyVolume(vios_UUID)
+                    for each in pv_xml_list:
+                        pv_dict = {}
+                        pv_dict['VolumeName'] = each.xpath("VolumeName")[0].text
+                        pv_dict['VolumeCapacity'] = each.xpath("VolumeCapacity")[0].text
+                        pv_dict['VolumeState'] = each.xpath("VolumeState")[0].text
+                        pv_dict['VolumeUniqueID'] = each.xpath("VolumeUniqueID")[0].text
+                        pv_dict['ReservePolicy'] = each.xpath("ReservePolicy")[0].text
+                        pv_dict['ReservePolicyAlgorithm'] = each.xpath("ReservePolicyAlgorithm")[0].text
+                        pv_list.append(pv_dict)
+                    lpar_config['FreePhysicalVolumes'] = pv_list
+                except Exception as error:
+                    logger.debug(error)
+    except Exception as error:
+        try:
+            rest_conn.logoff()
+        except Exception:
+            logger.debug("Logoff error")
+        error_msg = parse_error_response(error)
+        module.fail_json(msg=error_msg)
+
     if lpar_config:
         return False, lpar_config, None
     else:
@@ -432,6 +531,8 @@ def run_module():
         nim_vlan_id=dict(type='str'),
         nim_vlan_priority=dict(type='str'),
         timeout=dict(type='int'),
+        virtual_optical_media=dict(type='bool'),
+        free_pvs=dict(type='bool'),
         state=dict(type='str', choices=['facts', 'present']),
         action=dict(type='str', choices=['install', 'accept_license']),
     )

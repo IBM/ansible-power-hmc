@@ -25,6 +25,9 @@ firmware/templates/mc/2012_10/" xmlns:ns2="http://www.w3.org/XML/1998/namespace/
 LPAR_NS = 'LogicalPartition xmlns:LogicalPartition="http://www.ibm.com/xmlns/\
 systems/power/firmware/uom/mc/2012_10/" xmlns="http://www.ibm.com/xmlns/systems/power\
 /firmware/uom/mc/2012_10/" xmlns:ns2="http://www.w3.org/XML/1998/namespace/k2"'
+VIOS_NS = 'VirtualIOServer xmlns:VirtualIOServer="http://www.ibm.com/xmlns/\
+systems/power/firmware/uom/mc/2012_10/" xmlns="http://www.ibm.com/xmlns/systems/power\
+/firmware/uom/mc/2012_10/" xmlns:ns2="http://www.w3.org/XML/1998/namespace/k2"'
 
 
 def xml_strip_namespace(xml_str):
@@ -311,7 +314,7 @@ class HmcRestClient:
                 resp_msg = doc.xpath("//ParameterName[text()='result']/following-sibling::ParameterValue")
                 if resp_msg:
                     logger.debug("debugger: %s", resp_msg[0].text)
-                    raise HmcError(resp_msg[0].text)
+                    raise HmcError(resp_msg[0].text.strip('\n'))
                 else:
                     err_msg = "Failed: Job completed with error"
                     raise HmcError(err_msg)
@@ -334,7 +337,7 @@ class HmcRestClient:
         return result
 
     def getManagedSystem(self, system_name):
-        url = "https://{0}/rest/api/uom/ManagedSystem/search/(SystemName=={1})".format(self.hmc_ip, system_name)
+        url = "https://{0}/rest/api/uom/ManagedSystem/search/(SystemName=='{1}')".format(self.hmc_ip, system_name)
         header = {'X-API-Session': self.session,
                   'Accept': 'application/vnd.ibm.powervm.uom+xml; type=ManagedSystem'}
         response = open_url(url,
@@ -347,6 +350,7 @@ class HmcRestClient:
             return None, None
 
         managedsystem_root = xml_strip_namespace(response.read())
+
         uuid = managedsystem_root.xpath("//AtomID")[0].text
         return uuid, managedsystem_root.xpath("//ManagedSystem")[0]
 
@@ -816,13 +820,36 @@ class HmcRestClient:
         jobID = transform_resp.xpath('//JobID')[0].text
         return self.fetchJobStatus(jobID, template=True)
 
-    def poweroffPartition(self, vm_uuid, operation, restart='false', immediate='false'):
+    def poweroffPartition(self, vm_uuid, restart, shutdown_option):
         url = "https://{0}/rest/api/uom/LogicalPartition/{1}/do/PowerOff".format(self.hmc_ip, vm_uuid)
         header = _jobHeader(self.session)
 
         reqdOperation = {'OperationName': 'PowerOff',
                          'GroupName': 'LogicalPartition',
                          'ProgressType': 'DISCRETE'}
+        immediate = 'false'
+        operation = 'shutdown'
+
+        if shutdown_option == 'Delayed':
+            immediate = 'false'
+            operation = 'shutdown'
+        elif shutdown_option == 'Immediate':
+            immediate = 'true'
+            operation = 'shutdown'
+        elif shutdown_option == 'OperatingSystem':
+            immediate = 'false'
+            operation = 'osshutdown'
+        elif shutdown_option == 'OSImmediate':
+            immediate = 'true'
+            operation = 'osshutdown'
+        elif shutdown_option == 'Dump':
+            immediate = 'false'
+            operation = 'dumprestart'
+            restart = 'false'
+        elif shutdown_option == 'DumpRetry':
+            immediate = 'false'
+            operation = 'retrydump'
+            restart = 'false'
 
         jobParams = {'immediate': immediate,
                      'restart': restart,
@@ -1134,29 +1161,41 @@ class HmcRestClient:
             for vios_scsi_raw in vios_scsis:
                 vscsi_dict = {}
                 vios_scsi = etree.ElementTree(vios_scsi_raw)
-                # This code is to handle stale adapters and shared storage
-                if vios_scsi.find('//ClientAdapter') is None or vios_scsi.find('//Storage') is None:
+                # This code is to handle stale adapters
+                if len(vios_scsi.xpath('//ClientAdapter')) < 1:
                     continue
                 part_id = vios_scsi.xpath('//ClientAdapter/LocalPartitionID')[0].text
                 if str(lpar_id) == str(part_id):
-                    volumeUniqueID = vios_scsi.xpath('//Storage/PhysicalVolume/VolumeUniqueID')[0].text
-                    vscsi_dict['VolumeUniqueID'] = volumeUniqueID
-                    vios_id = int(vios_scsi.xpath('//ClientAdapter/RemoteLogicalPartitionID')[0].text)
-                    vol_dict = {"name": vios_dict[vios_id], 'vios': vios_scsi.xpath('//Storage/PhysicalVolume/VolumeName')[0].text}
-                    vscsi_dict['Volume'] = [vol_dict]
-                    flag = False
-                    for vscsi in vscsis:
-                        if vscsi['VolumeUniqueID'] == volumeUniqueID:
-                            vscsi['Volume'].append(vol_dict)
-                            flag = True
-                    if not flag:
+                    # Adds the PVs
+                    if len(vios_scsi.xpath('//Storage/PhysicalVolume/VolumeUniqueID')) >= 1:
+                        volumeUniqueID = vios_scsi.xpath('//Storage/PhysicalVolume/VolumeUniqueID')[0].text
+                        vscsi_dict['VolumeUniqueID'] = volumeUniqueID
+                        vios_id = int(vios_scsi.xpath('//ClientAdapter/RemoteLogicalPartitionID')[0].text)
+                        vol_dict = {"vios": vios_dict[vios_id], 'name': vios_scsi.xpath('//Storage/PhysicalVolume/VolumeName')[0].text}
+                        vscsi_dict['Volume'] = [vol_dict]
+                        flag = False
+                        for vscsi in vscsis:
+                            if 'VolumeUniqueID' in vscsi and vscsi['VolumeUniqueID'] == volumeUniqueID:
+                                vscsi['Volume'].append(vol_dict)
+                                flag = True
+                        if not flag:
+                            vscsi_dict['ClientVirtualSlotNumber'] = vios_scsi.xpath('//ClientAdapter/VirtualSlotNumber')[0].text
+                            vscsi_dict['ServerVirtualSlotNumber'] = vios_scsi.xpath('//ClientAdapter/RemoteSlotNumber')[0].text
+                            vscsi_dict['TargetDeviceName'] = vios_scsi.xpath('//TargetDevice//TargetName')[0].text
+                            vscsi_dict['VolumeCapacity'] = vios_scsi.xpath('//Storage/PhysicalVolume/VolumeCapacity')[0].text
+                            vscsis.append(vscsi_dict)
+                    # Adds the VOD
+                    elif len(vios_scsi.xpath('//TargetDevice/VirtualOpticalTargetDevice')) >= 1:
                         vscsi_dict['ClientVirtualSlotNumber'] = vios_scsi.xpath('//ClientAdapter/VirtualSlotNumber')[0].text
                         vscsi_dict['ServerVirtualSlotNumber'] = vios_scsi.xpath('//ClientAdapter/RemoteSlotNumber')[0].text
-                        vscsi_dict['TargetDeviceName'] = vios_scsi.xpath('//TargetDevice//TargetName')[0].text
+                        vscsi_dict['TargetName'] = vios_scsi.xpath('//TargetDevice/VirtualOpticalTargetDevice/TargetName')[0].text
+                        if len(vios_scsi.xpath('//Storage')) >= 1:
+                            vscsi_dict['MediaName'] = vios_scsi.xpath('//Storage//MediaName')[0].text
+                            vscsi_dict['MountType'] = vios_scsi.xpath('//Storage//MountType')[0].text
+                            vscsi_dict['Size'] = vios_scsi.xpath('//Storage//Size')[0].text
                         vscsis.append(vscsi_dict)
         except Exception:
             pass
-
         return vscsis
 
     def getSharedProcessorPools(self, system_uuid):
@@ -1540,3 +1579,377 @@ class HmcRestClient:
                     uuid_list.append(vios_uuid)
                 resp_dict[group_name] = uuid_list
         return resp_dict
+
+    def fetchPVsFromVIOSDOM(self, vios_dom, vios_name):
+        # Generate the list of PhysicalVolumes available in the VIOS DOM
+        pvs_raw = []
+        pvs = []
+        fc_ports_dom = vios_dom.xpath("//PhysicalFibreChannelPorts/PhysicalFibreChannelPort")
+        for fc_port_raw in fc_ports_dom:
+            fc_port_dom = etree.ElementTree(fc_port_raw)
+            pvs_raw = pvs_raw + fc_port_dom.xpath("//PhysicalVolumes/PhysicalVolume")
+        if pvs_raw:
+            pvs = [etree.ElementTree(pv_raw) for pv_raw in pvs_raw]
+        else:
+            raise HmcError("There are no Physical Volumes Available in VIOS: {0}".format(vios_name))
+        return pvs
+
+    def build_SCSI_MappingPayload(self, pv_dom_list, pv_setting, lpar_UUID, lpar_id, vios_id):
+        payload = ""
+        target_name_payload = ""
+        server_adapter_id_payload = ""
+        client_adapter_id_payload = ""
+        pv_payload = ""
+
+        for pv_dom in pv_dom_list:
+            disk_name = pv_dom.xpath("//VolumeName")[0].text
+            if disk_name == pv_setting['disk_name']:
+                pv_payload = pv_dom
+                break
+        else:
+            raise HmcError("Disk_Name provided: {0} not found in the vios {1}".format(pv_setting['disk_name'], pv_setting['vios_name']))
+
+        # build a payload for target name, if user provides
+        if pv_setting['target_name']:
+            target_name_payload = '''
+            <TargetDevice kb="CUR" kxe="false">
+                <PhysicalVolumeVirtualTargetDevice schemaVersion="V1_0">
+                    <Metadata>
+                        <Atom/>
+                    </Metadata>
+                <TargetName kb="CUR" kxe="false">{0}</TargetName>
+                </PhysicalVolumeVirtualTargetDevice>
+            </TargetDevice>
+            '''.format(pv_setting['target_name'])
+
+        # build a payload for client adapter id, if user provides
+        if pv_setting['server_adapter_id']:
+            server_adapter_id_payload = '''
+            <ClientAdapter kb="CUR" kxe="false" schemaVersion="V1_0">
+                <Metadata>
+                    <Atom/>
+                </Metadata>
+                <LocalPartitionID kxe="false" kb="CUR">{0}</LocalPartitionID>
+                <VirtualSlotNumber kb="COD" kxe="false">{1}</VirtualSlotNumber>
+                <RemoteLogicalPartitionID kxe="false" kb="CUR">{2}</RemoteLogicalPartitionID>
+            </ClientAdapter>
+            '''.format(lpar_id, str(pv_setting['server_adapter_id']), vios_id)
+
+        # build a payload for server adapter id, if user provides
+        if pv_setting['client_adapter_id']:
+            client_adapter_id_payload = '''
+            <ServerAdapter kb="CUR" kxe="false" schemaVersion="V1_0">
+                <Metadata>
+                    <Atom/>
+                </Metadata>
+                <LocalPartitionID kxe="false" kb="CUR">{0}</LocalPartitionID>
+                <VirtualSlotNumber kb="COD" kxe="false">{1}</VirtualSlotNumber>
+                <RemoteLogicalPartitionID kxe="false" kb="CUR">{2}</RemoteLogicalPartitionID>
+            </ServerAdapter>
+            '''.format(vios_id, str(pv_setting['client_adapter_id']), lpar_id)
+
+        payload = '''
+        <VirtualSCSIMapping schemaVersion="V1_0">
+            <Metadata>
+                <Atom/>
+            </Metadata>
+            <AssociatedLogicalPartition kxe="false" kb="CUR" href="https://localhost:443/rest/api/uom/LogicalPartition/{0}" rel="related"/>
+            {1}
+            {2}
+            <Storage kb="CUR" kxe="false">
+            {3}
+            </Storage>
+            {4}
+        </VirtualSCSIMapping>
+        '''.format(lpar_UUID, server_adapter_id_payload, client_adapter_id_payload, (etree.tostring(pv_payload)).decode("utf-8"), target_name_payload)
+
+        return payload.replace('\n\n', '').replace('\n', '')
+
+    def getVIOSSCSCIMappings_dictionary(self, vios_uuid):
+        vscsis_pv = []
+        vscsis_vod = []
+        try:
+            vios_scsi_xml = self.getVirtualIOServer(vios_uuid, 'ViosSCSIMapping')
+            vios_scsis = vios_scsi_xml.xpath('//VirtualSCSIMapping')
+            for vios_scsi_raw in vios_scsis:
+                vscsi_dict = {}
+                vios_scsi = etree.ElementTree(vios_scsi_raw)
+                try:
+                    # Fills the vscsi_pv dictionary
+                    vscsi_dict['BackingDeviceName'] = vios_scsi.xpath('//ServerAdapter/BackingDeviceName')[0].text
+                    vscsi_dict['RemoteLogicalPartitionID'] = vios_scsi.xpath('//ServerAdapter/RemoteLogicalPartitionID')[0].text
+                    vscsis_pv.append(vscsi_dict)
+                except Exception:
+                    pass
+                try:
+                    # Fills the vscsi_vod dictionary
+                    vscsi_dict['TargetName'] = vios_scsi.xpath('//TargetDevice/VirtualOpticalTargetDevice/TargetName')[0].text
+                    vscsis_vod.append(vscsi_dict)
+                except Exception:
+                    pass
+        except Exception:
+            pass
+        return vscsis_pv, vscsis_vod
+
+    def updateVIOSwithSCSIMappings(self, vios_UUID, pv_settings_list, lpar_UUID, vios_name, partition_dom, timeout):
+        payload = ""
+        flag = False
+        vios_dom = self.getVirtualIOServer(vios_UUID)
+        vios_vscsi_dict = self.getVIOSSCSCIMappings_dictionary(vios_UUID)
+        mapped_dvc_names = [item['BackingDeviceName'] for item in vios_vscsi_dict[0]]
+        pv_dom_list = self.fetchPVsFromVIOSDOM(vios_dom, vios_name)
+        lpar_id = partition_dom.xpath("//PartitionID")[0].text
+        vios_id = vios_dom.xpath("//PartitionID")[0].text
+        for pv_settings in pv_settings_list:
+            if pv_settings['disk_name'] not in mapped_dvc_names:
+                payload = self.build_SCSI_MappingPayload(pv_dom_list, pv_settings, lpar_UUID, lpar_id, vios_id)
+                vSCSIMappingsTag = vios_dom.xpath("//VirtualSCSIMappings")[0]
+                vSCSIMappingsTag.append(etree.XML(payload))
+                flag = True
+        if flag:
+            self.updateVirtualIOServer(vios_dom, timeout)
+        return flag
+
+    def fetchVIOSFcDetails(self, vios_dom):
+        fc_ports_list = []
+        fc_ports = vios_dom.xpath("//PhysicalFibreChannelAdapter/PhysicalFibreChannelPorts/PhysicalFibreChannelPort")
+        for fc_port_raw in fc_ports:
+            fc_dict = {}
+            fc_dict['AvailablePorts'] = "0"
+            fc_dict['TotalPorts'] = "0"
+            fc_port = etree.ElementTree(fc_port_raw)
+            try:
+                fc_dict['PortName'] = fc_port.xpath("//PortName")[0].text
+                fc_dict['AvailablePorts'] = fc_port.xpath("//AvailablePorts")[0].text
+                fc_dict['TotalPorts'] = fc_port.xpath("//TotalPorts")[0].text
+                fc_dict['LocationCode'] = fc_port.xpath("//LocationCode")[0].text
+            except Exception:
+                pass
+            finally:
+                fc_ports_list.append(fc_dict)
+
+        return fc_ports_list
+
+    def build_FC_MappingPayload(self, location_code, npiv_setting, lpar_UUID, lpar_id, vios_id):
+        payload = ""
+        server_adapter_id_payload = ""
+        client_adapter_id_payload = ""
+        wwpn_pair_payload = ""
+        client_adapter_payload = ""
+        # build client adapter_id payload
+        if npiv_setting['wwpn_pair']:
+            if ';' in npiv_setting['wwpn_pair']:
+                wwpn_pair = npiv_setting['wwpn_pair'].replace(";", " ")
+                wwpn_pair_payload = '''
+                <WWPNs kb="CUR" kxe="false">{0}</WWPNs>'''.format(wwpn_pair)
+            else:
+                raise ParameterError("Invalid WWPN pair format: {0}, Correct format is <wwpn1;wwpn2>".format(npiv_setting['wwpn_pair']))
+        if npiv_setting['client_adapter_id']:
+            client_adapter_payload = '''
+            <VirtualSlotNumber kb="COD" kxe="false">{0}</VirtualSlotNumber>
+            <ConnectingPartitionID kxe="false" kb="CUR">{1}</ConnectingPartitionID>'''.format(str(npiv_setting['client_adapter_id']), vios_id)
+        if wwpn_pair_payload or client_adapter_payload:
+            client_adapter_id_payload = '''
+            <ClientAdapter kxe="false" kb="CUR" schemaVersion="V1_0">
+                <Metadata>
+                    <Atom/>
+                </Metadata>
+                <LocalPartitionID kxe="false" kb="CUR">{0}</LocalPartitionID>
+                {1}
+                {2}
+            </ClientAdapter>
+            '''.format(lpar_id, client_adapter_payload, wwpn_pair_payload)
+        # build server adapter id payload
+        if npiv_setting['server_adapter_id']:
+            server_adapter_id_payload = '''
+            <ServerAdapter kxe="false" kb="CUR" schemaVersion="V1_0">
+                <Metadata>
+                    <Atom/>
+                </Metadata>
+                <VirtualSlotNumber kb="COD" kxe="false">{0}</VirtualSlotNumber>
+                <ConnectingPartitionID kxe="false" kb="CUR">{1}</ConnectingPartitionID>
+            </ServerAdapter>
+            '''.format(str(npiv_setting['server_adapter_id']), lpar_id)
+        # build Virtual Fibre Channel Mapping payload
+        payload = '''
+        <VirtualFibreChannelMapping schemaVersion="V1_0">
+            <Metadata>
+                <Atom/>
+            </Metadata>
+            <AssociatedLogicalPartition kxe="false" kb="CUR" href="https://localhost:443/rest/api/uom/LogicalPartition/{0}" rel="related"/>
+            {1}
+            <Port kxe="false" kb="CUR" schemaVersion="V1_0">
+                <Metadata>
+                    <Atom/>
+                </Metadata>
+                <LocationCode kb="ROR" kxe="false">{2}</LocationCode>
+                <PortName kxe="false" kb="CUR">{3}</PortName>
+            </Port>
+            {4}
+        </VirtualFibreChannelMapping>
+        '''.format(lpar_UUID, client_adapter_id_payload, location_code, npiv_setting['fc_port_name'], server_adapter_id_payload)
+        return payload
+
+    def updateVIOSwithNPIVMappings(self, vios_UUID, npiv_settings_list, lpar_UUID, vios_name, partition_dom, timeout):
+        payload = ""
+        flag = False
+        vios_dom = self.getVirtualIOServer(vios_UUID)
+        vios_npiv_dict_list = self.fetchVIOSFcDetails(vios_dom)
+        lpar_id = partition_dom.xpath("//PartitionID")[0].text
+        vios_id = vios_dom.xpath("//PartitionID")[0].text
+        for npiv_settings in npiv_settings_list:
+            for vios_npiv_dict in vios_npiv_dict_list:
+                if npiv_settings['fc_port_name'] == vios_npiv_dict['PortName']:
+                    if int(vios_npiv_dict['AvailablePorts']) > 0:
+                        payload = self.build_FC_MappingPayload(vios_npiv_dict['LocationCode'], npiv_settings, lpar_UUID, lpar_id, vios_id)
+                        FCMappingsTag = vios_dom.xpath("//VirtualFibreChannelMappings")[0]
+                        FCMappingsTag.append(etree.XML(payload))
+                        flag = True
+                        break
+                    else:
+                        raise HmcError("There are only {0} available ports in the fc_port_name: {1}"
+                                       .format(vios_npiv_dict['AvailablePorts'], npiv_settings['fc_port_name']))
+            else:
+                raise HmcError("fc_port_name: {0} provided is not found in the vios: {1}".format(npiv_settings['fc_port_name'], vios_name, ))
+        if flag:
+            self.updateVirtualIOServer(vios_dom, timeout)
+        return flag
+
+    def build_SCSI_VOD_MappingPayload(self, vod_setting, lpar_UUID, lpar_id, vios_id, vom_dict):
+        payload = ""
+        server_adapter_id_payload = ""
+        client_adapter_id_payload = ""
+        media_name_payload = ""
+
+        # build a payload for client adapter id, if user provides
+        if vod_setting['server_adapter_id']:
+            server_adapter_id_payload = '''
+            <ClientAdapter kb="CUR" kxe="false" schemaVersion="V1_0">
+                <Metadata>
+                    <Atom/>
+                </Metadata>
+                <LocalPartitionID kxe="false" kb="CUR">{0}</LocalPartitionID>
+                <VirtualSlotNumber kb="COD" kxe="false">{1}</VirtualSlotNumber>
+                <RemoteLogicalPartitionID kxe="false" kb="CUR">{2}</RemoteLogicalPartitionID>
+            </ClientAdapter>
+            '''.format(lpar_id, str(vod_setting['server_adapter_id']), vios_id)
+
+        # build a payload for server adapter id, if user provides
+        if vod_setting['client_adapter_id']:
+            client_adapter_id_payload = '''
+            <ServerAdapter kb="CUR" kxe="false" schemaVersion="V1_0">
+                <Metadata>
+                    <Atom/>
+                </Metadata>
+                <LocalPartitionID kxe="false" kb="CUR">{0}</LocalPartitionID>
+                <VirtualSlotNumber kb="COD" kxe="false">{1}</VirtualSlotNumber>
+                <RemoteLogicalPartitionID kxe="false" kb="CUR">{2}</RemoteLogicalPartitionID>
+            </ServerAdapter>
+            '''.format(vios_id, str(vod_setting['client_adapter_id']), lpar_id)
+
+        # build payload for loading media
+        if vod_setting['media_name']:
+            if vod_setting['media_name'] in vom_dict:
+                media_name_payload = '''
+                <Storage kb="CUR" kxe="false">
+                    <VirtualOpticalMedia schemaVersion="V1_0">
+                        <Metadata>
+                            <Atom/>
+                        </Metadata>
+                        <MediaName kxe="false" kb="CUR">{0}</MediaName>
+                    </VirtualOpticalMedia>
+                </Storage>
+                '''.format(vod_setting['media_name'])
+            else:
+                raise HmcError("MediaName: {0} not found in the VIOS".format(vod_setting['media_name']))
+
+        payload = '''
+        <VirtualSCSIMapping schemaVersion="V1_0">
+            <Metadata>
+                <Atom/>
+            </Metadata>
+            <AssociatedLogicalPartition kxe="false" kb="CUR" href="https://localhost:443/rest/api/uom/LogicalPartition/{0}" rel="related"/>
+            {1}
+            {2}
+            {3}
+            <TargetDevice kb="CUR" kxe="false">
+                <VirtualOpticalTargetDevice schemaVersion="V1_0">
+                    <Metadata>
+                        <Atom/>
+                    </Metadata>
+                    <TargetName kb="CUR" kxe="false">{4}</TargetName>
+                </VirtualOpticalTargetDevice>
+            </TargetDevice>
+        </VirtualSCSIMapping>
+        '''.format(lpar_UUID, server_adapter_id_payload, client_adapter_id_payload, media_name_payload, vod_setting['device_name'])
+
+        return payload.replace('\n\n', '').replace('\n', '')
+
+    def getVIOSVirtualOpticalMediaDetails(self, vios_dom):
+        voms_dict = {}
+        if len(vios_dom.xpath("//MediaRepositories/VirtualMediaRepository/OpticalMedia/VirtualOpticalMedia")) >= 1:
+            voms = vios_dom.xpath("//MediaRepositories/VirtualMediaRepository/OpticalMedia/VirtualOpticalMedia")
+            for vom_raw in voms:
+                vom_dict = {}
+                vom = etree.ElementTree(vom_raw)
+                media_name = vom.xpath('//MediaName')[0].text
+                vom_dict['MediaUDID'] = vom.xpath('//MediaUDID')[0].text
+                vom_dict['MountType'] = vom.xpath('//MountType')[0].text
+                vom_dict['Size'] = vom.xpath('//Size')[0].text
+                voms_dict[media_name] = vom_dict
+        return voms_dict
+
+    def updateVIOSwithVODMappings(self, vios_UUID, vod_settings_list, lpar_UUID, partition_dom, timeout):
+        payload = ""
+        flag = False
+        vios_dom = self.getVirtualIOServer(vios_UUID)
+        vios_vscsi_dict = self.getVIOSSCSCIMappings_dictionary(vios_UUID)
+        mapped_dvc_names = [item['TargetName'] for item in vios_vscsi_dict[1]]
+        lpar_id = partition_dom.xpath("//PartitionID")[0].text
+        vios_id = vios_dom.xpath("//PartitionID")[0].text
+        vom_dict = self.getVIOSVirtualOpticalMediaDetails(vios_dom)
+        for vod_settings in vod_settings_list:
+            if vod_settings['device_name'] not in mapped_dvc_names:
+                payload = self.build_SCSI_VOD_MappingPayload(vod_settings, lpar_UUID, lpar_id, vios_id, vom_dict)
+                vSCSIMappingsTag = vios_dom.xpath("//VirtualSCSIMappings")[0]
+                vSCSIMappingsTag.append(etree.XML(payload))
+                flag = True
+        if flag:
+            self.updateVirtualIOServer(vios_dom, timeout)
+        return flag
+
+    def updateVirtualIOServer(self, vios_dom, timeout=None):
+        header = {'X-API-Session': self.session,
+                  'Accept': '*/*',
+                  'Content-Type': 'application/vnd.ibm.powervm.uom+xml; type=VirtualIOServer'}
+
+        vios_uuid = vios_dom.xpath('//AtomID')[0].text
+        timeout_in_sec = 3600
+        if timeout:
+            if timeout > 60:
+                timeout_in_sec = timeout * 60
+
+            url = "https://{0}/rest/api/uom/VirtualIOServer/{1}?timeout={2}".format(
+                  self.hmc_ip, vios_uuid, timeout)
+        else:
+            url = "https://{0}/rest/api/uom/VirtualIOServer/{1}".format(
+                  self.hmc_ip, vios_uuid)
+
+        vios_dom = vios_dom.xpath("//VirtualIOServer")[0]
+        vios_xmlstr = etree.tostring(vios_dom)
+        vios_xmlstr = vios_xmlstr.decode("utf-8").replace("VirtualIOServer", VIOS_NS, 1)
+        logger.debug("INPUT PAYLOAD: \n %s", vios_xmlstr)
+        resp = open_url(url,
+                        headers=header,
+                        method='POST',
+                        data=vios_xmlstr,
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=timeout_in_sec)
+        if resp.code != 200:
+            logger.debug("Post operation failed. Respsonse code: %d", resp.code)
+            return None
+        response = resp.read()
+        logger.debug("POST RESPONSE: \n %s", response)
+        post_response = xml_strip_namespace(response)
+        return post_response
