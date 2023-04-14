@@ -1,8 +1,8 @@
 .. _hmc_pwdpolicy_module:
 
 
-hmc_pwdpolicy -- Manages the list, create, change and remove password policies of the HMC
-=========================================================================================
+hmc_pwdpolicy -- Manages the list, create, change and remove password policies of the HMC.
+==========================================================================================
 
 .. contents::
    :local:
@@ -123,6 +123,11 @@ Parameters
 
 
 
+Notes
+-----
+
+.. note::
+   - All operations support passwordless authentication.
 
 
 

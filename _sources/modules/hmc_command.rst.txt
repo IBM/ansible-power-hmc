@@ -50,6 +50,11 @@ Parameters
 
 
 
+Notes
+-----
+
+.. note::
+   - This module supports passwordless authentication.
 
 
 

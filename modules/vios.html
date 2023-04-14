@@ -52,7 +52,7 @@
 <li class="toctree-l2 current"><a class="reference internal" href="../modules.html#module-reference">Module reference</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="firmware_update.html">firmware_update – Change firmware level on Managed Systems</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hmc_command.html">hmc_command – Execute HMC command</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hmc_pwdpolicy.html">hmc_pwdpolicy – Manages the list, create, change and remove password policies of the HMC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hmc_pwdpolicy.html">hmc_pwdpolicy – Manages the list, create, change and remove password policies of the HMC.</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hmc_update_upgrade.html">hmc_update_upgrade – Manages the update and upgrade of the HMC</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hmc_user.html">hmc_user – Manage the hmc users</a></li>
 <li class="toctree-l3"><a class="reference internal" href="power_system.html">power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the Managed system</a></li>
@@ -62,6 +62,7 @@
 <li class="toctree-l3 current"><a class="current reference internal" href="#">vios – Creation and management of Virtual I/O Server partition</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#synopsis">Synopsis</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#parameters">Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#notes">Notes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#return-values">Return Values</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#status">Status</a></li>
@@ -120,9 +121,10 @@
 <ul class="simple">
 <li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
 <li><p><a class="reference internal" href="#parameters" id="id2">Parameters</a></p></li>
-<li><p><a class="reference internal" href="#examples" id="id3">Examples</a></p></li>
-<li><p><a class="reference internal" href="#return-values" id="id4">Return Values</a></p></li>
-<li><p><a class="reference internal" href="#status" id="id5">Status</a></p></li>
+<li><p><a class="reference internal" href="#notes" id="id3">Notes</a></p></li>
+<li><p><a class="reference internal" href="#examples" id="id4">Examples</a></p></li>
+<li><p><a class="reference internal" href="#return-values" id="id5">Return Values</a></p></li>
+<li><p><a class="reference internal" href="#status" id="id6">Status</a></p></li>
 </ul>
 </nav>
 <section id="synopsis">
@@ -151,7 +153,7 @@
 <dt>name (True, str, None)</dt><dd><p>The name of the VirtualIOServer.</p>
 </dd>
 <dt>settings (optional, dict, None)</dt><dd><p>To configure various supported attributes of VIOS partition.</p>
-<p>Supports all the attributes available for creation of VIOS on the mksyscfg command</p>
+<p>Supports all the attributes available for creation of VIOS on the mksyscfg command.</p>
 <p>valid only for <code class="docutils literal notranslate"><span class="pre">state</span></code> = <em>present</em></p>
 </dd>
 <dt>nim_IP (optional, str, None)</dt><dd><p>IP Address of the NIM Server.</p>
@@ -164,7 +166,7 @@
 <p>valid only for <code class="docutils literal notranslate"><span class="pre">action</span></code> = <em>install</em></p>
 </dd>
 <dt>prof_name (optional, str, None)</dt><dd><p>Profile Name to be used for VIOS install.</p>
-<p>Default profile name ‘default_profile’</p>
+<p>Default profile name ‘default_profile’.</p>
 <p>valid only for <code class="docutils literal notranslate"><span class="pre">action</span></code> = <em>install</em></p>
 </dd>
 <dt>location_code (optional, str, None)</dt><dd><p>Network adapter location code to be used while installing VIOS.</p>
@@ -192,21 +194,30 @@
 <p>Valid only for <code class="docutils literal notranslate"><span class="pre">state</span></code> = <em>facts</em></p>
 </dd>
 <dt>free_pvs (optional, bool, None)</dt><dd><p>Provides the Unassigned Physical Volume details.</p>
-<p>Default value is False</p>
+<p>Default value is False.</p>
 <p>Valid only for <code class="docutils literal notranslate"><span class="pre">state</span></code> = <em>facts</em></p>
 </dd>
-<dt>state (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">facts</span></code> fetch details of specified <em>virtualioserver</em></p>
-<p><code class="docutils literal notranslate"><span class="pre">present</span></code> creates VIOS with specified <em>settings</em></p>
+<dt>state (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">facts</span></code> fetch details of specified <em>VIOS</em>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">present</span></code> creates VIOS with specified <em>settings</em>.</p>
 </dd>
-<dt>action (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">install</span></code> install VIOS through NIM Server</p>
-<p><code class="docutils literal notranslate"><span class="pre">accept_license</span></code> Accept license after fresh installation of VIOS</p>
+<dt>action (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">install</span></code> install VIOS through NIM Server.</p>
+<p><code class="docutils literal notranslate"><span class="pre">accept_license</span></code> Accept license after fresh installation of VIOS.</p>
 </dd>
 </dl>
 </div></blockquote>
 </section>
+<section id="notes">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Notes</a><a class="headerlink" href="#notes" title="Permalink to this heading"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>Only state=present, action=install and action=accept_license operations support passwordless authentication.</p></li>
+</ul>
+</div>
+</section>
 <section id="examples">
-<h2><a class="toc-backref" href="#id3" role="doc-backlink">Examples</a><a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
-<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create VIOS with default configuration</span>
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Examples</a><a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
+<div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create VIOS with default configuration.</span>
 <span class="w">  </span><span class="nt">vios</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span>
 <span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span>
@@ -216,7 +227,7 @@
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;vios_partition_name&gt;</span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create VIOS with user defined settings</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create VIOS with user defined settings.</span>
 <span class="w">  </span><span class="nt">vios</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&#39;</span>
 <span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span>
@@ -229,7 +240,7 @@
 <span class="w">      </span><span class="nt">io_slots</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;ioslot1&gt;,&lt;ioslot2&gt;</span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install VIOS using NIM Server</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install VIOS using NIM Server.</span>
 <span class="w">  </span><span class="nt">vios</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&#39;</span>
 <span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span>
@@ -243,7 +254,7 @@
 <span class="w">    </span><span class="nt">nim_subnetmask</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;subnetmask&gt;</span>
 <span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">install</span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Accept License after VIOS Installation</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Accept License after VIOS Installation.</span>
 <span class="w">  </span><span class="nt">vios</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span>
 <span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span>
@@ -252,18 +263,30 @@
 <span class="w">    </span><span class="nt">system_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;managed_system_name&gt;</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;vios_partition_name&gt;</span>
 <span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">accept_license</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Show VIOS details with Free PVs and Virtual Optical Media.</span>
+<span class="w">  </span><span class="nt">vios</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span>
+<span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">         </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">    </span><span class="nt">system_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;managed_system_name&gt;</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;vios_partition_name&gt;</span>
+<span class="w">    </span><span class="nt">free_pvs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">virtual_optical_media</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">facts</span>
 </pre></div>
 </div>
 </section>
 <section id="return-values">
-<h2><a class="toc-backref" href="#id4" role="doc-backlink">Return Values</a><a class="headerlink" href="#return-values" title="Permalink to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Return Values</a><a class="headerlink" href="#return-values" title="Permalink to this heading"></a></h2>
 <dl class="simple">
 <dt>vios_info (on success for action install, dict, )</dt><dd><p>Respective VIOS information</p>
 </dd>
 </dl>
 </section>
 <section id="status">
-<h2><a class="toc-backref" href="#id5" role="doc-backlink">Status</a><a class="headerlink" href="#status" title="Permalink to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Status</a><a class="headerlink" href="#status" title="Permalink to this heading"></a></h2>
 <ul class="simple">
 <li><p>This module is not guaranteed to have a backwards compatible interface. <em>[preview]</em></p></li>
 <li><p>This module is maintained by community.</p></li>

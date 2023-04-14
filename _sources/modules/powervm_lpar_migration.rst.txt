@@ -112,6 +112,11 @@ Parameters
 
 
 
+Notes
+-----
+
+.. note::
+   - All the actions support passwordless authentication.
 
 
 

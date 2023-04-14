@@ -272,6 +272,11 @@ Parameters
 
 
 
+Notes
+-----
+
+.. note::
+   - All Operations support passwordless authentication.
 
 
 

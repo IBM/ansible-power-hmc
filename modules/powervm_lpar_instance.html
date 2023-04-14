@@ -52,7 +52,7 @@
 <li class="toctree-l2 current"><a class="reference internal" href="../modules.html#module-reference">Module reference</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="firmware_update.html">firmware_update – Change firmware level on Managed Systems</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hmc_command.html">hmc_command – Execute HMC command</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hmc_pwdpolicy.html">hmc_pwdpolicy – Manages the list, create, change and remove password policies of the HMC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hmc_pwdpolicy.html">hmc_pwdpolicy – Manages the list, create, change and remove password policies of the HMC.</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hmc_update_upgrade.html">hmc_update_upgrade – Manages the update and upgrade of the HMC</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hmc_user.html">hmc_user – Manage the hmc users</a></li>
 <li class="toctree-l3"><a class="reference internal" href="power_system.html">power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the Managed system</a></li>
@@ -385,6 +385,7 @@
 <li><p><em>retain_vios_cfg</em> and <em>delete_vdisks</em> options will only be supported from HMC release level on or above V9 R1 M930.</p></li>
 <li><p>Partition creation is not supported for resource role-based user in HMC Version prior to 951.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">install_os</span></code> action doesn’t support installation of IBMi OS.</p></li>
+<li><p>Only state=absent and action=install_os operations support passwordless authentication.</p></li>
 </ul>
 </div>
 </section>

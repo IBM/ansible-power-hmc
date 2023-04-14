@@ -89,6 +89,11 @@ Parameters
 
 
 
+Notes
+-----
+
+.. note::
+   - All operations support passwordless authentication.
 
 
 

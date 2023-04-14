@@ -52,7 +52,7 @@
 <li class="toctree-l2 current"><a class="reference internal" href="../modules.html#module-reference">Module reference</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="firmware_update.html">firmware_update – Change firmware level on Managed Systems</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hmc_command.html">hmc_command – Execute HMC command</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hmc_pwdpolicy.html">hmc_pwdpolicy – Manages the list, create, change and remove password policies of the HMC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hmc_pwdpolicy.html">hmc_pwdpolicy – Manages the list, create, change and remove password policies of the HMC.</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hmc_update_upgrade.html">hmc_update_upgrade – Manages the update and upgrade of the HMC</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hmc_user.html">hmc_user – Manage the hmc users</a></li>
 <li class="toctree-l3"><a class="reference internal" href="power_system.html">power_system – PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the Managed system</a></li>
@@ -177,15 +177,15 @@
 <dt>timeout (optional, int, None)</dt><dd><p>The maximum time, in minutes, to wait for partition operating system to complete dlpar.</p>
 <p>This option is valid for following actions <em>update_proc_mem</em>, <em>update_pv</em>, <em>update_npiv</em> and <em>update_vod</em></p>
 </dd>
-<dt>pv_settings (optional, list, None)</dt><dd><p>List of Physical Volumes settings to be configured</p>
+<dt>pv_settings (optional, list, None)</dt><dd><p>List of Physical Volumes settings to be configured.</p>
 <p>This option is valid only for <em>update_pv</em> action.</p>
 <dl>
-<dt>disk_name (True, str, None)</dt><dd><p>Physical Volume name</p>
+<dt>disk_name (True, str, None)</dt><dd><p>Name of the Disk.</p>
 </dd>
-<dt>vios_name (True, str, None)</dt><dd><p>Virtual IO Server name of the disk connected.</p>
+<dt>vios_name (True, str, None)</dt><dd><p>Virtual IO Server name of the Disk belongs to.</p>
 </dd>
-<dt>target_name (optional, str, None)</dt><dd><p>Target Device name</p>
-<p>Optional, if not provided auto assigns &lt;vtscsi*&gt;</p>
+<dt>target_name (optional, str, None)</dt><dd><p>Target Device name.</p>
+<p>Optional, if not provided auto assigns &lt;vtscsi*&gt;.</p>
 </dd>
 <dt>server_adapter_id (optional, int, None)</dt><dd><p>The Server adapter slot number to be configured with SCSI adapter.</p>
 <p>Optional, if not provided next available value will be assigned.</p>
@@ -195,12 +195,12 @@
 </dd>
 </dl>
 </dd>
-<dt>npiv_settings (optional, list, None)</dt><dd><p>List of Virtual Fibre Channel port settings to be configured</p>
+<dt>npiv_settings (optional, list, None)</dt><dd><p>List of Virtual Fibre Channel port settings to be configured.</p>
 <p>This option is valid only for <em>update_npiv</em> action.</p>
 <dl>
-<dt>fc_port_name (True, str, None)</dt><dd><p>Fibre Channel Port name</p>
+<dt>fc_port_name (True, str, None)</dt><dd><p>Fibre Channel Port name.</p>
 </dd>
-<dt>vios_name (True, str, None)</dt><dd><p>Virtual IO Server name of the disk connected.</p>
+<dt>vios_name (True, str, None)</dt><dd><p>Virtual IO Server name of the Fibre Channel Port belongs to.</p>
 </dd>
 <dt>wwpn_pair (optional, str, None)</dt><dd><p>The WWPN pair value to be configured with client FC adapter.</p>
 <p>Both the WWPN value should be separated by semicolon delimiter example ‘c0507607577aefc0;c0507607577aefc1’.</p>
@@ -217,7 +217,7 @@
 <dt>vod_settings (optional, list, None)</dt><dd><p>List of Virtual optical device settings to be configured.</p>
 <p>This option is valid only for <em>update_vod</em> action.</p>
 <dl>
-<dt>device_name (True, str, None)</dt><dd><p>Name of the device</p>
+<dt>device_name (True, str, None)</dt><dd><p>Name of the device.</p>
 </dd>
 <dt>vios_name (True, str, None)</dt><dd><p>Virtual IO Server name.</p>
 </dd>
@@ -245,7 +245,8 @@
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ul class="simple">
-<li><p>In case of update_pv action if updation of settings belongs to atleast one VIOS is successful then changed status shown as 1 and failed updates are shown as warning, This behavior is same for update_npiv and update_vod also.</p></li>
+<li><p>If the updating of settings for at least one VIOS is successful during the execution of the “update_pv” action, the changed status will be displayed as 1, and any failed updates will be shown as warnings. This behavior remains consistent for both the “update_npiv” and “update_vod” actions.</p></li>
+<li><p>Passwordless authentication is not supported</p></li>
 </ul>
 </div>
 </section>
@@ -269,7 +270,7 @@
 <span class="w">      </span><span class="nt">mem</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3072</span>
 <span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">update</span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">update PV on lpar</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Dynamically configure Physical Volume settings on Lpar.</span>
 <span class="w">  </span><span class="nt">powervm_dlpar</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&#39;</span>
 <span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span>
@@ -290,7 +291,7 @@
 <span class="w">        </span><span class="nt">client_adapter_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;Adapter_ID&gt;</span>
 <span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">update_pv</span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">update npiv on lpar</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Dynamically configure NPIV settings on Lpar.</span>
 <span class="w">  </span><span class="nt">powervm_dlpar</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&#39;</span>
 <span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span>
@@ -310,7 +311,7 @@
 <span class="w">        </span><span class="nt">server_adapter_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15</span>
 <span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">update_npiv</span>
 
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">update vod on lpar</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Dynamically configure Virtual Optical Disk settings on Lpar.</span>
 <span class="w">  </span><span class="nt">powervm_dlpar</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&#39;</span>
 <span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span>

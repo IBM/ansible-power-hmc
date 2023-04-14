@@ -56,7 +56,7 @@ Parameters
   settings (optional, dict, None)
     To configure various supported attributes of VIOS partition.
 
-    Supports all the attributes available for creation of VIOS on the mksyscfg command
+    Supports all the attributes available for creation of VIOS on the mksyscfg command.
 
     valid only for ``state`` = *present*
 
@@ -82,7 +82,7 @@ Parameters
   prof_name (optional, str, None)
     Profile Name to be used for VIOS install.
 
-    Default profile name 'default_profile'
+    Default profile name 'default_profile'.
 
     valid only for ``action`` = *install*
 
@@ -138,26 +138,31 @@ Parameters
   free_pvs (optional, bool, None)
     Provides the Unassigned Physical Volume details.
 
-    Default value is False
+    Default value is False.
 
     Valid only for ``state`` = *facts*
 
 
   state (optional, str, None)
-    ``facts`` fetch details of specified *virtualioserver*
+    ``facts`` fetch details of specified *VIOS*.
 
-    ``present`` creates VIOS with specified *settings*
+    ``present`` creates VIOS with specified *settings*.
 
 
   action (optional, str, None)
-    ``install`` install VIOS through NIM Server
+    ``install`` install VIOS through NIM Server.
 
-    ``accept_license`` Accept license after fresh installation of VIOS
-
-
+    ``accept_license`` Accept license after fresh installation of VIOS.
 
 
 
+
+
+Notes
+-----
+
+.. note::
+   - Only state=present, action=install and action=accept_license operations support passwordless authentication.
 
 
 
@@ -168,7 +173,7 @@ Examples
 .. code-block:: yaml+jinja
 
     
-    - name: Create VIOS with default configuration
+    - name: Create VIOS with default configuration.
       vios:
         hmc_host: "{{ inventory_hostname }}"
         hmc_auth:
@@ -178,7 +183,7 @@ Examples
         name: <vios_partition_name>
         state: present
 
-    - name: Create VIOS with user defined settings
+    - name: Create VIOS with user defined settings.
       vios:
         hmc_host: '{{ inventory_hostname }}'
         hmc_auth:
@@ -191,7 +196,7 @@ Examples
           io_slots: <ioslot1>,<ioslot2>
         state: present
 
-    - name: Install VIOS using NIM Server
+    - name: Install VIOS using NIM Server.
       vios:
         hmc_host: '{{ inventory_hostname }}'
         hmc_auth:
@@ -205,7 +210,7 @@ Examples
         nim_subnetmask: <subnetmask>
         action: install
 
-    - name: Accept License after VIOS Installation
+    - name: Accept License after VIOS Installation.
       vios:
         hmc_host: "{{ inventory_hostname }}"
         hmc_auth:
@@ -215,6 +220,17 @@ Examples
         name: <vios_partition_name>
         action: accept_license
 
+    - name: Show VIOS details with Free PVs and Virtual Optical Media.
+      vios:
+        hmc_host: "{{ inventory_hostname }}"
+        hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+        system_name: <managed_system_name>
+        name: <vios_partition_name>
+        free_pvs: true
+        virtual_optical_media: true
+        state: facts
 
 
 

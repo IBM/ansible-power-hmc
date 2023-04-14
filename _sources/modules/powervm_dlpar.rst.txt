@@ -98,23 +98,23 @@ Parameters
 
 
   pv_settings (optional, list, None)
-    List of Physical Volumes settings to be configured
+    List of Physical Volumes settings to be configured.
 
     This option is valid only for *update_pv* action.
 
 
     disk_name (True, str, None)
-      Physical Volume name
+      Name of the Disk.
 
 
     vios_name (True, str, None)
-      Virtual IO Server name of the disk connected.
+      Virtual IO Server name of the Disk belongs to.
 
 
     target_name (optional, str, None)
-      Target Device name
+      Target Device name.
 
-      Optional, if not provided auto assigns <vtscsi*>
+      Optional, if not provided auto assigns <vtscsi*>.
 
 
     server_adapter_id (optional, int, None)
@@ -131,17 +131,17 @@ Parameters
 
 
   npiv_settings (optional, list, None)
-    List of Virtual Fibre Channel port settings to be configured
+    List of Virtual Fibre Channel port settings to be configured.
 
     This option is valid only for *update_npiv* action.
 
 
     fc_port_name (True, str, None)
-      Fibre Channel Port name
+      Fibre Channel Port name.
 
 
     vios_name (True, str, None)
-      Virtual IO Server name of the disk connected.
+      Virtual IO Server name of the Fibre Channel Port belongs to.
 
 
     wwpn_pair (optional, str, None)
@@ -172,7 +172,7 @@ Parameters
 
 
     device_name (True, str, None)
-      Name of the device
+      Name of the device.
 
 
     vios_name (True, str, None)
@@ -215,7 +215,8 @@ Notes
 -----
 
 .. note::
-   - In case of update_pv action if updation of settings belongs to atleast one VIOS is successful then changed status shown as 1 and failed updates are shown as warning, This behavior is same for update_npiv and update_vod also.
+   - If the updating of settings for at least one VIOS is successful during the execution of the "update_pv" action, the changed status will be displayed as 1, and any failed updates will be shown as warnings. This behavior remains consistent for both the "update_npiv" and "update_vod" actions.
+   - Passwordless authentication is not supported
 
 
 
@@ -244,7 +245,7 @@ Examples
           mem: 3072
         action: update
 
-    - name: update PV on lpar
+    - name: Dynamically configure Physical Volume settings on Lpar.
       powervm_dlpar:
         hmc_host: '{{ inventory_hostname }}'
         hmc_auth:
@@ -265,7 +266,7 @@ Examples
             client_adapter_id: <Adapter_ID>
         action: update_pv
 
-    - name: update npiv on lpar
+    - name: Dynamically configure NPIV settings on Lpar.
       powervm_dlpar:
         hmc_host: '{{ inventory_hostname }}'
         hmc_auth:
@@ -285,7 +286,7 @@ Examples
             server_adapter_id: 15
         action: update_npiv
 
-    - name: update vod on lpar
+    - name: Dynamically configure Virtual Optical Disk settings on Lpar.
       powervm_dlpar:
         hmc_host: '{{ inventory_hostname }}'
         hmc_auth:
