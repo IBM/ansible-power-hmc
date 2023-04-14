@@ -29,7 +29,7 @@ test_data = [
 
     # passwd and sskjey information passed
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'build_config': {'location_type': 'sftp', 'build_file': 'path', 'hostname': '0.0.0.0',\
-      'mount_location': 'data', 'passwd': "abcd1234", 'sshkey_file': "None", 'restart': None}},\
+      'mount_location': 'data', 'passwd': "password_value", 'sshkey_file': "None", 'restart': None}},\
      "ParameterError: conflicting parameters 'passwd' and 'sshkey_file'. Provide any one"),
 
     # mount_location are mentioned in sftp
