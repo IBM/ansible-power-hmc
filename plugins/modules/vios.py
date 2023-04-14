@@ -18,6 +18,8 @@ author:
     - Anil Vijayan (@AnilVijayan)
     - Navinakumar Kandakur (@nkandak1)
 short_description: Creation and management of Virtual I/O Server partition
+notes:
+    - Only state=present, action=install and action=accept_license operations support passwordless authentication.
 description:
     - "Creates VIOS partition"
     - "Installs VIOS"
@@ -59,7 +61,7 @@ options:
         description:
             - To configure various supported attributes of VIOS partition.
             - Supports all the attributes available for creation of VIOS
-              on the mksyscfg command
+              on the mksyscfg command.
             - valid only for C(state) = I(present)
         type: dict
     nim_IP:
@@ -80,7 +82,7 @@ options:
     prof_name:
         description:
             - Profile Name to be used for VIOS install.
-            - Default profile name 'default_profile'
+            - Default profile name 'default_profile'.
             - valid only for C(action) = I(install)
         type: str
     location_code:
@@ -122,25 +124,25 @@ options:
     free_pvs:
         description:
             - Provides the Unassigned Physical Volume details.
-            - Default value is False
+            - Default value is False.
             - Valid only for C(state) = I(facts)
         type: bool
     state:
         description:
-            - C(facts) fetch details of specified I(virtualioserver)
-            - C(present) creates VIOS with specified I(settings)
+            - C(facts) fetch details of specified I(VIOS).
+            - C(present) creates VIOS with specified I(settings).
         type: str
         choices: ['facts', 'present']
     action:
         description:
-            - C(install) install VIOS through NIM Server
-            - C(accept_license) Accept license after fresh installation of VIOS
+            - C(install) install VIOS through NIM Server.
+            - C(accept_license) Accept license after fresh installation of VIOS.
         type: str
         choices: ['install', 'accept_license']
 '''
 
 EXAMPLES = '''
-- name: Create VIOS with default configuration
+- name: Create VIOS with default configuration.
   vios:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
@@ -150,7 +152,7 @@ EXAMPLES = '''
     name: <vios_partition_name>
     state: present
 
-- name: Create VIOS with user defined settings
+- name: Create VIOS with user defined settings.
   vios:
     hmc_host: '{{ inventory_hostname }}'
     hmc_auth:
@@ -163,7 +165,7 @@ EXAMPLES = '''
       io_slots: <ioslot1>,<ioslot2>
     state: present
 
-- name: Install VIOS using NIM Server
+- name: Install VIOS using NIM Server.
   vios:
     hmc_host: '{{ inventory_hostname }}'
     hmc_auth:
@@ -177,7 +179,7 @@ EXAMPLES = '''
     nim_subnetmask: <subnetmask>
     action: install
 
-- name: Accept License after VIOS Installation
+- name: Accept License after VIOS Installation.
   vios:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
@@ -187,6 +189,17 @@ EXAMPLES = '''
     name: <vios_partition_name>
     action: accept_license
 
+- name: Shaow VIOS details with Free PVs and Virtual Optical Media.
+  vios:
+    hmc_host: "{{ inventory_hostname }}"
+    hmc_auth:
+         username: '{{ ansible_user }}'
+         password: '{{ hmc_password }}'
+    system_name: <managed_system_name>
+    name: <vios_partition_name>
+    free_pvs: true
+    virtual_optical_media: true
+    state: facts
 '''
 
 RETURN = '''

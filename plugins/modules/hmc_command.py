@@ -17,6 +17,8 @@ module: hmc_command
 author:
     - Navinakumar Kandakur (@nkandak1)
 short_description: Execute HMC command
+notes:
+    - This module supports passwordless authentication.
 description:
     - Generic module that can execute any HMC CLI command
     - The given command will be executed on all selected HMC

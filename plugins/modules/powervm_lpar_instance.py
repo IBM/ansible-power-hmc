@@ -25,6 +25,7 @@ notes:
     - I(retain_vios_cfg) and I(delete_vdisks) options will only be supported from HMC release level on or above V9 R1 M930.
     - Partition creation is not supported for resource role-based user in HMC Version prior to 951.
     - C(install_os) action doesn't support installation of IBMi OS.
+    - Only state=absent and action=install_os operations support passwordless authentication.
 description:
     - "Creates AIX/Linux or IBMi partition with specified configuration details on mentioned system"
     - "Or Deletes specified AIX/Linux or IBMi partition on specified system"

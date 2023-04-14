@@ -10,6 +10,8 @@ DOCUMENTATION = r'''
 ---
 module: firmware_update
 short_description: Change firmware level on Managed Systems
+notes:
+    - All operations support passwordless authentication.
 version_added: "1.1.0"
 description:
     - Update/Upgrade a managed system.

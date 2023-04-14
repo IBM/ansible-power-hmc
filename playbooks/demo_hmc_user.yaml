@@ -7,7 +7,7 @@
   vars:
     curr_hmc_auth:
       username: custom_user
-      password: abc123
+      password: <password>
 
   tasks:
   - name: read the yaml file and assign its content to a variable

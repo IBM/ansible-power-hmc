@@ -16,7 +16,9 @@ DOCUMENTATION = '''
 module: hmc_pwdpolicy
 author:
     - Anil Vijayan (@AnilVijayan)
-short_description: Manages the list, create, change and remove password policies of the HMC
+short_description: Manages the list, create, change and remove password policies of the HMC.
+notes:
+    - All operations support passwordless authentication.
 description:
     - Lists Hardware Management Console password policy information by password policies or password policy status.
     - Creates a password policy.

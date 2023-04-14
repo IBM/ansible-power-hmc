@@ -19,8 +19,9 @@ author:
     - Navinakumar Kandakur(@nkandak1)
 short_description: Dynamically managing resources of partition
 notes:
-    - In case of update_pv action if updation of settings belongs to atleast one VIOS is successful then
-      changed status shown as 1 and failed updates are shown as warning, This behavior is same for update_npiv and update_vod also.
+    - In case of update_pv action,  If updating of settings belongs to at least one VIOS is successful then
+      changed status shown as 1 and failed updates are shown as warning, This behaviour is same for update_npiv and update_vod also.
+    - None of the operations support passwordless authentication.
 description:
     - "Managing processor resources dynamically"
     - "Managing memory resources dynamically"
@@ -105,25 +106,25 @@ options:
         type: int
     pv_settings:
         description:
-            - List of Physical Volumes settings to be configured
+            - List of Physical Volumes settings to be configured.
             - This option is valid only for I(update_pv) action.
         type: list
         elements: dict
         suboptions:
             disk_name:
                 description:
-                    - Physical Volume name
+                    - Name of the Disk.
                 type: str
                 required: True
             vios_name:
                 description:
-                    - Virtual IO Server name of the disk connected.
+                    - Virtual IO Server name of the Disk belongs to.
                 type: str
                 required: True
             target_name:
                 description:
-                    - Target Device name
-                    - Optional, if not provided auto assigns <vtscsi*>
+                    - Target Device name.
+                    - Optional, if not provided auto assigns <vtscsi*>.
                 type: str
             server_adapter_id:
                 description:
@@ -137,19 +138,19 @@ options:
                 type: int
     npiv_settings:
         description:
-            - List of Virtual Fibre Channel port settings to be configured
+            - List of Virtual Fibre Channel port settings to be configured.
             - This option is valid only for I(update_npiv) action.
         type: list
         elements: dict
         suboptions:
             fc_port_name:
                 description:
-                    - Fibre Channel Port name
+                    - Fibre Channel Port name.
                 type: str
                 required: True
             vios_name:
                 description:
-                    - Virtual IO Server name of the disk connected.
+                    - Virtual IO Server name of the Fibre Channel Port belongs to.
                 type: str
                 required: True
             wwpn_pair:
@@ -177,7 +178,7 @@ options:
         suboptions:
             device_name:
                 description:
-                    - Name of the device
+                    - Name of the device.
                 type: str
                 required: True
             vios_name:
@@ -230,7 +231,7 @@ EXAMPLES = '''
       mem: 3072
     action: update
 
-- name: update PV on lpar
+- name: Dynamically configure Physical Volume settings on Lpar.
   powervm_dlpar:
     hmc_host: '{{ inventory_hostname }}'
     hmc_auth:
@@ -251,7 +252,7 @@ EXAMPLES = '''
         client_adapter_id: <Adapter_ID>
     action: update_pv
 
-- name: update npiv on lpar
+- name: Dynamically configure NPIV settings on Lpar.
   powervm_dlpar:
     hmc_host: '{{ inventory_hostname }}'
     hmc_auth:
@@ -271,7 +272,7 @@ EXAMPLES = '''
         server_adapter_id: 15
     action: update_npiv
 
-- name: update vod on lpar
+- name: Dynamically configure Virtual Optical Disk settings on Lpar.
   powervm_dlpar:
     hmc_host: '{{ inventory_hostname }}'
     hmc_auth:
