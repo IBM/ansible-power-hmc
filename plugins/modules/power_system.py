@@ -18,7 +18,7 @@ author:
     - Anil Vijayan (@AnilVijayan)
     - Navinakumar Kandakur (@nkandak1)
 short_description: PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the Managed system
-note:
+notes:
     - All operations support passwordless authentication.
 description:
     - "Poweron specified managed system"

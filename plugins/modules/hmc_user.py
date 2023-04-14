@@ -18,7 +18,7 @@ author:
     - Anil Vijayan(@AnilVijayan)
     - Navinakumar Kandaur(@nkandak1)
 short_description: Manage the hmc users
-note:
+notes:
     - All Operations support passwordless authentication.
 description:
     - Create a Hardware Management Console user
