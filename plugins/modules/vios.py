@@ -189,7 +189,7 @@ EXAMPLES = '''
     name: <vios_partition_name>
     action: accept_license
 
-- name: Shaow VIOS details with Free PVs and Virtual Optical Media.
+- name: Show VIOS details with Free PVs and Virtual Optical Media.
   vios:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
