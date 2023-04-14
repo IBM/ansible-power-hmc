@@ -2,10 +2,10 @@ plugin: ibm.power_hmc.powervm_inventory
 hmc_hosts:
   - hmc: "hmc_host_name"
     user: user
-    password: password
+    password: <password>
   - hmc: "hmc_host_name2"
     user: user
-    password: password
+    password: <password>
 filters:
     PartitionState: 'running'
 groups:

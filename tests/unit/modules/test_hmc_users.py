@@ -88,27 +88,27 @@ test_data1 = [
       'ldap_resource': None}, "ParameterError: unsupported parameter: type"),
     # when taskrole is missing in attributes for present state with authentication_type as ldap
     ({'hmc_host': "0.0.0.0", 'enable_user': None, 'hmc_auth': hmc_auth, 'name': 'name', 'state': 'present',
-      'attributes': {'authentication_type': 'ldap', 'passwd': 'abc123'}, 'type': None, 'resource': None, 'ldap_settings': None,
+      'attributes': {'authentication_type': 'ldap', 'passwd': 'password'}, 'type': None, 'resource': None, 'ldap_settings': None,
       'ldap_resource': None}, "ParameterError: mandatory parameter taskrole is missing"),
     # when taskrole is missing in attributes for present state with authentication_type as kerberos
     ({'hmc_host': "0.0.0.0", 'enable_user': None, 'hmc_auth': hmc_auth, 'name': 'name', 'state': 'present',
-      'attributes': {'authentication_type': 'kerberos', 'passwd': 'abc123'}, 'type': None, 'resource': None, 'ldap_settings': None,
+      'attributes': {'authentication_type': 'kerberos', 'passwd': 'password'}, 'type': None, 'resource': None, 'ldap_settings': None,
       'ldap_resource': None}, "ParameterError: mandatory parameter taskrole is missing"),
     # when taskrole is missing in attributes for present state with authentication_type as local
     ({'hmc_host': "0.0.0.0", 'enable_user': None, 'hmc_auth': hmc_auth, 'name': 'name', 'state': 'present',
-      'attributes': {'authentication_type': 'local', 'passwd': 'abc123'}, 'type': None, 'resource': None, 'ldap_settings': None,
+      'attributes': {'authentication_type': 'local', 'passwd': 'password'}, 'type': None, 'resource': None, 'ldap_settings': None,
       'ldap_resource': None}, "ParameterError: mandatory parameter taskrole is missing"),
     # when ldap_settings key is mentioned for present state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'type': None, 'state': 'present',
-      'attributes': {'authentication_type': 'local', 'passwd': 'abc123'}, 'name': 'name', 'enable_user': None, 'resource': None,
+      'attributes': {'authentication_type': 'local', 'passwd': 'password'}, 'name': 'name', 'enable_user': None, 'resource': None,
       'ldap_settings': ldap_sett, 'ldap_resource': None}, "ParameterError: unsupported parameter: ldap_settings"),
     # when resource key is mentioned for present state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'type': None, 'state': 'present',
-      'attributes': {'authentication_type': 'local', 'passwd': 'abc123'}, 'name': 'name', 'enable_user': None, 'resource': 'user',
+      'attributes': {'authentication_type': 'local', 'passwd': 'password'}, 'name': 'name', 'enable_user': None, 'resource': 'user',
       'ldap_settings': None, 'ldap_resource': None}, "ParameterError: unsupported parameter: resource"),
     # when ldap_resource key is mentioned for present state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'type': None, 'state': 'present',
-      'attributes': {'authentication_type': 'local', 'passwd': 'abc123'}, 'name': 'name', 'enable_user': None, 'resource': None,
+      'attributes': {'authentication_type': 'local', 'passwd': 'password'}, 'name': 'name', 'enable_user': None, 'resource': None,
       'ldap_settings': None, 'ldap_resource': 'backup'}, "ParameterError: unsupported parameter: ldap_resource")]
 test_data2 = [
     # All user deletion testdata
@@ -303,7 +303,7 @@ test_data6 = [
      "ParameterError: mandatory parameter 'ldap_resource' is missing"),
     # when attributes key is mentioned for remove_ldap_config state
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'type': None, 'state': 'remove_ldap_config',
-      'attributes': {'authentication_type': 'local', 'taskrole': 'taskrole', 'passwd': 'passwd'}, 'name': None, 'enable_user': None, 'resource': None,
+      'attributes': {'authentication_type': 'local', 'taskrole': 'taskrole', 'passwd': 'password'}, 'name': None, 'enable_user': None, 'resource': None,
       'ldap_settings': None, 'ldap_resource': 'backup'}, "ParameterError: unsupported parameter: attributes"),
     # When resource is mentioned for remove ldap
     ({'hmc_host': "0.0.0.0", 'hmc_auth': hmc_auth, 'type': None, 'state': 'remove_ldap_config',
