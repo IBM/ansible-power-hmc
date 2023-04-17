@@ -61,4 +61,4 @@ deploy:
     local_dir: docs/build
     keep_history: true
     on:
-        branch: april-content-23
+        branch: dev-collection
