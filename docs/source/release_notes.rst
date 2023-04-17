@@ -167,3 +167,24 @@ Notes
 
 .. _GitHub v1.7.0:
    https://github.com/IBM/ansible-power-hmc/releases/download/v1.7.0/ibm-power_hmc-1.7.0.tar.gz
+
+Version 1.8.0
+-------------
+Notes
+  * powervm_dlpar: Dlpar support for VSCSI based physical volume
+  * powervm_dlpar: Dlpar support for NPIV based physical volume
+  * powervm_dlpar: Dlpar support for virtual optical drive
+  * powervm_lpar_instance: Fix for issue #91
+  * powervm_lpar_instance: Enhanced with system_name made optional for states like facts, absentand actions like shutdown, poweron and restart 
+  * vios: Enhancement associated with issue #93
+  * vios: Enhanced vios module with facts of free physical volumes and virtual media details 
+
+  Availability
+    * `Galaxy v1.8.0`_
+    * `GitHub v1.8.0`_
+
+.. _Galaxy v1.8.0:
+   https://galaxy.ansible.com/download/ibm-power_hmc-1.8.0.tar.gz
+
+.. _GitHub v1.8.0:
+   https://github.com/IBM/ansible-power-hmc/releases/download/v1.8.0/ibm-power_hmc-1.8.0.tar.gz
