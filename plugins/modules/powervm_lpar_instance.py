@@ -19,54 +19,62 @@ module: powervm_lpar_instance
 author:
     - Anil Vijayan (@AnilVijayan)
     - Navinakumar Kandakur (@nkandak1)
-short_description: Create, Delete, Shutdown, Activate, Restart and facts of an AIX/Linux or IBMi partition
+short_description: Create, Delete, Shutdown, Activate, Restart, Facts and Install of PowerVM Partitions
 notes:
-    - The network configuration currently will not support SRIOV or VNIC related configurations.
+    - The network configuration currently will not support SRIOV configurations.
     - I(retain_vios_cfg) and I(delete_vdisks) options will only be supported from HMC release level on or above V9 R1 M930.
     - Partition creation is not supported for resource role-based user in HMC Version prior to 951.
+    - C(install_os) action doesn't support installation of IBMi OS.
+    - Only state=absent and action=install_os operations support passwordless authentication.
 description:
     - "Creates AIX/Linux or IBMi partition with specified configuration details on mentioned system"
     - "Or Deletes specified AIX/Linux or IBMi partition on specified system"
     - "Or Shutdown specified AIX/Linux or IBMi partition on specified system"
     - "Or Poweron/Activate specified AIX/Linux or IBMi partition, with provided configuration details on the mentioned system"
     - "Or Restart specified AIX/Linux or IBMi partition on specified system"
-    - "Or facts of the specified AIX/Linux or IBMi partition of specified system"
+    - "Or Facts of the specified AIX/Linux or IBMi partition of specified system"
+    - "Or Install of PowerVM Partition"
 
-version_added: "1.1.0"
+version_added: "1.2.0"
 requirements:
 - Python >= 3
 - lxml
 options:
     hmc_host:
         description:
-            - IPaddress or hostname of the HMC
+            - IPaddress or hostname of the HMC.
         required: true
         type: str
     hmc_auth:
         description:
-            - Username and Password credential of the HMC
+            - Username and Password credential of the HMC.
         required: true
         type: dict
         suboptions:
             username:
                 description:
-                    - HMC username
+                    - HMC username.
                 required: true
                 type: str
             password:
                 description:
-                    - HMC password
+                    - HMC password.
                 type: str
     system_name:
         description:
-            - The name of the managed system
-        required: true
+            - The name of the managed system.
+            - Optional for I(state=absent), I(state=facts), I(action=poweron), I(action=shutdown) and I(action=restart).
         type: str
     vm_name:
         description:
-            - The name of the powervm partition to create/delete/poweron/shutdown/facts
+            - The name of the powervm partition.
         required: true
         type: str
+    vm_id:
+        description:
+            - The partition ID to be set while creating a Logical Partition.
+            - Optional, if not provided, next available value will be assigned.
+        type: int
     proc:
         description:
             - The number of dedicated processors to create a partition.
@@ -79,16 +87,16 @@ options:
             - The maximum number of dedicated processors to create a partition.
             - If C(proc_unit) parameter is set, then this value will work as max virtual processors for
               shared processor setting.
-            - Default value is C(proc)
-            - This value should be always equal or greater than C(proc)
+            - Default value is C(proc).
+            - This value should be always equal or greater than C(proc).
         type: int
     min_proc:
         description:
             - The minimum number of dedicated processors to create a partition.
             - If C(proc_unit) parameter is set, then this value will work as min virtual processors for
-              shared processor setting
-            - Default value is '1'
-            - This value should be always equal or less than C(proc)
+              shared processor setting.
+            - Default value is '1'.
+            - This value should be always equal or less than C(proc).
         type: int
     proc_unit:
         description:
@@ -96,42 +104,42 @@ options:
         type: float
     shared_proc_pool:
         description:
-            - Shared Processor Pool ID or Name
+            - Shared Processor Pool ID or Name.
             - If numeric value provided to this parameter, it will be considered as Shared Processor Pool ID.
-            - This parameter can be used only with C(proc_unit)
-            - Default value is 'DefaultPool'
+            - This parameter can be used only with C(proc_unit).
+            - Default value is 'DefaultPool'.
         type: str
     max_proc_unit:
         description:
-            - The maximum number of shared processing units to create a partition
-            - This value should be equal or greater than C(proc_unit)
-            - This parameter can be used only with C(proc_unit)
-            - Default value is C(proc_unit)
+            - The maximum number of shared processing units to create a partition.
+            - This value should be equal or greater than C(proc_unit).
+            - This parameter can be used only with C(proc_unit).
+            - Default value is C(proc_unit).
         type: float
     min_proc_unit:
         description:
-            - The minimum number of shared processing units to create a partition
-            - This value should be equal or less than C(proc_unit)
-            - This parameter can be used only with C(proc_unit)
-            - Default value is '0.1'
+            - The minimum number of shared processing units to create a partition.
+            - This value should be equal or less than C(proc_unit).
+            - This parameter can be used only with C(proc_unit).
+            - Default value is '0.1'.
         type: float
     proc_mode:
         description:
-            - The processor mode to be used to create a partition with shared processor settings
-            - Default value is 'uncapped'
-            - This parameter can be used only with C(proc_unit)
+            - The processor mode to be used to create a partition with shared processor settings.
+            - Default value is 'uncapped'.
+            - This parameter can be used only with C(proc_unit).
         type: str
         choices: ['capped', 'uncapped']
     weight:
         description:
-            - The weight to be used for uncapped proc mode while create a partition with shared processor settings
-            - Default value is '128'
-            - This value will be ignored if the C(proc_mode) is set to I(capped)
-            - This parameter can be used only with C(proc_mode)
+            - The weight to be used for uncapped proc mode while create a partition with shared processor settings.
+            - Default value is '128'.
+            - This value will be ignored if the C(proc_mode) is set to I(capped).
+            - This parameter can be used only with C(proc_mode).
         type: int
     proc_compatibility_mode:
         description:
-            - The processor compatibility mode to be configured while creating a partition
+            - The processor compatibility mode to be configured while creating a partition.
         type: str
     mem:
         description:
@@ -142,13 +150,13 @@ options:
         description:
             - The maximum value of dedicated memory value in megabytes to create a partition.
             - Default value is '2048 MB'.
-            - This parameter can only be used with C(mem)
+            - This parameter can only be used with C(mem).
         type: int
     min_mem:
         description:
             - The maximum value of dedicated memory value in megabytes to create a partition.
             - Default value is '1024 MB'.
-            - This parameter can only be used with C(mem)
+            - This parameter can only be used with C(mem).
         type: int
     os_type:
         description:
@@ -175,7 +183,7 @@ options:
             - The initial program load (IPL) source to be used while activating an IBMi partition.
             - If the user doesn't provide this option, current setting of this option in the partition will be considered.
             - If this option provided for AIX/Linux type partition, operation gives a warning and then ignores this option and proceed with the operation.
-            - This option is valid only for C(poweron) I(action)
+            - This option is valid only for C(poweron) I(action).
         type: str
         choices: ['a','b','c','d']
     volume_config:
@@ -191,21 +199,21 @@ options:
             volume_name:
                 description:
                     - Physical volume name visible through VIOS.
-                    - This option is mutually exclusive with I(volume_size)
+                    - This option is mutually exclusive with I(volume_size).
                 type: str
             vios_name:
                 description:
                     - VIOS name to which mentioned I(volume_name) is present.
-                    - This option is mutually exclusive with I(volume_size)
+                    - This option is mutually exclusive with I(volume_size).
                 type: str
             volume_size:
                 description:
-                    - Physical volume size in MB
+                    - Physical volume size in MB.
                 type: int
     virt_network_config:
         description:
-            - Virtual Network configuration of the partition
-            - This implicitly adds a Virtual Ethernet Adapter with given virtual network to the partition
+            - Virtual Network configuration of the partition.
+            - This implicitly adds a Virtual Ethernet Adapter with given virtual network to the partition.
             - Make sure provided Virtual Network has been attached to an active Network Bridge for external network communication.
         type: list
         elements: dict
@@ -213,7 +221,7 @@ options:
             network_name:
                 description:
                     - Name of the Virtual Network to be attached to the partition.
-                    - This option is mandatory
+                    - This option is mandatory.
                 required: true
                 type: str
             slot_number:
@@ -223,33 +231,33 @@ options:
                 type: int
     npiv_config:
         description:
-            - To configure N-Port ID Virtualization is also known as Virtual Fibre of the partition
-            - User can provide two fc port configurations and mappings will be created with VIOS implicitly
+            - To configure N-Port ID Virtualization is also known as Virtual Fibre of the partition.
+            - User can provide two fc port configurations and mappings will be created with VIOS implicitly.
         type: list
         elements: dict
         suboptions:
             vios_name:
                 description:
-                    - The name of the vios in which fc port available
-                    - This option is mandatory
+                    - The name of the vios in which fc port available.
+                    - This option is mandatory.
                 required: true
                 type: str
             fc_port:
                 description:
-                    - The port to be used for npiv. User can specify either port name or fully qualified location code
-                    - This option is mandatory
+                    - The port to be used for npiv. User can specify either port name or fully qualified location code.
+                    - This option is mandatory.
                 required: true
                 type: str
             wwpn_pair:
                 description:
                     - The WWPN pair value to be configured with client FC adapter.
-                    - Both the WWPN value should be separated by semicolon delimiter
-                    - Optional, if not provided the value will be auto assigned
+                    - Both the WWPN value should be separated by semicolon delimiter.
+                    - Optional, if not provided the value will be auto assigned.
                 type: str
             client_adapter_id:
                 description:
                     - The client adapter slot number to be configured with FC adapter.
-                    - Optional, if not provided next availble value will be assigned.
+                    - Optional, if not provided next available value will be assigned.
                 type: int
             server_adapter_id:
                 description:
@@ -291,10 +299,105 @@ options:
             - Default is false.
             - Currently we are showing only NPIV storage details.
         type: bool
+    install_settings:
+        description:
+            - Settings for installing Operating System on logical partition.
+            - User expected to have NIM Server with pull install configuration.
+        type: dict
+        suboptions:
+            vm_ip:
+                description:
+                    - IP Address to be configured to Logical Partition.
+                required: True
+                type: str
+            nim_ip:
+                description:
+                    - IP Address of the NIM Server.
+                required: True
+                type: str
+            nim_gateway:
+                description:
+                    - Logical Partition gateway IP Address.
+                required: True
+                type: str
+            nim_subnetmask:
+                description:
+                    - Subnetmask IP Address to be configured to Logical Partition.
+                required: True
+                type: str
+            location_code:
+                description:
+                    - Network adapter location code to be used while installing OS.
+                    - If user doesn't provide, it automatically picks the first pingable adapter attached to the partition.
+                type: str
+            nim_vlan_id:
+                description:
+                    - Specifies the VLANID(0 to 4094) to use for tagging Ethernet frames during network install for virtual network communication.
+                    - Default value is 0.
+                type: str
+            nim_vlan_priority:
+                description:
+                    - Specifies the VLAN priority (0 to 7) to use for tagging Ethernet frames during network install for virtual network communication.
+                    - Default value is 0.
+                type: str
+            timeout:
+                description:
+                    - Max waiting time in mins for OS to bootup fully.
+                    - Min timeout should be more than 10 mins.
+                    - Default value is 60 min.
+                type: int
+    vnic_config:
+        description:
+            - Virtual NIC configuration of the partition.
+        type: list
+        elements: dict
+        suboptions:
+            vnic_adapter_id:
+                description:
+                    - VNIC Adapter ID to be configured while creating a partition.
+                    - Optional, if not provided, next available value will be assigned.
+                type: int
+            backing_devices:
+                description:
+                    - SRIOV physical ports to be used as a backing device of VNIC.
+                    - If user doesn't provide this option, by default it picks the SRIOV Physical port with link status up as backing device.
+                    - If there are no SRIOV Physical port with link status as up then it randomly picks physical port which has capacity more than 2.0%.
+                type: list
+                elements: dict
+                suboptions:
+                    location_code:
+                        description:
+                            - SRIOV Physical port location code to be used as backing device.
+                            - An illustrative pattern for SRIOV physical port location code is XXXXX.XXX.XXXXXXX-P1-T1 or P1-T1.
+                        required: True
+                        type: str
+                    capacity:
+                        description:
+                            - Capacity value to be configured for vnic backing device. Default value is 2.0%.
+                        type: float
+                    hosting_partition:
+                        description:
+                            - The VIOS name on which SRIOV physical port location code to be configured.
+                            - By default picks a random VIOS name with RMC state as active.
+                        type: str
+    shutdown_option:
+        description:
+            - Option to shutdown Logical Partition
+            - This option is valid only for C(shutdown) I(action).
+            - Default value is C(Delayed).
+        type: str
+        choices: ['Delayed', 'Immediate', 'OperatingSystem', 'OSImmediate']
+    restart_option:
+        description:
+            - Option to reboot Logical Partition
+            - This option is valid only for C(restart) I(action).
+            - Default value is C(Immediate).
+        type: str
+        choices: ['Immediate', 'OperatingSystem', 'OSImmediate', 'Dump', 'DumpRetry']
     state:
         description:
             - C(present) creates a partition of the specified I(os_type), I(vm_name), I(proc) and I(memory) on specified I(system_name).
-            - C(absent) deletes a partition of the specified I(vm_name) on specified I(system_name).
+            - C(absent) deletes a partition of the specified I(vm_name).
             - C(facts) fetch the details of the specified I(vm_name) on specified I(system_name).
         type: str
         choices: ['present', 'absent', 'facts']
@@ -303,13 +406,14 @@ options:
             - C(shutdown) shutdown a partition of the specified I(vm_name) on specified I(system_name).
             - C(poweron) poweron a partition of the specified I(vm_name) with specified I(prof_name), I(keylock), I(iIPLsource) on specified I(system_name).
             - C(restart) restart a partition of the specified I(vm_name) on specified I(system_name).
+            - C(install_os) install Aix/Linux OS through NIM Server on specified I(vm_name).
         type: str
-        choices: ['poweron', 'shutdown', 'restart']
+        choices: ['poweron', 'shutdown', 'restart', 'install_os']
 '''
 
 EXAMPLES = '''
 - name: Create an IBMi logical partition instance with shared proc, volume_config's vios_name and volume_name values, PhysicaIO and
-        max_virtual_slots
+        max_virtual_slots.
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -317,6 +421,7 @@ EXAMPLES = '''
          password: '{{ hmc_password }}'
       system_name: <system_name>
       vm_name: <vm_name>
+      vm_id: <lpar_id>
       proc: 4
       proc_unit: 4
       mem: 20480
@@ -333,7 +438,7 @@ EXAMPLES = '''
       state: present
 
 - name: Create an AIX/Linux logical partition instance with default proc, mem, virt_network_config, volume_config's volumes_size and
-        npiv_config
+        npiv_config, vnic_config.
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -351,10 +456,23 @@ EXAMPLES = '''
          - vios_name: <viosname>
            fc_port: <fc_port_name/loc_code>
            wwpn_pair: <wwpn1;wwpn2>
+      vnic_config:
+         - vnic_adapter_id: <vnic_adapter_id>
+           backing_devices:
+              - location_code: XXXXX.XXX.XXXXXXX-P1-T1
+                capacity: <capacity>
+                hosting_partition: <vios_name>
+              - location_code: P1-T2
+         - backing_devices:
+              - location_code: P1-T3
+                hosting_partition: <vios_name>
+              - location_code: P1-T4
+                capacity: <capacity>
+         - vnic_adapter_id: <vnic_adapter_id>
       os_type: aix_linux
       state: present
 
-- name: Delete a logical partition instance with retain_vios_cfg and delete_vdisk options
+- name: Delete a logical partition instance with retain_vios_cfg and delete_vdisk options.
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -366,7 +484,7 @@ EXAMPLES = '''
       delete_vdisks: True
       state: absent
 
-- name: Shutdown a logical partition
+- name: Shutdown a logical partition.
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -376,7 +494,7 @@ EXAMPLES = '''
       vm_name: <vm_name>
       action: shutdown
 
-- name: Activate an AIX/Linux logical partition with user defined profile_name
+- name: Activate an AIX/Linux logical partition with user defined profile_name.
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -387,7 +505,7 @@ EXAMPLES = '''
       prof_name: <profile_name>
       action: poweron
 
-- name: Activate IBMi based on its current configuration with keylock and iIPLsource options
+- name: Activate IBMi based on its current configuration with keylock and iIPLsource options.
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -399,7 +517,7 @@ EXAMPLES = '''
       iIPLsource: 'd'
       action: poweron
 
-- name: Create a partition with all resources
+- name: Create a partition with all resources.
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
@@ -410,6 +528,20 @@ EXAMPLES = '''
       all_resources: True
       os_type: aix_linux
       state: present
+
+- name: Install Aix/Linux OS on LPAR from NIM Server.
+  powervm_lpar_instance:
+      hmc_host: '{{ inventory_hostname }}'
+      hmc_auth: "{{ curr_hmc_auth }}"
+      system_name: <system_name>
+      vm_name: <vm_name>
+      install_settings:
+         vm_ip: <IP_address of the lpar>
+         nim_ip: <IP_address of the NIM Server>
+         nim_gateway: <Gateway IP_Addres>
+         nim_subnetmask: <Subnetmask IP_Address>
+      action: install_os
+
 '''
 
 RETURN = '''
@@ -543,27 +675,44 @@ def validate_parameters(params):
 
     if opr == 'present':
         mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']
-        unsupportedList = ['prof_name', 'keylock', 'iIPLsource', 'retain_vios_cfg', 'delete_vdisks', 'advanced_info']
+        unsupportedList = ['prof_name', 'keylock', 'iIPLsource', 'retain_vios_cfg', 'delete_vdisks', 'advanced_info', 'install_settings',
+                           'shutdown_option', 'restart_option']
     elif opr == 'poweron':
-        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
+        mandatoryList = ['hmc_host', 'hmc_auth', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'volume_config', 'virt_network_config', 'retain_vios_cfg', 'delete_vdisks',
                            'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
-                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool']
+                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'install_settings',
+                           'vnic_config', 'shutdown_option', 'restart_option']
     elif opr == 'absent':
-        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
+        mandatoryList = ['hmc_host', 'hmc_auth', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
-                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool']
+                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'install_settings',
+                           'vnic_config', 'shutdown_option', 'restart_option']
     elif opr == 'facts':
-        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
+        mandatoryList = ['hmc_host', 'hmc_auth', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
-                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool']
-    else:
-        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']
+                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'install_settings',
+                           'vnic_config', 'shutdown_option', 'restart_option']
+    elif opr == 'install_os':
+        mandatoryList = ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'install_settings']
+        unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config', 'retain_vios_cfg',
+                           'delete_vdisks', 'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc', 'min_proc_unit', 'max_proc_unit',
+                           'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem', 'vm_id', 'vnic_config',
+                           'shutdown_option', 'restart_option']
+    elif opr == 'shutdown':
+        mandatoryList = ['hmc_host', 'hmc_auth', 'vm_name']
         unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
                            'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc',
-                           'min_proc_unit', 'max_proc_unit', 'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool']
+                           'min_proc_unit', 'max_proc_unit', 'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem',
+                           'vm_id', 'install_settings', 'vnic_config', 'restart_option']
+    else:
+        mandatoryList = ['hmc_host', 'hmc_auth', 'vm_name']
+        unsupportedList = ['proc', 'mem', 'os_type', 'proc_unit', 'prof_name', 'keylock', 'iIPLsource', 'volume_config', 'virt_network_config',
+                           'retain_vios_cfg', 'delete_vdisks', 'all_resources', 'max_virtual_slots', 'advanced_info', 'min_proc', 'max_proc',
+                           'min_proc_unit', 'max_proc_unit', 'proc_mode', 'weight', 'proc_compatibility_mode', 'shared_proc_pool', 'min_mem', 'max_mem',
+                           'vm_id', 'install_settings', 'vnic_config', 'shutdown_option']
 
     collate = []
     for eachMandatory in mandatoryList:
@@ -639,7 +788,7 @@ def identifyFreeVolume(rest_conn, system_uuid, volume_name=None, volume_size=0, 
         for each in pv_xml_list:
 
             # This condition is to avoid picking already picked UDID in case of mutiple volume config
-            if(pvid_list and each.xpath("UniqueDeviceID")[0].text in pvid_list):
+            if (pvid_list and each.xpath("UniqueDeviceID")[0].text in pvid_list):
                 continue
 
             if volume_size > 0 and int(each.xpath("VolumeCapacity")[0].text) >= volume_size:
@@ -818,6 +967,33 @@ def fetch_virt_networks(rest_conn, system_uuid, virt_nw_config_list, max_slot_no
     return virt_nws_identified
 
 
+def get_MS_names_by_lpar_name(hmc_obj, lpar_name):
+    mss = hmc_obj.list_all_managed_system_details("name,state")
+    ms_list = []
+    for ms in mss:
+        ms_name, state = ms.split(',')
+        if state == 'Operating':
+            lpar_names = hmc_obj.list_all_lpars_details(ms_name, "name")
+            if lpar_name in lpar_names:
+                ms_list.append(ms_name)
+    return ms_list
+
+
+def identify_ManagedSystem_of_lpar(hmc, vm_name):
+    system_name = None
+    ms_name = get_MS_names_by_lpar_name(hmc, vm_name)
+    if len(ms_name) == 1:
+        system_name = ms_name[0]
+    elif len(ms_name) > 1:
+        err_msg = "Logical Partition Name:'{0}' found in more than one managed systems:'{1}'," \
+                  " Please provide the system_name parameter to avoid the confusion".format(vm_name, ms_name)
+        raise ParameterError(err_msg)
+    else:
+        err_msg = "Logical Partition Name:'{0}' not found in any of the managed systems".format(vm_name)
+        raise ParameterError(err_msg)
+    return system_name
+
+
 def create_partition(module, params):
     changed = False
     cli_conn = None
@@ -831,6 +1007,7 @@ def create_partition(module, params):
     password = params['hmc_auth']['password']
     system_name = params['system_name']
     vm_name = params['vm_name']
+    vm_id = params['vm_id']
     proc = str(params['proc'] or 2)
     max_proc = str(params['max_proc'] or proc)
     min_proc = str(params['min_proc'] or 1)
@@ -874,7 +1051,7 @@ def create_partition(module, params):
         module.fail_json(msg="Given system is not present")
 
     try:
-        partition_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, vm_name)
+        partition_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, partition_name=vm_name)
     except Exception as error:
         try:
             rest_conn.logoff()
@@ -922,10 +1099,10 @@ def create_partition(module, params):
         if proc_compatibility_mode not in supp_compat_modes:
             raise HmcError("unsupported proc_compat_mode:{0}, Supported proc_compat_modes are {1}".format(proc_compatibility_mode, supp_compat_modes))
 
-    if params['npiv_config']:
-        fcports_config = fetch_fc_config(rest_conn, system_uuid, params['npiv_config'])
-
     try:
+        if params['npiv_config']:
+            fcports_config = fetch_fc_config(rest_conn, system_uuid, params['npiv_config'])
+
         if os_type in ['aix', 'linux', 'aix_linux']:
             reference_template = "QuickStart_lpar_rpa_2"
         else:
@@ -966,6 +1143,8 @@ def create_partition(module, params):
         config_dict['weight'] = str(weight) if proc_mode == 'uncapped' else str(0)
         config_dict['proc_comp_mode'] = proc_compatibility_mode
         config_dict['shared_proc_pool'] = shared_proc_pool if shared_proc_pool else str(0)
+        if vm_id:
+            config_dict['lpar_id'] = str(vm_id)
 
         # Tagged IO
         if os_type == 'ibmi':
@@ -1033,6 +1212,23 @@ def create_partition(module, params):
                 rest_conn.add_vscsi(draft_template_dom, vscsi_clients_payload)
                 rest_conn.updatePartitionTemplate(draft_uuid, draft_template_dom)
 
+        # Virtual NIC Configurations
+        if params['vnic_config']:
+            vios_response = rest_conn.getVirtualIOServersQuick(system_uuid)
+            vios_list = json.loads(vios_response)
+            vios_name_list = []
+            for vios in vios_list:
+                if vios['RMCState'] == 'active':
+                    vios_name_list.append(vios['PartitionName'])
+            if not vios_name_list:
+                module.fail_json(msg="There are no RMC Active VIOS available in the managed system")
+            sriov_adapters_dom = server_dom.xpath("//SRIOVAdapters//SRIOVAdapter")
+            sriov_dvc_col = rest_conn.create_sriov_collection(sriov_adapters_dom)
+            if not sriov_dvc_col:
+                module.fail_json(msg="There are no SRIOV Physical ports available in the managed system")
+            rest_conn.add_vnic_payload(draft_template_dom, params['vnic_config'], sriov_dvc_col, vios_name_list)
+            rest_conn.updatePartitionTemplate(draft_uuid, draft_template_dom)
+
         resp_dom = rest_conn.deployPartitionTemplate(draft_uuid, system_uuid)
         partition_uuid = resp_dom.xpath("//ParameterName[text()='PartitionUuid']/following-sibling::ParameterValue")[0].text
         partition_prop = rest_conn.quickGetPartition(partition_uuid)
@@ -1082,10 +1278,13 @@ def remove_partition(module, params):
         retainViosCfg = False
         deleteVdisks = False
     else:
-        retainViosCfg = not(retainViosCfg)
-
+        retainViosCfg = not (retainViosCfg)
     try:
-        hmc.deletePartition(system_name, vm_name, retainViosCfg, deleteVdisks)
+        if system_name:
+            hmc.deletePartition(system_name, vm_name, retainViosCfg, deleteVdisks)
+        else:
+            ms_name = identify_ManagedSystem_of_lpar(hmc, vm_name)
+            hmc.deletePartition(ms_name, vm_name, retainViosCfg, deleteVdisks)
     except HmcError as del_lpar_error:
         error_msg = parse_error_response(del_lpar_error)
         if 'HSCL8012' in error_msg:
@@ -1108,6 +1307,8 @@ def poweroff_partition(module, params):
     password = params['hmc_auth']['password']
     system_name = params['system_name']
     vm_name = params['vm_name']
+    shutdown_option = params['shutdown_option'] or 'Delayed'
+    restart_option = params['restart_option'] or 'Immediate'
     operation = params['action']
 
     try:
@@ -1117,6 +1318,11 @@ def poweroff_partition(module, params):
         module.fail_json(msg="Logon to HMC failed")
 
     try:
+        if not system_name:
+            hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
+            hmc = Hmc(hmc_conn)
+            system_name = identify_ManagedSystem_of_lpar(hmc, vm_name)
+
         system_uuid, server_dom = rest_conn.getManagedSystem(system_name)
         if not system_uuid:
             module.fail_json(msg="Given system is not present")
@@ -1145,10 +1351,10 @@ def poweroff_partition(module, params):
             return False, None, None
         else:
             if operation == 'restart':
-                rest_conn.poweroffPartition(lpar_uuid, 'shutdown', 'true')
+                rest_conn.poweroffPartition(lpar_uuid, 'true', restart_option)
                 changed = True
             elif operation == 'shutdown':
-                rest_conn.poweroffPartition(lpar_uuid, 'shutdown')
+                rest_conn.poweroffPartition(lpar_uuid, 'false', shutdown_option)
                 changed = True
 
     except (Exception, HmcError) as error:
@@ -1189,6 +1395,11 @@ def poweron_partition(module, params):
         module.fail_json(msg="Logon to HMC failed")
 
     try:
+        if not system_name:
+            hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
+            hmc = Hmc(hmc_conn)
+            system_name = identify_ManagedSystem_of_lpar(hmc, vm_name)
+
         system_uuid, server_dom = rest_conn.getManagedSystem(system_name)
         if not system_uuid:
             module.fail_json(msg="Given system is not present")
@@ -1262,6 +1473,64 @@ def poweron_partition(module, params):
     return changed, None, None
 
 
+def install_aix_os(module, params):
+    hmc_host = params['hmc_host']
+    hmc_user = params['hmc_auth']['username']
+    password = params['hmc_auth']['password']
+    system_name = params['system_name']
+    vm_name = params['vm_name']
+    vm_ip = params['install_settings']['vm_ip']
+    nim_ip = params['install_settings']['nim_ip']
+    nim_gateway = params['install_settings']['nim_gateway']
+    nim_subnetmask = params['install_settings']['nim_subnetmask']
+    location_code = params['install_settings']['location_code']
+    profile_name = params['prof_name'] or 'default_profile'
+    nim_vlan_id = params['install_settings']['nim_vlan_id'] or '0'
+    nim_vlan_priority = params['install_settings']['nim_vlan_priority'] or '0'
+    timeout = params['install_settings']['timeout'] or 60
+    validate_parameters(params)
+    changed = False
+    warn_msg = None
+    vm_property = None
+
+    hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
+    hmc = Hmc(hmc_conn)
+
+    if timeout < 10:
+        module.fail_json(msg="timeout should be more than 10mins")
+    try:
+        lpar_details = hmc.getPartitionConfig(system_name, vm_name)
+        if lpar_details['lpar_env'] != 'aixlinux':
+            module.fail_json(msg="UnSupported logical partitions os type:" + lpar_details['lpar_env'] + ", Supported logical partition os type is aixlinux")
+
+        if location_code:
+            hmc.installOSFromNIM(location_code, nim_ip, nim_gateway, vm_ip, nim_vlan_id, nim_vlan_priority, nim_subnetmask, vm_name, profile_name, system_name)
+        else:
+            dvcdictlt = hmc.fetchIODetailsForNetboot(nim_ip, nim_gateway, vm_ip, vm_name, profile_name, system_name, nim_subnetmask)
+            for dvcdict in dvcdictlt:
+                if dvcdict['Ping Result'] == 'successful':
+                    location_code = dvcdict['Location Code']
+                    break
+            if location_code:
+                hmc.installOSFromNIM(location_code, nim_ip, nim_gateway, vm_ip, nim_vlan_id, nim_vlan_priority, nim_subnetmask,
+                                     vm_name, profile_name, system_name)
+            else:
+                module.fail_json(msg="None of adapters part of the profile is reachable through network. Please attach correct network adapter")
+
+        rmc_state, vm_property, ref_code = hmc.checkForOSToBootUpFully(system_name, vm_name, timeout)
+        if rmc_state:
+            changed = True
+        elif ref_code in ['', '00']:
+            changed = True
+            warn_msg = "AIX installation has been successfull but RMC didnt come up, please check the HMC firewall and security"
+        else:
+            module.fail_json(msg="AIX Installation failed even after waiting for " + str(timeout) + " mins and the reference code is " + ref_code)
+    except HmcError as install_error:
+        return False, repr(install_error), None
+
+    return changed, vm_property, warn_msg
+
+
 def partition_details(module, params):
     rest_conn = None
     system_uuid = None
@@ -1283,6 +1552,11 @@ def partition_details(module, params):
         module.fail_json(msg=error_msg)
 
     try:
+        if not system_name:
+            hmc_conn = HmcCliConnection(module, hmc_host, hmc_user, password)
+            hmc = Hmc(hmc_conn)
+            system_name = identify_ManagedSystem_of_lpar(hmc, vm_name)
+
         system_uuid, server_dom = rest_conn.getManagedSystem(system_name)
         if not system_uuid:
             module.fail_json(msg="Given system is not present")
@@ -1303,8 +1577,40 @@ def partition_details(module, params):
             module.fail_json(msg="There are no Logical Partitions present on the system")
 
         if lpar_uuid and advanced_info:
-            partition_prop['VirtualFiberChannelAdapters'] = rest_conn.fetchFCDetailsFromVIOS(system_uuid, partition_prop['PartitionID'])
-            partition_prop['VirtualSCSIClientAdapters'] = rest_conn.fetchSCSIDetailsFromVIOS(system_uuid, partition_prop['PartitionID'])
+            vios_response = rest_conn.getVirtualIOServersQuick(system_uuid)
+            vios_list = []
+            if vios_response is not None:
+                vios_list = json.loads(vios_response)
+            partition_prop['VirtualFiberChannelAdapters'] = rest_conn.fetchFCDetailsFromVIOS(system_uuid, partition_prop['PartitionID'], vios_list)
+            partition_prop['VirtualSCSIClientAdapters'] = rest_conn.fetchSCSIDetailsFromVIOS(system_uuid, partition_prop['PartitionID'], vios_list)
+            partition_prop['DedicatedVirtualNICs'] = rest_conn.fetchDedicatedVirtualNICs(system_uuid, lpar_uuid, vm_name, vios_list)
+
+            lpar_uuid, partition_dom = rest_conn.getLogicalPartition(system_uuid, partition_uuid=lpar_uuid)
+            partition_prop['MinimumMemory'] = partition_dom.xpath("//MinimumMemory")[0].text
+            partition_prop['MaximumMemory'] = partition_dom.xpath("//MaximumMemory")[0].text
+            isDedicatedProc = rest_conn.isDedicatedProcConfig(partition_dom)
+            if isDedicatedProc:
+                partition_prop['MinimumProcessors'] = partition_dom.xpath("//MinimumProcessors")[0].text
+                partition_prop['MaximumProcessors'] = partition_dom.xpath("//MaximumProcessors")[0].text
+            else:
+                partition_prop['MinimumProcessingUnits'] = partition_dom.xpath("//MinimumProcessingUnits")[0].text
+                partition_prop['MaximumProcessingUnits'] = partition_dom.xpath("//MaximumProcessingUnits")[0].text
+                partition_prop['MinimumVirtualProcessors'] = partition_dom.xpath("//MinimumVirtualProcessors")[0].text
+                partition_prop['MaximumVirtualProcessors'] = partition_dom.xpath("//MaximumVirtualProcessors")[0].text
+                partition_prop['CurrentSharedProcessorPoolID'] = rest_conn.getProcPool(partition_dom)
+
+            modeMapping = {
+                'keep idle procs': 'keep_idle_procs',
+                'sre idle proces': 'share_idle_procs',
+                'sre idle procs active': 'share_idle_procs_active',
+                'sre idle procs always': 'share_idle_procs_always',
+                'uncapped': 'uncapped',
+                'capped': 'capped'
+            }
+
+            partition_prop['SharingMode'] = modeMapping[partition_dom.xpath("//SharingMode")[0].text]
+            if partition_prop['SharingMode'] == 'uncapped':
+                partition_prop['UncappedWeight'] = rest_conn.getProcUncappedWeight(partition_dom)
 
         if not lpar_uuid:
             module.fail_json(msg="Given Logical Partition is not present on the system")
@@ -1332,6 +1638,7 @@ def perform_task(module):
         "shutdown": poweroff_partition,
         "poweron": poweron_partition,
         "restart": poweroff_partition,
+        "install_os": install_aix_os,
     }
 
     oper = 'state'
@@ -1358,6 +1665,25 @@ def run_module():
                    vios_name=dict(type='str'),
                    volume_size=dict(type='int')
                    )
+    install_os_args = dict(vm_ip=dict(type='str', required=True),
+                           nim_ip=dict(type='str', required=True),
+                           nim_gateway=dict(type='str', required=True),
+                           nim_subnetmask=dict(type='str', required=True),
+                           location_code=dict(type='str'),
+                           nim_vlan_id=dict(type='str'),
+                           nim_vlan_priority=dict(type='str'),
+                           timeout=dict(type='int')
+                           )
+    bck_dvc_args = dict(location_code=dict(type='str', required=True),
+                        capacity=dict(type='float'),
+                        hosting_partition=dict(type='str')
+                        )
+    vnic_args = dict(vnic_adapter_id=dict(type='int'),
+                     backing_devices=dict(type='list',
+                                          elements='dict',
+                                          options=bck_dvc_args)
+                     )
+
     # define available arguments/parameters a user can pass to the module
     module_args = dict(
         hmc_host=dict(type='str', required=True),
@@ -1369,8 +1695,9 @@ def run_module():
                           password=dict(type='str', no_log=True),
                       )
                       ),
-        system_name=dict(type='str', required=True),
+        system_name=dict(type='str'),
         vm_name=dict(type='str', required=True),
+        vm_id=dict(type='int'),
         proc=dict(type='int'),
         max_proc=dict(type='int'),
         min_proc=dict(type='int'),
@@ -1406,22 +1733,31 @@ def run_module():
         retain_vios_cfg=dict(type='bool'),
         delete_vdisks=dict(type='bool'),
         advanced_info=dict(type='bool'),
+        install_settings=dict(type='dict',
+                              options=install_os_args),
+        vnic_config=dict(type='list',
+                         elements='dict',
+                         options=vnic_args
+                         ),
+        shutdown_option=dict(type='str', choices=['Delayed', 'Immediate', 'OperatingSystem', 'OSImmediate']),
+        restart_option=dict(type='str', choices=['Immediate', 'OperatingSystem', 'OSImmediate', 'Dump', 'DumpRetry']),
         state=dict(type='str',
                    choices=['present', 'absent', 'facts']),
         action=dict(type='str',
-                    choices=['shutdown', 'poweron', 'restart'])
+                    choices=['shutdown', 'poweron', 'restart', 'install_os'])
     )
 
     module = AnsibleModule(
         argument_spec=module_args,
         mutually_exclusive=[('state', 'action')],
         required_one_of=[('state', 'action')],
-        required_if=[['state', 'facts', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
-                     ['state', 'absent', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
+        required_if=[['state', 'facts', ['hmc_host', 'hmc_auth', 'vm_name']],
+                     ['state', 'absent', ['hmc_host', 'hmc_auth', 'vm_name']],
                      ['state', 'present', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'os_type']],
-                     ['action', 'shutdown', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
-                     ['action', 'poweron', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
-                     ['action', 'restart', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name']],
+                     ['action', 'shutdown', ['hmc_host', 'hmc_auth', 'vm_name']],
+                     ['action', 'poweron', ['hmc_host', 'hmc_auth', 'vm_name']],
+                     ['action', 'restart', ['hmc_host', 'hmc_auth', 'vm_name']],
+                     ['action', 'install_os', ['hmc_host', 'hmc_auth', 'system_name', 'vm_name', 'install_settings']],
                      ],
         required_by=dict(
             proc_unit=('proc', ),
@@ -1439,6 +1775,10 @@ def run_module():
 
     if module._verbosity >= 5:
         init_logger()
+
+    if sys.version_info < (3, 0):
+        py_ver = sys.version_info[0]
+        module.fail_json(msg="Unsupported Python version {0}, supported python version is 3 and above".format(py_ver))
 
     changed, info, warning = perform_task(module)
 

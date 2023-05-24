@@ -49,7 +49,7 @@ class Hmc():
         return versionDict
 
     def pingTest(self, i_host):
-        pattern = re.compile(r"(\d) received")
+        pattern = re.compile(r"(\d) (packets\s)?received")
         report = ("No response", "Partial Response", "Alive")
         cmd = "ping -c 2 " + i_host.strip()
 
@@ -64,7 +64,7 @@ class Hmc():
 
             igot = re.findall(pattern, stdout_value)
             if igot:
-                result = report[int(igot[0])]
+                result = report[int(igot[0][0])]
 
         return result
 
@@ -458,9 +458,10 @@ class Hmc():
                 di['Ping Result'] = x[4]
                 di['Device Type'] = x[5]
                 res.append(di)
+
         return res
 
-    def fetchIODetailsForNetboot(self, nimIP, gateway, lparIP, viosName, profName, systemName):
+    def fetchIODetailsForNetboot(self, nimIP, gateway, lparIP, viosName, profName, systemName, submask):
         lpar_netboot = self.CMD['LPAR_NETBOOT'] +\
             self.OPT['LPAR_NETBOOT']['-A'] +\
             self.OPT['LPAR_NETBOOT']['-M'] +\
@@ -470,11 +471,12 @@ class Hmc():
             self.OPT['LPAR_NETBOOT']['-S'] + nimIP +\
             self.OPT['LPAR_NETBOOT']['-G'] + gateway +\
             self.OPT['LPAR_NETBOOT']['-C'] + lparIP +\
+            self.OPT['LPAR_NETBOOT']['-K'] + submask +\
             " " + viosName + " " + profName + " " + systemName
         result = self.hmcconn.execute(lpar_netboot)
         return self._parseIODetailsFromNetboot(result)
 
-    def installVIOSFromNIM(self, loc_code, nimIP, gateway, lparIP, vlanID, vlanPrio, submask, viosName, profName, systemName):
+    def installOSFromNIM(self, loc_code, nimIP, gateway, lparIP, vlanID, vlanPrio, submask, viosName, profName, systemName):
         lpar_netboot = self.CMD['LPAR_NETBOOT'] +\
             self.OPT['LPAR_NETBOOT']['-F'] +\
             self.OPT['LPAR_NETBOOT']['-D'] +\
@@ -518,3 +520,160 @@ class Hmc():
                 self.OPT['MKAUTHKEYS']['-U'] + username +\
                 self.OPT['MKAUTHKEYS']['--PASSWD'] + passwd
         self.hmcconn.execute(mkauthcmd)
+
+    def listUsr(self, user_type=None, filt=None):
+        listHmcUsr = self.CMD['LSHMCUSR']
+        if user_type:
+            listHmcUsr += self.OPT['LSHMCUSR']['-T'][user_type.upper()]
+        if filt:
+            listHmcUsr += self.cmdClass.filterBuilder('LSHMCUSR', filt)
+        result = self.hmcconn.execute(listHmcUsr)
+        if 'No results were found' in result:
+            return []
+        return self.cmdClass.parseMultiLineCSV(result)
+
+    def createUsr(self, configDict):
+        config = {each.upper(): str(configDict[each]) for each in configDict if configDict[each] is not None}
+        mkhmcusrCmd = self.CMD['MKHMCUSR'] +\
+            self.cmdClass.i_a_ConfigBuilder('MKHMCUSR', '-I', config)
+        self.hmcconn.execute(mkhmcusrCmd)
+
+    def modifyUsr(self, configDict=None, enable=False, modify_type=None):
+        chhmcusrCmd = self.CMD['CHHMCUSR']
+        config = {each.upper(): str(configDict[each]) for each in configDict if configDict[each] is not None}
+        if enable:
+            chhmcusrCmd += self.OPT['CHHMCUSR']['-O']['E'] +\
+                self.OPT['CHHMCUSR']['-U'] + config['NAME']
+        elif modify_type == 'default' and config:
+            chhmcusrCmd += self.OPT['CHHMCUSR']['-T']['DEFAULT'] +\
+                self.cmdClass.i_a_ConfigBuilder('CHHMCUSR', '-I', config)
+        elif config:
+            chhmcusrCmd += self.cmdClass.i_a_ConfigBuilder('CHHMCUSR', '-I', config)
+        self.hmcconn.execute(chhmcusrCmd)
+
+    def removeUsr(self, usr=None, rm_type=None):
+        rmhmcusrCmd = self.CMD['RMHMCUSR']
+        if usr:
+            rmhmcusrCmd += self.OPT['RMHMCUSR']['-U'] + usr
+        elif rm_type:
+            rmhmcusrCmd += self.OPT['RMHMCUSR']['-T'][rm_type.upper()]
+        self.hmcconn.execute(rmhmcusrCmd)
+
+    def checkForOSToBootUpFully(self, system_name, name, timeoutInMin=60):
+        POLL_INTERVAL_IN_SEC = 30
+        WAIT_UNTIL_IN_SEC = timeoutInMin * 60 - 600
+        waited = 0
+        rmcActive = False
+        ref_code = None
+        # wait for 10 mins before polling
+        time.sleep(600)
+        while waited < WAIT_UNTIL_IN_SEC:
+            conf_dict = self.getPartitionConfig(system_name, name)
+            if conf_dict['rmc_state'] == 'active':
+                rmcActive = True
+                break
+            else:
+                waited += POLL_INTERVAL_IN_SEC
+            time.sleep(POLL_INTERVAL_IN_SEC)
+        if not rmcActive:
+            res = self.getPartitionRefcode(system_name, name)
+            ref_code = res['REFCODE']
+        return rmcActive, conf_dict, ref_code
+
+    def accept_level(self, system_name):
+        updlic_cmd = self.CMD['UPDLIC'] +\
+            self.OPT['UPDLIC']['-M'] + system_name +\
+            self.OPT['UPDLIC']['-O']['ACCEPT']
+
+        return self.hmcconn.execute(updlic_cmd)
+
+    def update_managed_system(self, system_name, upgrade=False, repo='ibmwebsite', level='latest', remote_repo=None):
+        if upgrade:
+            update_upgrade_flags = self.OPT['UPDLIC']['-O']['UPGRADE']
+        else:
+            update_upgrade_flags = self.OPT['UPDLIC']['-O']['RETINSTACT']
+        # build command
+        updlic_cmd = self.CMD['UPDLIC'] +\
+            self.OPT['UPDLIC']['-M'] + system_name +\
+            update_upgrade_flags +\
+            self.OPT['UPDLIC']['-T']['SYS'] +\
+            self.OPT['UPDLIC']['-R'] + repo +\
+            self.OPT['UPDLIC']['-L'] + level
+        if remote_repo:
+            updlic_cmd += self.OPT['UPDLIC']['-H'] + remote_repo['hostname']
+            updlic_cmd += self.OPT['UPDLIC']['-U'] + remote_repo['userid']
+            updlic_cmd += self.OPT['UPDLIC']['-D'] + remote_repo['directory']
+            passwd = remote_repo['passwd']
+            if passwd:
+                updlic_cmd += self.OPT['UPDLIC']['--PASSWD'] + passwd
+            ssh_key = remote_repo['sshkey_file']
+            if ssh_key:
+                updlic_cmd += self.OPT['UPDLIC']['-K'] + ssh_key
+
+        self.hmcconn.execute(updlic_cmd)
+
+    def get_firmware_level(self, system_name):
+        lslic_cmd = self.CMD['LSLIC'] +\
+            self.OPT['LSLIC']['-M'] + system_name +\
+            self.OPT['LSLIC']['-F']['SPNAMELEVEL']
+        raw_result = self.hmcconn.execute(lslic_cmd)
+        headers = "service_pack,level,ecnumber"
+        res_dict = self.cmdClass.parseAttributes(headers, raw_result)
+        parsed_res = dict((k.lower(), v) for k, v in res_dict.items())
+        return parsed_res
+
+    def list_all_managed_systems(self):
+        lssysconn_cmd = self.CMD['LSSYSCONN'] +\
+            self.OPT['LSSYSCONN']['-R']['ALL'] +\
+            self.OPT['LSSYSCONN']['-F']['MTMS']
+
+        raw_result = self.hmcconn.execute(lssysconn_cmd)
+        lines = raw_result.split()
+        return lines
+
+    def list_HMC_LDAP(self, resource, filt=None):
+        lshmcldap_cmd = self.CMD['LSHMCLDAP'] +\
+            self.OPT['LSHMCLDAP']['-R'][resource.upper()]
+        if filt:
+            lshmcldap_cmd += self.cmdClass.filterBuilder('LSHMCLDAP', filt)
+        result = self.hmcconn.execute(lshmcldap_cmd)
+        if 'LDAP server is not configured' in result:
+            return []
+        return self.cmdClass.parseMultiLineCSV(result)
+
+    def configure_LDAP_on_HMC(self, operation, configDict=None, resource=None):
+        chhmcldap = self.CMD['CHHMCLDAP']
+        if operation == 'set':
+            chhmcldap += self.OPT['CHHMCLDAP']['-O']['S']
+            config = {each.upper(): str(configDict[each]) for each in configDict if configDict[each] is not None}
+            chhmcldap += self.cmdClass.configBuilder('CHHMCLDAP', config)
+        elif operation == 'remove':
+            resource = resource.upper()
+            chhmcldap += self.OPT['CHHMCLDAP']['-O']['R'] +\
+                self.OPT['CHHMCLDAP']['-R'][resource]
+        self.hmcconn.execute(chhmcldap)
+
+    def list_all_managed_system_details(self, filter=None):
+        lines = []
+        lssyscfgCmd = self.CMD['LSSYSCFG'] +\
+            self.OPT['LSSYSCFG']['-R']['SYS']
+        if filter:
+            lssyscfgCmd += self.OPT['LSSYSCFG']['-F'] + filter
+
+        raw_result = self.hmcconn.execute(lssyscfgCmd)
+        lines = raw_result.split()
+
+        return lines
+
+    def list_all_lpars_details(self, sys_name, filter=None):
+        lines = []
+        lssyscfgCmd = self.CMD['LSSYSCFG'] +\
+            self.OPT['LSSYSCFG']['-R']['LPAR'] +\
+            self.OPT['LSSYSCFG']['-M'] + sys_name
+        if filter:
+            lssyscfgCmd += self.OPT['LSSYSCFG']['-F'] + filter
+
+        raw_result = self.hmcconn.execute(lssyscfgCmd)
+        lines = raw_result.split()
+
+        return lines

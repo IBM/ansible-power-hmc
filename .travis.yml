@@ -2,7 +2,7 @@ sudo: required
 dist: bionic
 language: python
 python:
-  - "3.7"
+  - "3.10"
 
 # command to install dependencies
 install:
@@ -28,6 +28,7 @@ install:
 env:
   global:
     secure: DQDvnMpHEJq7piWc3KmNK1SIAWT1YdtqQfxq9F2SyI/d+a6kxucjouUS3Im7Sx6YpVx2NfBKf94UWpv4rYBxcEAhwykmbm60qh4i/7fw1MNo5zOFiQoKN5hs5TcZSSK30W9w7ILVeZlnZYYjdE9/Eh4mJtCZFpq9HolNDsEMXNyTLx3gCau0SmgRiFovRuYvSR2ERA9KBjjiK+ytSkNz7OUA2axhjQ3RsUQW1CQ/XniW5jiCIRDMLrSkK7Xv1ef3jLi+enrfnGBEio4vz49I5J2kuHhPNGnlmyXnPTyHwLM+PDiiylICmj6wVjXCyM4zupBpDDECAHUR4wUMu58/rVTPnLr4PXSyJAXiJyISE6CeQ47qjl6DsSj1ORXWjqcBtWpYXoOOhR1AEVjGnb0/NTMv/R+5QlnJYE6F0A7+lqjyky8jO/QsbtwfYMsIRvXUMt6AF94xCO4ZV8CdSbHUc4k1h0H+Jzs+lLjMyd2zQKULQFo1asGEUjguGCtX9U6ktJuCDX3jxDSix8/6Req55MNkjC8Lr1n8H1WcX8uRBA80d0zxkvmQL9L8xyaJwxOJImJ3PfM+1zMVNgxyYPQpHkdWcBIYGvwbrnMhSpMtdQit8uv5DfMRdoOniqkvGtt971WnGFS+bqmwV6pKneRiGkWSEk2Q82KXZrqEo5TUvzI=
+
 #command to run tests
 script:
 
@@ -45,6 +46,7 @@ script:
 
   - pyenv global 3.7
   - ansible-test sanity --python 3.7 --skip-test shellcheck
+  - ansible-test sanity --python 3.10 --skip-test shellcheck
   - cd /home/travis/.ansible/collections/
   - python -m pytest
   - cd $build_path

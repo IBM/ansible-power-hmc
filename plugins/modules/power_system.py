@@ -18,6 +18,8 @@ author:
     - Anil Vijayan (@AnilVijayan)
     - Navinakumar Kandakur (@nkandak1)
 short_description: PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the Managed system
+notes:
+    - All operations support passwordless authentication.
 description:
     - "Poweron specified managed system"
     - "Poweroff specified managed system"
@@ -106,7 +108,7 @@ options:
 
 EXAMPLES = '''
 - name: poweroff managed system
-  hmc_managed_system:
+  power_system:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
          username: '{{ ansible_user }}'
@@ -115,7 +117,7 @@ EXAMPLES = '''
     action: poweroff
 
 - name: poweron managed system
-  hmc_managed_system:
+  power_system:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
          username: '{{ ansible_user }}'
@@ -124,7 +126,7 @@ EXAMPLES = '''
     action: poweron
 
 - name: modify managed system name, powerOn lpar start policy and powerOff policy
-  hmc_managed_system:
+  power_system:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
          username: '{{ ansible_user }}'
@@ -136,7 +138,7 @@ EXAMPLES = '''
     action: modify_syscfg
 
 - name: modify managed system memory settings
-  hmc_managed_system:
+  power_system:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
          username: '{{ ansible_user }}'
@@ -148,7 +150,7 @@ EXAMPLES = '''
     action: modify_hwres
 
 - name: fetch the managed system details
-  hmc_managed_system:
+  power_system:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
          username: '{{ ansible_user }}'
@@ -443,6 +445,10 @@ def run_module():
 
     if module._verbosity >= 5:
         init_logger()
+
+    if sys.version_info < (3, 0):
+        py_ver = sys.version_info[0]
+        module.fail_json(msg="Unsupported Python version {0}, supported python version is 3 and above".format(py_ver))
 
     changed, info, warning = perform_task(module)
 

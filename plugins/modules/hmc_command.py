@@ -17,6 +17,8 @@ module: hmc_command
 author:
     - Navinakumar Kandakur (@nkandak1)
 short_description: Execute HMC command
+notes:
+    - This module supports passwordless authentication.
 description:
     - Generic module that can execute any HMC CLI command
     - The given command will be executed on all selected HMC
@@ -73,6 +75,7 @@ logger = logging.getLogger(__name__)
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
+import sys
 
 
 def init_logger():
@@ -136,6 +139,10 @@ def run_module():
 
     if module._verbosity >= 5:
         init_logger()
+
+    if sys.version_info < (3, 0):
+        py_ver = sys.version_info[0]
+        module.fail_json(msg="Unsupported Python version {0}, supported python version is 3 and above".format(py_ver))
 
     changed, info, warning = perform_task(module)
 

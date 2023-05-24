@@ -125,3 +125,66 @@ Availability
 
 .. _GitHub v1.5.0:
    https://github.com/IBM/ansible-power-hmc/releases/download/v1.5.0/ibm-power_hmc-1.5.0.tar.gz
+   
+   
+Version 1.6.0
+-------------
+Notes
+  * powervm_lpar_instance: VNIC configuration support
+  * powervm_lpar_instance: Add VNIC info into facts
+  * powervm_lpar_instance: Supports install of AIX and Linux partition using netboot
+  * powervm_lpar_instance: Partition ID configuration support
+  * hmc_user: User management of HMC
+  
+  Availability
+    * `Galaxy v1.6.0`_
+    * `GitHub v1.6.0`_
+
+.. _Galaxy v1.6.0:
+   https://galaxy.ansible.com/download/ibm-power_hmc-1.6.0.tar.gz
+
+.. _GitHub v1.6.0:
+   https://github.com/IBM/ansible-power-hmc/releases/download/v1.6.0/ibm-power_hmc-1.6.0.tar.gz
+   
+Version 1.7.0
+-------------
+Notes
+  * firmware_update: Update/Upgrade firmware level on Managed System
+  * powervm_dlpar: Dynamically managing proc/mem resources of partition
+  * hmc_user: LDAP configuration support
+  * powervm_lpar_instance: Managed Sytem made optional for removal of partition
+  * powervm_inventory: Support for managed system group
+  * powervm_inventory: Introduced new properties like `AssociatedGroups` (Tagged group name), `AssociatedHMC` (HMC IP/Hostname), `AssociatedHMCUserName` (HMC username), `SystemName`
+  * powervm_inventory: Renamed parameter value from lpar_name to name for paramters like ansible_host_type and ansible_display_name
+  * powervm_inventory: Added more flexible yaml friendly format for configuration input (hmc_hosts as list)
+  
+  Availability
+    * `Galaxy v1.7.0`_
+    * `GitHub v1.7.0`_
+
+.. _Galaxy v1.7.0:
+   https://galaxy.ansible.com/download/ibm-power_hmc-1.7.0.tar.gz
+
+.. _GitHub v1.7.0:
+   https://github.com/IBM/ansible-power-hmc/releases/download/v1.7.0/ibm-power_hmc-1.7.0.tar.gz
+
+Version 1.8.0
+-------------
+Notes
+  * powervm_dlpar: Dlpar support for VSCSI based physical volume
+  * powervm_dlpar: Dlpar support for NPIV based physical volume
+  * powervm_dlpar: Dlpar support for virtual optical drive
+  * powervm_lpar_instance: Fix for issue #91
+  * powervm_lpar_instance: Enhanced with system_name made optional for states like facts, absentand actions like shutdown, poweron and restart 
+  * vios: Enhancement associated with issue #93
+  * vios: Enhanced vios module with facts of free physical volumes and virtual media details 
+
+  Availability
+    * `Galaxy v1.8.0`_
+    * `GitHub v1.8.0`_
+
+.. _Galaxy v1.8.0:
+   https://galaxy.ansible.com/download/ibm-power_hmc-1.8.0.tar.gz
+
+.. _GitHub v1.8.0:
+   https://github.com/IBM/ansible-power-hmc/releases/download/v1.8.0/ibm-power_hmc-1.8.0.tar.gz

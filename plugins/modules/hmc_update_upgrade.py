@@ -25,6 +25,7 @@ notes:
     - Module will not satisfy the idempotency requirement of Ansible, even though it partially confirms it.
       For instance, if the module is tasked to update/upgrade the HMC to the same level, it will still
       go ahead with the operation and finally the changed state will be reported as false.
+    - All Operations support passwordless authentication.
 description:
     - Updates the HMC by installing a corrective service package located on an FTP/SFTP/NFS server/Ansible Controller Node/HMC hard disk.
     - Upgrades the HMC by obtaining  the required  files  from a remote server or from the HMC hard disk. The files are transferred
@@ -169,8 +170,7 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_resource import 
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import Error
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
-
-
+import sys
 import logging
 LOG_FILENAME = "/tmp/ansible_power_hmc.log"
 logger = logging.getLogger(__name__)
@@ -201,7 +201,7 @@ def command_option_checker(config):
         unsupportedList = ['mount_location']
 
         if config['location_type'] == 'sftp':
-            if not(config['sshkey_file'] or config['passwd']):
+            if not (config['sshkey_file'] or config['passwd']):
                 raise ParameterError("mandatory parameter 'passwd' or 'sshkey_file' is missing")
             elif config['sshkey_file'] and config['passwd']:
                 raise ParameterError("conflicting parameters 'passwd' and 'sshkey_file'. Provide any one")
@@ -577,6 +577,10 @@ def run_module():
 
     if module._verbosity >= 5:
         init_logger()
+
+    if sys.version_info < (3, 0):
+        py_ver = sys.version_info[0]
+        module.fail_json(msg="Unsupported Python version {0}, supported python version is 3 and above".format(py_ver))
 
     changed, build_info, warning = perform_task(module)
 

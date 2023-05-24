@@ -1,0 +1,48 @@
+---
+- name: HMC User creation and updation
+  hosts: hmcs
+  collections:
+      - ibm.power_hmc
+  connection: local
+  vars:
+    curr_hmc_auth:
+      username: custom_user
+      password: <password>
+
+  tasks:
+  - name: read the yaml file and assign its content to a variable
+    include_vars:
+      file: hmc_users_input.yaml
+      name: userslist
+
+  - name: Create Users by reading the user detail from yaml input file
+    hmc_user:
+      hmc_host: "{{ inventory_hostname }}"
+      hmc_auth: "{{curr_hmc_auth}}"
+      name: "{{item.name}}"
+      attributes:
+        authentication_type: "{{item.authentication_type}}"
+        taskrole: "{{item.taskrole}}"
+        passwd: "{{item.passwd}}"
+      state: present
+    with_items: "{{ userslist.users }}"
+
+  - name: List the properties of hmc user
+    hmc_user:
+      hmc_host: "{{ inventory_hostname }}"
+      hmc_auth: "{{curr_hmc_auth}}"
+      type: user
+      state: facts
+    register: testout_raw
+
+  - name: Update all custom HMC users with description and password age
+    hmc_user:
+      hmc_host: "{{ inventory_hostname }}"
+      hmc_auth: "{{curr_hmc_auth}}"
+      name: "{{item.NAME}}"
+      attributes:
+        description: "ansible test"
+        pwage: "30"
+      state: updated
+    with_items: "{{ testout_raw.user_info | flatten }}"
+    when: item.NAME not in ['root', 'hmcpe', 'hscroot', 'hscpe'] 
