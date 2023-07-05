@@ -616,9 +616,9 @@ def validate_proc_mem(system_dom, proc, mem, max_proc, min_proc, max_mem, min_me
             raise HmcError("{0} Available system proc units is not enough for {1} shared CPUs. Provide value on or below {0}"
                            .format(str(curr_avail_procs), str(proc_unit)))
     else:
-        if max_proc > curr_avail_procs:
+        if proc > curr_avail_procs:
             raise HmcError("{2} Available system proc units is not enough for {1} dedicated CPUs. Provide value on or below {0} CPUs"
-                           .format(str(int_avail_proc), str(max_proc), str(curr_avail_procs)))
+                           .format(str(max_proc), str(proc), str(curr_avail_procs)))
 
     curr_avail_mem = system_dom.xpath('//CurrentAvailableSystemMemory')[0].text
     int_avail_mem = int(curr_avail_mem)
