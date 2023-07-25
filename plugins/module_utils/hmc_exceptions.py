@@ -31,6 +31,15 @@ class ParameterError(Error):
             return "ParameterError: {0}".format(self.message)
 
 
+class ProcMemValidationError(Error):
+    """
+    Raised when process memory validation fails
+    """
+    def __repr__(self):
+        if self.message:
+            return "ProcMemValidationError: {0}".format(self.message)
+
+
 class HmcError(Error):
     """
     Indicates an error with the hmc execution
