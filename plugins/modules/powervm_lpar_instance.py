@@ -567,6 +567,7 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_resource import 
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import HmcError
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import Error
+from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ProcMemValidationError
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import parse_error_response
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import HmcRestClient
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import add_taggedIO_details
@@ -594,46 +595,52 @@ def init_logger():
 
 def validate_proc_mem(system_dom, proc, mem, max_proc, min_proc, max_mem, min_mem, weight, min_proc_unit, max_proc_unit, proc_unit=None):
     if not (min_proc <= proc <= max_proc):
-        raise HmcError("Allocated processor:{0} value should be in-between minimum_processor:{1} and maximum_processor:{2}"
-                       .format(str(proc), str(min_proc), str(max_proc)))
+        raise ProcMemValidationError("Allocated processor:{0} value should be in-between minimum_processor:{1} and maximum_processor:{2}"
+                                     .format(str(proc), str(min_proc), str(max_proc)))
     if not (min_mem <= mem <= max_mem):
-        raise HmcError("Allocated memory:{0} value should be in-between minimum memory:{1} and  maximum memory:{2}"
-                       .format(str(mem), str(min_mem), str(max_mem)))
-    curr_avail_proc_units = system_dom.xpath('//CurrentAvailableSystemProcessorUnits')[0].text
+        raise ProcMemValidationError("Allocated memory:{0} value should be in-between minimum memory:{1} and  maximum memory:{2}"
+                                     .format(str(mem), str(min_mem), str(max_mem)))
+    curr_avail_proc_units = system_dom.xpath(
+        '//CurrentAvailableSystemProcessorUnits')[0].text
     curr_avail_procs = float(curr_avail_proc_units)
-    int_avail_proc = int(float(curr_avail_proc_units))
 
     if proc_unit:
         if weight not in range(256):
-            raise HmcError("weight value should be in between 0 to 255")
+            raise ProcMemValidationError(
+                "weight value should be in between 0 to 255")
         if not (min_proc_unit <= proc_unit <= max_proc_unit):
-            raise HmcError("Allocated processor units:{0} value should be in-between minimum processor units:{1} and maximum processor units:{2}"
-                           .format(str(proc_unit), str(min_proc_unit), str(max_proc_unit)))
-        min_proc_unit_per_virtproc = system_dom.xpath('//MinimumProcessorUnitsPerVirtualProcessor')[0].text
+            raise ProcMemValidationError("Allocated processor units:{0} value should be in-between minimum processor units:{1} and maximum processor units:{2}"
+                                         .format(str(proc_unit), str(min_proc_unit), str(max_proc_unit)))
+        min_proc_unit_per_virtproc = system_dom.xpath(
+            '//MinimumProcessorUnitsPerVirtualProcessor')[0].text
         if Decimal(str(proc_unit)) % Decimal(min_proc_unit_per_virtproc) != Decimal('0.0'):
-            raise HmcError("Input processor units: {0} must be a multiple of {1}".format(proc_unit, min_proc_unit_per_virtproc))
+            raise ProcMemValidationError("Input processor units: {0} must be a multiple of {1}".format(
+                proc_unit, min_proc_unit_per_virtproc))
         if proc_unit > curr_avail_procs:
-            raise HmcError("{0} Available system proc units is not enough for {1} shared CPUs. Provide value on or below {0}"
-                           .format(str(curr_avail_procs), str(proc_unit)))
+            raise ProcMemValidationError("{0} Available system proc units is not enough for {1} shared CPUs. Provide value on or below {0}"
+                                         .format(str(curr_avail_procs), str(proc_unit)))
     else:
-        if max_proc > curr_avail_procs:
-            raise HmcError("{2} Available system proc units is not enough for {1} dedicated CPUs. Provide value on or below {0} CPUs"
-                           .format(str(int_avail_proc), str(max_proc), str(curr_avail_procs)))
+        if proc > curr_avail_procs:
+            raise ProcMemValidationError("{2} Available system proc units is not enough for {1} dedicated CPUs. Provide value on or below {0} CPUs"
+                                         .format(str(max_proc), str(proc), str(curr_avail_procs)))
 
     curr_avail_mem = system_dom.xpath('//CurrentAvailableSystemMemory')[0].text
     int_avail_mem = int(curr_avail_mem)
-    curr_avail_lmb = system_dom.xpath('//CurrentLogicalMemoryBlockSize')[0].text
+    curr_avail_lmb = system_dom.xpath(
+        '//CurrentLogicalMemoryBlockSize')[0].text
     lmb = int(curr_avail_lmb)
 
     if max_mem < min_mem or mem < min_mem or mem > max_mem:
-        raise HmcError("Allocated Memory:{0} value should be in-between minimum_memory:{1} and maximum_memory:{2}"
-                       .format(str(mem), str(min_mem), str(max_mem)))
+        raise ProcMemValidationError("Allocated Memory:{0} value should be in-between minimum_memory:{1} and maximum_memory:{2}"
+                                     .format(str(mem), str(min_mem), str(max_mem)))
 
     if mem % lmb > 0:
-        raise HmcError("Requested mem value not in mutiple of block size:{0}".format(curr_avail_lmb))
+        raise ProcMemValidationError(
+            "Requested mem value not in mutiple of block size:{0}".format(curr_avail_lmb))
 
     if mem > int_avail_mem:
-        raise HmcError("Available system memory is not enough. Provide value on or below {0}".format(curr_avail_mem))
+        raise ProcMemValidationError(
+            "Available system memory is not enough. Provide value on or below {0}".format(curr_avail_mem))
 
 
 def validate_sub_dict(sub_key, params):
