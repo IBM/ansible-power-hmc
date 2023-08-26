@@ -58,33 +58,33 @@ Parameters
 
     Supports all the attributes available for creation of VIOS on the mksyscfg command.
 
-    valid only for ``state`` = *present*
+    valid only for \ :literal:`state`\  = \ :emphasis:`present`\ 
 
 
   nim_IP (optional, str, None)
     IP Address of the NIM Server.
 
-    valid only for ``action`` = *install*
+    valid only for \ :literal:`action`\  = \ :emphasis:`install`\ 
 
 
   nim_gateway (optional, str, None)
     VIOS gateway IP Address.
 
-    valid only for ``action`` = *install*
+    valid only for \ :literal:`action`\  = \ :emphasis:`install`\ 
 
 
   vios_IP (optional, str, None)
     IP Address to be configured to VIOS.
 
-    valid only for ``action`` = *install*
+    valid only for \ :literal:`action`\  = \ :emphasis:`install`\ 
 
 
   prof_name (optional, str, None)
     Profile Name to be used for VIOS install.
 
-    Default profile name 'default_profile'.
+    Default profile name 'default\_profile'.
 
-    valid only for ``action`` = *install*
+    valid only for \ :literal:`action`\  = \ :emphasis:`install`\ 
 
 
   location_code (optional, str, None)
@@ -92,13 +92,13 @@ Parameters
 
     If user doesn't provide, it automatically picks the first pingable adapter attached to the partition.
 
-    valid only for ``action`` = *install*
+    valid only for \ :literal:`action`\  = \ :emphasis:`install`\ 
 
 
   nim_subnetmask (optional, str, None)
     Subnetmask IP Address to be configured to VIOS.
 
-    valid only for ``action`` = *install*
+    valid only for \ :literal:`action`\  = \ :emphasis:`install`\ 
 
 
   nim_vlan_id (optional, str, None)
@@ -106,7 +106,7 @@ Parameters
 
     Default value is 0
 
-    valid only for ``action`` = *install*
+    valid only for \ :literal:`action`\  = \ :emphasis:`install`\ 
 
 
   nim_vlan_priority (optional, str, None)
@@ -114,7 +114,7 @@ Parameters
 
     Default value is 0
 
-    valid only for ``action`` = *install*
+    valid only for \ :literal:`action`\  = \ :emphasis:`install`\ 
 
 
   timeout (optional, int, None)
@@ -124,7 +124,7 @@ Parameters
 
     Default value is 60 min.
 
-    valid only for ``action`` = *install*
+    valid only for \ :literal:`action`\  = \ :emphasis:`install`\ 
 
 
   virtual_optical_media (optional, bool, None)
@@ -132,7 +132,7 @@ Parameters
 
     Default value is False.
 
-    Valid only for ``state`` = *facts*
+    Valid only for \ :literal:`state`\  = \ :emphasis:`facts`\ 
 
 
   free_pvs (optional, bool, None)
@@ -140,19 +140,19 @@ Parameters
 
     Default value is False.
 
-    Valid only for ``state`` = *facts*
+    Valid only for \ :literal:`state`\  = \ :emphasis:`facts`\ 
 
 
   state (optional, str, None)
-    ``facts`` fetch details of specified *VIOS*.
+    \ :literal:`facts`\  fetch details of specified \ :emphasis:`VIOS`\ .
 
-    ``present`` creates VIOS with specified *settings*.
+    \ :literal:`present`\  creates VIOS with specified \ :emphasis:`settings`\ .
 
 
   action (optional, str, None)
-    ``install`` install VIOS through NIM Server.
+    \ :literal:`install`\  install VIOS through NIM Server.
 
-    ``accept_license`` Accept license after fresh installation of VIOS.
+    \ :literal:`accept\_license`\  Accept license after fresh installation of VIOS.
 
 
 
@@ -162,7 +162,7 @@ Notes
 -----
 
 .. note::
-   - Only state=present, action=install and action=accept_license operations support passwordless authentication.
+   - Only state=present, action=install and action=accept\_license operations support passwordless authentication.
 
 
 

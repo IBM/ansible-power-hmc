@@ -12,19 +12,19 @@ powervm_inventory -- HMC-based inventory source for Power Servers
 Synopsis
 --------
 
-This plugin utilizes HMC APIs to build a dynamic inventory of defined partitions (LPAR, VIOS) and Power Servers. Inventory sources must be structured as *.power_hmc.yml or *.power_hmc.yaml.
+This plugin utilizes HMC APIs to build a dynamic inventory of defined partitions (LPAR, VIOS) and Power Servers. Inventory sources must be structured as \*.power\_hmc.yml or \*.power\_hmc.yaml.
 
 To create a usable Ansible host for a given LPAR or Power Server, the IP or hostname of the LPAR or Power Server must be exposed through the HMC in some way. Currently there are only two such sources supported by this plugin, either an RMC IP address(not valid for IBMi partition) or the name of the LPAR or Power Server must be also a valid hostname.
 
-Valid LPAR/VIOS properties that can be used for groups, keyed groups, filters, unknown partition identification, and composite variables can be found in the HMC REST API documentation. By default, valid properties include those listed as "Quick Properties", but if `advanced_fields` are enabled, you may be able to use more advanced properties of the partition. Further information about the LPAR APIs can be found in the `Knowledge Center <https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/LogicalPartition.htm>`_.
+Valid LPAR/VIOS properties that can be used for groups, keyed groups, filters, unknown partition identification, and composite variables can be found in the HMC REST API documentation. By default, valid properties include those listed as "Quick Properties", but if \`advanced\_fields\` are enabled, you may be able to use more advanced properties of the partition. Further information about the LPAR APIs can be found in the \ `Knowledge Center <https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/LogicalPartition.htm>`__\ .
 
-Valid Power Server properties that can be used for system_groups, system_keyed_groups, system_filters and system_composit variables can be found in HMC REST API documentation listed as 'Quick Properties'. (These options works only when `group_lpars_by_managed_system` option set to false) `Knowledge Center <https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/ManagedSystem.htm'>`_.
+Valid Power Server properties that can be used for system\_groups, system\_keyed\_groups, system\_filters and system\_composit variables can be found in HMC REST API documentation listed as 'Quick Properties'. (These options works only when \`group\_lpars\_by\_managed\_system\` option set to false) \ `Knowledge Center <https://www.ibm.com/support/knowledgecenter/9040-MR9/p9ehl/apis/ManagedSystem.htm'>`__\ .
 
 Apart from properties defined in HMC REST API Documentation we can use the following properties also with Power Server, and LPAR/VIOS 'AssociatedGroups' (Tagged group name), 'AssociatedHMC' (HMC IP/Hostname), 'AssociatedHMCUserName' (HMC username) for LPAR/VIOS or Power server grouping and compose.
 
-If a property is used in the inventory source that is unique to a partition type, only partitions for which that property is defined may be included. Non-compatible partitions can be filtered out by `OperatingSystemVersion` or `PartitionType` as detailed in the second example.
+If a property is used in the inventory source that is unique to a partition type, only partitions for which that property is defined may be included. Non-compatible partitions can be filtered out by \`OperatingSystemVersion\` or \`PartitionType\` as detailed in the second example.
 
-A group named 'MaagedSystems' gets created with all the Power Server Managed by the HMC and Power Server grouping features enables only when `group_lpars_by_managed_system` option set to false in the dynamic inventory playbook.
+A group named 'MaagedSystems' gets created with all the Power Server Managed by the HMC and Power Server grouping features enables only when \`group\_lpars\_by\_managed\_system\` option set to false in the dynamic inventory playbook.
 
 
 
@@ -32,7 +32,7 @@ Requirements
 ------------
 The below requirements are needed on the host that executes this module.
 
-- Python >= 3
+- Python \>= 3
 
 
 
@@ -48,7 +48,7 @@ Parameters
 
 
   system_filters (optional, any, {})
-    A key value pair for filtering by various Power Server attributes. Results include only system_filter matching Power Servers and LPAR/VIOS belongs to it.
+    A key value pair for filtering by various Power Server attributes. Results include only system\_filter matching Power Servers and LPAR/VIOS belongs to it.
 
 
   compose (optional, dict, {})
@@ -92,7 +92,7 @@ Parameters
 
 
   ansible_host_type (optional, str, ip)
-    Determines if the IP Address or the LPAR/Power Server name will be used as the "ansible_host" variable in playbooks.
+    Determines if the IP Address or the LPAR/Power Server name will be used as the "ansible\_host" variable in playbooks.
 
 
   advanced_fields (optional, bool, False)
@@ -110,9 +110,9 @@ Parameters
   identify_unknown_by (optional, str, omit)
     Allows you to include partitions unable to be automatically detected as a valid Ansible target.
 
-    By default, Aix/Linux partitions without IP's and IBMi partitions in not running state are omitted from the inventory. This is not be the case in the event you have name set for ansible_host_type. If not, omitted partitions will be added to a group called "unknown" and will can be identified by any LPAR property of your choosing (PartitionName or UUID are common identifiers).
+    By default, Aix/Linux partitions without IP's and IBMi partitions in not running state are omitted from the inventory. This is not be the case in the event you have name set for ansible\_host\_type. If not, omitted partitions will be added to a group called "unknown" and will can be identified by any LPAR property of your choosing (PartitionName or UUID are common identifiers).
 
-    If you do not omit unknown partitions, you may run into issues targeting groups that include them. To avoid this, you can specify a host pattern in a playbooks such as `targetgroup:!unknown`. This will your playbook to run against all known hosts in your target group.
+    If you do not omit unknown partitions, you may run into issues targeting groups that include them. To avoid this, you can specify a host pattern in a playbooks such as \`targetgroup:!unknown\`. This will your playbook to run against all known hosts in your target group.
 
     This is not valid for Power Servers.
 

@@ -12,9 +12,11 @@
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=92cb7abb"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -102,11 +104,11 @@
            <div itemprop="articleBody">
              
   <section id="playbooks">
-<h1>Playbooks<a class="headerlink" href="#playbooks" title="Permalink to this heading"></a></h1>
+<h1>Playbooks<a class="headerlink" href="#playbooks" title="Link to this heading"></a></h1>
 <p>The sample playbooks that are <strong>included</strong> in the <strong>IBM Power Systems HMC collection</strong>
 demonstrate how to use the collection content.</p>
 <section id="playbook-documentation">
-<h2>Playbook Documentation<a class="headerlink" href="#playbook-documentation" title="Permalink to this heading"></a></h2>
+<h2>Playbook Documentation<a class="headerlink" href="#playbook-documentation" title="Link to this heading"></a></h2>
 <p>An <a class="reference external" href="https://docs.ansible.com/ansible/latest/user_guide/playbooks_intro.html#playbooks-intro">Ansible playbook</a> consists of organized instructions that define work for
 a managed node (host) to be managed with Ansible.</p>
 <p>A <a class="reference external" href="https://github.com/IBM/ansible-power-hmc/tree/dev-collection/playbooks">playbooks directory</a> that contains a sample playbook is included in the
@@ -118,7 +120,7 @@ the <a class="reference external" href="installation.html">installation document
 refer to the installation path as <code class="docutils literal notranslate"><span class="pre">~/.ansible/collections/ansible_collections/ibm/power_hmc</span></code>.</p>
 </section>
 <section id="sample-configuration-and-setup">
-<h2>Sample Configuration and Setup<a class="headerlink" href="#sample-configuration-and-setup" title="Permalink to this heading"></a></h2>
+<h2>Sample Configuration and Setup<a class="headerlink" href="#sample-configuration-and-setup" title="Link to this heading"></a></h2>
 <p>Each release of Ansible provides options in addition to the ones identified in
 the sample configurations that are included with this collection. These options
 allow you to customize how Ansible operates in your environment. Ansible
@@ -133,7 +135,7 @@ options to your inventory or <cite>ansible.cfg</cite>.</p>
 the Ansible documentation on <a class="reference external" href="https://docs.ansible.com/ansible/latest/reference_appendices/config.html#ansible-configuration-settings-locations">Ansible configuration settings</a>.</p>
 </section>
 <section id="inventory">
-<h2>Inventory<a class="headerlink" href="#inventory" title="Permalink to this heading"></a></h2>
+<h2>Inventory<a class="headerlink" href="#inventory" title="Link to this heading"></a></h2>
 <p>Ansible works with multiple managed nodes (hosts) at the same time, using a
 list or group of lists known as an <a class="reference external" href="https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html">inventory</a>. Once the inventory is defined,
 you can use <a class="reference external" href="https://docs.ansible.com/ansible/latest/user_guide/intro_patterns.html#intro-patterns">patterns</a> to select the hosts or groups that you want Ansible to
@@ -160,7 +162,7 @@ should be included when running the sample playbook.</p>
 using the magic variable <strong>inventory_hostname</strong></p>
 </section>
 <section id="run-the-playbooks">
-<h2>Run the playbooks<a class="headerlink" href="#run-the-playbooks" title="Permalink to this heading"></a></h2>
+<h2>Run the playbooks<a class="headerlink" href="#run-the-playbooks" title="Link to this heading"></a></h2>
 <p>The sample playbooks must be run from the <a class="reference external" href="https://github.com/IBM/ansible-power-hmc/tree/dev-collection/playbooks">playbooks directory</a> of the installed
 collection: <code class="docutils literal notranslate"><span class="pre">~/.ansible/collections/ansible_collections/ibm/power_hmc/playbooks/</span></code>.</p>
 <p>Access the sample Ansible playbook and ensure that you are within the collection
@@ -170,7 +172,7 @@ playbooks directory where the sample files are included:
 command syntax is <code class="docutils literal notranslate"><span class="pre">ansible-playbook</span> <span class="pre">-i</span> <span class="pre">&lt;inventory&gt;</span> <span class="pre">&lt;playbook&gt;</span></code>; for example,
 <code class="docutils literal notranslate"><span class="pre">ansible-playbook</span> <span class="pre">-i</span> <span class="pre">inventory</span> <span class="pre">demo_hmc_update.yml</span></code>.</p>
 <section id="hmc-password-settings">
-<h3>HMC Password Settings<a class="headerlink" href="#hmc-password-settings" title="Permalink to this heading"></a></h3>
+<h3>HMC Password Settings<a class="headerlink" href="#hmc-password-settings" title="Link to this heading"></a></h3>
 <p>Either mention the password of managed node (HMC) on the playbook as a variable,
 but never store this variable in plain text; always use a vault. Or user can setup
 the password less login to HMC using the <code class="docutils literal notranslate"><span class="pre">mkauthkey</span></code> with the public SSH key of
@@ -179,7 +181,7 @@ which takes care of passwordless setup on managed HMCs:
 <code class="docutils literal notranslate"><span class="pre">~/.ansible/collections/ansible_collections/ibm/power_hmc/playbooks/demo_passwordless_setup.yml</span></code></p>
 </section>
 <section id="verbosity">
-<h3>Verbosity<a class="headerlink" href="#verbosity" title="Permalink to this heading"></a></h3>
+<h3>Verbosity<a class="headerlink" href="#verbosity" title="Link to this heading"></a></h3>
 <p>Optionally, you can configure the console logging verbosity during playbook
 execution. This is helpful in situations where communication is failing and
 you want to obtain more details. To adjust the logging verbosity, append more

@@ -60,11 +60,11 @@ Parameters
 
 
     passwd (optional, str, None)
-      The password to use to log in to the remote FTP or SFTP server. The *passwd* and *sshkey* options are mutually exclusive in case if *location_type=sftp*. This option is only valid when the firmware image is located on a remote FTP or SFTP server.
+      The password to use to log in to the remote FTP or SFTP server. The \ :emphasis:`passwd`\  and \ :emphasis:`sshkey`\  options are mutually exclusive in case if \ :emphasis:`location\_type=sftp`\ . This option is only valid when the firmware image is located on a remote FTP or SFTP server.
 
 
     sshkey_file (optional, str, None)
-      The name of the file that contains the SSH private key. This option is only valid if *location_type=sftp*.
+      The name of the file that contains the SSH private key. This option is only valid if \ :emphasis:`location\_type=sftp`\ .
 
 
     directory (True, str, None)
@@ -77,13 +77,13 @@ Parameters
 
 
   state (optional, str, None)
-    ``updated`` executes an update on target system.
+    \ :literal:`updated`\  executes an update on target system.
 
-    ``upgraded`` executes an upgrade on target system.
+    \ :literal:`upgraded`\  executes an upgrade on target system.
 
 
   action (optional, str, None)
-    ``accept`` accepts firmware level for target system.
+    \ :literal:`accept`\  accepts firmware level for target system.
 
 
 

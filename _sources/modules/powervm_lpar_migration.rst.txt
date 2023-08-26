@@ -52,7 +52,7 @@ Parameters
   dest_system (optional, str, None)
     The name of the destination managed system.
 
-    valid only for ``validate`` and ``migrate`` *action* operation.
+    valid only for \ :literal:`validate`\  and \ :literal:`migrate`\  \ :emphasis:`action`\  operation.
 
 
   vm_names (optional, list, None)
@@ -60,7 +60,7 @@ Parameters
 
     To perform action on multiple partitions, provide comma separated partition names or in list form.
 
-    For ``recover`` *action* only one partition name is allowed.
+    For \ :literal:`recover`\  \ :emphasis:`action`\  only one partition name is allowed.
 
 
   vm_ids (optional, list, None)
@@ -68,45 +68,45 @@ Parameters
 
     To perform action on multiple partitions, provide comma separated partition ids or in list form.
 
-    For ``recover`` *action* only one partition id is allowed.
+    For \ :literal:`recover`\  \ :emphasis:`action`\  only one partition id is allowed.
 
 
   all_vms (optional, bool, None)
-    All the partitions of the *src_system* to be migrated.
+    All the partitions of the \ :emphasis:`src\_system`\  to be migrated.
 
-    valid only for ``migrate`` *action*
+    valid only for \ :literal:`migrate`\  \ :emphasis:`action`\ 
 
 
   remote_ip (optional, str, None)
-    If the destination managed system is not managed by the same management console that is managing the source managed system, then use this option to specify the IP address or host name of the management console that is managing the destination managed system. This option is mandatory for ``authenticate`` *action* and optional for other *action*
+    If the destination managed system is not managed by the same management console that is managing the source managed system, then use this option to specify the IP address or host name of the management console that is managing the destination managed system. This option is mandatory for \ :literal:`authenticate`\  \ :emphasis:`action`\  and optional for other \ :emphasis:`action`\ 
 
 
   remote_username (optional, str, None)
     Username of the remote HMC
 
-    This option can be used only with ``authenticate`` *action*
+    This option can be used only with \ :literal:`authenticate`\  \ :emphasis:`action`\ 
 
 
   remote_passwd (optional, str, None)
     Password of the remote HMC
 
-    This option can be used only with ``authenticate`` *action*
+    This option can be used only with \ :literal:`authenticate`\  \ :emphasis:`action`\ 
 
 
   wait (optional, int, None)
     The maximum time, in minutes, to wait for operation to complete
 
-    This option can be used only with ``migrate`` and ``validate`` *action*
+    This option can be used only with \ :literal:`migrate`\  and \ :literal:`validate`\  \ :emphasis:`action`\ 
 
 
   action (True, str, None)
-    ``validate`` validate a specified partition/s.
+    \ :literal:`validate`\  validate a specified partition/s.
 
-    ``migrate`` migrate a specified partition/s from *src_system* to *dest_system*.
+    \ :literal:`migrate`\  migrate a specified partition/s from \ :emphasis:`src\_system`\  to \ :emphasis:`dest\_system`\ .
 
-    ``recover`` recover a specified partition.
+    \ :literal:`recover`\  recover a specified partition.
 
-    ``authenticate`` adds SSH authentication key of remote management console.
+    \ :literal:`authenticate`\  adds SSH authentication key of remote management console.
 
 
 

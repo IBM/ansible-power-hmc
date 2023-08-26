@@ -52,25 +52,25 @@ Parameters
 
 
   name (optional, str, None)
-    The user name of the HMC user. This option is valid for *state=present*, *state=absent*, *state=updated*, *state=facts* and *state=ldap_facts*.
+    The user name of the HMC user. This option is valid for \ :emphasis:`state=present`\ , \ :emphasis:`state=absent`\ , \ :emphasis:`state=updated`\ , \ :emphasis:`state=facts`\  and \ :emphasis:`state=ldap\_facts`\ .
 
 
   enable_user (optional, bool, None)
     To enable an HMC user that was disabled due to inactivity.
 
-    This option is only valid if *state=updated*.
+    This option is only valid if \ :emphasis:`state=updated`\ .
 
 
   type (optional, str, None)
-    The type of user. During *state=updated* to change the default settings of HMC user, specify ``default`` with this option. The values of this option changes during *state=absent*. Supported values are ``all|local|kerberos|ldap|automanage``. During *state=facts*, valid values are ``default|user``.
+    The type of user. During \ :emphasis:`state=updated`\  to change the default settings of HMC user, specify \ :literal:`default`\  with this option. The values of this option changes during \ :emphasis:`state=absent`\ . Supported values are \ :literal:`all|local|kerberos|ldap|automanage`\ . During \ :emphasis:`state=facts`\ , valid values are \ :literal:`default|user`\ .
 
 
   resource (optional, str, None)
-    The LDAP resources to be listed. This option is valid only for *state=ldap_facts*. To filter out the LDAP configuration of particular user we can use ``name`` parameter with *resource=user*.
+    The LDAP resources to be listed. This option is valid only for \ :emphasis:`state=ldap\_facts`\ . To filter out the LDAP configuration of particular user we can use \ :literal:`name`\  parameter with \ :emphasis:`resource=user`\ .
 
 
   ldap_resource (optional, str, None)
-    LDAP configuration to be removed. This is valid only for *action=remove_ldap_config*.
+    LDAP configuration to be removed. This is valid only for \ :emphasis:`action=remove\_ldap\_config`\ .
 
 
   attributes (optional, dict, None)
@@ -82,7 +82,7 @@ Parameters
 
 
     taskrole (optional, str, None)
-      Valid values are ``hmcsuperadmin|hmcoperator|hmcviewer| hmcpe|hmcservicerep|hmcclientliveupdate|<custom user role>``.
+      Valid values are \ :literal:`hmcsuperadmin|hmcoperator|hmcviewer| hmcpe|hmcservicerep|hmcclientliveupdate|\<custom user role\>`\ .
 
 
     resourcerole (optional, str, None)
@@ -110,7 +110,7 @@ Parameters
 
 
     authentication_type (optional, str, None)
-      Valid values are ``local|kerberos|ldap``.
+      Valid values are \ :literal:`local|kerberos|ldap`\ .
 
 
     session_timeout (optional, int, None)
@@ -252,21 +252,21 @@ Parameters
   state (optional, str, None)
     The desired state of the HMC user and ldap.
 
-    ``facts`` does not change anything on the HMC and returns the HMC user information or the default settings of HMC user attributes.
+    \ :literal:`facts`\  does not change anything on the HMC and returns the HMC user information or the default settings of HMC user attributes.
 
-    ``ldap_facts`` does not change anything on the HMC and returns LDAP configuration or LDAP user details.
+    \ :literal:`ldap\_facts`\  does not change anything on the HMC and returns LDAP configuration or LDAP user details.
 
-    ``updated`` ensures the HMC user is updated with provided configuration.
+    \ :literal:`updated`\  ensures the HMC user is updated with provided configuration.
 
-    ``present`` ensures the HMC user is created with provided configuration.
+    \ :literal:`present`\  ensures the HMC user is created with provided configuration.
 
-    ``absent`` ensures the HMC user is removed.
+    \ :literal:`absent`\  ensures the HMC user is removed.
 
 
   action (optional, str, None)
-    ``configure_ldap`` Configure Hardware Management Console (HMC) Light weight Directory Access Protocol (LDAP) client configuration.
+    \ :literal:`configure\_ldap`\  Configure Hardware Management Console (HMC) Light weight Directory Access Protocol (LDAP) client configuration.
 
-    ``remove_ldap_config`` Remove the Hardware Management Console (HMC) Light weight Directory Access Protocol (LDAP) client configuration.
+    \ :literal:`remove\_ldap\_config`\  Remove the Hardware Management Console (HMC) Light weight Directory Access Protocol (LDAP) client configuration.
 
 
 

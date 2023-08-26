@@ -58,7 +58,7 @@ Parameters
     proc (optional, int, None)
       The number of dedicated processors to create a partition.
 
-      If ``proc_unit`` parameter is set, then this value will work as virtual processors for shared processor setting.
+      If \ :literal:`proc\_unit`\  parameter is set, then this value will work as virtual processors for shared processor setting.
 
 
     proc_unit (optional, float, None)
@@ -68,9 +68,9 @@ Parameters
     sharing_mode (optional, str, None)
       The sharing mode of the partition.
 
-      Valid values for partitions using dedicated processors are ``keep_idle_procs``, ``share_idle_procs``, ``share_idle_procs_active``, ``share_idle_procs_always``.
+      Valid values for partitions using dedicated processors are \ :literal:`keep\_idle\_procs`\ , \ :literal:`share\_idle\_procs`\ , \ :literal:`share\_idle\_procs\_active`\ , \ :literal:`share\_idle\_procs\_always`\ .
 
-      Valid values for partitions using shared processors are ``capped``, ``uncapped``.
+      Valid values for partitions using shared processors are \ :literal:`capped`\ , \ :literal:`uncapped`\ .
 
 
     uncapped_weight (optional, int, None)
@@ -94,13 +94,13 @@ Parameters
   timeout (optional, int, None)
     The maximum time, in minutes, to wait for partition operating system to complete dlpar.
 
-    This option is valid for following actions *update_proc_mem*, *update_pv*, *update_npiv* and *update_vod*
+    This option is valid for following actions \ :emphasis:`update\_proc\_mem`\ , \ :emphasis:`update\_pv`\ , \ :emphasis:`update\_npiv`\  and \ :emphasis:`update\_vod`\ 
 
 
   pv_settings (optional, list, None)
     List of Physical Volumes settings to be configured.
 
-    This option is valid only for *update_pv* action.
+    This option is valid only for \ :emphasis:`update\_pv`\  action.
 
 
     disk_name (True, str, None)
@@ -114,7 +114,7 @@ Parameters
     target_name (optional, str, None)
       Target Device name.
 
-      Optional, if not provided auto assigns <vtscsi*>.
+      Optional, if not provided auto assigns \<vtscsi\*\>.
 
 
     server_adapter_id (optional, int, None)
@@ -133,7 +133,7 @@ Parameters
   npiv_settings (optional, list, None)
     List of Virtual Fibre Channel port settings to be configured.
 
-    This option is valid only for *update_npiv* action.
+    This option is valid only for \ :emphasis:`update\_npiv`\  action.
 
 
     fc_port_name (True, str, None)
@@ -168,7 +168,7 @@ Parameters
   vod_settings (optional, list, None)
     List of Virtual optical device settings to be configured.
 
-    This option is valid only for *update_vod* action.
+    This option is valid only for \ :emphasis:`update\_vod`\  action.
 
 
     device_name (True, str, None)
@@ -199,13 +199,13 @@ Parameters
 
 
   action (True, str, None)
-    ``update_proc_mem`` updates the processor and memory resources of the partition.
+    \ :literal:`update\_proc\_mem`\  updates the processor and memory resources of the partition.
 
-    ``update_pv`` Attach Physical Volumes via Virtual SCSI.
+    \ :literal:`update\_pv`\  Attach Physical Volumes via Virtual SCSI.
 
-    ``update_npiv`` Attach FC Port.
+    \ :literal:`update\_npiv`\  Attach FC Port.
 
-    ``update_vod`` Attach Virtual Optical Device.
+    \ :literal:`update\_vod`\  Attach Virtual Optical Device.
 
 
 
@@ -215,7 +215,7 @@ Notes
 -----
 
 .. note::
-   - If the updating of settings for at least one VIOS is successful during the execution of the "update_pv" action, the changed status will be displayed as 1, and any failed updates will be shown as warnings. This behavior remains consistent for both the "update_npiv" and "update_vod" actions.
+   - If the updating of settings for at least one VIOS is successful during the execution of the "update\_pv" action, the changed status will be displayed as 1, and any failed updates will be shown as warnings. This behavior remains consistent for both the "update\_npiv" and "update\_vod" actions.
    - Passwordless authentication is not supported
 
 

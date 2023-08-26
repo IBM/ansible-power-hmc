@@ -1,8 +1,8 @@
 .. _power_system_module:
 
 
-power_system -- PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the Managed system
-===========================================================================================
+power_system -- PowerOn, PowerOff, modify\_syscfg, modify\_hwres, facts of the Managed system
+=============================================================================================
 
 .. contents::
    :local:
@@ -52,23 +52,23 @@ Parameters
 
 
   new_name (optional, str, None)
-    The new name to be configured on specified *system_name*.
+    The new name to be configured on specified \ :emphasis:`system\_name`\ .
 
-    This option works with ``modify_syscfg`` *action*.
+    This option works with \ :literal:`modify\_syscfg`\  \ :emphasis:`action`\ .
 
 
   power_off_policy (optional, int, None)
-    power off policy to be configured on specified *system_name*.
+    power off policy to be configured on specified \ :emphasis:`system\_name`\ .
 
-    This option works with ``modify_syscfg`` *action*.
+    This option works with \ :literal:`modify\_syscfg`\  \ :emphasis:`action`\ .
 
     Configuring this option to '1' will power off the Managed System after all partitions are shutdown.
 
 
   power_on_lpar_start_policy (optional, str, None)
-    power on partition start policy to be configured on specified *system_name* for the next system restart.
+    power on partition start policy to be configured on specified \ :emphasis:`system\_name`\  for the next system restart.
 
-    This option works with ``modify_syscfg`` *action*.
+    This option works with \ :literal:`modify\_syscfg`\  \ :emphasis:`action`\ .
 
 
   requested_num_sys_huge_pages (optional, int, None)
@@ -76,37 +76,37 @@ Parameters
 
     User can change this value only when the managed system is powered off.
 
-    This option works with ``modify_hwres`` *action*.
+    This option works with \ :literal:`modify\_hwres`\  \ :emphasis:`action`\ .
 
 
   mem_mirroring_mode (optional, str, None)
-    Configures the memory mirroring mode on specified *system_name* for the next system poweron or system restart.
+    Configures the memory mirroring mode on specified \ :emphasis:`system\_name`\  for the next system poweron or system restart.
 
     User can use this option on only managed systems which supports memory mirroring.
 
-    This option works with ``modify_hwres`` *action*.
+    This option works with \ :literal:`modify\_hwres`\  \ :emphasis:`action`\ .
 
 
   pend_mem_region_size (optional, str, None)
-    Configures the memory region size setting on specified *system_name*.
+    Configures the memory region size setting on specified \ :emphasis:`system\_name`\ .
 
     choices are in MB.
 
-    This option works with ``modify_hwres`` *action*.
+    This option works with \ :literal:`modify\_hwres`\  \ :emphasis:`action`\ .
 
 
   action (optional, str, None)
-    ``poweroff`` poweroff a specified *system_name*.
+    \ :literal:`poweroff`\  poweroff a specified \ :emphasis:`system\_name`\ .
 
-    ``poweron`` poweron a specified *system_name*.
+    \ :literal:`poweron`\  poweron a specified \ :emphasis:`system\_name`\ .
 
-    ``modify_syscfg`` Makes system configurations of specified *system_name*.
+    \ :literal:`modify\_syscfg`\  Makes system configurations of specified \ :emphasis:`system\_name`\ .
 
-    ``modify_hwres`` Makes hardware resource configurations of specified *system_name*.
+    \ :literal:`modify\_hwres`\  Makes hardware resource configurations of specified \ :emphasis:`system\_name`\ .
 
 
   state (optional, str, None)
-    ``facts`` fetch details of specified *system_name*
+    \ :literal:`facts`\  fetch details of specified \ :emphasis:`system\_name`\ 
 
 
 
@@ -116,7 +116,7 @@ Notes
 -----
 
 .. note::
-   - All operations support passwordless authentication.
+   - All operations except facts support passwordless authentication.
 
 
 

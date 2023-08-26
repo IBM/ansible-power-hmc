@@ -12,9 +12,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=92cb7abb"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -117,7 +119,7 @@
            <div itemprop="articleBody">
              
   <section id="hmc-update-upgrade-manages-the-update-and-upgrade-of-the-hmc">
-<span id="hmc-update-upgrade-module"></span><h1>hmc_update_upgrade – Manages the update and upgrade of the HMC<a class="headerlink" href="#hmc-update-upgrade-manages-the-update-and-upgrade-of-the-hmc" title="Permalink to this heading"></a></h1>
+<span id="hmc-update-upgrade-module"></span><h1>hmc_update_upgrade – Manages the update and upgrade of the HMC<a class="headerlink" href="#hmc-update-upgrade-manages-the-update-and-upgrade-of-the-hmc" title="Link to this heading"></a></h1>
 <nav class="contents local" id="contents">
 <ul class="simple">
 <li><p><a class="reference internal" href="#synopsis" id="id1">Synopsis</a></p></li>
@@ -130,19 +132,19 @@
 </ul>
 </nav>
 <section id="synopsis">
-<h2><a class="toc-backref" href="#id1" role="doc-backlink">Synopsis</a><a class="headerlink" href="#synopsis" title="Permalink to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Synopsis</a><a class="headerlink" href="#synopsis" title="Link to this heading"></a></h2>
 <p>Updates the HMC by installing a corrective service package located on an FTP/SFTP/NFS server/Ansible Controller Node/HMC hard disk.</p>
 <p>Upgrades the HMC by obtaining  the required  files  from a remote server or from the HMC hard disk. The files are transferred onto a special partition on the HMC hard disk. After the files have been transferred, HMC will boot from this partition and perform the upgrade.</p>
 </section>
 <section id="requirements">
-<h2><a class="toc-backref" href="#id2" role="doc-backlink">Requirements</a><a class="headerlink" href="#requirements" title="Permalink to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Requirements</a><a class="headerlink" href="#requirements" title="Link to this heading"></a></h2>
 <p>The below requirements are needed on the host that executes this module.</p>
 <ul class="simple">
 <li><p>Python &gt;= 3</p></li>
 </ul>
 </section>
 <section id="parameters">
-<h2><a class="toc-backref" href="#id3" role="doc-backlink">Parameters</a><a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Parameters</a><a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
 <blockquote>
 <div><dl>
 <dt>hmc_host (True, str, None)</dt><dd><p>The IPaddress or hostname of the HMC.</p>
@@ -183,7 +185,7 @@
 </div></blockquote>
 </section>
 <section id="notes">
-<h2><a class="toc-backref" href="#id4" role="doc-backlink">Notes</a><a class="headerlink" href="#notes" title="Permalink to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Notes</a><a class="headerlink" href="#notes" title="Link to this heading"></a></h2>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ul class="simple">
@@ -195,7 +197,7 @@
 </div>
 </section>
 <section id="examples">
-<h2><a class="toc-backref" href="#id5" role="doc-backlink">Examples</a><a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Examples</a><a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
 <div class="highlight-yaml+jinja notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">List the HMC current build level</span>
 <span class="w">  </span><span class="nt">hmc_update_upgrade</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&#39;</span>
@@ -234,20 +236,20 @@
 </div>
 </section>
 <section id="return-values">
-<h2><a class="toc-backref" href="#id6" role="doc-backlink">Return Values</a><a class="headerlink" href="#return-values" title="Permalink to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Return Values</a><a class="headerlink" href="#return-values" title="Link to this heading"></a></h2>
 <dl class="simple">
 <dt>build_info (always, dict, )</dt><dd><p>Respective build information</p>
 </dd>
 </dl>
 </section>
 <section id="status">
-<h2><a class="toc-backref" href="#id7" role="doc-backlink">Status</a><a class="headerlink" href="#status" title="Permalink to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Status</a><a class="headerlink" href="#status" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p>This module is not guaranteed to have a backwards compatible interface. <em>[preview]</em></p></li>
 <li><p>This module is maintained by community.</p></li>
 </ul>
 <section id="authors">
-<h3>Authors<a class="headerlink" href="#authors" title="Permalink to this heading"></a></h3>
+<h3>Authors<a class="headerlink" href="#authors" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Anil Vijayan (&#64;AnilVijayan)</p></li>
 <li><p>Navinakumar Kandakur (&#64;nkandak1)</p></li>

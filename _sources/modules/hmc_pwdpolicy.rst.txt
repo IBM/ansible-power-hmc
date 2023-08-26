@@ -50,7 +50,7 @@ Parameters
 
 
   policy_config (optional, dict, None)
-    Configuration parameters required for the HMC password policies. This option is valid for state like ``present``, ``modified``.
+    Configuration parameters required for the HMC password policies. This option is valid for state like \ :literal:`present`\ , \ :literal:`modified`\ .
 
 
     pwage (optional, str, None)
@@ -94,30 +94,30 @@ Parameters
 
 
     new_name (optional, str, None)
-      The new name of the password policy. This option valid only when *state=modified*.
+      The new name of the password policy. This option valid only when \ :emphasis:`state=modified`\ .
 
 
 
   policy_type (optional, str, None)
-    ``policies`` list all the password policies on the HMC.
+    \ :literal:`policies`\  list all the password policies on the HMC.
 
-    ``status`` list password policy status information.
+    \ :literal:`status`\  list password policy status information.
 
 
   state (True, str, None)
     The desired password policy state of the target HMC.
 
-    ``present`` ensure the target HMC is having the mentioned password policy.
+    \ :literal:`present`\  ensure the target HMC is having the mentioned password policy.
 
-    ``modified`` ensure the policy on target HMC password is modified.
+    \ :literal:`modified`\  ensure the policy on target HMC password is modified.
 
-    ``absent`` ensure the policy on the target HMC password is removed.
+    \ :literal:`absent`\  ensure the policy on the target HMC password is removed.
 
-    ``facts`` does not change anything on the HMC and returns current policy status/settings of HMC.
+    \ :literal:`facts`\  does not change anything on the HMC and returns current policy status/settings of HMC.
 
-    ``activated`` ensure the policy on the target HMC password is activated.
+    \ :literal:`activated`\  ensure the policy on the target HMC password is activated.
 
-    ``deactivated`` ensure the password policy is deactivated on the target HMC.
+    \ :literal:`deactivated`\  ensure the password policy is deactivated on the target HMC.
 
 
 

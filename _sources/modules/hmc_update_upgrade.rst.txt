@@ -22,7 +22,7 @@ Requirements
 ------------
 The below requirements are needed on the host that executes this module.
 
-- Python >= 3
+- Python \>= 3
 
 
 
@@ -51,9 +51,9 @@ Parameters
 
 
     location_type (True, str, None)
-      The type of location which contains the corrective service ISO image. Valid values are ``disk`` for the HMC hard disk, ``ftp`` for an FTP site, ``sftp`` for a secure FTP (SFTP) site, ``nfs`` for an NFS file system.
+      The type of location which contains the corrective service ISO image. Valid values are \ :literal:`disk`\  for the HMC hard disk, \ :literal:`ftp`\  for an FTP site, \ :literal:`sftp`\  for a secure FTP (SFTP) site, \ :literal:`nfs`\  for an NFS file system.
 
-      When the location type is set to ``disk``, first it looks for the ``build_file`` in HMC hard disk if it doesn't exist then it looks for ``build_file`` in the Ansible Controller node.
+      When the location type is set to \ :literal:`disk`\ , first it looks for the \ :literal:`build\_file`\  in HMC hard disk if it doesn't exist then it looks for \ :literal:`build\_file`\  in the Ansible Controller node.
 
 
     hostname (optional, str, None)
@@ -65,30 +65,30 @@ Parameters
 
 
     passwd (optional, str, None)
-      The password to use to log in to the remote FTP or SFTP server. The *passwd* and *sshkey* options are mutually exclusive in case if *location_type=sftp*. This option is only valid when the ISO image is located on a remote FTP or SFTP server.
+      The password to use to log in to the remote FTP or SFTP server. The \ :emphasis:`passwd`\  and \ :emphasis:`sshkey`\  options are mutually exclusive in case if \ :emphasis:`location\_type=sftp`\ . This option is only valid when the ISO image is located on a remote FTP or SFTP server.
 
 
     sshkey_file (optional, str, None)
-      The name of the file that contains the SSH private key. This option is only valid if *location_type=sftp*.
+      The name of the file that contains the SSH private key. This option is only valid if \ :emphasis:`location\_type=sftp`\ .
 
 
     mount_location (optional, str, None)
-      The mount location defined on the NFS server where the corrective service ISO image is located. This option is valid only if *location_type=nfs*.
+      The mount location defined on the NFS server where the corrective service ISO image is located. This option is valid only if \ :emphasis:`location\_type=nfs`\ .
 
 
     build_file (optional, str, None)
-      The name of the corrective service ISO image file. This  option  is required when the ISO image is located on any of the following locations HMC hard disk, Ansible controller node filesystem, remote FTP, SFTP, or NFS server. During upgrade of the HMC, this option represents the host path where the network install image is kept. During update of the HMC if *location_type=disk* and ISO image is kept in Ansible controller node or HMC hard disk, this option should be provided with the ansible control node path in which ISO file or network install image is kept.
+      The name of the corrective service ISO image file. This  option  is required when the ISO image is located on any of the following locations HMC hard disk, Ansible controller node filesystem, remote FTP, SFTP, or NFS server. During upgrade of the HMC, this option represents the host path where the network install image is kept. During update of the HMC if \ :emphasis:`location\_type=disk`\  and ISO image is kept in Ansible controller node or HMC hard disk, this option should be provided with the ansible control node path in which ISO file or network install image is kept.
 
 
 
   state (True, str, None)
     The desired build state of the target HMC.
 
-    ``facts`` does not change anything on the HMC and returns current driver/build level of HMC.
+    \ :literal:`facts`\  does not change anything on the HMC and returns current driver/build level of HMC.
 
-    ``updated`` ensures the target HMC is updated with given corrective service ISO image.
+    \ :literal:`updated`\  ensures the target HMC is updated with given corrective service ISO image.
 
-    ``upgraded`` ensures the target HMC is upgraded with given upgrade files.
+    \ :literal:`upgraded`\  ensures the target HMC is upgraded with given upgrade files.
 
 
 
@@ -98,8 +98,8 @@ Notes
 -----
 
 .. note::
-   - Upgrade with *location_type=disk* will not support for V8 R870 and V9 R1 M910 release of the HMC
-   - Update with *location_type=disk* and *build_file* in the HMC local path won't remove the file after update.
+   - Upgrade with \ :emphasis:`location\_type=disk`\  will not support for V8 R870 and V9 R1 M910 release of the HMC
+   - Update with \ :emphasis:`location\_type=disk`\  and \ :emphasis:`build\_file`\  in the HMC local path won't remove the file after update.
    - Module will not satisfy the idempotency requirement of Ansible, even though it partially confirms it. For instance, if the module is tasked to update/upgrade the HMC to the same level, it will still go ahead with the operation and finally the changed state will be reported as false.
    - All Operations support passwordless authentication.
 
