@@ -248,8 +248,8 @@ options:
                 type: str
             authsearch:
                 description:
-                    - Specifies whether  the HMC will attempt an LDAP search, with the user's credentials, as an additional con-
-                      firmation that the bind operation was successful.
+                    - Specifies whether  the HMC will attempt an LDAP search, with the user's credentials, as an additional 
+                      confirmation that the bind operation was successful.
                 type: str
                 choices: ['base', 'none']
             tlsreqcert:

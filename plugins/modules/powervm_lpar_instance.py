@@ -297,7 +297,7 @@ options:
             - Option to display advanced information of the logical partition.
             - Applicable only for C(facts) state.
             - Default is false.
-            - Currently we are showing only NPIV storage details.
+            - Currently it is showing only NPIV storage details.
         type: bool
     install_settings:
         description:

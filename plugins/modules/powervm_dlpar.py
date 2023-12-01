@@ -230,7 +230,7 @@ EXAMPLES = '''
       pool_id: 2
     mem_settings:
       mem: 3072
-    action: update
+    action: update_proc_mem
 
 - name: Dynamically configure Physical Volume settings on Lpar.
   powervm_dlpar:
