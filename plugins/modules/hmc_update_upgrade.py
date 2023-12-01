@@ -319,7 +319,6 @@ def image_copy_from_local_to_hmc(module, params):
                 if '.iso' in fl:
                     iso_file = fl
                     return iso_file
-            logger.debug(iso_file)
             if not iso_file:
                 remove_image_from_hmc(module, params)
                 raise Error("copy of image to hmc is incomplete. Necessary files are missing")
