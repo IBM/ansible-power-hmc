@@ -313,10 +313,13 @@ def image_copy_from_local_to_hmc(module, params):
                 remove_image_from_hmc(module, params)
                 raise Error("copy of image to hmc is incomplete. Necessary files are missing")
         else:
-            iso_file = out3.split()[0]
-            if '.iso' in iso_file:
-                return iso_file
-            else:
+            files = out3.split()
+            iso_file = None
+            for fl in files:
+                if '.iso' in fl:
+                    iso_file = fl
+                    return iso_file
+            if not iso_file:
                 remove_image_from_hmc(module, params)
                 raise Error("copy of image to hmc is incomplete. Necessary files are missing")
     else:
