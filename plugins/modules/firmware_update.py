@@ -42,13 +42,12 @@ options:
         required: true
         type: str
     repository:
-        description: Type of image repository for the firmware image.
+        description:
+            - The repository from which to retrieve the firmware updates. Valid values are ibmwebsite for the IBM service website,
+              ftp for a remote FTP site, sftp for a remote secure FTP (SFTP) site
         type: str
         default: ibmwebsite
-        choices:
-          - ibmwebsite
-          - ftp
-          - sftp
+        choices: ['ibmwebsite', 'ftp', 'sftp']
     remote_repo:
         description: When the image repository needs credentials to be accessed remotely.
         type: dict
@@ -79,11 +78,21 @@ options:
                 type: str
             directory:
                 description:
-                    - Location where the images are stored on the host.
+                    - Location where the images are stored.
                 required: true
                 type: str
     level:
-        description: target level of operation.
+        description:
+            -  Specify sss to retrieve a specific level of Managed System or Power LIC updates, even if disruptive.
+               sss is the three character identifier of the specific level to retrieve.
+               This is only valid when the LIC type is either Managed System only or Power only.
+            -  Specify ccc,ppp to retrieve a specific level of Managed System and Power LIC updates, even if disruptive.
+               ccc is the three character identifier of the specific level of Managed System LIC updates to retrieve.
+               ppp is the three character identifier of the specific level of Power LIC updates to retrieve.
+               This is only valid when the LIC type is both Managed System and Power.
+            -  Specify release1_level1,release2_level2,... to retrieve specific levels of LIC updates, even if disruptive.
+               The level specified in each entry indicates the desired level
+               for all components which are running the release specified in the entry.
         type: str
         default: latest
     state:

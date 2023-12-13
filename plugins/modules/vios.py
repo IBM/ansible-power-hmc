@@ -61,7 +61,7 @@ options:
         description:
             - To configure various supported attributes of VIOS partition.
             - Supports all the attributes available for creation of VIOS
-              on the mksyscfg command.
+              on the mksyscfg command except 'lpar_env'.
             - valid only for C(state) = I(present)
         type: dict
     nim_IP:

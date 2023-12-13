@@ -205,3 +205,22 @@ Notes
 
 .. _GitHub v1.8.1:
    https://github.com/IBM/ansible-power-hmc/releases/download/v1.8.1/ibm-power_hmc-1.8.1.tar.gz
+
+Version 1.8.2
+-------------
+Notes
+  * powervm_dlpar: Fix for Issue #108
+  * vios: Fix for issue #101
+  * hmc_update_upgrade: Fix for issue #113
+  * Document Corrections
+
+
+  Availability
+    * `Galaxy v1.8.2`_
+    * `GitHub v1.8.2`_
+
+.. _Galaxy v1.8.2:
+   https://galaxy.ansible.com/download/ibm-power_hmc-1.8.2.tar.gz
+
+.. _GitHub v1.8.2:
+   https://github.com/IBM/ansible-power-hmc/releases/download/v1.8.2/ibm-power_hmc-1.8.2.tar.gz
