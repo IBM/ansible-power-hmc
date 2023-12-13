@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>firmware_update – Change firmware level on Managed Systems &mdash; IBM Power Systems HMC 1.0.0-beta1 documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
@@ -149,7 +151,7 @@
 </dd>
 <dt>system_name (True, str, None)</dt><dd><p>The name of the managed system.</p>
 </dd>
-<dt>repository (optional, str, ibmwebsite)</dt><dd><p>Type of image repository for the firmware image.</p>
+<dt>repository (optional, str, ibmwebsite)</dt><dd><p>The repository from which to retrieve the firmware updates. Valid values are ibmwebsite for the IBM service website, ftp for a remote FTP site, sftp for a remote secure FTP (SFTP) site</p>
 </dd>
 <dt>remote_repo (optional, dict, None)</dt><dd><p>When the image repository needs credentials to be accessed remotely.</p>
 <dl class="simple">
@@ -161,11 +163,13 @@
 </dd>
 <dt>sshkey_file (optional, str, None)</dt><dd><p>The name of the file that contains the SSH private key. This option is only valid if <em>location_type=sftp</em>.</p>
 </dd>
-<dt>directory (True, str, None)</dt><dd><p>Location where the images are stored on the host.</p>
+<dt>directory (True, str, None)</dt><dd><p>Location where the images are stored.</p>
 </dd>
 </dl>
 </dd>
-<dt>level (optional, str, latest)</dt><dd><p>target level of operation.</p>
+<dt>level (optional, str, latest)</dt><dd><p>Specify sss to retrieve a specific level of Managed System or Power LIC updates, even if disruptive. sss is the three character identifier of the specific level to retrieve. This is only valid when the LIC type is either Managed System only or Power only.</p>
+<p>Specify ccc,ppp to retrieve a specific level of Managed System and Power LIC updates, even if disruptive. ccc is the three character identifier of the specific level of Managed System LIC updates to retrieve. ppp is the three character identifier of the specific level of Power LIC updates to retrieve. This is only valid when the LIC type is both Managed System and Power.</p>
+<p>Specify release1_level1,release2_level2,… to retrieve specific levels of LIC updates, even if disruptive. The level specified in each entry indicates the desired level for all components which are running the release specified in the entry.</p>
 </dd>
 <dt>state (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">updated</span></code> executes an update on target system.</p>
 <p><code class="docutils literal notranslate"><span class="pre">upgraded</span></code> executes an upgrade on target system.</p>

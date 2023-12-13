@@ -44,7 +44,7 @@ Parameters
 
 
   repository (optional, str, ibmwebsite)
-    Type of image repository for the firmware image.
+    The repository from which to retrieve the firmware updates. Valid values are ibmwebsite for the IBM service website, ftp for a remote FTP site, sftp for a remote secure FTP (SFTP) site
 
 
   remote_repo (optional, dict, None)
@@ -68,12 +68,16 @@ Parameters
 
 
     directory (True, str, None)
-      Location where the images are stored on the host.
+      Location where the images are stored.
 
 
 
   level (optional, str, latest)
-    target level of operation.
+    Specify sss to retrieve a specific level of Managed System or Power LIC updates, even if disruptive. sss is the three character identifier of the specific level to retrieve. This is only valid when the LIC type is either Managed System only or Power only.
+
+    Specify ccc,ppp to retrieve a specific level of Managed System and Power LIC updates, even if disruptive. ccc is the three character identifier of the specific level of Managed System LIC updates to retrieve. ppp is the three character identifier of the specific level of Power LIC updates to retrieve. This is only valid when the LIC type is both Managed System and Power.
+
+    Specify release1\_level1,release2\_level2,... to retrieve specific levels of LIC updates, even if disruptive. The level specified in each entry indicates the desired level for all components which are running the release specified in the entry.
 
 
   state (optional, str, None)

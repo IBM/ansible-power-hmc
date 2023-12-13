@@ -229,7 +229,7 @@ Parameters
 
 
     authsearch (optional, str, None)
-      Specifies whether  the HMC will attempt an LDAP search, with the user's credentials, as an additional con- firmation that the bind operation was successful.
+      Specifies whether  the HMC will attempt an LDAP search, with the user's credentials, as an additional confirmation that the bind operation was successful.
 
 
     tlsreqcert (optional, str, None)

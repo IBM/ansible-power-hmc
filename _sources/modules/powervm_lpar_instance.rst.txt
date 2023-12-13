@@ -341,7 +341,7 @@ Parameters
 
     Default is false.
 
-    Currently we are showing only NPIV storage details.
+    Currently it is showing only NPIV storage details.
 
 
   install_settings (optional, dict, None)

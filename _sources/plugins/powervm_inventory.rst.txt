@@ -235,7 +235,7 @@ Examples
       HMCIP: AssociatedHMC
       HMCUSERNAME: AssociatedHMCUserName
 
-    # Generate an inventory of all running partitions and operation Power Servers
+    # Generate an inventory of all running partitions and operating Power Servers
     # Create a seperate group for partitions tagged with associated group name 'production_lpars'
     # Create a seperate group for Power Servers tagged with associated group name 'Production_systems'
     plugin: ibm.power_hmc.powervm_inventory

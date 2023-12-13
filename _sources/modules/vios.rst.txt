@@ -56,7 +56,7 @@ Parameters
   settings (optional, dict, None)
     To configure various supported attributes of VIOS partition.
 
-    Supports all the attributes available for creation of VIOS on the mksyscfg command.
+    Supports all the attributes available for creation of VIOS on the mksyscfg command except 'lpar\_env'.
 
     valid only for \ :literal:`state`\  = \ :emphasis:`present`\ 
 
