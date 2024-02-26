@@ -330,6 +330,11 @@ options:
                     - Network adapter location code to be used while installing OS.
                     - If user doesn't provide, it automatically picks the first pingable adapter attached to the partition.
                 type: str
+            vm_mac:
+                description:
+                    - mac address of lpar
+                    - Used while installing linux OS on lpar, provided by user
+                type: str
             nim_vlan_id:
                 description:
                     - Specifies the VLANID(0 to 4094) to use for tagging Ethernet frames during network install for virtual network communication.
@@ -529,7 +534,7 @@ EXAMPLES = '''
       os_type: aix_linux
       state: present
 
-- name: Install Aix/Linux OS on LPAR from NIM Server.
+- name: Install Aix OS on LPAR from NIM Server.
   powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth: "{{ curr_hmc_auth }}"
@@ -540,6 +545,20 @@ EXAMPLES = '''
          nim_ip: <IP_address of the NIM Server>
          nim_gateway: <Gateway IP_Addres>
          nim_subnetmask: <Subnetmask IP_Address>
+      action: install_os
+
+- name: Install Linux OS on LPAR from NIM Server.
+  powervm_lpar_instance:
+      hmc_host: '{{ inventory_hostname }}'
+      hmc_auth: "{{ curr_hmc_auth }}"
+      system_name: <system_name>
+      vm_name: <vm_name>
+      install_settings:
+         vm_ip: <IP_address of the lpar>
+         nim_ip: <IP_address of the NIM Server>
+         nim_gateway: <Gateway IP_Addres>
+         nim_subnetmask: <Subnetmask IP_Address>
+         vm_mac: <mac address of lpar>
       action: install_os
 
 '''
@@ -1491,6 +1510,7 @@ def install_aix_os(module, params):
     nim_gateway = params['install_settings']['nim_gateway']
     nim_subnetmask = params['install_settings']['nim_subnetmask']
     location_code = params['install_settings']['location_code']
+    vm_mac = params['install_settings']['vm_mac']
     profile_name = params['prof_name'] or 'default_profile'
     nim_vlan_id = params['install_settings']['nim_vlan_id'] or '0'
     nim_vlan_priority = params['install_settings']['nim_vlan_priority'] or '0'
@@ -1512,6 +1532,8 @@ def install_aix_os(module, params):
 
         if location_code:
             hmc.installOSFromNIM(location_code, nim_ip, nim_gateway, vm_ip, nim_vlan_id, nim_vlan_priority, nim_subnetmask, vm_name, profile_name, system_name)
+        elif vm_mac:
+            hmc.installlinuxOSFromNIM(nim_ip, nim_gateway, vm_ip, nim_subnetmask, vm_name, profile_name, system_name, vm_mac)
         else:
             dvcdictlt = hmc.fetchIODetailsForNetboot(nim_ip, nim_gateway, vm_ip, vm_name, profile_name, system_name, nim_subnetmask)
             for dvcdict in dvcdictlt:
@@ -1677,6 +1699,7 @@ def run_module():
                            nim_gateway=dict(type='str', required=True),
                            nim_subnetmask=dict(type='str', required=True),
                            location_code=dict(type='str'),
+                           vm_mac=dict(type='str'),
                            nim_vlan_id=dict(type='str'),
                            nim_vlan_priority=dict(type='str'),
                            timeout=dict(type='int')

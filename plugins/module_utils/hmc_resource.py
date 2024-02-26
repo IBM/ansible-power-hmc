@@ -491,6 +491,24 @@ class Hmc():
             " " + viosName + " " + profName + " " + systemName
         self.hmcconn.execute(lpar_netboot)
 
+    def installlinuxOSFromNIM(self, nimIP, gateway, lparIP, submask, viosName, profName, systemName, lparMac):
+        lpar_netboot = self.CMD['LPAR_NETBOOT'] +\
+            self.OPT['LPAR_NETBOOT']['-x'] +\
+            self.OPT['LPAR_NETBOOT']['-v'] +\
+            self.OPT['LPAR_NETBOOT']['-F'] +\
+            self.OPT['LPAR_NETBOOT']['-i'] +\
+            self.OPT['LPAR_NETBOOT']['-D'] +\
+            self.OPT['LPAR_NETBOOT']['-T'] + "ent" +\
+            self.OPT['LPAR_NETBOOT']['-s'] + "auto" +\
+            self.OPT['LPAR_NETBOOT']['-d'] + "auto" +\
+            self.OPT['LPAR_NETBOOT']['-m'] + lparMac +\
+            self.OPT['LPAR_NETBOOT']['-S'] + nimIP +\
+            self.OPT['LPAR_NETBOOT']['-G'] + gateway +\
+            self.OPT['LPAR_NETBOOT']['-C'] + lparIP +\
+            self.OPT['LPAR_NETBOOT']['-K'] + submask +\
+            " " + viosName + " " + profName + " " + systemName
+        self.hmcconn.execute(lpar_netboot)
+
     def getPartitionRefcode(self, system_name, name):
         filter_config = dict(LPAR_NAMES=name)
         lsrefcode = self.CMD['LSREFCODE'] +\
