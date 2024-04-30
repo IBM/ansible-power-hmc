@@ -31,7 +31,7 @@ qualified name ``power_hmc``. For example:
               username: '{{ ansible_user }}'
 
 
-In Ansible 2.9, the ``collections`` keyword was added to reduce the need
+In Ansible 2.14.0, the ``collections`` keyword was added to reduce the need
 to refer to the collection repeatedly. For example, you can use the
 ``collections`` keyword in your playbook:
 

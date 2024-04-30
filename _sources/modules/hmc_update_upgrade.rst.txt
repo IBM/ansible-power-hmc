@@ -16,6 +16,8 @@ Updates the HMC by installing a corrective service package located on an FTP/SFT
 
 Upgrades the HMC by obtaining  the required  files  from a remote server or from the HMC hard disk. The files are transferred onto a special partition on the HMC hard disk. After the files have been transferred, HMC will boot from this partition and perform the upgrade.
 
+Update the HMC from IBM Fix Central website
+
 
 
 Requirements
@@ -51,9 +53,11 @@ Parameters
 
 
     location_type (True, str, None)
-      The type of location which contains the corrective service ISO image. Valid values are \ :literal:`disk`\  for the HMC hard disk, \ :literal:`ftp`\  for an FTP site, \ :literal:`sftp`\  for a secure FTP (SFTP) site, \ :literal:`nfs`\  for an NFS file system.
+      The type of location which contains the corrective service ISO image. Valid values are \ :literal:`disk`\  for the HMC hard disk, \ :literal:`ftp`\  for an FTP site, \ :literal:`sftp`\  for a secure FTP (SFTP) site, \ :literal:`nfs`\  for an NFS file system and \ :literal:`ibmwebsite`\  for update through IBM fixcentral website.
 
       When the location type is set to \ :literal:`disk`\ , first it looks for the \ :literal:`build\_file`\  in HMC hard disk if it doesn't exist then it looks for \ :literal:`build\_file`\  in the Ansible Controller node.
+
+      ibmwebsite location type supports only update operation and HMC1030 releas onwards
 
 
     hostname (optional, str, None)
@@ -80,8 +84,12 @@ Parameters
       The name of the corrective service ISO image file. This  option  is required when the ISO image is located on any of the following locations HMC hard disk, Ansible controller node filesystem, remote FTP, SFTP, or NFS server. During upgrade of the HMC, this option represents the host path where the network install image is kept. During update of the HMC if \ :emphasis:`location\_type=disk`\  and ISO image is kept in Ansible controller node or HMC hard disk, this option should be provided with the ansible control node path in which ISO file or network install image is kept.
 
 
+    ptf (optional, str, None)
+      The name of the PTF to install. This option is required when the ISO image is located on the IBM Fix Central website. Otherwise, this option is not valid. This option is required only when the location\_type is 'ibmwebsite'. This option is available for HMC versions from 1030 onwards.
 
-  state (True, str, None)
+
+
+  state (optional, str, None)
     The desired build state of the target HMC.
 
     \ :literal:`facts`\  does not change anything on the HMC and returns current driver/build level of HMC.
@@ -89,6 +97,12 @@ Parameters
     \ :literal:`updated`\  ensures the target HMC is updated with given corrective service ISO image.
 
     \ :literal:`upgraded`\  ensures the target HMC is upgraded with given upgrade files.
+
+
+  action (optional, str, None)
+    \ :literal:`listptf`\  lists available Hardware Management Console (HMC) updates from the IBM Fix Central website.
+
+    This option is available for HMC versions from 1030 onwards
 
 
 
@@ -147,6 +161,24 @@ Examples
               build_file: /Images/MF71190-10.2.1041.0-2308160028-x86_64.iso
           state: updated
 
+    - name: List all the available ptfs
+      hmc_update_upgrade:
+          hmc_host: '{{ inventory_hostname }}'
+          hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+          action: listptf
+
+    - name: Update the HMC to the V10R2M1041(ifix) build level from ibmwebsite
+      hmc_update_upgrade:
+          hmc_host: '{{ inventory_hostname }}'
+          hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+          build_config:
+              location_type: ibmwebsite
+              ptf: vMF71409
+          state: updated
 
 
 

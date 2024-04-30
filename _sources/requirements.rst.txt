@@ -17,7 +17,7 @@ The nodes listed below require these specific versions of software:
 Control node
 ------------
 
-* `Ansible version`_: 2.9 or later
+* `Ansible version`_: 2.14.0 or later
 * `Python`_: 3
 
 .. _Ansible version:

@@ -17,7 +17,7 @@
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
         <script src="../_static/documentation_options.js?v=92cb7abb"></script>
-        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
         <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -138,6 +138,7 @@
 <p>Modify System configuration of the specified managed system with specified configuration details</p>
 <p>Modify hardware resource of the specified managed system with specified hardware resource details</p>
 <p>Get the facts of the specified managed system</p>
+<p>Enable and Disable PCM metrics</p>
 </section>
 <section id="parameters">
 <h2><a class="toc-backref" href="#id2" role="doc-backlink">Parameters</a><a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
@@ -177,10 +178,18 @@
 <p>choices are in MB.</p>
 <p>This option works with <code class="docutils literal notranslate"><span class="pre">modify_hwres</span></code> <em>action</em>.</p>
 </dd>
+<dt>metrics (optional, list, None)</dt><dd><p>Provides five types of utilization data</p>
+<p>Long Term Monitor(LTM), Short Term Monitor(STM), Aggregated metrics(AM), ComputeLTM(CLTM), EnergyMonitor(EM).</p>
+<p>AM collects data from LTM and EM, hence when the AM is enabled automatically LTM and EM will be enabled.</p>
+<p>When LTM or EM is disabled then automatically the AM will also get disabled.</p>
+<p>This option works only with <code class="docutils literal notranslate"><span class="pre">enable_pcm</span></code> and <code class="docutils literal notranslate"><span class="pre">disable_pcm</span></code> <em>action</em>.</p>
+</dd>
 <dt>action (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">poweroff</span></code> poweroff a specified <em>system_name</em>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">poweron</span></code> poweron a specified <em>system_name</em>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">modify_syscfg</span></code> Makes system configurations of specified <em>system_name</em>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">modify_hwres</span></code> Makes hardware resource configurations of specified <em>system_name</em>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">enable_pcm</span></code> Enables the Performance and Capacity Monitoring for specified types of utilization data.</p>
+<p><code class="docutils literal notranslate"><span class="pre">disable_pcm</span></code> Disables the Performance and Capacity Monitoring for specified types of utilization data.</p>
 </dd>
 <dt>state (optional, str, None)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">facts</span></code> fetch details of specified <em>system_name</em></p>
 </dd>
@@ -248,6 +257,28 @@
 <span class="w">         </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
 <span class="w">    </span><span class="nt">system_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;managed_system_name&gt;</span>
 <span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">facts</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enable the long-term monitoring</span>
+<span class="w">  </span><span class="nt">power_system</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span>
+<span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">         </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">    </span><span class="nt">system_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;managed_system_name&gt;</span>
+<span class="w">    </span><span class="nt">metrics</span><span class="p">:</span>
+<span class="w">         </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LTM</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enable_pcm</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">disable the short-term monitoring</span>
+<span class="w">  </span><span class="nt">power_system</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">hmc_host</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">inventory_hostname</span> <span class="cp">}}</span><span class="s">&quot;</span>
+<span class="w">    </span><span class="nt">hmc_auth</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">ansible_user</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">         </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="cp">{{</span> <span class="nv">hmc_password</span> <span class="cp">}}</span><span class="s">&#39;</span>
+<span class="w">    </span><span class="nt">system_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;managed_system_name&gt;</span>
+<span class="w">    </span><span class="nt">metrics</span><span class="p">:</span>
+<span class="w">         </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">STM</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">disble_pcm</span>
 </pre></div>
 </div>
 </section>

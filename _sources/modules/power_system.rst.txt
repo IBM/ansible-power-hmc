@@ -22,6 +22,8 @@ Modify hardware resource of the specified managed system with specified hardware
 
 Get the facts of the specified managed system
 
+Enable and Disable PCM metrics
+
 
 
 
@@ -95,6 +97,18 @@ Parameters
     This option works with \ :literal:`modify\_hwres`\  \ :emphasis:`action`\ .
 
 
+  metrics (optional, list, None)
+    Provides five types of utilization data
+
+    Long Term Monitor(LTM), Short Term Monitor(STM), Aggregated metrics(AM), ComputeLTM(CLTM), EnergyMonitor(EM).
+
+    AM collects data from LTM and EM, hence when the AM is enabled automatically LTM and EM will be enabled.
+
+    When LTM or EM is disabled then automatically the AM will also get disabled.
+
+    This option works only with \ :literal:`enable\_pcm`\  and \ :literal:`disable\_pcm`\  \ :emphasis:`action`\ .
+
+
   action (optional, str, None)
     \ :literal:`poweroff`\  poweroff a specified \ :emphasis:`system\_name`\ .
 
@@ -103,6 +117,10 @@ Parameters
     \ :literal:`modify\_syscfg`\  Makes system configurations of specified \ :emphasis:`system\_name`\ .
 
     \ :literal:`modify\_hwres`\  Makes hardware resource configurations of specified \ :emphasis:`system\_name`\ .
+
+    \ :literal:`enable\_pcm`\  Enables the Performance and Capacity Monitoring for specified types of utilization data.
+
+    \ :literal:`disable\_pcm`\  Disables the Performance and Capacity Monitoring for specified types of utilization data.
 
 
   state (optional, str, None)
@@ -177,6 +195,28 @@ Examples
              password: '{{ hmc_password }}'
         system_name: <managed_system_name>
         state: facts
+
+    - name: enable the long-term monitoring
+      power_system:
+        hmc_host: "{{ inventory_hostname }}"
+        hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+        system_name: <managed_system_name>
+        metrics:
+             - LTM
+        action: enable_pcm
+
+    - name: disable the short-term monitoring
+      power_system:
+        hmc_host: "{{ inventory_hostname }}"
+        hmc_auth:
+             username: '{{ ansible_user }}'
+             password: '{{ hmc_password }}'
+        system_name: <managed_system_name>
+        metrics:
+             - STM
+        action: disble_pcm
 
 
 

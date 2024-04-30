@@ -224,3 +224,21 @@ Notes
 
 .. _GitHub v1.8.2:
    https://github.com/IBM/ansible-power-hmc/releases/download/v1.8.2/ibm-power_hmc-1.8.2.tar.gz
+
+Version 1.9.0
+-------------
+Notes
+  * power_system: Support for PCM metrics enable and disable
+  * hmc_update_upgrade: Support for HMC update through ibmwebsite(IBM Fixcentral website) and listing available PTFs
+  * Document Corrections
+
+
+  Availability
+    * `Galaxy v1.9.0`_
+    * `GitHub v1.9.0`_
+
+.. _Galaxy v1.9.0:
+   https://galaxy.ansible.com/download/ibm-power_hmc-1.9.0.tar.gz
+
+.. _GitHub v1.9.0:
+   https://github.com/IBM/ansible-power-hmc/releases/download/v1.9.0/ibm-power_hmc-1.9.0.tar.gz
