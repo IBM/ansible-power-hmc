@@ -26,8 +26,6 @@ This repository contains some example best practices for open source repositorie
 * [MAINTAINERS.md](MAINTAINERS.md)
 * [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for more details you should [read this][coc].
 
-<!-- The following are OPTIONAL, but strongly suggested to have in your repository. -->
-* [travis.yml](.travis.yml) - Look https://docs.travis-ci.com/user/tutorial/ for more details.
 
 
 <!-- A notes section is useful for anything that isn't covered in the Usage or Scope. Like what we have below. -->
@@ -93,6 +91,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Authors:
 - Anil Vijayan <anilvijayan@in.ibm.com>
 - Navinakumar Kandakur <nkandak1@in.ibm.com>
+- Sreenidhi <sreenidhi.s1@in.ibm.com>
+
 
 [coc]: https://help.github.com/en/github/building-a-strong-community/adding-a-code-of-conduct-to-your-project
 [issues]: https://github.com/IBM/ansible-power-hmc/issues/new
