@@ -1,0 +1,9 @@
+set timeout=1
+menuentry 'Install OS' {
+    insmod http
+    insmod tftp
+    set root=tftp,{{ hostvars['pxe'].ansible_host }}
+    echo 'Loading OS Install kernel ...'
+    linux {{ mac_address }}/ppc/ppc64/vmlinuz ifname=net0:{{ hardware_ethernet }} ip={{ host_ip }}::{{ host_gw }}:{{ host_netmask }}:{{ hostname }}:net0:none nameserver={{ dns_ip }} inst.repo=http://{{ hostvars['repo'].ansible_host }}:{{ repo_port }}{{ hostvars['repo']['repo_dir'] }} inst.ks=http://{{ hostvars['repo'].ansible_host }}:{{ repo_port }}/{{ ks_path}}
+    initrd {{ mac_address }}/ppc/ppc64/initrd.img
+}

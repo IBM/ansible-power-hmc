@@ -1,0 +1,12 @@
+---
+- name: Copy dhcpd.conf to temporary directory
+  shell: cp /etc/dhcp/dhcpd.conf /tmp/dhcpd.conf
+- name: Edit dhcpd.conf with latest entry
+  blockinfile:
+    marker: "#{mark} Ansible module dhcp entry"
+    dest: /etc/dhcp/dhcpd.conf
+    block: "{{ lookup('template', 'dhcpd_conf.j2') }}"
+- name: Restart dhcpd service
+  shell: systemctl restart  dhcpd.service
+
+

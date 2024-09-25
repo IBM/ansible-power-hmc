@@ -1,0 +1,11 @@
+---
+- name: Create KS file name
+  set_fact:
+    ks_file: "{{ distro | regex_replace('\\.', '') }}_{{ hardware_ethernet }}.ks"
+- name: Path to the build in repo server
+  set_fact:
+    repo_dir: "/crtl/repo/rhel/{{ distro }}"
+- name: Create a file
+  template:
+    src: templates/ks.j2
+    dest: "/var/www/html/linux_ks/{{ ks_file }}"

@@ -1,0 +1,28 @@
+---
+- name: Check if ansible_pwer_hmc.log file exists
+  stat:
+    path: /tmp/ansible_power_hmc.log
+  register: log_file_info
+
+- name: Fail if ansible_power_hmc.log file is not found
+  fail:
+    msg: "Installation log file not found: /tmp/ansible_power_hmc.log"
+  when: log_file_info.stat.exists == false
+
+- name: Check log file for bug-related messages
+  become: true
+  shell: "grep -E 'Oops|Call Trace|Entering emergency mode' /tmp/ansible_power_hmc.log"
+  register: log_results
+  ignore_errors: true
+  when: log_file_info.stat.exists
+
+- name: Display bug-related messages if found
+  fail:
+    msg: "Installation failed"
+  when: log_results.stdout_lines|length > 0
+
+- name: Print success message
+  debug:
+    msg: "Installation success"
+  when: log_results.stdout_lines|length == 0
+                                                 

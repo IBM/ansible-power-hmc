@@ -1,0 +1,33 @@
+---
+- name: Remove ':' in hardware ethernet address
+  set_fact:
+    mac_address: "{{ hardware_ethernet | regex_replace(':', '') }}"
+- name: Path to the ks file
+  set_fact:
+    ks_path: /linux_ks/{{ hostvars['repo']['ks_file'] }}
+- name: Append base directory path with a new directory named by mac address
+  set_fact:
+    dest_dir: "{{ base_dir }}{{ mac_address }}"
+- name: Append base directory path with a new directory named by mac address
+  shell: rm -rf {{ dest_dir }}
+- name: Calculate cutdir value
+  shell: echo "{{ hostvars['repo']['repo_dir'] }}" | tr '/' '\n' | grep -v "^$" | wc -l
+  register: cut_dir
+- name: Download files from /boot dir
+  shell: wget -r --reject="index.html*" --no-parent -nH --cut-dir={{ cut_dir.stdout | int + 1 }}   http://{{ hostvars['repo'].ansible_host }}:{{ repo_port }}/{{ hostvars['repo']['repo_dir'] }}/boot/ -P {{ dest_dir }}
+- name: Download files from /ppc dir
+  shell: wget -r --reject="index.html*" --no-parent -nH --cut-dir={{ cut_dir.stdout | int + 1 }}   http://{{ hostvars['repo'].ansible_host }}:{{ repo_port }}/{{ hostvars['repo']['repo_dir'] }}/ppc/ -P {{ dest_dir }}
+- name: Create netboot dir
+  shell: grub2-mknetdir --net-directory={{ base_dir }} --subdir={{ mac_address }}/boot/grub/
+- name: Create grub.cfg
+  template:
+    src: templates/grub_conf.j2
+    dest: "{{ dest_dir }}/boot/grub/grub.cfg"
+- name: Set core elf file path
+  set_fact:
+    core_file_path: "{{ mac_address }}/boot/grub/powerpc-ieee1275/core.elf"
+- name: Replace ':' in hardware ethernet address wit '-'
+  set_fact:
+    address: "{{ hardware_ethernet | regex_replace(':', '-') }}"
+- name: Copy the grub.cfg to boot/grub/powerpc-ieee1275/ directory
+  shell: cp "{{ dest_dir }}/boot/grub/grub.cfg" "{{ dest_dir }}/boot/grub/powerpc-ieee1275/grub.cfg-01-{{ address }}"

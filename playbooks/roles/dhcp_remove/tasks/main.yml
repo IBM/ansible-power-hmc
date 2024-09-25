@@ -1,0 +1,11 @@
+---
+- name: Copy dhcpd.conf to temporary directory
+  shell: cp /etc/dhcp/dhcpd.conf /tmp/dhcpd.conf
+- name: Delete dhcp entry of lpar
+  blockinfile:
+    dest: /etc/dhcp/dhcpd.conf
+    marker: "#{mark} Ansible module dhcp entry"
+    block: "{{ lookup('template', 'dhcpd_conf.j2') }}"
+    state: absent
+- name: Restart dhcpd service
+  shell: systemctl restart  dhcpd.service

@@ -1,0 +1,51 @@
+# Use text mode install
+text
+# Reboot after installation
+reboot
+
+%post
+sed -i 's/#\?PermitRootLogin.*/PermitRootLogin yes/g' /etc/ssh/sshd_config;service sshd restart;multipath -t >/etc/multipath.conf;service multipathd start
+%end
+
+%addon com_redhat_kdump --enable --reserve-mb='auto'
+
+%end
+
+# Keyboard layouts
+keyboard --vckeymap=us --xlayouts='us'
+# System language
+lang en_US.UTF-8
+
+# Network information
+network  --hostname="{{ hostname }}"
+
+# Use network installation
+url --url="http://{{ hostvars['repo'].ansible_host }}:{{ repo_port }}{{ repo_dir }}/BaseOS"
+
+%packages
+@core
+device-mapper-multipath
+kexec-tools
+
+%end
+
+# System services
+services --enabled="NetworkManager,sshd"
+# Do not configure the X Window System
+skipx
+
+# Clear the Master Boot Record
+zerombr
+# Partition clearing information
+clearpart --all --initlabel --drives=sda
+# System bootloader configuration
+bootloader --append="crashkernel=2G-4G:384M,4G-16G:512M,16G-64G:1G,64G-128G:2G,128G-:4G" --location=mbr --boot-drive=sda
+autopart --fstype=ext4
+# Generated using Blivet version 3.6.0
+ignoredisk --only-use=sda
+
+# System timezone
+timezone Asia/Kolkata --utc
+
+# Root password
+rootpw --plaintext password

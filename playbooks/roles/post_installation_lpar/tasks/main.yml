@@ -1,0 +1,19 @@
+---
+- name: Check login status
+  shell: echo "Login successful"
+  register: login_status
+  ignore_errors: yes
+
+- name: Fail if unable to login
+  fail:
+    msg: "Failed to login to LPAR"
+  when: login_status.rc != 0
+
+- name: Run command on LPAR
+  shell: cat /etc/os-release| grep PRETTY|  awk -F= '{print $2}' | awk -F\" '{print $2}'
+  register: command_output
+
+- name: Display command output
+  debug:
+    var: command_output
+

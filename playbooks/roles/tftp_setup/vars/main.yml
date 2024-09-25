@@ -1,0 +1,4 @@
+---
+# vars file for tftp_setup
+repo_port: 81
+base_dir: /var/lib/tftpboot/

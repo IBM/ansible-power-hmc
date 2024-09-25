@@ -1,0 +1,15 @@
+subnet {{ host_subnet }} netmask {{ host_netmask }} {
+    allow bootp;
+    option routers {{ host_gw }};
+    option domain-name-servers {{ dns_ip }};
+    option domain-name "aus.stglabs.ibm.com";
+    group {
+        next-server {{ hostvars['pxe'].ansible_host }};
+        filename "{{ core_file_path }}";
+              host {{ hostname }} {
+                        hardware ethernet {{ hardware_ethernet }};
+                        fixed-address {{ host_ip }};
+            option tftp-server-name "{{ hostvars['pxe'].ansible_host }}";
+        }
+    }
+}
