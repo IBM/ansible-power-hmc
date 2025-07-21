@@ -1,0 +1,80 @@
+{
+  "bootloader": {
+    "stopOnBootMenu": false
+  },
+  "user": {
+    "fullName": "abc",
+    "userName": "abc",
+    "password": "abc123",
+    "hashedPassword": false,
+    "autologin": false
+  },
+  "root": { "hashedPassword": false, "password": "{{ host_password }}" },
+  "software": {
+    "patterns": []
+  },
+  "product": {
+    "id": "SLES"
+  },
+  "storage": {
+"drives": [
+{
+"search": "/dev/disk/by-id/{{ disk_id }}",
+"partitions": [
+{ "search": "*", "delete": true },
+{
+"filesystem": { "path": "/" },
+"size": { "min": "10 GiB" }
+},
+{
+"filesystem": { "path": "swap" },
+"size": { "min": "1 GiB", "max": "4 GiB" }
+}
+]
+}
+]
+},
+  "network": {
+    "connections": [
+      {
+        "id": "Wired Connection",
+        "method4": "manual",
+        "gateway4": "{{ host_gw }}",
+        "method6": "disabled",
+        "addresses": [
+          "{{ host_ip }}/ {{ host_netmask | ansible.utils.ipaddr('prefix') }}"
+        ],
+        "nameservers": [
+          "{{ dns_ip }}"
+        ],
+        "ignoreAutoDns": false,
+        "status": "up",
+        "autoconnect": true
+      }
+    ]
+  },
+  "localization": {
+    "language": "en_US.UTF-8",
+    "keyboard": "us",
+    "timezone": "Europe/Berlin"
+  },
+scripts: {
+                post: [
+                    {
+            name: "permit-root-login",
+            content: |||
+                #!/bin/bash
+                ssh_file="/usr/etc/ssh/sshd_config"
+                backup_file="/usr/etc/ssh/sshd_config.bak.$(date +%F_%T)"
+                cp "$ssh_file" "$backup_file"
+                if grep -q "^PermitRootLogin" "$ssh_file"; then
+                    sed -i "s/^PermitRootLogin.*/PermitRootLogin yes/" "$ssh_file"
+                else
+                    echo "PermitRootLogin yes" >> "$ssh_file"
+                fi
+                systemctl enable sshd.service
+            |||
+        }
+                ]
+            }
+}

@@ -1,0 +1,26 @@
+---
+- name: Install linux
+  hosts: localhost
+  collections:
+    - ibm.power_hmc
+    - ansible.netcommon
+  gather_facts: False
+  roles:
+    - role: sles_linux_install
+      vars:
+
+        distro: sles16
+        install_protocol: http
+        repo_port: 81
+        repo_dir: /sles/
+        host_ip: 9.xx.xx.xx
+        host_gw: 9.xx.xx.xx
+        host_subnet: 9.xx.xx.xx
+        host_netmask: 255.xxx.xxx.xx
+        dns_ip: 9.x.x.x
+        hostname: ltcvm-lp3.xxx.xxxxxxx.ibm.com
+        lpar_name: ltcvm-lp3
+        hardware_ethernet: xx:xx:xx:xx:xx:xx
+        managed_system: ltcvm
+        host_password: "{{ hostvars[groups['vm'][0]].ansible_password }}"
+        disk_id: scsi-SAIX_VDASD_xxxxxxxxxxxc0000000xxxxxxxxxxx.x
