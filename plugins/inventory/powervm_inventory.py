@@ -145,6 +145,19 @@ options:
             - This is not valid for Power Servers.
         default: omit
         type: str
+    name_filter_pattern:
+        description:
+            - Allows you to transform display name of LPAR according to regex
+            - Using python re.sub function
+            - Specify name_filter_replace as a replacement for matched pattern
+        default: ""
+        type: str
+    name_filter_replace:
+        description:
+            - Allows you to transform Display name
+            - See name_filter_pattern
+        default: ""
+        type: str
 '''
 
 EXAMPLES = '''
@@ -289,6 +302,7 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client impo
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_rest_client import HmcRestClient
 from ansible.config.manager import ensure_type
 from ansible.template import Templar
+import re
 
 from ansible.utils.display import Display
 display = Display()
@@ -563,6 +577,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             exclude_lpar=dict(type='list', value=config.get("exclude_lpar", [])),
             exclude_system=dict(type='list', value=config.get("exclude_system", [])),
             ansible_display_name=dict(type='str', choices=['name', 'ip'], value=config.get("ansible_display_name", "name")),
+            name_filter_pattern=dict(type='str', value=config.get("name_filter_pattern", "")),
+            name_filter_replace=dict(type='str', value=config.get("name_filter_replace", "")),
             ansible_host_type=dict(type='str', choices=['name', 'ip'], value=config.get("ansible_host_type", "ip")),
             advanced_fields=dict(type='bool', value=config.get("advanced_fields", False)),
             group_lpars_by_managed_system=dict(type='bool', value=config.get("group_lpars_by_managed_system", True)),
@@ -617,7 +633,10 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
     def get_lpar_name(self, lpar):
         if "PartitionName" in lpar and lpar['PartitionName'] is not None:
-            return lpar['PartitionName']
+            if self.name_filter_pattern:
+                return re.sub(self.name_filter_pattern, self.name_filter_replace, lpar['PartitionName'])
+            else:
+                return lpar['PartitionName']
         else:
             raise LparFieldNotFoundError("LPAR has no value for 'PartitionName'")
 
