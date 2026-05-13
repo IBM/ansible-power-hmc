@@ -365,3 +365,19 @@ Notes
   
 .. _GitHub v1.15.0:
    https://github.com/IBM/ansible-power-hmc/releases/download/v1.15.0/ibm-power_hmc-1.15.0.tar.gz
+
+
+Version 1.15.1
+-------------
+Notes
+  * powervm_partition_profile: Support for partition profile with force update.
+  
+  Availability
+    * `Galaxy v1.15.1`_
+    * `GitHub v1.15.1`_ 
+  
+.. _Galaxy v1.15.1:
+   https://galaxy.ansible.com/download/ibm-power_hmc-1.15.1.tar.gz
+  
+.. _GitHub v1.15.1:
+   https://github.com/IBM/ansible-power-hmc/releases/download/v1.15.1/ibm-power_hmc-1.15.1.tar.gz
