@@ -421,7 +421,7 @@ class Hmc():
         if wait:
             migrlparCmd += self.OPT['MIGRLPAR']['-W'] + str(wait)
         if pool and opr == 'M':
-            if len(pool) == 1:
+            if '/' not in str(pool):
                 if pool.isdigit():
                     migrlparCmd += " " + self.OPT['MIGRLPAR']['-I'] + '"shared_proc_pool_id=' + str(pool) + '"'
                 else:
@@ -429,7 +429,7 @@ class Hmc():
             else:
                 if '//' in str(pool):
                     migrlparCmd += " " + self.OPT['MIGRLPAR']['-I'] + '\\' + '"multiple_shared_proc_pool_names=' + str(pool) + '\\' + '"'
-                elif '/' in str(pool):
+                else:
                     migrlparCmd += " " + self.OPT['MIGRLPAR']['-I'] + '\\' + '"multiple_shared_proc_pool_ids=' + str(pool) + '\\' + '"'
         self.hmcconn.execute(migrlparCmd)
 
