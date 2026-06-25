@@ -381,3 +381,22 @@ Notes
   
 .. _GitHub v1.15.1:
    https://github.com/IBM/ansible-power-hmc/releases/download/v1.15.1/ibm-power_hmc-1.15.1.tar.gz
+
+
+Version 1.16.0
+-------------
+Notes
+  * powervm_lpar_instance: Reformat LPAR facts to show multi-VIOS SCSI disk connectivity.
+  * powervm_lpar_instance, powervm_dlpar, power_system, vios, platform_update: Fix for session timeout issue.
+  * powervm_lpar_instance: Support for VTD name in lpar creation.
+  * powervm_lpar_migration: Fix for LPM not preserving shared processor pool ID during migration.
+  
+  Availability
+    * `Galaxy v1.16.0`_
+    * `GitHub v1.16.0`_ 
+  
+.. _Galaxy v1.16.0:
+   https://galaxy.ansible.com/download/ibm-power_hmc-1.16.0.tar.gz
+  
+.. _GitHub v1.16.0:
+   https://github.com/IBM/ansible-power-hmc/releases/download/v1.16.0/ibm-power_hmc-1.16.0.tar.gz
