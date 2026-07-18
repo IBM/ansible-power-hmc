@@ -1,0 +1,12 @@
+galaxy_info:
+  author: Naveen Kumar T
+  description: SUSE Linux installation using pxe server
+  license: GPL-3.0-only
+  min_ansible_version: '>=2.14.0'
+  galaxy_tags:
+    - infrastructure
+    - ibm
+    - power
+    - hmc
+    - linux
+    - pxe

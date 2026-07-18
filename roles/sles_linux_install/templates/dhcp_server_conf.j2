@@ -1,0 +1,8 @@
+default-lease-time 600;
+max-lease-time 7200;
+authoritative;
+subnet {{ host_subnet }} netmask {{ host_netmask }} {
+  range {{dhcp_range_start}} {{ dhcp_range_end }};
+  option routers {{ host_gw }};
+  option domain-name-servers {{ dns_ip }};
+}

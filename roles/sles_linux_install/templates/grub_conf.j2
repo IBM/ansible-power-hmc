@@ -1,0 +1,17 @@
+set timeout=1
+menuentry 'Install OS' {
+    insmod http
+    insmod tftp
+    set root=tftp,{{ hostvars[groups['pxe'][0]].ansible_host }}
+    echo 'Loading OS Install kernel ...'
+
+    linux {{ mac_address }}/boot/ppc64le/linux \
+    rd.neednet=1 ip={{ host_ip }}::{{ host_gw }}:{{ host_netmask }}:{{ hostname }}::none \
+    nameserver={{ dns_ip }} \
+    agama.install_url={{ install_protocol }}://{{ hostvars[groups['repo'][0]].ansible_host }}{% if install_protocol == 'http' %}:{{ repo_port }}{% endif %}/{{ repo_dir }}/install \
+    root=live:{{ install_protocol }}://{{ hostvars[groups['repo'][0]].ansible_host }}{% if install_protocol == 'http' %}:{{ repo_port }}{% endif %}/{{ repo_dir }}/LiveOS/squashfs.img \
+    live.password=abc123 \
+    inst.auto={{ install_protocol }}://{{ hostvars[groups['repo'][0]].ansible_host }}{% if install_protocol == 'http' %}:{{ repo_port }}{% endif %}/{{ ks_file }}
+
+    initrd {{ mac_address }}/boot/ppc64le/initrd
+}

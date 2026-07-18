@@ -1,0 +1,49 @@
+---
+
+# Redhat Release Name
+distro: 
+
+# Repository Port Number 
+repo_port: 
+
+# Path to the build files in Repository server
+repo_dir: 
+
+# Tftp boot directory path in PXE server
+base_dir: /var/lib/tftpboot/
+
+# Remove ':' in hardware ethernet address
+mac_address: "{{ hardware_ethernet | regex_replace(':', '') }}"
+
+# Append base directory path with a new directory named by mac address
+dest_dir: "{{ base_dir }}{{ mac_address }}"
+
+# Set core elf file path in PXE server
+core_file_path: "{{ mac_address }}/boot/ppc64le/grub2-ieee1275/powerpc-ieee1275/core.elf"
+
+# Replace ':' in hardware ethernet address wit '-'
+address: "{{ hardware_ethernet | regex_replace(':', '-') }}"
+
+# Install params
+install_protocol: ftp
+
+# HMC credentials
+curr_hmc_auth:
+        username: "{{ hostvars[groups['hmcs'][0]].ansible_user }}"
+        password: "{{ hostvars[groups['hmcs'][0]].ansible_password }}"
+
+# Host Details
+host_ip: 9.1.1.10
+host_gw: 9.1.1.1
+host_subnet: 9.1.1.0
+host_netmask: 255.255.255.0
+dns_ip: 9.0.0.0
+hostname: vm.abc.com
+lpar_name: vm-hmc
+hardware_ethernet: aa:aa:aa:aa:aa:aa 
+managed_system: vm-abc
+host_password: password
+
+
+
+

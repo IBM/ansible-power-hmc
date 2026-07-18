@@ -1,0 +1,278 @@
+---
+- name: Gather service facts
+  run_once: true
+  service_facts:
+  delegate_to: "{{ groups['pxe'][0] }}"
+
+- name: Check if the pxe server has dhcp and tftp services running
+  run_once: true
+  set_fact:
+    dhcpd_running: "{{ 'dhcpd.service' in services and services['dhcpd.service'].state == 'running' }}"
+    tftp_running: >-
+      {{ ('tftp.service' in services and services['tftp.service'].state == 'running') or
+         ('xinetd.service' in services and services['xinetd.service'].state == 'running') }}
+  delegate_to: "{{ groups['pxe'][0] }}"
+
+- name: Install dhcp in pxe server
+  block:
+    - name: Install dhcp in pxe server
+      dnf:
+        name:
+          - dhcp-server
+        state: present
+      delegate_to: "{{ groups['pxe'][0] }}"
+
+    - name: Calculate DHCP range from IP (assuming /24 subnet) using bash only
+      shell: |
+          ip="{{ host_subnet }}"
+          # Assume /24 subnet
+          cidr=24
+          netmask="255.255.255.0"
+
+          # Extract network base IP
+          IFS=. read -r o1 o2 o3 o4 <<< "$ip"
+          network="${o1}.${o2}.${o3}.0"
+
+          ip_to_dec() {
+          IFS=. read -r a b c d <<< "$1"
+          echo $(( (a << 24) + (b << 16) + (c << 8) + d ))
+          }
+
+          dec_to_ip() {
+          a=$(( ($1 >> 24) & 255 ))
+          b=$(( ($1 >> 16) & 255 ))
+          c=$(( ($1 >> 8) & 255 ))
+          d=$(( $1 & 255 ))
+          echo "$a.$b.$c.$d"
+          }
+
+          net_dec=$(ip_to_dec "$network")
+          mask_dec=$(ip_to_dec "$netmask")
+          broadcast_dec=$(( net_dec | (~mask_dec & 0xFFFFFFFF) ))
+
+          start_dec=$(( net_dec + 10 ))
+          end_dec=$(( broadcast_dec - 1 - 1 ))  # second-to-last usable
+
+          start_ip=$(dec_to_ip "$start_dec")
+          end_ip=$(dec_to_ip "$end_dec")
+
+          echo "dhcp_range_start=$start_ip"
+          echo "dhcp_range_end=$end_ip"
+      register: dhcp_range_output
+
+    - name: Set DHCP range facts
+      set_fact:
+        dhcp_range_start: "{{ dhcp_range_output.stdout_lines | select('search', '^dhcp_range_start=') | first | regex_replace('^dhcp_range_start=', '') }}"
+        dhcp_range_end: "{{ dhcp_range_output.stdout_lines | select('search', '^dhcp_range_end=') | first | regex_replace('^dhcp_range_end=', '') }}"
+
+    - name: Debug
+      debug:
+        msg: "{{ dhcp_range_start }} {{ dhcp_range_end }}"
+
+    - name: Add block for dhcp configuration
+      run_once: true
+      template:
+        src: templates/dhcp_server_conf.j2
+        dest: "/etc/dhcp/dhcpd.conf"
+        owner: root
+        group: root
+        mode: '0644'
+      delegate_to: "{{ groups['pxe'][0] }}"
+
+    - name: Enable and start dhcp-server
+      systemd:
+        name: dhcpd
+        state: started
+        enabled: true
+      delegate_to: "{{ groups['pxe'][0] }}"
+
+    - name: Open DHCP ports in firewall
+      firewalld:
+        service: dhcp
+        permanent: true
+        state: enabled
+        immediate: true
+      delegate_to: "{{ groups['pxe'][0] }}"
+
+  when: not dhcpd_running
+
+- name: Install tftp in pxe server
+  block:
+    - name: Install tftp in pxe server
+      dnf:
+        name: tftp-server
+        state: present
+        use_backend: dnf4
+      delegate_to: "{{ groups['pxe'][0] }}"
+
+    - name: Ensure TFTP root directory exists
+      file:
+        path: /var/lib/tftpboot
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      delegate_to: "{{ groups['pxe'][0] }}"
+    
+    - name: Enable and start tftp-socket
+      systemd:
+        name: tftp.socket
+        state: started
+        enabled: true
+      delegate_to: "{{ groups['pxe'][0] }}"
+
+    - name: Enable and start tftp-server
+      systemd:
+        name: tftp.service
+        state: started
+        enabled: true
+      delegate_to: "{{ groups['pxe'][0] }}"
+
+    - name: Install grub2-tools-extra and wget package in pxe server
+      dnf:
+        name: grub2-tools-extra
+        state: present
+        use_backend: dnf4
+      delegate_to: "{{ groups['pxe'][0] }}"
+
+    - name: Install wget package in pxe server
+      dnf:
+        name: wget
+        state: present
+        use_backend: dnf4
+      delegate_to: "{{ groups['pxe'][0] }}"
+
+    - name: Open TFTP ports in firewall
+      firewalld:
+        service: tftp
+        permanent: true
+        state: enabled
+        immediate: true
+      delegate_to: "{{ groups['pxe'][0] }}"
+  when: not tftp_running
+
+- name: Create Kickstart file name
+  set_fact:
+    ks_file: "{{ distro | regex_replace('\\.', '') }}_{{ hardware_ethernet }}.jsonnet"
+
+- name: Create a kickstart file in Repository server
+  run_once: true
+  template:
+    src: templates/jsonnet.j2
+    dest: "/var/www/html/{{ ks_file }}"
+  delegate_to: "{{ groups['repo'][0] }}"
+
+- name: Remove any existing tftp boot folder in PXE server for this VM
+  run_once: true
+  shell: rm -rf "{{ dest_dir }}"
+  delegate_to: "{{ groups['pxe'][0] }}"
+
+- name: Calculate cutdir value
+  shell: echo "{{ repo_dir }}" | tr '/' '\n' | grep -v "^$" | wc -l
+  register: cut_dir
+
+- name: Download files from /LiveOS/Squashfs  in Repository Server to the PXE server tftp path(hardware address)
+  run_once: true
+  shell: wget -r --reject="index.html*" --no-parent -nH --cut-dir={{ cut_dir.stdout | int + 1 }}   http://{{ hostvars[groups['repo'][0]].ansible_host }}:{{ repo_port }}/{{ repo_dir }}/LiveOS/squashfs.img  -P {{ dest_dir }}/  
+  delegate_to: "{{ groups['pxe'][0] }}" 
+
+- name: Download files from /boot and /ppc directory in Repository Server to the PXE server tftp path(hardware address)
+  run_once: true
+  shell: wget -r --reject="index.html*" --no-parent -nH --cut-dir={{ cut_dir.stdout | int + 1 }}   http://{{ hostvars[groups['repo'][0]].ansible_host }}:{{ repo_port }}/{{ repo_dir }}/boot/ -P {{ dest_dir }}
+  delegate_to: "{{ groups['pxe'][0] }}"
+
+
+- name: Create netboot directory in PXE server under tftp path
+  run_once: true
+  shell: grub2-mknetdir --net-directory={{ base_dir }} --subdir={{ mac_address }}/boot/ppc64le/grub2-ieee1275/
+  delegate_to: "{{ groups['pxe'][0] }}"
+
+- name: Create grub.cfg in  PXE server
+  run_once: true 
+  template:
+    src: templates/grub_conf.j2
+    dest: "{{ dest_dir }}/boot/grub2/grub.cfg"
+  delegate_to: "{{ groups['pxe'][0] }}"
+
+- name: copy to grub.cfg to boot directory in PXE server
+  run_once: true
+  shell: cp "{{ dest_dir }}/boot/grub2/grub.cfg" "{{ dest_dir }}/boot/ppc64le/grub2-ieee1275/grub.cfg"
+  delegate_to: "{{ groups['pxe'][0] }}"
+
+- name: Backup the dhcp file , if in case this blocks add any errors
+  run_once: true
+  shell: cp /etc/dhcp/dhcpd.conf /tmp/dhcpd.conf
+  delegate_to: "{{ groups['pxe'][0] }}"
+
+- name: DHCP block file to add lpar entry into dhcpd.conf
+  run_once: true
+  blockinfile:
+    dest: /etc/dhcp/dhcpd.conf
+    marker: "#{mark} Ansible module dhcp entry"
+    block: "{{ lookup('template', 'dhcpd_conf.j2') }}"
+    state: present
+  delegate_to: "{{ groups['pxe'][0] }}"
+   
+- name: restart dhcp service
+  run_once: true
+  shell: systemctl restart  dhcpd.service
+  delegate_to: "{{ groups['pxe'][0] }}"
+
+- name: Lparnetboot operation on target lpar
+  run_once: true
+  connection: local
+  collections:
+      - ibm.power_hmc
+  powervm_lpar_instance:
+        hmc_host: "{{ hostvars[groups['hmcs'][0]].ansible_host }}"
+        hmc_auth: "{{ curr_hmc_auth }}"
+        system_name: "{{ managed_system }}"
+        vm_name: "{{ lpar_name }}"
+        install_settings:
+          vm_ip: "{{ host_ip }}"
+          nim_ip: "{{ hostvars[groups['pxe'][0]].ansible_host }}"
+          nim_gateway: "{{ host_gw }}"
+          nim_subnetmask: "{{ host_netmask }}"
+          vm_mac: "{{ mac_address }}"
+          timeout: 13
+        action: install_os
+  ignore_errors: yes
+  delegate_to: "{{ groups['hmcs'][0] }}"
+
+- name: Revert the DHCP configuration changes in PXE server, take a backup of configuration file
+  run_once: true
+  shell: cp /etc/dhcp/dhcpd.conf /tmp/dhcpd.conf
+  delegate_to: "{{ groups['pxe'][0] }}"
+
+- name: block file
+  run_once: true
+  blockinfile:
+    dest: /etc/dhcp/dhcpd.conf
+    marker: "#{mark} Ansible module dhcp entry"
+    block: "{{ lookup('template', 'dhcpd_conf.j2') }}"
+    state: absent
+  delegate_to: "{{ groups['pxe'][0] }}"
+  
+- name: resatart dhcp
+  run_once: true
+  shell: systemctl restart  dhcpd.service
+  delegate_to: "{{ groups['pxe'][0] }}"
+
+- name: Wait for host SSH to become available after install
+  run_once: true
+  wait_for_connection:
+    timeout: 10
+    sleep: 5
+  vars:
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+  delegate_to: "{{ groups['vm'][0] }}"
+
+- name: Ensure system facts are gathered from the VM
+  run_once: true
+  setup:
+  delegate_to: "{{ groups['vm'][0] }}"
+
+- name: Print OS info from the VM
+  run_once: true
+  debug:
+    msg: "Distribution: {{ ansible_facts['distribution'] }}, Version: {{ ansible_facts['distribution_version'] }}"
