@@ -24,9 +24,11 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **Environment (please complete the following information):**
- - HMC: [e.g. V8R870 V9R1M910]
- - Python Version [e.g. 3.6 3.7]
- - OpenSSH Version [e.g. 1.0.2]
+ - HMC [e.g. V8R870 V9R1M910]:
+ - Python Version [e.g. 3.6 3.7]:
+ - OpenSSH Version [e.g. 1.0.2]:
+ - Ansible Version [e.g. 2.10.7]:
+ - AIX Collection Version [e.g. 1.8.1]:
 
 **Additional context**
 Add any other context about the problem here.
