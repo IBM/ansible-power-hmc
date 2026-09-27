@@ -45,3 +45,5 @@ plugins/modules/powervm_client_network_adapter.py compile-2.7!skip # Python 2.7 
 plugins/modules/powervm_client_network_adapter.py import-2.7!skip # Python 2.7 is not supported
 plugins/modules/vios_update_upgrade.py compile-2.7!skip # Python 2.7 is not supported
 plugins/modules/vios_update_upgrade.py import-2.7!skip # Python 2.7 is not supported
+plugins/modules/power_network_bridge.py compile-2.7!skip # Python 2.7 is not supported
+plugins/modules/power_network_bridge.py import-2.7!skip # Python 2.7 is not supported
