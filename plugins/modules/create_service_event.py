@@ -17,15 +17,15 @@ DOCUMENTATION = '''
 module: create_service_event
 author:
     - Sreenidhi S(@SreenidhiS1)
-short_description: Creates or lists serviceable events on the Hardware Management Console (HMC).
+short_description: Creates or lists serviceable events on the Hardware Management Console (HMC)
 notes:
     - This module requires the HMC which has systems licensed for advanced automation and monitoring.
-    - The types C(aix), C(cloudconn), C(lpm), C(novalink), C(sys), and C(vios) are supported for Power11 systems only.
-    - The types C(power), C(processor), C(lan), C(software), C(io), and C(other) are supported for Power10 and POWER9 systems only.
+    - The types C(aix), C(cloudconn), C(lpm), C(novalink), C(sys), and C(vios) are supported for POWER11 systems only.
+    - The types C(power), C(processor), C(lan), C(software), C(io), and C(other) are supported for POWER10 and POWER9 systems only.
     - The types C(hmc), C(test), and C(hmctest) are supported for all systems.
 description:
     - Creates a serviceable event on the Hardware Management Console (HMC) to report a problem that occurred
-      on either the power server or the HMC itself, and initiates a service request for repair.
+      on either the managed system or the HMC itself, and initiates a service request for repair.
     - Lists serviceable events available on the HMC.
 version_added: 1.0.0
 requirements:
@@ -53,7 +53,7 @@ options:
                 type: str
     system_name:
         description:
-            - The name or mtms (machine type model serial) of the managed system.
+            - The name or MTMS (machine type model serial) of the managed system.
             - Required for I(state=created) except with C(hmctest).
             - Optional for I(state=facts).
         type: str
@@ -67,7 +67,7 @@ options:
             - The type of event to create.
             - C(power) to report a problem with the power subsystem of managed-system.
             - C(processor) to report a problem with hardware in the processor subsystem of managed-system.
-            - C(lan) to report a problem with the local area network (LAN) that attaches managed-system.
+            - C(lan) to report a problem with the local area network (LAN) to which managed-system is attached.
             - C(software) to report a problem with an operating system or other software loaded on managed-system.
             - C(io) to report a problem with hardware in the I/O configuration of managed-system.
             - C(other) to report a problem with managed-system that is not adequately described by any other event type.
@@ -86,9 +86,9 @@ options:
     attributes:
         description:
             - The serviceable event attributes to set.
-            - The attribute data consists of attribute name/value pairs.
+            - The attribute data consists of name/value pairs.
             - Required with C(aix), C(cloudconn), C(lpm), C(novalink), C(sys), and C(vios).
-            - Also required with C(hmc) on Power11 systems.
+            - Also required with C(hmc) on POWER11 systems.
             - Otherwise this option is not valid.
         type: dict
         suboptions:
@@ -159,9 +159,9 @@ options:
             service_file:
                 description:
                     - The name of the log file attached to the serviceable event.
-                    - Multiple service files must be comma separated.
+                    - Multiple service files must be comma-separated.
                     - Required with C(aix), C(cloudconn), C(lpm), C(novalink), C(sys), and C(vios).
-                    - Also required with C(hmc) on Power11 systems.
+                    - Also required with C(hmc) on POWER11 systems.
                     - C(aixffdc) AIX system logs. Valid with C(aix).
                     - C(aixsnap) AIX snap data. Valid with C(aix).
                     - C(lpmffdc) Partition migration debug data. Valid with C(lpm).
@@ -256,15 +256,29 @@ EXAMPLES = '''
     state: facts
     event_type: hardware
 
-- name: List console events for a managed system
+- name: List console events
   create_service_event:
     hmc_host: '{{ inventory_hostname }}'
     hmc_auth: "{{ curr_hmc_auth }}"
     state: facts
     event_type: console
-    system_name: <system name>
     days: 7
     number_of_events: 10
+'''
+
+RETURN = '''
+changed:
+    description: Indicates whether the serviceable event was created.
+    type: bool
+    returned: always
+info:
+    description: Output of the serviceable event creation or list operation.
+    type: raw
+    returned: always
+warning:
+    description: Warning message, if any.
+    type: str
+    returned: when a warning is raised
 '''
 
 import logging
@@ -440,7 +454,7 @@ def create_svc_events(module, params):
         logger.debug("Testing")
         logger.debug(system_gen)
         if system_gen == 'power11' and hmc.getManagedSystemDetails(m_system, "advanced_hmc_automation_and_monitoring_capable").strip() != '1':
-            module.fail_json(msg="This module is supported only for systems where advanced hmc automation and monitoring capablity is enabled")
+            module.fail_json(msg="This module is supported only for systems where advanced hmc automation and monitoring capability is enabled")
     validate_parameters(params, system_gen)
     attributes = params['attributes']
     if params['types'] != 'hmctest' and attributes is not None:

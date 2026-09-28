@@ -26,7 +26,7 @@ description:
     - Deletes a Virtual Network Bridge identified by I(virtual_network_name).
 version_added: "1.0.0"
 requirements:
-    - Python >= 3
+    - Python >= 3.9
 options:
     hmc_host:
         description:
@@ -86,7 +86,7 @@ options:
             jumbo_frames:
                 description:
                     - Enable 9000-byte jumbo frames on the Shared Ethernet Adapter.
-                    - Valid only when I(state=present)
+                    - Valid only when I(state=present).
                 type: bool
             large_send:
                 description:
@@ -143,7 +143,7 @@ options:
                         description:
                             - Name of the secondary VIOS partition (e.g. C(VIOS-test-01)).
                             - Required when I(secondary_vios) is configured for I(state=present).
-                            - Required when I(state=update) while enabling load balancing or
+                            - Required when I(state=update) while enabling load-balancing or
                               adding a new secondary VIOS to an existing single-VIOS bridge.
                         type: str
                     backing_device:
@@ -183,10 +183,10 @@ options:
             - C(facts) retrieves information about all Virtual Network Bridges.
             - C(present) creates the Virtual Network Bridge if it does not already exist.
             - C(update) modifies an existing Virtual Network Bridge identified by
-              I(virtual_network_name). Updatable fields are I(failover_enabled),
-              I(load_balancing), I(jumbo_frames), I(large_send), I(qos_mode),
-              I(addition_pvid) (when enabling load-sharing), per-VIOS
-              I(high_availability_mode), and I(tagged_virtual_networks) (per
+              C(virtual_network_name). Updatable fields are I(failover_enabled),
+              C(load_balancing), I(jumbo_frames), I(large_send), I(qos_mode),
+              C(addition_pvid) (when enabling load-sharing), per-VIOS
+              C(high_availability_mode), and I(tagged_virtual_networks) (per
               LoadGroup, keyed by PVID).
             - C(absent) deletes the Virtual Network Bridge identified by I(virtual_network_name).
         required: true
@@ -305,7 +305,7 @@ network_bridge_info:
                     description: Whether SEA failover is enabled on the bridge.
                     type: str
                 load_balancing_enabled:
-                    description: Whether load balancing across LoadGroups is enabled.
+                    description: Whether load-balancing across LoadGroups is enabled.
                     type: str
                 shared_ethernet_adapters:
                     description: List of Shared Ethernet Adapters backing the bridge.
@@ -328,10 +328,10 @@ network_bridge_info:
                             description: Whether large send offload is enabled on the SEA.
                             type: str
                         qos_mode:
-                            description: Quality of service mode of the SEA (disabled, loose, or strict).
+                            description: Quality-of-service mode of the SEA (disabled, loose, or strict).
                             type: str
                         high_availability_mode:
-                            description: High availability mode of the SEA (disabled, auto, or standby).
+                            description: High-availability mode of the SEA (disabled, auto, or standby).
                             type: str
                         port_vlan_id:
                             description: Port VLAN ID associated with the SEA.
@@ -422,7 +422,7 @@ network_bridge_info:
             description: Whether SEA failover is enabled. Returned on C(present).
             type: bool
         load_balancing_enabled:
-            description: Whether load balancing is enabled. Returned on C(present) and C(update).
+            description: Whether load-balancing is enabled. Returned on C(present) and C(update).
             type: bool
         jumbo_frames:
             description: Whether jumbo frames are enabled on the SEA. Returned on C(present) and C(update).
@@ -431,7 +431,7 @@ network_bridge_info:
             description: Whether large send offload is enabled on the SEA. Returned on C(present) and C(update).
             type: bool
         qos_mode:
-            description: Quality of service mode set on the SEA. Returned on C(present) and C(update).
+            description: Quality-of-service mode set on the SEA. Returned on C(present) and C(update).
             type: str
         tagged_virtual_networks_added:
             description: >

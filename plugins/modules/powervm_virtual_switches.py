@@ -21,11 +21,11 @@ short_description: Create and manage PowerVM Virtual Switches
 notes:
     - This module supports creating virtual switches and retrieving virtual switch information.
 description:
-    - "Creates a virtual switch with specified configuration on the managed system"
-    - "Retrieves information about virtual switches on the managed system"
+    - Creates a virtual switch with specified configuration on the managed system.
+    - Retrieves information about virtual switches on the managed system.
 version_added: "1.0.0"
 requirements:
-- Python >= 3
+- Python >= 3.9
 options:
     hmc_host:
         description:
@@ -34,23 +34,22 @@ options:
         type: str
     hmc_auth:
         description:
-            - Username and Password credential of the HMC.
+            - Username and password credential of the HMC.
         required: true
         type: dict
         suboptions:
             username:
                 description:
-                    - HMC username.
+                    - Username of the HMC to log in.
                 required: true
                 type: str
             password:
                 description:
-                    - HMC password.
-                required: false
+                    - Password of the HMC.
                 type: str
     system_name:
         description:
-            - The name or mtms (machine type model serial) of the managed system.
+            - The name or MTMS (machine type model serial) of the managed system.
         required: true
         type: str
     virtual_switch_name:
@@ -85,7 +84,7 @@ options:
 
 EXAMPLES = '''
 - name: Create a virtual switch
-  powervm_virtual_switches:
+  ibm.power_hmc.powervm_virtual_switches:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -96,7 +95,7 @@ EXAMPLES = '''
     state: present
 
 - name: Modify a virtual switch (change mode)
-  powervm_virtual_switches:
+  ibm.power_hmc.powervm_virtual_switches:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -107,7 +106,7 @@ EXAMPLES = '''
     state: modify
 
 - name: Modify a virtual switch (change name and mode)
-  powervm_virtual_switches:
+  ibm.power_hmc.powervm_virtual_switches:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -119,7 +118,7 @@ EXAMPLES = '''
     state: modify
 
 - name: Delete a virtual switch
-  powervm_virtual_switches:
+  ibm.power_hmc.powervm_virtual_switches:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -129,7 +128,7 @@ EXAMPLES = '''
     state: absent
 
 - name: Get all virtual switch facts
-  powervm_virtual_switches:
+  ibm.power_hmc.powervm_virtual_switches:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -138,7 +137,7 @@ EXAMPLES = '''
     state: facts
 
 - name: Get specific virtual switch facts
-  powervm_virtual_switches:
+  ibm.power_hmc.powervm_virtual_switches:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -148,7 +147,7 @@ EXAMPLES = '''
     state: facts
 
 - name: Get virtual switch facts using MTMS
-  powervm_virtual_switches:
+  ibm.power_hmc.powervm_virtual_switches:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -159,9 +158,24 @@ EXAMPLES = '''
 
 RETURN = '''
 virtual_switch_info:
-    description: Information about virtual switches
+    description: Information about virtual switches on the managed system.
     type: dict
-    returned: always
+    returned: on success
+    contains:
+        virtual_switches:
+            description: List of virtual switches on the managed system.
+            type: list
+            elements: dict
+            contains:
+                switch_name:
+                    description: Name of the virtual switch.
+                    type: str
+                switch_mode:
+                    description: Mode of the virtual switch (C(Veb) or C(Vepa)).
+                    type: str
+                switch_id:
+                    description: Unique numeric identifier of the virtual switch.
+                    type: str
 '''
 
 import logging

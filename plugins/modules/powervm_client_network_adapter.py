@@ -34,7 +34,7 @@ description:
     - Deletes a Client Network Adapter from a logical partition or VIOS.
 version_added: "1.0.0"
 requirements:
-    - Python >= 3
+    - Python >= 3.9
 options:
     hmc_host:
         description:
@@ -43,13 +43,13 @@ options:
         type: str
     hmc_auth:
         description:
-            - Username and Password credential of the HMC.
+            - Username and password credential of the HMC.
         required: true
         type: dict
         suboptions:
             username:
                 description:
-                    - HMC username.
+                    - Username of the HMC to log in.
                 required: true
                 type: str
             password:
@@ -61,7 +61,7 @@ options:
                 type: str
     system_name:
         description:
-            - The name or mtms (machine type model serial) of the managed system.
+            - The name or MTMS (machine type model serial) of the managed system.
         required: true
         type: str
     vm_name:
@@ -101,7 +101,7 @@ options:
         description:
             - The MAC address to assign to the adapter.
             - Optional when I(state=updated).
-            - Use colon-separated format, e.g. C(B6:08:90:7C:A6:08).
+            - Use colon-separated format, e.g., C(B6:08:90:7C:A6:08).
         type: str
     os_mac_address_restrictions:
         description:
@@ -116,7 +116,7 @@ options:
         description:
             - List of MAC addresses the OS is permitted to use on the adapter.
             - Required when I(os_mac_address_restrictions=allow_specified).
-            - Each entry should be in colon-separated format, e.g. C(B6:08:90:7C:A6:08).
+            - Each entry should be in colon-separated format, e.g., C(B6:08:90:7C:A6:08).
             - Optional when I(state=updated).
         type: list
         elements: str
@@ -165,7 +165,7 @@ options:
               I(virtual_ethernet_adapter_id) and I(virtual_network_name). If the adapter has only one
               virtual network attached, the entire adapter is deleted. If the adapter has
               multiple virtual networks, the specified network's link is removed from
-              I(VirtualNetworks) and its VLAN ID is stripped from I(TaggedVLANIDs).
+              C(VirtualNetworks) and its VLAN ID is stripped from C(TaggedVLANIDs).
               When I(vios_name) is specified, the VIOS must be in the C(not activated)
               (shut-down) state, otherwise the module fails with an error.
             - C(facts) retrieves information about all Client Network Adapters on the
@@ -334,7 +334,7 @@ RETURN = '''
 client_network_adapter_info:
     description: Information about Client Network Adapters on the logical partition or VIOS.
     type: dict
-    returned: on success of C(facts), C(present), and C(updated) states
+    returned: on success of C(facts), C(present), C(updated), and C(detach_virtual_network) states
     contains:
         client_network_adapters:
             description: List of Client Network Adapters found on the logical partition or VIOS.

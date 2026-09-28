@@ -1,4 +1,4 @@
-# !/usr/bin/python
+#!/usr/bin/python
 
 # Copyright: (c) 2018- IBM, Inc
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
@@ -16,31 +16,30 @@ DOCUMENTATION = '''
 module: platform_update
 author:
     - Chiranthan M V (@chiranthanmv)
-short_description: Applies consolidated system firmware (update/upgrade), VIOS, SR-IOV, and I/O adapter updates, including optional partition migration.
+short_description: Applies consolidated system firmware (update/upgrade), VIOS, SR-IOV, and I/O adapter updates, including optional partition migration
 notes:
   - Supports IBM Fix Central website (C(IBMWebsite)) and SFTP server (C(sftp)) as update/upgrade sources.
   - For SFTP-based updates, the firmware or VIOS image must already be present on the SFTP server.
     The HMC connects to the SFTP server directly; no pre-staging to the HMC is required.
-  - Supports defining the order in which update/upgrade are applied across components.
+  - Supports defining the order in which updates and upgrades are applied across components.
   - To perform configuration operations, you do not need to specify a separate state or action.
     Supplying values under C(platform_config) is sufficient to apply the changes directly to the HMC.
   - When performing an update or upgrade operation via C(IBMWebsite) with C(level='latest'),
-    if the Ansible response status is C(ok) and C(changed) is C(false), and the result is C(COMPLETED_WITH_ERROR) with the reason C("update not available"),
+    if the Ansible response status is C(ok) and C(changed) is C(False), and the result is C(COMPLETED_WITH_ERROR) with the reason C("update not available"),
     it indicates that no newer update images are available or the target is already up-to-date.
-  - Module will not satisfy the idempotency requirement of Ansible, even though it partially confirms it.
+  - This module will not satisfy the idempotency requirement of Ansible, even though it partially confirms it.
     For instance, if the module is tasked to update/upgrade the HMC to the same level, it will still
     go ahead with the operation and finally the changed state will be reported as false.
   - Upgrade the Power server after successfully evacuating the partition to the destination system,
     and ensure the partition is not returned to the original server.
-description: |
-  This module performs update and upgrade for various system components as part of system maintenance or automation workflows.
-  It supports:
-    - System Firmware update and upgrade
-    - VIOS and I/O Adapters update only
-    - SR-IOV Adapters update based on supported system firmware levels
-    - Logical Partition migration
-  All update and upgrade can be performed independently or combined in a single consolidated update operation.
-  Supports C(state=facts) to retrieve information about available adapters without making any changes.
+description:
+    - This module performs update and upgrade for various system components as part of system maintenance or automation workflows.
+    - Supports System Firmware update and upgrade.
+    - Supports VIOS and I/O Adapters update.
+    - Supports SR-IOV Adapters update based on supported system firmware levels.
+    - Supports Logical Partition migration.
+    - All updates and upgrades can be performed independently or combined in a single consolidated update operation.
+    - Supports C(state=facts) to retrieve information about available adapters without making any changes.
 version_added: 1.0.0
 requirements:
 - Python >= 3.9
@@ -64,11 +63,10 @@ options:
             password:
                 description:
                     - Password for the HMC user.
-                required: false
                 type: str
     system_name:
         description:
-            - The name or mtms (machine type model serial) of the managed system on which the operations are to be performed.
+            - The name or MTMS (machine type model serial) of the managed system on which the operations are to be performed.
         required: true
         type: str
     platform_config:
@@ -76,7 +74,6 @@ options:
             - Defines the configuration for the operation to be performed, such as system firmware update/upgrade
               (including SR-IOV adapter updates) or VIOS updates (including I/O adapter updates).
             - Also supports performing partition migrations.
-        required: false
         type: dict
         suboptions:
             system_firmware_update:
@@ -87,7 +84,7 @@ options:
                     update_type:
                         description:
                             - Type of firmware update/upgrade operation.
-                            - 'C(NoUpdate): System firmware update/upgrade is skipped, but SR-IOV adapter updates are still allowed'
+                            - 'C(NoUpdate): System firmware update/upgrade is skipped, but SR-IOV adapter updates are still allowed.'
                             - 'C(Update): Applies an update.'
                             - 'C(Upgrade): Applies an upgrade.'
                             - When set to C(Update) or C(Upgrade), the C(sriov_adapter_update) will be implicit.
@@ -148,14 +145,14 @@ options:
                     sriov_adapter_update:
                         description:
                             - List of SR-IOV adapter update configurations.
-                            - This option must not be provided if C(update_type) is set to C(Update) or C(Upgrade) in C(system_firmware_update)
+                            - This option must not be provided if C(update_type) is set to C(Update) or C(Upgrade) in C(system_firmware_update).
                         type: list
                         elements: dict
                         suboptions:
                             all:
                                 description:
                                     - Indicates whether the update should be applied to all adapters.
-                                    - If set to C(true), the C(adapter_id) field is not required.
+                                    - If set to C(True), the C(adapter_id) field is not required.
                                 type: bool
                             adapter_id:
                                 description:
@@ -165,8 +162,8 @@ options:
                             subtype:
                                 description:
                                     - Specifies the level of update to apply.
-                                    - C(DriverOnly) perform only the driver update.
-                                    - C(Adapter) perform both the adapter firmware and driver updates.
+                                    - C(DriverOnly) performs only the driver update.
+                                    - C(Adapter) performs both the adapter firmware and driver updates.
                                 type: str
                                 choices: ['DriverOnly', 'Adapter']
             partition_migration:
@@ -179,10 +176,11 @@ options:
                     is_quick_evac:
                         description:
                             - Indicates whether to perform a quick evacuation during partition migration.
-                            - Must always be set to C(true) when performing partition migration.
+                            - Must always be set to C(True) when performing partition migration.
                         type: bool
                     destination_managed_system:
-                        description: Target managed system name.
+                        description:
+                            - Name of the target managed system to migrate partitions to.
                         type: str
                     leave_partition_in_target:
                         description:
@@ -199,16 +197,18 @@ options:
                     update_type:
                         description:
                             - Specifies the type of VIOS update to be performed.
-                            - 'C(NoUpdate): No update will be applied to VIOS, but I/O adapter updates are still allowed'
-                            - 'C(Update): Applies a VIOS update using the provided configuration. The I/O adapter update is performed implicitly'
+                            - 'C(NoUpdate): No update will be applied to VIOS, but I/O adapter updates are still allowed.'
+                            - 'C(Update): Applies a VIOS update using the provided configuration. The I/O adapter update is performed implicitly.'
                             - When set to C(NoUpdate), the fields C(resource_type) and C(vios_image_name) are not required.
                         type: str
                         choices: ['NoUpdate', 'Update']
                     vios_name:
-                        description: Name of the VIOS partition.
+                        description:
+                            - Name of the VIOS partition to be updated.
                         type: str
                     update_order:
-                        description: Priority order in which the update should be applied.
+                        description:
+                            - Priority order in which the update should be applied relative to other components.
                         type: int
                     resource_type:
                         description:
@@ -268,7 +268,7 @@ options:
                             all:
                                 description:
                                     - Indicates whether all I/O adapters should be updated.
-                                    - If set to C(true), the C(device) field is not required
+                                    - If set to C(True), the C(device) field is not required.
                                 type: bool
                             device:
                                 description:
@@ -550,7 +550,7 @@ EXAMPLES = '''
                 username: sftpuser
                 keyfile: /home/hscroot/.ssh/id_rsa
 
-- name: Facts
+- name: Gather SR-IOV, VIOS, and I/O adapter facts
   platform_update:
     hmc_host: <host>
     hmc_auth:
@@ -564,9 +564,9 @@ RETURN = '''
 result:
     description: >
         Dictionary containing the outcome of the operation.
-        Always includes `changed` indicating if the operation made any changes.
-        The `command_output` key contains a dictionary with operation-specific details.
-        The keys and values in `command_output` depend on the type of operation performed.
+        Always includes C(changed) indicating if the operation made any changes.
+        The C(command_output) key contains a dictionary with operation-specific details.
+        The keys and values in C(command_output) depend on the type of operation performed.
     type: dict
     returned: always
     sample: {

@@ -22,13 +22,13 @@ notes:
     - This module supports creating virtual networks and retrieving virtual network information.
     - Virtual networks are associated with virtual switches on the managed system.
 description:
-    - "Creates a virtual network with specified configuration on the managed system"
-    - "Retrieves information about virtual networks on the managed system"
-    - "Update the name of the virtual network on the managed system"
-    - "Deletes virtual networks from the managed system"
+    - Creates a virtual network with specified configuration on the managed system.
+    - Retrieves information about virtual networks on the managed system.
+    - Updates the name of the virtual network on the managed system.
+    - Deletes virtual networks from the managed system.
 version_added: "1.0.0"
 requirements:
-- Python >= 3
+- Python >= 3.9
 options:
     hmc_host:
         description:
@@ -37,29 +37,28 @@ options:
         type: str
     hmc_auth:
         description:
-            - Username and Password credential of the HMC.
+            - Username and password credential of the HMC.
         required: true
         type: dict
         suboptions:
             username:
                 description:
-                    - HMC username.
+                    - Username of the HMC to log in.
                 required: true
                 type: str
             password:
                 description:
-                    - HMC password.
-                required: false
+                    - Password of the HMC.
                 type: str
     system_name:
         description:
-            - The name or mtms (machine type model serial) of the managed system.
+            - The name or MTMS (machine type model serial) of the managed system.
         required: true
         type: str
     network_name:
         description:
             - The name of the virtual network.
-            - Required when I(state=present) or I(state=absent)or I(state=updated).
+            - Required when I(state=present), I(state=absent), or I(state=updated).
             - Optional when I(state=facts). If provided, returns details for the specific network. If not provided, returns all networks.
         type: str
     network_vlan_id:
@@ -83,7 +82,7 @@ options:
     tagged_network:
         description:
             - Specifies whether the network is tagged or untagged.
-            - Optional when I(state=present). Defaults to false if not specified.
+            - Optional when I(state=present). Defaults to C(False) if not specified.
         type: bool
         default: false
     state:
@@ -104,7 +103,7 @@ options:
 
 EXAMPLES = '''
 - name: Create a virtual network with switch name
-  powervm_virtual_network:
+  ibm.power_hmc.powervm_virtual_network:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -117,7 +116,7 @@ EXAMPLES = '''
     state: present
 
 - name: Create a virtual network with switch ID
-  powervm_virtual_network:
+  ibm.power_hmc.powervm_virtual_network:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -130,7 +129,7 @@ EXAMPLES = '''
     state: present
 
 - name: Update a virtual network name
-  powervm_virtual_network:
+  ibm.power_hmc.powervm_virtual_network:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -141,7 +140,7 @@ EXAMPLES = '''
     state: updated
 
 - name: Delete a virtual network
-  powervm_virtual_network:
+  ibm.power_hmc.powervm_virtual_network:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -151,7 +150,7 @@ EXAMPLES = '''
     state: absent
 
 - name: Get all virtual network facts
-  powervm_virtual_network:
+  ibm.power_hmc.powervm_virtual_network:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -160,7 +159,7 @@ EXAMPLES = '''
     state: facts
 
 - name: Get specific virtual network facts
-  powervm_virtual_network:
+  ibm.power_hmc.powervm_virtual_network:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -170,7 +169,7 @@ EXAMPLES = '''
     state: facts
 
 - name: Get virtual network facts using MTMS
-  powervm_virtual_network:
+  ibm.power_hmc.powervm_virtual_network:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -181,9 +180,9 @@ EXAMPLES = '''
 
 RETURN = '''
 virtual_network_info:
-    description: Information about virtual networks
+    description: Information about virtual networks on the managed system.
     type: dict
-    returned: always
+    returned: on success
     sample: {
         "virtual_networks": [
             {
