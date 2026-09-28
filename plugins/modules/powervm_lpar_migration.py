@@ -16,7 +16,7 @@ DOCUMENTATION = '''
 module: powervm_lpar_migration
 author:
     - Navinakumar Kandakur (@nkandak1)
-short_description: validate, migrate and recover of the LPAR
+short_description: Validate, migrate, and recover LPARs
 notes:
     - All the actions support passwordless authentication.
 description:
@@ -53,7 +53,7 @@ options:
     dest_system:
         description:
             - The name of the destination managed system.
-            - valid only for C(validate) and C(migrate) I(action) operation.
+            - Valid only for C(validate) and C(migrate) I(action) operation.
         type: str
     vm_names:
         description:
@@ -72,7 +72,7 @@ options:
     all_vms:
         description:
             - All the partitions of the I(src_system) to be migrated.
-            - valid only for C(migrate) I(action)
+            - Valid only for C(migrate) I(action).
         type: bool
     remote_ip:
         description:
@@ -93,14 +93,14 @@ options:
         type: str
     wait:
         description:
-            - The maximum time, in minutes, to wait for operation to complete
-            - This option can be used only with C(migrate) and C(validate) I(action)
+            - The maximum time, in minutes, to wait for operation to complete.
+            - This option can be used only with C(migrate) and C(validate) I(action).
         type: int
     shared_proc_pool:
         description:
-            - list of the details of the shared processor pools to use on the destination managed system.
-            - this parameter support single and multiple pools.
-            - This option can be used only with C(migrate)
+            - List of the details of the shared processor pools to use on the destination managed system.
+            - This parameter supports single and multiple pools.
+            - This option can be used only with C(migrate).
         type: list
         elements: dict
         suboptions:
@@ -145,7 +145,7 @@ options:
 
 EXAMPLES = '''
 - name: Validate that the input partitions can be migrated to the destination
-  powervm_lpar_migration:
+  ibm.power_hmc.powervm_lpar_migration:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -157,8 +157,8 @@ EXAMPLES = '''
       - <vm_name2>
     action: validate
 
-- name: Recover specifed vm_id from migration failure
-  powervm_lpar_migration:
+- name: Recover specified vm_id from migration failure
+  ibm.power_hmc.powervm_lpar_migration:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -169,7 +169,7 @@ EXAMPLES = '''
     action: recover
 
 - name: Migrate all partitions of the cec to remote HMC
-  powervm_lpar_migration:
+  ibm.power_hmc.powervm_lpar_migration:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -181,7 +181,7 @@ EXAMPLES = '''
     action: migrate
 
 - name: Migrate 2 partitions of the cec to another
-  powervm_lpar_migration:
+  ibm.power_hmc.powervm_lpar_migration:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -199,7 +199,7 @@ EXAMPLES = '''
     action: migrate
 
 - name: Adds SSH authentication key of remote HMC.
-  powervm_lpar_migration:
+  ibm.power_hmc.powervm_lpar_migration:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'

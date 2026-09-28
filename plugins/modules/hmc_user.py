@@ -15,9 +15,9 @@ DOCUMENTATION = '''
 ---
 module: hmc_user
 author:
-    - Anil Vijayan(@AnilVijayan)
-    - Navinakumar Kandaur(@nkandak1)
-short_description: Manage the hmc users
+    - Anil Vijayan (@AnilVijayan)
+    - Navinakumar Kandakur (@nkandak1)
+short_description: Manage HMC users
 notes:
     - All Operations support passwordless authentication.
 description:
@@ -43,7 +43,7 @@ options:
         suboptions:
             username:
                 description:
-                    - Username of the HMC to login.
+                    - Username of the HMC to log in.
                 required: true
                 type: str
             password:
@@ -52,7 +52,7 @@ options:
                 type: str
     name:
         description:
-            -  The user name of the HMC user. This option is valid for I(state=present),
+            - The user name of the HMC user. This option is valid for I(state=present),
                I(state=absent), I(state=updated), I(state=facts) and I(state=ldap_facts).
         type: str
     enable_user:
@@ -62,8 +62,8 @@ options:
         type: bool
     type:
         description:
-            -  The type of user. During I(state=updated) to change the default settings of
-               HMC user, specify C(default) with this option. The values of this option changes
+            - The type of user. During I(state=updated) to change the default settings of
+               HMC user, specify C(default) with this option. The values of this option change
                during I(state=absent). Supported values are C(all|local|kerberos|ldap|automanage).
                During I(state=facts), valid values are C(default|user).
         type: str
@@ -278,7 +278,7 @@ options:
             - C(present) ensures the HMC user is created with provided configuration.
             - C(absent) ensures the HMC user is removed.
         type: str
-        choices: ['facts', 'present', 'absent', 'updated', ldap_facts]
+        choices: ['facts', 'present', 'absent', 'updated', 'ldap_facts']
     action:
         description:
             - C(configure_ldap) Configure Hardware Management Console (HMC) Light weight Directory Access Protocol (LDAP) client
@@ -292,7 +292,7 @@ options:
 
 EXAMPLES = '''
 - name: List the properties of hmc user.
-  hmc_user:
+  ibm.power_hmc.hmc_user:
     state: facts
     hmc_host: "{{ inventory_hostname }}"
     name: <user_name>
@@ -301,7 +301,7 @@ EXAMPLES = '''
       password: <password>
 
 - name: Create hmc user.
-  hmc_user:
+  ibm.power_hmc.hmc_user:
     state: present
     hmc_host: "{{ inventory_hostname }}"
     name: <user_name>
@@ -314,7 +314,7 @@ EXAMPLES = '''
       passwd: <new_user_password>
 
 - name: Modify hmc user.
-  hmc_user:
+  ibm.power_hmc.hmc_user:
     state: updated
     hmc_host: "{{ inventory_hostname }}"
     name: <user_name>
@@ -326,7 +326,7 @@ EXAMPLES = '''
       max_webui_login_attempts: 20
 
 - name: Remove hmc user.
-  hmc_user:
+  ibm.power_hmc.hmc_user:
     state: absent
     hmc_host: "{{ inventory_hostname }}"
     name: <user_name>
@@ -335,7 +335,7 @@ EXAMPLES = '''
       password: <password>
 
 - name: List the ldap configuration.
-  hmc_user:
+  ibm.power_hmc.hmc_user:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: <username>
@@ -345,7 +345,7 @@ EXAMPLES = '''
     state: ldap_facts
 
 - name: Configure ldap settings.
-  hmc_user:
+  ibm.power_hmc.hmc_user:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: <username>
@@ -361,7 +361,7 @@ EXAMPLES = '''
     action: configure_ldap
 
 - name: Remove ldap configuration.
-  hmc_user:
+  ibm.power_hmc.hmc_user:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: <username>
@@ -371,7 +371,7 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-Command_output:
+command_output:
     description: Respective user configuration
     type: dict
     returned: on success of all states except C(absent)

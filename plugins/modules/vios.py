@@ -45,7 +45,7 @@ options:
         suboptions:
             username:
                 description:
-                    - Username of the HMC to login.
+                    - Username of the HMC to log in.
                 required: true
                 type: str
             password:
@@ -54,7 +54,7 @@ options:
                 type: str
     system_name:
         description:
-            - The name or mtms (machine type model serial) of the managed system.
+            - The name or MTMS (machine type model serial) of the managed system.
         type: str
     name:
         description:
@@ -147,7 +147,6 @@ options:
             - Specifies a label name for installed vios to use instead of creating a default label name.
             - supports only installation through image available on the HMC local disk.
             - valid only for C(action) = I(install)
-        required: false
         type: str
     network_macaddr:
         description:
@@ -185,7 +184,7 @@ options:
         elements: str
     directory_list:
         description:
-            - The name of one or more VIOS installation images to remove
+            - The name of one or more VIOS installation images to remove.
         type: list
         elements: str
     media:
@@ -229,7 +228,7 @@ options:
                 type: str
             sftp_password:
                 description:
-                    - Password of the SFTP sever.
+                    - Password of the SFTP server.
                 type: str
     state:
         description:
@@ -250,7 +249,7 @@ options:
 
 EXAMPLES = '''
 - name: Create VIOS with default configuration.
-  vios:
+  ibm.power_hmc.vios:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -260,7 +259,7 @@ EXAMPLES = '''
     state: present
 
 - name: Create VIOS with user defined settings.
-  vios:
+  ibm.power_hmc.vios:
     hmc_host: '{{ inventory_hostname }}'
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -273,7 +272,7 @@ EXAMPLES = '''
     state: present
 
 - name: Install VIOS using NIM Server.
-  vios:
+  ibm.power_hmc.vios:
     hmc_host: '{{ inventory_hostname }}'
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -287,7 +286,7 @@ EXAMPLES = '''
     action: install
 
 - name: Install VIOS using the image available on the HMC local disk
-  vios:
+  ibm.power_hmc.vios:
     hmc_host: '{{ inventory_hostname }}'
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -306,7 +305,7 @@ EXAMPLES = '''
     action: install
 
 - name: Accept License after VIOS Installation.
-  vios:
+  ibm.power_hmc.vios:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -316,7 +315,7 @@ EXAMPLES = '''
     action: accept_license
 
 - name: Show VIOS details with Free PVs and Virtual Optical Media.
-  vios:
+  ibm.power_hmc.vios:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -328,7 +327,7 @@ EXAMPLES = '''
     state: facts
 
 - name: List all VIOS Images
-  vios:
+  ibm.power_hmc.vios:
     hmc_host: '{{ inventory_hostname }}'
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -341,7 +340,7 @@ EXAMPLES = '''
     msg: '{{ images_info }}'
 
 - name: Copy Vios Image via SFTP Server
-  vios:
+  ibm.power_hmc.vios:
     hmc_host: '{{ inventory_hostname }}'
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -360,7 +359,7 @@ EXAMPLES = '''
     register: testout
 
 - name: Copy Vios Image via NFS
-  vios:
+  ibm.power_hmc.vios:
     hmc_host: '{{ inventory_hostname }}'
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -378,7 +377,7 @@ EXAMPLES = '''
     register: testout
 
 - name: Delete Vios Image
-  vios:
+  ibm.power_hmc.vios:
     hmc_host: '{{ inventory_hostname }}'
     hmc_auth:
       username: '{{ ansible_user }}'

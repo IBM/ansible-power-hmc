@@ -1,4 +1,4 @@
-# !/usr/bin/python
+#!/usr/bin/python
 
 # Copyright: (c) 2018- IBM, Inc
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
@@ -15,12 +15,12 @@ DOCUMENTATION = '''
 ---
 module: vios_update_upgrade
 author:
-    - Sreenidhi S(@SreenidhiS1)
+    - Sreenidhi S (@SreenidhiS1)
 short_description: Manages the update and upgrade of the VIOS from the HMC
 notes:
     - All Operations support passwordless authentication.
     - Module will not satisfy the idempotency requirement of Ansible, even though it partially confirms it.
-      For instance, if the module is tasked to update/upgrade the HMC to the same level, it will still
+      For instance, if the module is tasked to update/upgrade the VIOS to the same level, it will still
       go ahead with the operation and finally the changed state will be reported as false.
 description:
     - When the Virtual I/O Server (VIOS) partition is running and has an active Resource Monitoring and Control (RMC) connection,
@@ -81,7 +81,7 @@ options:
                 description:
                     - The name of the VIOS update image.
                     - When the VIOS update image is on the HMC hard disk or the IBM Fix Central website,
-                      this option is required to specify the name of the image to use for the update.
+                      This option is required to specify the name of the image to use for the update.
                     - This parameter is used along with the C(save) option to specify the image that
                       will be saved to the HMC's hard disk
                 type: str
@@ -128,10 +128,8 @@ options:
             directory:
                 description:
                     - The name of the directory on the remote server that contains the VIOS update image.
-                    - If this option is not specified when the VIOS update/upgrade image is on a SFTP server user home directory.
-                      In that case command obtains the image from the remote server's user home directory.
-                    - If this option is not specified when the VIOS update/upgrade image is on a NFS server mount directory.
-                      In that case command obtains the image from the mount directory.
+                    - If this option is not specified, the image is obtained from the SFTP user's home directory.
+                    - If this option is not specified, the image is obtained from the NFS mount directory.
                 type: str
             disks:
                 description:
@@ -163,7 +161,7 @@ options:
 
 EXAMPLES = '''
 - name: Get the current version of VIOS.
-  vios_update_upgrade:
+  ibm.power_hmc.vios_update_upgrade:
     hmc_host: '{{ hmc_ip }}'
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -174,7 +172,7 @@ EXAMPLES = '''
     state: facts
 
 - name: Update the VIOS from the HMC using the image available on remote SFTP server.
-  vios_update_upgrade:
+  ibm.power_hmc.vios_update_upgrade:
     hmc_host: '{{ hmc_ip }}'
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -191,7 +189,7 @@ EXAMPLES = '''
     state: updated
 
 - name: Update the VIOS from the HMC using the image available on remote NFS server.
-  vios_update_upgrade:
+  ibm.power_hmc.vios_update_upgrade:
     hmc_host: '{{ hmc_ip }}'
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -209,7 +207,7 @@ EXAMPLES = '''
     state: updated
 
 - name: Upgrade the VIOS from the HMC using the image available on HMC hard disk.
-  vios_update_upgrade:
+  ibm.power_hmc.vios_update_upgrade:
     hmc_host: '{{ hmc_ip }}'
     hmc_auth:
       username: '{{ ansible_user }}'

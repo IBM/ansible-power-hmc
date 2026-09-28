@@ -15,7 +15,7 @@ DOCUMENTATION = '''
 ---
 module: vios_mapping_facts
 author:
-    - Sreenidhi S(@SreenidhiS1)
+    - Sreenidhi S (@SreenidhiS1)
 short_description: Returns the VIOS mapping of physical, logical, and virtual devices as facts.
 notes:
     - This module requires the HMC login user to have specific permissions.
@@ -57,32 +57,32 @@ requirements:
 options:
     hmc_host:
         description:
-            - The IP Address or hostname of the HMC
+            - The IP Address or hostname of the HMC.
         required: true
         type: str
     hmc_auth:
         description:
-            - Username and Password credential of the HMC
+            - Username and Password credential of the HMC.
         required: true
         type: dict
         suboptions:
             username:
                 description:
-                    - HMC username
+                    - Username of the HMC to log in.
                 required: true
                 type: str
             password:
                 description:
-                    - HMC password
+                    - Password of the HMC.
                 required: true
                 type: str
     system_name:
         description:
-            - The name or mtms (machine type model serial) of the managed system
+            - The name or MTMS (machine type model serial) of the managed system.
         type: str
     vios_name:
         description:
-            - The name of the Virtual I/O Server
+            - The name of the Virtual I/O Server.
         required: true
         type: str
     component:
@@ -152,7 +152,7 @@ options:
 
 EXAMPLES = '''
 - name: Populate the mapping facts with the mapping information for VSCSI
-  vios_mapping_facts:
+  ibm.power_hmc.vios_mapping_facts:
     hmc_host: <hmc_host>
     hmc_auth:
       username: <hmc_username>
@@ -163,7 +163,7 @@ EXAMPLES = '''
     state: facts
 
 - name: Populate the mapping facts with the mapping information for NPIV device vfchost0
-  vios_mapping_facts:
+  ibm.power_hmc.vios_mapping_facts:
     hmc_host: <hmc_host>
     hmc_auth:
       username: <hmc_username>
@@ -175,7 +175,7 @@ EXAMPLES = '''
     state: facts
 
 - name: Populate the mapping facts with the mapping information for all devices
-  vios_mapping_facts:
+  ibm.power_hmc.vios_mapping_facts:
     hmc_host: <hmc_host>
     hmc_auth:
       username: <hmc_username>
@@ -186,7 +186,7 @@ EXAMPLES = '''
     state: facts
 
 - name: Populate the mapping facts with the mapping information for optical backing devices
-  vios_mapping_facts:
+  ibm.power_hmc.vios_mapping_facts:
     hmc_host: <hmc_host>
     hmc_auth:
       username: <hmc_username>

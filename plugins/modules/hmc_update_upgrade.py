@@ -36,11 +36,11 @@ description:
     - Update/Upgrade the HMC from IBM Fix Central website
 version_added: 1.0.0
 requirements:
-- Python >= 3
+- Python >= 3.9
 options:
     hmc_host:
         description:
-            - The IPaddress or hostname of the HMC.
+            - The IP address or hostname of the HMC.
         required: true
         type: str
     hmc_auth:
@@ -51,7 +51,7 @@ options:
         suboptions:
             username:
                 description:
-                    - Username of the HMC to login.
+                    - Username of the HMC to log in.
                 required: true
                 type: str
             password:
@@ -61,12 +61,11 @@ options:
     build_config:
         description:
             - Configuration parameters required for the HMC update/upgrade.
-        required: false
         type: dict
         suboptions:
             location_type:
                 description:
-                    - The type of location which contains the corrective service ISO image.Valid values are
+                    - The type of location that contains the corrective service ISO image. Valid values are
                     - C(disk) for the HMC hard disk
                     - C(ftp) for an FTP site
                     - C(sftp) for a secure FTP (SFTP) site
@@ -87,7 +86,7 @@ options:
             userid:
                 description:
                     - The user ID to use to log in to the remote FTP or SFTP server.
-                      This option is required when the ISO image is located on a remote FTP or SFTP server
+                      This option is required when the ISO image is located on a remote FTP or SFTP server.
                       Otherwise, this option is not valid.
                 type: str
             passwd:
@@ -115,9 +114,9 @@ options:
                       image is kept.
                     - During update of the HMC if I(location_type=disk) and ISO image is kept in Ansible controller node or HMC hard disk,
                       this option should be provided with the ansible control node path in which ISO file or network install image is kept.
-                    - If the path specified contains the ISO file name then that specified ISO file will considered for updation.
-                    - If the path specified doesnot contain the ISO file name then the specified folder will be searched for ISO files,
-                      sorted in alphabetical order and the 1st ISO will be considered for updation.
+                    - If the path specified contains the ISO file name then that specified ISO file will be considered for the update.
+                    - If the path specified does not contain the ISO file name then the specified folder will be searched for ISO files,
+                      sorted in alphabetical order and the 1st ISO will be considered for the update.
                 type: str
             ptf:
                 description:
@@ -200,7 +199,7 @@ EXAMPLES = '''
       state: updated
 
 - name: Upgrade Power HMC to the mentioned PTF level using the image obtained from ibmwebsite
-  hmc_update_upgrade:
+  ibm.power_hmc.hmc_update_upgrade:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth: '{{ curr_hmc_auth }}'
       build_config:
@@ -209,7 +208,7 @@ EXAMPLES = '''
       state: upgraded
 
 - name: Upgrade the Power HMC using NFS server
-  hmc_update_upgrade:
+  ibm.power_hmc.hmc_update_upgrade:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth: '{{ curr_hmc_auth }}'
       build_config:
@@ -220,7 +219,7 @@ EXAMPLES = '''
       state: upgraded
 
 - name: Upgrade the Power HMC using SFTP server
-  hmc_update_upgrade:
+  ibm.power_hmc.hmc_update_upgrade:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth: '{{ curr_hmc_auth }}'
       build_config:

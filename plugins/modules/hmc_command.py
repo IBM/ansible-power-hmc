@@ -11,7 +11,7 @@ ANSIBLE_METADATA = {
     'supported_by': 'community'
 }
 
-DOCUMENTATION = '''
+DOCUMENTATION = r'''
 ---
 module: hmc_command
 author:
@@ -20,9 +20,9 @@ short_description: Execute HMC command
 notes:
     - This module supports passwordless authentication.
 description:
-    - Generic module that can execute any HMC CLI command
-    - The given command will be executed on all selected HMC
-    - Information about the HMC CLI commands can be found in the https://www.ibm.com/docs/en/power10/7063-CR1?topic=hmc-commands
+    - Generic module that can execute any HMC CLI command.
+    - The given command will be executed on all selected HMCs.
+    - Information about the HMC CLI commands can be found at U(https://www.ibm.com/docs/en/power10/7063-CR1?topic=hmc-commands).
 version_added: 1.0.0
 options:
     hmc_host:
@@ -38,7 +38,7 @@ options:
         suboptions:
             username:
                 description:
-                    - Username of the HMC to login.
+                    - Username of the HMC to log in.
                 required: true
                 type: str
             password:
@@ -52,9 +52,9 @@ options:
         type: str
 '''
 
-EXAMPLES = '''
+EXAMPLES = r'''
 - name: Execute a command on HMC
-  hmc_command:
+  ibm.power_hmc.hmc_command:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -62,9 +62,9 @@ EXAMPLES = '''
     cmd: <cmd>
 '''
 
-RETURN = '''
+RETURN = r'''
 Command_output:
-    description: Respective command output
+    description: Respective command output.
     type: str
     returned: always
 '''
