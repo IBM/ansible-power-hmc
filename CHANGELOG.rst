@@ -400,3 +400,25 @@ Notes
   
 .. _GitHub v1.16.0:
    https://github.com/IBM/ansible-power-hmc/releases/download/v1.16.0/ibm-power_hmc-1.16.0.tar.gz
+
+
+Version 1.17.0
+-------------
+Notes
+  * powervm_virtual_switches: Support for Virtual Switch list, create, modify and delete.
+  * powervm_client_network_adapter: Support for client Network Adapter list, create, modify and delete.
+  * powervm_virtual_network: Support for Virtual Network list, create, modify and delete.
+  * power_network_bridge: Support for Network Bridge list, create, modify and delete.
+  * create_service_event: Spport for hmc, test, hmctest, sys, vios, lpm, cloudconn, aix, novalink event types.
+  * platform_update: Support for SFTP based update and upgrade
+  * powervm_partition_profile: Fix for profile configurations not preserved upon force update issue.
+  
+  Availability
+    * `Galaxy v1.17.0`_
+    * `GitHub v1.17.0`_ 
+  
+.. _Galaxy v1.17.0:
+   https://galaxy.ansible.com/download/ibm-power_hmc-1.17.0.tar.gz
+  
+.. _GitHub v1.17.0:
+   https://github.com/IBM/ansible-power-hmc/releases/download/v1.17.0/ibm-power_hmc-1.17.0.tar.gz
