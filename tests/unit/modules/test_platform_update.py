@@ -215,6 +215,169 @@ platform_config_test_data = [
         "ParameterError: unsupported parameter [vios_name] for partition_migration"
     ),
 
+    # --- SFTP: system_firmware_update ---
+
+    # sftp repository but no sftp block at all
+    (
+        {'hmc_host': '1.2.3.4', 'hmc_auth': {'username': 'user', 'password': 'pass'}, 'system_name': 'sys', 'state': None,
+         'platform_config': {
+             'system_firmware_update': {
+                 'update_type': 'Update', 'update_order': 1,
+                 'repository': 'sftp', 'level': 'latest', 'sftp': None
+             }
+        }},
+        "ParameterError: 'sftp' block is required for system_firmware_update when repository=sftp"
+    ),
+
+    # sftp block present but hostname missing
+    (
+        {'hmc_host': '1.2.3.4', 'hmc_auth': {'username': 'user', 'password': 'pass'}, 'system_name': 'sys', 'state': None,
+         'platform_config': {
+             'system_firmware_update': {
+                 'update_type': 'Update', 'update_order': 1,
+                 'repository': 'sftp', 'level': 'latest',
+                 'sftp': {'hostname': None, 'directory': '/fw', 'username': 'user', 'password': 'pass', 'keyfile': None}
+             }
+        }},
+        "ParameterError: mandatory parameter [hostname] is missing in sftp block for system_firmware_update"
+    ),
+
+    # sftp block present but directory missing
+    (
+        {'hmc_host': '1.2.3.4', 'hmc_auth': {'username': 'user', 'password': 'pass'}, 'system_name': 'sys', 'state': None,
+         'platform_config': {
+             'system_firmware_update': {
+                 'update_type': 'Update', 'update_order': 1,
+                 'repository': 'sftp', 'level': 'latest',
+                 'sftp': {'hostname': 'sftp.host', 'directory': None, 'username': 'user', 'password': 'pass', 'keyfile': None}
+             }
+        }},
+        "ParameterError: mandatory parameter [directory] is missing in sftp block for system_firmware_update"
+    ),
+
+    # sftp block: neither password nor keyfile provided
+    (
+        {'hmc_host': '1.2.3.4', 'hmc_auth': {'username': 'user', 'password': 'pass'}, 'system_name': 'sys', 'state': None,
+         'platform_config': {
+             'system_firmware_update': {
+                 'update_type': 'Update', 'update_order': 1,
+                 'repository': 'sftp', 'level': 'latest',
+                 'sftp': {'hostname': 'sftp.host', 'directory': '/fw', 'username': 'user', 'password': None, 'keyfile': None}
+             }
+        }},
+        "ParameterError: Either 'password' or 'keyfile' is required in sftp block for system_firmware_update"
+    ),
+
+    # sftp block: both password and keyfile provided (mutually exclusive)
+    (
+        {'hmc_host': '1.2.3.4', 'hmc_auth': {'username': 'user', 'password': 'pass'}, 'system_name': 'sys', 'state': None,
+         'platform_config': {
+             'system_firmware_update': {
+                 'update_type': 'Update', 'update_order': 1,
+                 'repository': 'sftp', 'level': 'latest',
+                 'sftp': {'hostname': 'sftp.host', 'directory': '/fw', 'username': 'user', 'password': 'pass', 'keyfile': '/id_rsa'}
+             }
+        }},
+        "ParameterError: Parameters 'password' and 'keyfile' are mutually exclusive in sftp block for system_firmware_update"
+    ),
+
+    # --- SFTP: vios_update ---
+
+    # sftp resource_type but no sftp block
+    (
+        {'hmc_host': '1.2.3.4', 'hmc_auth': {'username': 'user', 'password': 'pass'}, 'system_name': 'sys', 'state': None,
+         'platform_config': {
+             'vios_update': [{
+                 'update_type': 'Update', 'vios_name': 'vios1', 'update_order': 1,
+                 'resource_type': 'sftp', 'vios_image_name': 'pkg', 'sftp': None
+             }]
+        }},
+        "ParameterError: 'sftp' block is required for vios_update when resource_type=sftp"
+    ),
+
+    # sftp vios: vios_image_name missing
+    (
+        {'hmc_host': '1.2.3.4', 'hmc_auth': {'username': 'user', 'password': 'pass'}, 'system_name': 'sys', 'state': None,
+         'platform_config': {
+             'vios_update': [{
+                 'update_type': 'Update', 'vios_name': 'vios1', 'update_order': 1,
+                 'resource_type': 'sftp', 'vios_image_name': None,
+                 'sftp': {'hostname': 'sftp.host', 'username': 'user', 'password': 'pass', 'ssh_key': None}
+             }]
+        }},
+        "ParameterError: mandatory parameter [vios_image_name] is missing for vios_update"
+    ),
+
+    # sftp vios: neither password nor ssh_key provided
+    (
+        {'hmc_host': '1.2.3.4', 'hmc_auth': {'username': 'user', 'password': 'pass'}, 'system_name': 'sys', 'state': None,
+         'platform_config': {
+             'vios_update': [{
+                 'update_type': 'Update', 'vios_name': 'vios1', 'update_order': 1,
+                 'resource_type': 'sftp', 'vios_image_name': 'pkg',
+                 'sftp': {'hostname': 'sftp.host', 'username': 'user', 'password': None, 'ssh_key': None}
+             }]
+        }},
+        "ParameterError: Either 'password' or 'ssh_key' is required in sftp block for vios_update"
+    ),
+
+    # sftp vios: both password and ssh_key provided (mutually exclusive)
+    (
+        {'hmc_host': '1.2.3.4', 'hmc_auth': {'username': 'user', 'password': 'pass'}, 'system_name': 'sys', 'state': None,
+         'platform_config': {
+             'vios_update': [{
+                 'update_type': 'Update', 'vios_name': 'vios1', 'update_order': 1,
+                 'resource_type': 'sftp', 'vios_image_name': 'pkg',
+                 'sftp': {'hostname': 'sftp.host', 'username': 'user', 'password': 'pass', 'ssh_key': '/id_rsa'}
+             }]
+        }},
+        "ParameterError: Parameters 'password' and 'ssh_key' are mutually exclusive in sftp block for vios_update"
+    ),
+
+    # --- SFTP: io_adapter_update ---
+
+    # sftp repository but no sftp block in io_adapter_update
+    (
+        {'hmc_host': '1.2.3.4', 'hmc_auth': {'username': 'user', 'password': 'pass'}, 'system_name': 'sys', 'state': None,
+         'platform_config': {
+             'vios_update': [{
+                 'update_type': 'NoUpdate', 'vios_name': 'vios1', 'update_order': 1,
+                 'io_adapter_update': [{'all': True, 'repository': 'sftp', 'sftp': None}]
+             }]
+        }},
+        "ParameterError: 'sftp' block is required for io_adapter_update when repository=sftp"
+    ),
+
+    # sftp io_adapter: neither password nor keyfile provided
+    (
+        {'hmc_host': '1.2.3.4', 'hmc_auth': {'username': 'user', 'password': 'pass'}, 'system_name': 'sys', 'state': None,
+         'platform_config': {
+             'vios_update': [{
+                 'update_type': 'NoUpdate', 'vios_name': 'vios1', 'update_order': 1,
+                 'io_adapter_update': [{
+                     'all': True, 'repository': 'sftp',
+                     'sftp': {'hostname': 'sftp.host', 'directory': '/io', 'username': 'user', 'password': None, 'keyfile': None}
+                 }]
+             }]
+        }},
+        "ParameterError: Either 'password' or 'keyfile' is required in sftp block for io_adapter_update"
+    ),
+
+    # sftp io_adapter: both password and keyfile provided (mutually exclusive)
+    (
+        {'hmc_host': '1.2.3.4', 'hmc_auth': {'username': 'user', 'password': 'pass'}, 'system_name': 'sys', 'state': None,
+         'platform_config': {
+             'vios_update': [{
+                 'update_type': 'NoUpdate', 'vios_name': 'vios1', 'update_order': 1,
+                 'io_adapter_update': [{
+                     'all': True, 'repository': 'sftp',
+                     'sftp': {'hostname': 'sftp.host', 'directory': '/io', 'username': 'user', 'password': 'pass', 'keyfile': '/id_rsa'}
+                 }]
+             }]
+        }},
+        "ParameterError: Parameters 'password' and 'keyfile' are mutually exclusive in sftp block for io_adapter_update"
+    ),
+
 ]
 
 platform_config_test_data1 = [
@@ -498,7 +661,202 @@ platform_config_test_data1 = [
                 }
             }
         }
-    )
+    ),
+
+    # --- SFTP payload: system_firmware_update with password auth ---
+    (
+        {
+            'platform_config': {
+                'system_firmware_update': {
+                    'update_type': 'Update',
+                    'update_order': 1,
+                    'repository': 'sftp',
+                    'level': 'latest',
+                    'sriov_adapter_update': None,
+                    'sftp': {
+                        'hostname': 'sftp.host',
+                        'directory': '/fw',
+                        'username': 'sftpuser',
+                        'password': 'sftppass',
+                        'keyfile': None,
+                    }
+                }
+            }
+        },
+        {
+            'platform_config': {
+                'SystemFirmwareUpdate': {
+                    'UpdateType': 'Update',
+                    'UpdateOrder': 1,
+                    'Repository': 'sftp',
+                    'Level': 'latest',
+                    'HostName': 'sftp.host',
+                    'Directory': '/fw',
+                    'UserName': 'sftpuser',
+                    'Password': 'sftppass',
+                }
+            }
+        }
+    ),
+
+    # --- SFTP payload: system_firmware_update with keyfile auth ---
+    (
+        {
+            'platform_config': {
+                'system_firmware_update': {
+                    'update_type': 'Update',
+                    'update_order': 1,
+                    'repository': 'sftp',
+                    'level': 'latest',
+                    'sriov_adapter_update': None,
+                    'sftp': {
+                        'hostname': 'sftp.host',
+                        'directory': '/fw',
+                        'username': 'sftpuser',
+                        'password': None,
+                        'keyfile': '/home/user/.ssh/id_rsa',
+                    }
+                }
+            }
+        },
+        {
+            'platform_config': {
+                'SystemFirmwareUpdate': {
+                    'UpdateType': 'Update',
+                    'UpdateOrder': 1,
+                    'Repository': 'sftp',
+                    'Level': 'latest',
+                    'HostName': 'sftp.host',
+                    'Directory': '/fw',
+                    'UserName': 'sftpuser',
+                    'Keyfile': '/home/user/.ssh/id_rsa',
+                }
+            }
+        }
+    ),
+
+    # --- SFTP payload: vios_update with password auth, SaveFile injected ---
+    (
+        {
+            'platform_config': {
+                'vios_update': [{
+                    'update_type': 'Update',
+                    'vios_name': 'vios1',
+                    'update_order': 1,
+                    'resource_type': 'sftp',
+                    'vios_image_name': 'pkg_name',
+                    'sftp': {
+                        'hostname': 'sftp.host',
+                        'username': 'sftpuser',
+                        'password': 'sftppass',
+                        'ssh_key': None,
+                        'remote_directory': '/vios',
+                        'file_names': None,
+                    }
+                }]
+            }
+        },
+        {
+            'platform_config': {
+                'VIOSUpdate': [{
+                    'UpdateType': 'Update',
+                    'VIOSName': 'vios1',
+                    'UpdateOrder': 1,
+                    'ResourceType': 'sftp',
+                    'Name': 'pkg_name',
+                    'ServerHostOrIP': 'sftp.host',
+                    'UserName': 'sftpuser',
+                    'Password': 'sftppass',
+                    'RemoteDirectory': '/vios',
+                    'SaveFile': True,
+                }]
+            }
+        }
+    ),
+
+    # --- SFTP payload: vios_update with ssh_key and file_names list ---
+    (
+        {
+            'platform_config': {
+                'vios_update': [{
+                    'update_type': 'Update',
+                    'vios_name': 'vios1',
+                    'update_order': 1,
+                    'resource_type': 'sftp',
+                    'vios_image_name': 'pkg_name',
+                    'sftp': {
+                        'hostname': 'sftp.host',
+                        'username': 'sftpuser',
+                        'password': None,
+                        'ssh_key': '/id_rsa',
+                        'remote_directory': '/vios',
+                        'file_names': ['img1.tar.gz', 'img2.tar.gz'],
+                    }
+                }]
+            }
+        },
+        {
+            'platform_config': {
+                'VIOSUpdate': [{
+                    'UpdateType': 'Update',
+                    'VIOSName': 'vios1',
+                    'UpdateOrder': 1,
+                    'ResourceType': 'sftp',
+                    'Name': 'pkg_name',
+                    'ServerHostOrIP': 'sftp.host',
+                    'UserName': 'sftpuser',
+                    'SSHKey': '/id_rsa',
+                    'RemoteDirectory': '/vios',
+                    'FileNames': 'img1.tar.gz,img2.tar.gz',
+                    'SaveFile': True,
+                }]
+            }
+        }
+    ),
+
+    # --- SFTP payload: io_adapter_update with password auth ---
+    (
+        {
+            'platform_config': {
+                'vios_update': [{
+                    'update_type': 'NoUpdate',
+                    'vios_name': 'vios1',
+                    'update_order': 1,
+                    'resource_type': None,
+                    'io_adapter_update': [{
+                        'all': True,
+                        'device': None,
+                        'repository': 'sftp',
+                        'sftp': {
+                            'hostname': 'sftp.host',
+                            'directory': '/io',
+                            'username': 'sftpuser',
+                            'password': 'sftppass',
+                            'keyfile': None,
+                        }
+                    }]
+                }]
+            }
+        },
+        {
+            'platform_config': {
+                'VIOSUpdate': [{
+                    'UpdateType': 'NoUpdate',
+                    'VIOSName': 'vios1',
+                    'UpdateOrder': 1,
+                    'IOAdapterUpdate': [{
+                        'ALL': True,
+                        'Repository': 'sftp',
+                        'HostName': 'sftp.host',
+                        'Directory': '/io',
+                        'UserName': 'sftpuser',
+                        'Password': 'sftppass',
+                    }]
+                }]
+            }
+        }
+    ),
+
 ]
 
 
@@ -540,6 +898,9 @@ def test_call_platform_config(mocker, platform_config_test_input, expectedError)
 def test_call_platform_config_payload(mocker, platform_config_test_input, expected):
     hmc_module = common_mock_setup(mocker)
 
+    # Mirror the exact call order in platform_update():
+    # _flatten_sftp_block → cleanup_entries → map_entries
+    hmc_module._flatten_sftp_block(platform_config_test_input.get('platform_config', {}))
     cleanup_data = hmc_module.cleanup_entries(platform_config_test_input)
     result = hmc_module.map_entries(cleanup_data)
     assert result == expected

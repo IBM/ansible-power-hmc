@@ -31,16 +31,16 @@ options:
         suboptions:
             username:
                 description:
-                    - HMC username.
+                    - Username of the HMC to log in.
                 required: true
                 type: str
             password:
                 description:
-                    - HMC password.
+                    - Password of the HMC.
                 type: str
     system_name:
         description:
-            - The name or mtms (machine type model serial) of the managed system.
+            - The name or MTMS (machine type model serial) of the managed system.
         required: true
         type: str
     repository:
@@ -69,7 +69,7 @@ options:
             passwd:
                 description:
                     - The password to use to log in to the remote FTP or SFTP server.
-                      The I(passwd) and I(sshkey) options are mutually exclusive in case if I(repository=sftp).
+                      The C(passwd) and C(sshkey_file) options are mutually exclusive in case if I(repository=sftp).
                       This option is only valid when the firmware image is located on a remote FTP or SFTP server.
                 type: str
             sshkey_file:
@@ -84,7 +84,7 @@ options:
                 type: str
     level:
         description:
-            -  Specify sss to retrieve a specific level of Managed System or Power LIC updates, even if disruptive.
+            - Specify sss to retrieve a specific level of Managed System or Power LIC updates, even if disruptive.
                sss is the three character identifier of the specific level to retrieve.
                This is only valid when the LIC type is either Managed System only or Power only.
             -  Specify ccc to retrieve a specific level of Managed System LIC updates, even if disruptive.
@@ -124,7 +124,7 @@ EXAMPLES = r'''
       state: updated
 
 - name: Upgrade system to specific level at an sftp repo.
-  firmware_update:
+  ibm.power_hmc.firmware_update:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth: '{{ curr_hmc_auth }}'
       system_name: <System name/mtms>
@@ -140,17 +140,17 @@ EXAMPLES = r'''
 
 RETURN = r'''
 service_pack:
-    description: The service pack representation of the system
+    description: The service pack representation of the system.
     type: str
     returned: always
     sample: 'FW940.20'
 level:
-    description: The specific level active on the system
+    description: The specific level active on the system.
     type: str
     returned: always
     sample: '55'
 ecnumber:
-    description: The engineering change (EC) number associated with the firmware update
+    description: The engineering change (EC) number associated with the firmware update.
     type: str
     returned: always
     sample: '01VL940'
@@ -162,16 +162,21 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions impor
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
 
 import logging
+import os
 import sys
-LOG_FILENAME = "/tmp/ansible_power_hmc.log"
+LOG_FILENAME = "/tmp/ansible_power_hmc_{0}.log".format(os.getpid())
 logger = logging.getLogger(__name__)
 
 
 def init_logger():
-    logging.basicConfig(
-        filename=LOG_FILENAME,
-        format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
-        level=logging.DEBUG)
+    old_umask = os.umask(0o177)
+    try:
+        logging.basicConfig(
+            filename=LOG_FILENAME,
+            format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
+            level=logging.DEBUG)
+    finally:
+        os.umask(old_umask)
 
 
 def create_hmc_conn(module, params):

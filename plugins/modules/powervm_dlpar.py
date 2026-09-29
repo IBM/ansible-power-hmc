@@ -15,21 +15,18 @@ DOCUMENTATION = '''
 ---
 module: powervm_dlpar
 author:
-    - Anil Vijayan(@AnilVijayan)
-    - Navinakumar Kandakur(@nkandak1)
+    - Anil Vijayan (@AnilVijayan)
+    - Navinakumar Kandakur (@nkandak1)
 short_description: Dynamically managing resources of partition
 notes:
-    - If the updating of settings for at least one VIOS is successful during the execution of the "update_pv" action,
-      the changed status will be displayed as 1, and any failed updates will be shown as warnings.
-      This behavior remains consistent for both the "update_npiv" and "update_vod" actions.
     - Passwordless authentication is not supported.
     - If the updating of settings for at least one VIOS is successful during the execution of the "update_pv" action,
       the changed status will be displayed as 1, and any failed updates will be shown as warnings. This behavior remains
       consistent for both the "update_npiv" and "update_vod" actions.
 description:
-    - "Managing processor resources dynamically"
-    - "Managing memory resources dynamically"
-    - "Managing Storage resources dynamically"
+    - Managing processor resources dynamically.
+    - Managing memory resources dynamically.
+    - Managing Storage resources dynamically.
 version_added: 1.0.0
 options:
     hmc_host:
@@ -54,7 +51,7 @@ options:
                 type: str
     system_name:
         description:
-            - The name or mtms (machine type model serial) of the managed system.
+            - The name or MTMS (machine type model serial) of the managed system.
         required: true
         type: str
     vm_name:
@@ -101,7 +98,7 @@ options:
         suboptions:
             mem:
                 description:
-                    - The value of dedicated memory value in megabytes to create a partition.
+                    - The dedicated memory value in megabytes to create a partition.
                 type: int
     timeout:
         description:
@@ -212,13 +209,13 @@ options:
             - C(update_npiv) Attach FC Port.
             - C(update_vod) Attach Virtual Optical Device.
         type: str
-        choices: ['update_proc_mem', 'update_pv', update_npiv, update_vod]
+        choices: ['update_proc_mem', 'update_pv', 'update_npiv', 'update_vod']
         required: true
 '''
 
 EXAMPLES = '''
 - name: Dynamically set the processor and memory values.
-  powervm_dlpar:
+  ibm.power_hmc.powervm_dlpar:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -236,7 +233,7 @@ EXAMPLES = '''
     action: update_proc_mem
 
 - name: Dynamically configure Physical Volume settings on Lpar.
-  powervm_dlpar:
+  ibm.power_hmc.powervm_dlpar:
     hmc_host: '{{ inventory_hostname }}'
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -257,7 +254,7 @@ EXAMPLES = '''
     action: update_pv
 
 - name: Dynamically configure NPIV settings on Lpar.
-  powervm_dlpar:
+  ibm.power_hmc.powervm_dlpar:
     hmc_host: '{{ inventory_hostname }}'
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -277,7 +274,7 @@ EXAMPLES = '''
     action: update_npiv
 
 - name: Dynamically configure Virtual Optical Disk settings on Lpar.
-  powervm_dlpar:
+  ibm.power_hmc.powervm_dlpar:
     hmc_host: '{{ inventory_hostname }}'
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -303,7 +300,8 @@ partition_info:
 '''
 
 import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc.log"
+import os
+LOG_FILENAME = "/tmp/ansible_power_hmc_{0}.log".format(os.getpid())
 logger = logging.getLogger(__name__)
 import sys
 import json
@@ -321,10 +319,14 @@ from operator import itemgetter
 
 
 def init_logger():
-    logging.basicConfig(
-        filename=LOG_FILENAME,
-        format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
-        level=logging.DEBUG)
+    old_umask = os.umask(0o177)
+    try:
+        logging.basicConfig(
+            filename=LOG_FILENAME,
+            format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
+            level=logging.DEBUG)
+    finally:
+        os.umask(old_umask)
 
 
 def validate_parameters(params):

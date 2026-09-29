@@ -11,7 +11,7 @@ ANSIBLE_METADATA = {
     'supported_by': 'community'
 }
 
-DOCUMENTATION = '''
+DOCUMENTATION = r'''
 ---
 module: hmc_command
 author:
@@ -20,9 +20,9 @@ short_description: Execute HMC command
 notes:
     - This module supports passwordless authentication.
 description:
-    - Generic module that can execute any HMC CLI command
-    - The given command will be executed on all selected HMC
-    - Information about the HMC CLI commands can be found in the https://www.ibm.com/docs/en/power10/7063-CR1?topic=hmc-commands
+    - Generic module that can execute any HMC CLI command.
+    - The given command will be executed on all selected HMCs.
+    - Information about the HMC CLI commands can be found at U(https://www.ibm.com/docs/en/power10/7063-CR1?topic=hmc-commands).
 version_added: 1.0.0
 options:
     hmc_host:
@@ -38,7 +38,7 @@ options:
         suboptions:
             username:
                 description:
-                    - Username of the HMC to login.
+                    - Username of the HMC to log in.
                 required: true
                 type: str
             password:
@@ -52,9 +52,9 @@ options:
         type: str
 '''
 
-EXAMPLES = '''
+EXAMPLES = r'''
 - name: Execute a command on HMC
-  hmc_command:
+  ibm.power_hmc.hmc_command:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -62,15 +62,16 @@ EXAMPLES = '''
     cmd: <cmd>
 '''
 
-RETURN = '''
+RETURN = r'''
 Command_output:
-    description: Respective command output
+    description: Respective command output.
     type: str
     returned: always
 '''
 
 import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc.log"
+import os
+LOG_FILENAME = "/tmp/ansible_power_hmc_{0}.log".format(os.getpid())
 logger = logging.getLogger(__name__)
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
@@ -79,10 +80,14 @@ import sys
 
 
 def init_logger():
-    logging.basicConfig(
-        filename=LOG_FILENAME,
-        format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
-        level=logging.DEBUG)
+    old_umask = os.umask(0o177)
+    try:
+        logging.basicConfig(
+            filename=LOG_FILENAME,
+            format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
+            level=logging.DEBUG)
+    finally:
+        os.umask(old_umask)
 
 
 def run_hmc_adhoc_command(module, params):

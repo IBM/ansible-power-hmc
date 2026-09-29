@@ -54,7 +54,7 @@ description:
     - Cleanup an existing alternate disk copy.
 version_added: 1.0.0
 requirements:
-- Python >= 3
+- Python >= 3.9
 options:
     hmc_host:
         description:
@@ -78,7 +78,7 @@ options:
                 type: str
     system_name:
         description:
-            - The name or mtms (machine type model serial) of the managed system.
+            - The name or MTMS (machine type model serial) of the managed system.
         type: str
     vios_name:
         description:
@@ -102,7 +102,7 @@ options:
     force:
         description:
             - Forces removal of any existing alternate disk copy on target disks.
-            - valid only for I(state) = C(copy)
+            - Valid only for C(copy) state.
         type: bool
         default: False
     state:
@@ -114,8 +114,8 @@ options:
 '''
 
 EXAMPLES = '''
-- name: Copy the rootvg to an alternate disk hdsik1
-  vios_alt_root_vg:
+- name: Copy the rootvg to an alternate disk hdisk1
+  ibm.power_hmc.vios_alt_root_vg:
     hmc_host: '{{ inventory_hostname }}'
     hmc_auth: "{{ curr_hmc_auth }}"
     system_name: <system-name>
@@ -125,7 +125,7 @@ EXAMPLES = '''
     state: copy
 
 - name: Copy the rootvg to multiple disks hdisk1 and hdisk2
-  vios_alt_root_vg:
+  ibm.power_hmc.vios_alt_root_vg:
     hmc_host: '{{ inventory_hostname }}'
     hmc_auth: "{{ curr_hmc_auth }}"
     system_name: <system-name>
@@ -136,7 +136,7 @@ EXAMPLES = '''
     state: copy
 
 - name: Copy the rootvg using minimize disk_size_policy
-  vios_alt_root_vg:
+  ibm.power_hmc.vios_alt_root_vg:
     hmc_host: '{{ inventory_hostname }}'
     hmc_auth: "{{ curr_hmc_auth }}"
     system_name: <system-name>
@@ -145,7 +145,7 @@ EXAMPLES = '''
     state: copy
 
 - name: Cleanup an existing alternate disk
-  vios_alt_root_vg:
+  ibm.power_hmc.vios_alt_root_vg:
     hmc_host: '{{ inventory_hostname }}'
     hmc_auth: "{{ curr_hmc_auth }}"
     system_name: <system-name>
@@ -154,12 +154,13 @@ EXAMPLES = '''
 '''
 RETURN = '''
 alt_rootvg_info:
-    description: Respective alt_rootvg_info information
+    description: Alternate rootvg information.
     type: dict
     returned: on success for copy rootvg
 '''
 import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc.log"
+import os
+LOG_FILENAME = "/tmp/ansible_power_hmc_{0}.log".format(os.getpid())
 logger = logging.getLogger(__name__)
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
@@ -171,10 +172,14 @@ import sys
 
 
 def init_logger():
-    logging.basicConfig(
-        filename=LOG_FILENAME,
-        format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
-        level=logging.DEBUG)
+    old_umask = os.umask(0o177)
+    try:
+        logging.basicConfig(
+            filename=LOG_FILENAME,
+            format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
+            level=logging.DEBUG)
+    finally:
+        os.umask(old_umask)
 
 
 def validate_parameters(params):

@@ -1,4 +1,4 @@
-# !/usr/bin/python
+#!/usr/bin/python
 
 # Copyright: (c) 2018- IBM, Inc
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
@@ -16,30 +16,30 @@ DOCUMENTATION = '''
 module: platform_update
 author:
     - Chiranthan M V (@chiranthanmv)
-short_description: Applies consolidated system firmware (update/upgrade), VIOS, SR-IOV, and I/O adapter updates, including optional partition migration.
+short_description: Applies consolidated system firmware (update/upgrade), VIOS, SR-IOV, and I/O adapter updates, including optional partition migration
 notes:
-  - The current version supports only IBM Fix Central website as the update/upgrade source .
-  - Support for additional update/upgrade sources will be added in future releases.
-  - Supports defining the order in which update/upgrade are applied across components.
+  - Supports IBM Fix Central website (C(IBMWebsite)) and SFTP server (C(sftp)) as update/upgrade sources.
+  - For SFTP-based updates, the firmware or VIOS image must already be present on the SFTP server.
+    The HMC connects to the SFTP server directly; no pre-staging to the HMC is required.
+  - Supports defining the order in which updates and upgrades are applied across components.
   - To perform configuration operations, you do not need to specify a separate state or action.
     Supplying values under C(platform_config) is sufficient to apply the changes directly to the HMC.
   - When performing an update or upgrade operation via C(IBMWebsite) with C(level='latest'),
-    if the Ansible response status is C(ok) and C(changed) is C(false), and the result is C(COMPLETED_WITH_ERROR) with the reason C("update not available"),
+    if the Ansible response status is C(ok) and C(changed) is C(False), and the result is C(COMPLETED_WITH_ERROR) with the reason C("update not available"),
     it indicates that no newer update images are available or the target is already up-to-date.
-  - Module will not satisfy the idempotency requirement of Ansible, even though it partially confirms it.
+  - This module will not satisfy the idempotency requirement of Ansible, even though it partially confirms it.
     For instance, if the module is tasked to update/upgrade the HMC to the same level, it will still
     go ahead with the operation and finally the changed state will be reported as false.
   - Upgrade the Power server after successfully evacuating the partition to the destination system,
     and ensure the partition is not returned to the original server.
-description: |
-  This module performs update and upgrade for various system components as part of system maintenance or automation workflows.
-  It supports:
-    - System Firmware update and upgrade
-    - VIOS and I/O Adapters update only
-    - SR-IOV Adapters update based on supported system firmware levels
-    - Logical Partition migration
-  All update and upgrade can be performed independently or combined in a single consolidated update operation.
-  Supports C(state=facts) to retrieve information about available adapters without making any changes.
+description:
+    - This module performs update and upgrade for various system components as part of system maintenance or automation workflows.
+    - Supports System Firmware update and upgrade.
+    - Supports VIOS and I/O Adapters update.
+    - Supports SR-IOV Adapters update based on supported system firmware levels.
+    - Supports Logical Partition migration.
+    - All updates and upgrades can be performed independently or combined in a single consolidated update operation.
+    - Supports C(state=facts) to retrieve information about available adapters without making any changes.
 version_added: 1.0.0
 requirements:
 - Python >= 3.9
@@ -63,11 +63,10 @@ options:
             password:
                 description:
                     - Password for the HMC user.
-                required: false
                 type: str
     system_name:
         description:
-            - The name or mtms (machine type model serial) of the managed system on which the operations are to be performed.
+            - The name or MTMS (machine type model serial) of the managed system on which the operations are to be performed.
         required: true
         type: str
     platform_config:
@@ -75,7 +74,6 @@ options:
             - Defines the configuration for the operation to be performed, such as system firmware update/upgrade
               (including SR-IOV adapter updates) or VIOS updates (including I/O adapter updates).
             - Also supports performing partition migrations.
-        required: false
         type: dict
         suboptions:
             system_firmware_update:
@@ -86,7 +84,7 @@ options:
                     update_type:
                         description:
                             - Type of firmware update/upgrade operation.
-                            - 'C(NoUpdate): System firmware update/upgrade is skipped, but SR-IOV adapter updates are still allowed'
+                            - 'C(NoUpdate): System firmware update/upgrade is skipped, but SR-IOV adapter updates are still allowed.'
                             - 'C(Update): Applies an update.'
                             - 'C(Upgrade): Applies an upgrade.'
                             - When set to C(Update) or C(Upgrade), the C(sriov_adapter_update) will be implicit.
@@ -100,28 +98,61 @@ options:
                     repository:
                         description:
                             - Specifies the source repository for the update image.
-                            - currently only supports C(IBMWebsite).
+                            - C(IBMWebsite) uses IBM Fix Central as the source.
+                            - C(sftp) uses an SFTP server as the source; requires the C(sftp) block.
                             - If not specified, it defaults to C(IBMWebsite).
                         type: str
-                        choices: ['IBMWebsite']
+                        choices: ['IBMWebsite', 'sftp']
                         default: 'IBMWebsite'
                     level:
                         description:
                             - Specifies the firmware version level to apply.
                             - If not provided, the latest available version will be used by default.
+                            - Not applicable when C(repository=sftp).
                         type: str
                         default: 'latest'
+                    sftp:
+                        description:
+                            - SFTP connection and authentication details.
+                            - Required when C(repository=sftp).
+                        type: dict
+                        suboptions:
+                            hostname:
+                                description:
+                                    - Hostname or IP address of the SFTP server.
+                                    - Required when C(repository=sftp).
+                                type: str
+                            directory:
+                                description:
+                                    - Directory on the SFTP server containing the firmware image.
+                                    - Required when C(repository=sftp).
+                                type: str
+                            username:
+                                description:
+                                    - Username for SFTP authentication.
+                                    - Required when C(repository=sftp).
+                                type: str
+                            password:
+                                description:
+                                    - Password for SFTP authentication.
+                                    - Required unless C(keyfile) is provided.
+                                type: str
+                            keyfile:
+                                description:
+                                    - Path to an SSH private key file.
+                                    - Mutually exclusive with C(password).
+                                type: str
                     sriov_adapter_update:
                         description:
                             - List of SR-IOV adapter update configurations.
-                            - This option must not be provided if C(update_type) is set to C(Update) or C(Upgrade) in C(system_firmware_update)
+                            - This option must not be provided if C(update_type) is set to C(Update) or C(Upgrade) in C(system_firmware_update).
                         type: list
                         elements: dict
                         suboptions:
                             all:
                                 description:
                                     - Indicates whether the update should be applied to all adapters.
-                                    - If set to C(true), the C(adapter_id) field is not required.
+                                    - If set to C(True), the C(adapter_id) field is not required.
                                 type: bool
                             adapter_id:
                                 description:
@@ -131,8 +162,8 @@ options:
                             subtype:
                                 description:
                                     - Specifies the level of update to apply.
-                                    - C(DriverOnly) perform only the driver update.
-                                    - C(Adapter) perform both the adapter firmware and driver updates.
+                                    - C(DriverOnly) performs only the driver update.
+                                    - C(Adapter) performs both the adapter firmware and driver updates.
                                 type: str
                                 choices: ['DriverOnly', 'Adapter']
             partition_migration:
@@ -145,10 +176,11 @@ options:
                     is_quick_evac:
                         description:
                             - Indicates whether to perform a quick evacuation during partition migration.
-                            - Must always be set to C(true) when performing partition migration.
+                            - Must always be set to C(True) when performing partition migration.
                         type: bool
                     destination_managed_system:
-                        description: Target managed system name.
+                        description:
+                            - Name of the target managed system to migrate partitions to.
                         type: str
                     leave_partition_in_target:
                         description:
@@ -165,30 +197,69 @@ options:
                     update_type:
                         description:
                             - Specifies the type of VIOS update to be performed.
-                            - 'C(NoUpdate): No update will be applied to VIOS, but I/O adapter updates are still allowed'
-                            - 'C(Update): Applies a VIOS update using the provided configuration. The I/O adapter update is performed implicitly'
+                            - 'C(NoUpdate): No update will be applied to VIOS, but I/O adapter updates are still allowed.'
+                            - 'C(Update): Applies a VIOS update using the provided configuration. The I/O adapter update is performed implicitly.'
                             - When set to C(NoUpdate), the fields C(resource_type) and C(vios_image_name) are not required.
                         type: str
                         choices: ['NoUpdate', 'Update']
                     vios_name:
-                        description: Name of the VIOS partition.
+                        description:
+                            - Name of the VIOS partition to be updated.
                         type: str
                     update_order:
-                        description: Priority order in which the update should be applied.
+                        description:
+                            - Priority order in which the update should be applied relative to other components.
                         type: int
                     resource_type:
                         description:
                             - Specifies the source repository for the update image.
-                            - Currently only supports C(IBMWebsite).
+                            - C(IBMWebsite) uses IBM Fix Central as the source.
+                            - C(sftp) uses an SFTP server as the source; requires the C(sftp) block.
                             - If not specified, it defaults to C(IBMWebsite).
                         type: str
-                        choices: ['IBMWebsite']
+                        choices: ['IBMWebsite', 'sftp']
                         default: 'IBMWebsite'
                     vios_image_name:
                         description:
                             - Specifies the VIOS image name to apply.
-                            - The field is required if C(update_type) is C(update).
+                            - Required when C(update_type=Update) for both C(IBMWebsite) and C(sftp).
                         type: str
+                    sftp:
+                        description:
+                            - SFTP connection and authentication details.
+                            - Required when C(resource_type=sftp).
+                        type: dict
+                        suboptions:
+                            hostname:
+                                description:
+                                    - Hostname or IP address of the SFTP server.
+                                    - Required when C(resource_type=sftp).
+                                type: str
+                            username:
+                                description:
+                                    - Username for SFTP authentication.
+                                    - Required when C(resource_type=sftp).
+                                type: str
+                            password:
+                                description:
+                                    - Password for SFTP authentication.
+                                    - Required unless C(ssh_key) is provided.
+                                type: str
+                            ssh_key:
+                                description:
+                                    - Path to an SSH private key file used for SFTP authentication.
+                                    - Mutually exclusive with C(password).
+                                type: str
+                            remote_directory:
+                                description:
+                                    - Directory on the SFTP server containing the VIOS image.
+                                type: str
+                            file_names:
+                                description:
+                                    - Specific files to download from the SFTP server.
+                                    - Specified as a list; internally converted to a comma-separated string.
+                                type: list
+                                elements: str
                     io_adapter_update:
                         description: List of I/O adapters to update during VIOS update.
                         type: list
@@ -197,7 +268,7 @@ options:
                             all:
                                 description:
                                     - Indicates whether all I/O adapters should be updated.
-                                    - If set to C(true), the C(device) field is not required
+                                    - If set to C(True), the C(device) field is not required.
                                 type: bool
                             device:
                                 description:
@@ -209,11 +280,43 @@ options:
                             repository:
                                 description:
                                     - Specifies the source repository for the update image.
-                                    - Currently only supports C(IBMWebsite).
+                                    - C(IBMWebsite) uses IBM Fix Central as the source.
+                                    - C(sftp) uses an SFTP server as the source; requires the C(sftp) block.
                                     - If not specified, it defaults to C(IBMWebsite).
                                 type: str
-                                choices: ['IBMWebsite']
+                                choices: ['IBMWebsite', 'sftp']
                                 default: 'IBMWebsite'
+                            sftp:
+                                description:
+                                    - SFTP connection and authentication details.
+                                    - Required when C(repository=sftp).
+                                type: dict
+                                suboptions:
+                                    hostname:
+                                        description:
+                                            - Hostname or IP address of the SFTP server.
+                                            - Required when C(repository=sftp).
+                                        type: str
+                                    directory:
+                                        description:
+                                            - Directory on the SFTP server containing the adapter firmware.
+                                            - Required when C(repository=sftp).
+                                        type: str
+                                    username:
+                                        description:
+                                            - Username for SFTP authentication.
+                                            - Required when C(repository=sftp).
+                                        type: str
+                                    password:
+                                        description:
+                                            - Password for SFTP authentication.
+                                            - Required unless C(keyfile) is provided.
+                                        type: str
+                                    keyfile:
+                                        description:
+                                            - Path to an SSH private key file.
+                                            - Mutually exclusive with C(password).
+                                        type: str
     state:
         description:
             - C(facts) gathers and returns information about available SR-IOV adapters, Virtual I/O Servers (VIOS), and I/O adapters without making any changes.
@@ -237,7 +340,7 @@ EXAMPLES = '''
           - adapter_id: 1
             subtype: DriverOnly
 
-- name: Update all SR-IOV adapters (Adapter) using IBM Fix Central (No Firware Update)
+- name: Update all SR-IOV adapters (Adapter) using IBM Fix Central (No Firmware Update)
   platform_update:
     hmc_host: <host>
     hmc_auth:
@@ -321,7 +424,6 @@ EXAMPLES = '''
         - update_type: NoUpdate
           vios_name: <vios1>
           update_order: 1
-          repository: IBMWebsite
           io_adapter_update:
             - device:
                 - "ent0"
@@ -345,7 +447,7 @@ EXAMPLES = '''
             - all: true
               repository: IBMWebsite
 
-- name: Update multiple VIOS instances to the latest available level from IBM Fix Central with vios1 update first and then vios2
+- name: Update multiple VIOS instances from IBM Fix Central with ordered execution
   platform_update:
     hmc_host: <host>
     hmc_auth:
@@ -365,7 +467,7 @@ EXAMPLES = '''
           vios_image_name: <name>
           resource_type: IBMWebsite
 
-- name: Updates System Firmware To latest and Vios to latest available level along with all I/O adapters from IBM Fix Central
+- name: Update System Firmware and VIOS with all I/O adapters from IBM Fix Central
   platform_update:
     hmc_host: <host>
     hmc_auth:
@@ -387,7 +489,68 @@ EXAMPLES = '''
             - all: true
               repository: IBMWebsite
 
-- name: Facts
+- name: Perform a System Firmware update from an SFTP server using password authentication
+  platform_update:
+    hmc_host: <host>
+    hmc_auth:
+      username: <hscroot>
+      password: <hmcpass>
+    system_name: <system_name>
+    platform_config:
+      system_firmware_update:
+        update_type: Update
+        update_order: 1
+        repository: sftp
+        sftp:
+          hostname: sftp.example.com
+          directory: /firmware/images
+          username: sftpuser
+          password: sftppass
+
+- name: Update VIOS from an SFTP server using SSH key authentication with specific files
+  platform_update:
+    hmc_host: <host>
+    hmc_auth:
+      username: <hscroot>
+      password: <hmcpass>
+    system_name: <system_name>
+    platform_config:
+      vios_update:
+        - update_type: Update
+          vios_name: vios1
+          update_order: 1
+          resource_type: sftp
+          vios_image_name: vios_package_name
+          sftp:
+            hostname: sftp.example.com
+            username: sftpuser
+            ssh_key: /home/hscroot/.ssh/id_rsa
+            remote_directory: /vios/images
+            file_names:
+              - vios_image.tar.gz
+
+- name: Update I/O adapters from an SFTP server using SSH key authentication
+  platform_update:
+    hmc_host: <host>
+    hmc_auth:
+      username: <hscroot>
+      password: <hmcpass>
+    system_name: <system_name>
+    platform_config:
+      vios_update:
+        - update_type: NoUpdate
+          vios_name: vios1
+          update_order: 1
+          io_adapter_update:
+            - all: true
+              repository: sftp
+              sftp:
+                hostname: sftp.example.com
+                directory: /io/firmware
+                username: sftpuser
+                keyfile: /home/hscroot/.ssh/id_rsa
+
+- name: Gather SR-IOV, VIOS, and I/O adapter facts
   platform_update:
     hmc_host: <host>
     hmc_auth:
@@ -401,9 +564,9 @@ RETURN = '''
 result:
     description: >
         Dictionary containing the outcome of the operation.
-        Always includes `changed` indicating if the operation made any changes.
-        The `command_output` key contains a dictionary with operation-specific details.
-        The keys and values in `command_output` depend on the type of operation performed.
+        Always includes C(changed) indicating if the operation made any changes.
+        The C(command_output) key contains a dictionary with operation-specific details.
+        The keys and values in C(command_output) depend on the type of operation performed.
     type: dict
     returned: always
     sample: {
@@ -418,7 +581,8 @@ result:
 
 
 import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc.log"
+import os
+LOG_FILENAME = "/tmp/ansible_power_hmc_{0}.log".format(os.getpid())
 logger = logging.getLogger(__name__)
 import re
 from ansible.module_utils.basic import AnsibleModule
@@ -439,10 +603,39 @@ after_update_level = {}
 
 
 def init_logger():
-    logging.basicConfig(
-        filename=LOG_FILENAME,
-        format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
-        level=logging.DEBUG)
+    old_umask = os.umask(0o177)
+    try:
+        logging.basicConfig(
+            filename=LOG_FILENAME,
+            format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
+            level=logging.DEBUG)
+    finally:
+        os.umask(old_umask)
+
+
+def _validate_sftp_block(sftp_block, context, password_key='password', key_key='keyfile', required_fields=None):
+    """Validate the nested sftp block: required fields present, exactly one auth method supplied."""
+    if required_fields is None:
+        required_fields = ['hostname', 'username']
+
+    missing = [f for f in required_fields if not sftp_block.get(f)]
+    if missing:
+        raise ParameterError(
+            f"mandatory parameter{'s' if len(missing) > 1 else ''} "
+            f"[{', '.join(missing)}] {'are' if len(missing) > 1 else 'is'} missing "
+            f"in sftp block for {context}"
+        )
+
+    has_password = bool(sftp_block.get(password_key))
+    has_key = bool(sftp_block.get(key_key))
+    if has_password and has_key:
+        raise ParameterError(
+            f"Parameters '{password_key}' and '{key_key}' are mutually exclusive in sftp block for {context}"
+        )
+    if not has_password and not has_key:
+        raise ParameterError(
+            f"Either '{password_key}' or '{key_key}' is required in sftp block for {context}"
+        )
 
 
 def validate_sub_params(params, value):
@@ -469,6 +662,17 @@ def validate_sub_params(params, value):
                 raise ParameterError("'all' is mutually exclusive with 'device'.")
         if not (params.get('all') or params.get('device')):
             raise ParameterError("either 'all' or 'device' parameter is required")
+
+        repo = (params.get('repository') or '').lower()
+        if repo == 'sftp':
+            sftp_block = params.get('sftp')
+            if not sftp_block:
+                raise ParameterError(f"'sftp' block is required for {value} when repository=sftp")
+            _validate_sftp_block(
+                sftp_block, context=value,
+                required_fields=['hostname', 'directory', 'username']
+            )
+
     collate = []
     for eachUnsupported in unsupportedList:
         if params.get(eachUnsupported):
@@ -521,12 +725,12 @@ def validate_parameters(params):
         if update_type:
             update_type = update_type.lower()
         sriov_updates = sfw_update.get('sriov_adapter_update', [])
-        resource_type = sfw_update.get('repository')
+        repo = (sfw_update.get('repository') or '').lower()
 
         if update_type == 'noupdate':
             if not sriov_updates:
                 raise ParameterError("Missing parameter sriov_adapter_update for system_firmware_update")
-            if resource_type:
+            if repo:
                 sfw_update['repository'] = None
             if sfw_update.get('level') != 'latest':
                 raise ParameterError("Parameter 'level' is not supported for system_firmware_update when update_type = 'NoUpdate'")
@@ -534,6 +738,14 @@ def validate_parameters(params):
         elif update_type in ['update', 'upgrade']:
             if sriov_updates:
                 raise ParameterError(f"Invalid combination: sriov_adapter_update is not allowed with update_type = '{update_type}'")
+            if repo == 'sftp':
+                sftp_block = sfw_update.get('sftp')
+                if not sftp_block:
+                    raise ParameterError("'sftp' block is required for system_firmware_update when repository=sftp")
+                _validate_sftp_block(
+                    sftp_block, context='system_firmware_update',
+                    required_fields=['hostname', 'directory', 'username']
+                )
 
         if sriov_updates:
             for adapter in sriov_updates:
@@ -550,9 +762,20 @@ def validate_parameters(params):
                 'system_name'
             ]
             vios_update_type = vios.get('update_type', '')
+            resource_type = (vios.get('resource_type') or '').lower()
+
             if vios_update_type and vios_update_type.lower() != 'noupdate':
                 mandatory.append('resource_type')
                 mandatory.append('vios_image_name')
+                if resource_type == 'sftp':
+                    sftp_block = vios.get('sftp')
+                    if not sftp_block:
+                        raise ParameterError("'sftp' block is required for vios_update when resource_type=sftp")
+                    _validate_sftp_block(
+                        sftp_block, context='vios_update',
+                        password_key='password', key_key='ssh_key',
+                        required_fields=['hostname', 'username']
+                    )
             else:
                 if vios.get('resource_type'):
                     vios['resource_type'] = None
@@ -659,21 +882,26 @@ def cleanup_entries(data, sriov=None, io=None):
                 ioAdapters = vios.get("io_adapter_update")
                 if ioAdapters and ioAdapters[0].get('all'):
                     repo = ioAdapters[0].get("repository", "")
+                    sftp_fields = {k: v for k, v in ioAdapters[0].items()
+                                   if k not in ('all', 'device', 'repository', 'sftp', 'Id', 'Device', 'Repository')}
                     vios["io_adapter_update"] = [
-                        {
-                            "Id": adapter_id,
-                            "Device": ",".join(devices),
-                            "Repository": repo
-                        }
+                        dict(
+                            {"Id": adapter_id, "Device": ",".join(devices), "Repository": repo},
+                            **sftp_fields
+                        )
                         for adapter_id, devices in io['IOAdapterUpdate'].items()
                     ]
                 elif ioAdapters:
                     vios["io_adapter_update"] = [
-                        {
-                            "Id": adapter.get("Id", ""),
-                            "Device": ",".join(adapter.get("device", [])),
-                            "Repository": adapter.get("repository")
-                        }
+                        dict(
+                            {
+                                "Id": adapter.get("Id", ""),
+                                "Device": ",".join(adapter.get("device", [])) if isinstance(adapter.get("device"), list) else adapter.get("device", ""),
+                                "Repository": adapter.get("repository")
+                            },
+                            **{k: v for k, v in adapter.items()
+                               if k not in ('id', 'Id', 'device', 'Device', 'repository', 'Repository', 'sftp', 'all')}
+                        )
                         for adapter in ioAdapters
                     ]
 
@@ -694,6 +922,88 @@ def cleanup_entries(data, sriov=None, io=None):
 
     else:
         return data
+
+
+def _flatten_sftp_block(data):
+    """
+    Walk the config dict and inline any nested 'sftp' block one level up,
+    converting its keys to the API-expected names in the process.
+
+    The sftp block under system_firmware_update / io_adapter_update uses:
+        hostname, directory, username, password, keyfile
+    mapped to:
+        HostName, Directory, UserName, Password, Keyfile
+
+    The sftp block under vios_update uses:
+        hostname, username, password, ssh_key, remote_directory, file_names
+    mapped to:
+        ServerHostOrIP, UserName, Password, SSHKey, RemoteDirectory, FileNames
+    SaveFile is always injected as true for SFTP VIOS updates.
+    """
+    sfw_key_map = {
+        'hostname': 'HostName',
+        'directory': 'Directory',
+        'username': 'UserName',
+        'password': 'Password',
+        'keyfile': 'Keyfile',
+    }
+    vios_key_map = {
+        'hostname': 'ServerHostOrIP',
+        'username': 'UserName',
+        'password': 'Password',
+        'ssh_key': 'SSHKey',
+        'remote_directory': 'RemoteDirectory',
+        'file_names': 'FileNames',
+    }
+    io_key_map = {
+        'hostname': 'HostName',
+        'directory': 'Directory',
+        'username': 'UserName',
+        'password': 'Password',
+        'keyfile': 'Keyfile',
+    }
+
+    if not isinstance(data, dict):
+        return data
+
+    # system_firmware_update
+    sfw = data.get('SystemFirmwareUpdate') or data.get('system_firmware_update')
+    if isinstance(sfw, dict):
+        sftp = sfw.pop('sftp', None)
+        if sftp and isinstance(sftp, dict):
+            for k, v in sftp.items():
+                if v is not None:
+                    sfw[sfw_key_map.get(k, k)] = v
+
+    # vios_update entries
+    vios_list = data.get('VIOSUpdate') or data.get('vios_update') or []
+    for vios in vios_list:
+        if not isinstance(vios, dict):
+            continue
+        sftp = vios.pop('sftp', None)
+        if sftp and isinstance(sftp, dict):
+            # convert file_names list -> comma-separated string
+            file_names = sftp.get('file_names')
+            if isinstance(file_names, list):
+                sftp['file_names'] = ','.join(file_names)
+            for k, v in sftp.items():
+                if v is not None:
+                    vios[vios_key_map.get(k, k)] = v
+            # SaveFile is always true for SFTP VIOS updates
+            vios['SaveFile'] = True
+
+        # io_adapter_update entries inside each vios
+        io_list = vios.get('IOAdapterUpdate') or vios.get('io_adapter_update') or []
+        for io in io_list:
+            if not isinstance(io, dict):
+                continue
+            sftp = io.pop('sftp', None)
+            if sftp and isinstance(sftp, dict):
+                for k, v in sftp.items():
+                    if v is not None:
+                        io[io_key_map.get(k, k)] = v
+
+    return data
 
 
 def map_entries(data):
@@ -717,7 +1027,7 @@ def map_entries(data):
         "name": "Name",
         "level": "Level",
         "vios_image_name": "Name",
-        "all": "ALL"
+        "all": "ALL",
     }
 
     if isinstance(data, dict):
@@ -730,6 +1040,11 @@ def map_entries(data):
         return [map_entries(item) for item in data]
     else:
         return data
+
+
+def _is_sftp(source):
+    """Return True when the normalised source value indicates SFTP."""
+    return (source or '').lower() == 'sftp'
 
 
 def check_response_exception(output, module, request):
@@ -859,7 +1174,7 @@ def platform_update(module):
                             if io_adapters:
                                 for adapter in io_adapters:
                                     adapter["Id"] = vios_details[2].zfill(3)
-                                    adapter['repository'] = adapter.get("repository").lower()
+                                    adapter['repository'] = (adapter.get("repository") or '').lower()
                 else:
                     module.fail_json(msg=f"The VIOS {vios} is not available in HMC")
 
@@ -913,7 +1228,7 @@ def platform_update(module):
                     module.fail_json(msg=error_msg)
                 sriov_update = sysfirm_update.get('sriov_adapter_update')
                 if sriov_update:
-                    if 'No results' in output.get("SRIOVAdapterUpdate", {}).get("AdapterID"):
+                    if 'No results' in (output.get("SRIOVAdapterUpdate", {}).get("AdapterID") or ''):
                         error_msg = f'No SRIOV Adapters are available for {system_name}'
                         module.fail_json(msg=error_msg)
 
@@ -924,7 +1239,7 @@ def platform_update(module):
                             available_adapter_id = output.get("SRIOVAdapterUpdate", {}).get("AdapterID")
                         else:
                             adapter_id = adapter.get("adapter_id")
-                            if adapter_id not in output.get("SRIOVAdapterUpdate", {}).get("AdapterID"):
+                            if adapter_id not in (output.get("SRIOVAdapterUpdate", {}).get("AdapterID") or []):
                                 error_msg = f"SRIOVAdapter with ID {adapter_id} is not present for system {system_name}"
                                 module.fail_json(msg=error_msg)
                             adapter['adapter_id'] = str(adapter_id)
@@ -938,7 +1253,7 @@ def platform_update(module):
                     module.fail_json(msg=error_msg)
 
                 for io_update in all_io_updates:
-                    if 'No results' in output.get("IOAdapterUpdate"):
+                    if 'No results' in (output.get("IOAdapterUpdate") or ''):
                         error_msg = f"No IO Adapters are available for VIOS '{io_update.get('vios_name')}'"
                         module.fail_json(msg=error_msg)
                     if io_update.get('all'):
@@ -964,7 +1279,7 @@ def platform_update(module):
                             error_msg = f"VIOS '{io_update.get('vios_name')}' does not contain IO Adapter with ID '{io_update.get('vios_id')}'."
                             module.fail_json(msg=error_msg)
 
-            # Vios Update Check
+            # Vios Update Check — skip listViosUpdates for SFTP (image resolved by HMC at update time)
             needs_update = None
             if vios_updates:
                 needs_update = any('update' == vios.get('update_type', '').lower() for vios in attributes.get("vios_update", []))
@@ -972,9 +1287,12 @@ def platform_update(module):
                 console_uuid = rest_conn.getManagementConsole()
                 for vios_info in attributes.get("vios_update", []):
                     updateType = vios_info['update_type'].lower()
-                    if updateType in 'update':
+                    if updateType == 'update':
                         vios_name = vios_info['vios_name']
                         source_file = vios_info['resource_type']
+                        if _is_sftp(source_file):
+                            logger.info("Skipping listViosUpdates for VIOS %s: sftp repository", vios_name)
+                            continue
                         vios_level = vios_info['vios_image_name']
                         output = rest_conn.listViosUpdates(console_uuid, system_name, vios_name, source_file)
                         check_response_exception(output, module, 'listViosUpdates')
@@ -988,59 +1306,109 @@ def platform_update(module):
                             )
                             module.fail_json(msg=error_msg)
 
-            # System Firmware Update Check
+            # System Firmware Update Check — skip LICQueryRepository for SFTP
             sysfirm_update = attributes.get('system_firmware_update')
             if sysfirm_update:
-                updateType = sysfirm_update.get('update_type').lower()
+                updateType = (sysfirm_update.get('update_type') or '').lower()
                 if updateType in ['update', 'upgrade']:
                     firm_level = sysfirm_update.get('level')
-                    source_file = sysfirm_update.get('repository').lower()
+                    source_file = (sysfirm_update.get('repository') or '').lower()
                     if source_file:
                         sysfirm_update['repository'] = source_file
                     sysfirm_update['Type'] = 'sys'
-                    output = rest_conn.LICQueryRepository(system_uuid, system_name, source_file,
-                                                          type="sys", level=updateType)
-                    check_response_exception(output, module, 'LICQueryRepository')
-                    if "No results" in output.get('ParameterValue'):
-                        error_msg = f"No {updateType.upper()} file found at the specified source: {source_file} for the resource: {system_name}."
-                        module.fail_json(msg=error_msg)
-                    if output.get('ParameterName') == 'JOBRESULT_KEY_ERRORMSG':
-                        error_msg = (
-                            f"No {updateType.upper()} file found at the specified source: {source_file} "
-                            f"for the resource: {system_name} reason: {output.get('ParameterValue')}"
+                    if _is_sftp(source_file):
+                        sftp_block = sysfirm_update.get('sftp', {}) or {}
+                        output = rest_conn.LICQueryRepository(
+                            system_uuid, system_name, source_file,
+                            type="sys", level=updateType,
+                            hostname=sftp_block.get('hostname'),
+                            username=sftp_block.get('username'),
+                            password=sftp_block.get('password'),
+                            directory=sftp_block.get('directory'),
+                            keyfile=sftp_block.get('keyfile'),
                         )
-                        module.fail_json(msg=error_msg)
-                    param_val = output.get('ParameterValue', '')
-                    available_levels = []
-                    if param_val:
+                        check_response_exception(output, module, 'LICQueryRepository')
+                        if output.get('ParameterName') == 'JOBRESULT_KEY_ERRORMSG':
+                            error_msg = (
+                                f"No {updateType.upper()} file found at the SFTP source: {sftp_block.get('hostname')} "
+                                f"for the resource: {system_name} reason: {output.get('ParameterValue')}"
+                            )
+                            module.fail_json(msg=error_msg)
+                        param_val = output.get('ParameterValue', '')
+                        logger.debug("SFTP LICQueryRepository ParameterValue raw: %s", repr(param_val))
+                        if not param_val or 'No results' in param_val:
+                            module.fail_json(msg=(
+                                f"No {updateType.upper()} firmware image found on SFTP server "
+                                f"{sftp_block.get('hostname')}:{sftp_block.get('directory', '')} "
+                                f"for the resource: {system_name}. "
+                                f"Verify the directory path and that firmware images are present."
+                            ))
+                        available_levels = []
                         for line in param_val.splitlines():
                             parts = line.split(",")
                             if len(parts) >= 3:
                                 available_levels.append(parts[2].strip())
-                    if firm_level != 'latest' and firm_level not in available_levels:
-                        error_msg = (
-                            f"Update file {firm_level} for the resource {system_name} "
-                            f"is not found at the specified source location: {source_file}."
-                        )
-                        module.fail_json(msg=error_msg)
-                    else:
-                        if output.get('ParameterValue'):
-                            output = output.get('ParameterValue')
-                            lines = output.split("\n")
+                        if firm_level != 'latest' and firm_level not in available_levels:
+                            error_msg = (
+                                f"Update file {firm_level} for the resource {system_name} "
+                                f"is not found at the specified SFTP source location: {sftp_block.get('hostname')}."
+                            )
+                            module.fail_json(msg=error_msg)
+                        else:
+                            lines = param_val.split("\n")
                             sysfirm_update['IsDestruptive'] = False
                             if firm_level != 'latest':
                                 for line in lines:
                                     parts = line.split(",")
-                                    if firm_level == parts[2]:
+                                    if len(parts) > 4 and firm_level == parts[2]:
                                         sysfirm_update['IsDestruptive'] = parts[4].strip().lower() == "disruptive"
                                         break
-                            else:
-                                latest_line = max(
-                                    (line for line in lines if line.strip()),
-                                    key=lambda line_data: int(line_data.split(",")[2])
-                                )
-                                parts = latest_line.split(",")
-                                sysfirm_update['IsDestruptive'] = parts[4].strip().lower() == "disruptive"
+                    else:
+                        output = rest_conn.LICQueryRepository(system_uuid, system_name, source_file,
+                                                              type="sys", level=updateType)
+                        check_response_exception(output, module, 'LICQueryRepository')
+                        if "No results" in (output.get('ParameterValue') or ''):
+                            error_msg = f"No {updateType.upper()} file found at the specified source: {source_file} for the resource: {system_name}."
+                            module.fail_json(msg=error_msg)
+                        if output.get('ParameterName') == 'JOBRESULT_KEY_ERRORMSG':
+                            error_msg = (
+                                f"No {updateType.upper()} file found at the specified source: {source_file} "
+                                f"for the resource: {system_name} reason: {output.get('ParameterValue')}"
+                            )
+                            module.fail_json(msg=error_msg)
+                        param_val = output.get('ParameterValue', '')
+                        available_levels = []
+                        if param_val:
+                            for line in param_val.splitlines():
+                                parts = line.split(",")
+                                if len(parts) >= 3:
+                                    available_levels.append(parts[2].strip())
+                        if firm_level != 'latest' and firm_level not in available_levels:
+                            error_msg = (
+                                f"Update file {firm_level} for the resource {system_name} "
+                                f"is not found at the specified source location: {source_file}."
+                            )
+                            module.fail_json(msg=error_msg)
+                        else:
+                            if output.get('ParameterValue'):
+                                output = output.get('ParameterValue')
+                                lines = output.split("\n")
+                                sysfirm_update['IsDestruptive'] = False
+                                if firm_level != 'latest':
+                                    for line in lines:
+                                        parts = line.split(",")
+                                        if firm_level == parts[2]:
+                                            sysfirm_update['IsDestruptive'] = parts[4].strip().lower() == "disruptive"
+                                            break
+                                else:
+                                    latest_line = max(
+                                        (line for line in lines if line.strip()),
+                                        key=lambda line_data: int(line_data.split(",")[2])
+                                    )
+                                    parts = latest_line.split(",")
+                                    sysfirm_update['IsDestruptive'] = parts[4].strip().lower() == "disruptive"
+
+                    # Normalise numeric level to 3-digit zero-padded string for HMC API
                     if sysfirm_update.get('level') != "latest":
                         firm_level = str(sysfirm_update.get('level'))
                         if firm_level.isdigit():
@@ -1048,12 +1416,16 @@ def platform_update(module):
                                 firm_level = "00" + firm_level
                             elif len(firm_level) == 2:
                                 firm_level = "0" + firm_level
+                        sysfirm_update['level'] = firm_level
 
-            # IO Adapter Update check
+            # IO Adapter Update check — skip LICQueryRepository for SFTP
             if all_io_updates:
                 for io_update in all_io_updates:
-                    source_file = io_update.get('repository').lower()
+                    source_file = (io_update.get('repository') or '').lower()
                     vios_id = io_update.get('vios_id')
+                    if _is_sftp(source_file):
+                        logger.info("Skipping LICQueryRepository for IO adapter update: sftp repository")
+                        continue
                     output = rest_conn.LICQueryRepository(system_uuid, system_name, source_file)
                     check_response_exception(output, module, 'LICQueryRepository')
                     if available_io_updates:
@@ -1061,9 +1433,14 @@ def platform_update(module):
                     else:
                         adp_ids = {io_update.get('id')}
                     if output.get('ParameterName') == 'JOBRESULT_KEY_ERRORMSG':
-                        f"Import operation failed for IO Adapter ID '{adp_ids}' "
-                        f"on VIOS '{io_update.get('vios_name')}': {output.get('ParameterValue')}"
+                        error_msg = (
+                            f"Import operation failed for IO Adapter ID '{adp_ids}' "
+                            f"on VIOS '{io_update.get('vios_name')}': {output.get('ParameterValue')}"
+                        )
                         module.fail_json(msg=error_msg)
+
+            # Flatten nested sftp blocks into parent dicts before cleanup/mapping
+            _flatten_sftp_block(attributes)
 
             cleaned_data = cleanup_entries(attributes, sriov=available_adapter_id, io=available_io_updates)
             mapped_data = map_entries(cleaned_data)
@@ -1178,6 +1555,30 @@ def compare_levels(before, after):
 
 
 def run_module():
+    # Shared sftp sub-spec reused across all three update sections
+    sftp_sfw_spec = dict(
+        hostname=dict(type='str'),
+        directory=dict(type='str'),
+        username=dict(type='str'),
+        password=dict(type='str', no_log=True),
+        keyfile=dict(type='str', no_log=True),
+    )
+    sftp_vios_spec = dict(
+        hostname=dict(type='str'),
+        username=dict(type='str'),
+        password=dict(type='str', no_log=True),
+        ssh_key=dict(type='str', no_log=True),
+        remote_directory=dict(type='str'),
+        file_names=dict(type='list', elements='str'),
+    )
+    sftp_io_spec = dict(
+        hostname=dict(type='str'),
+        directory=dict(type='str'),
+        username=dict(type='str'),
+        password=dict(type='str', no_log=True),
+        keyfile=dict(type='str', no_log=True),
+    )
+
     module_args = dict(
         hmc_host=dict(type='str', required=True),
         hmc_auth=dict(type='dict',
@@ -1197,8 +1598,9 @@ def run_module():
                     options=dict(
                         update_type=dict(type='str', choices=['NoUpdate', 'Update', 'Upgrade']),
                         update_order=dict(type='int'),
-                        repository=dict(type='str', choices=['IBMWebsite'], default='IBMWebsite'),
+                        repository=dict(type='str', choices=['IBMWebsite', 'sftp'], default='IBMWebsite'),
                         level=dict(type='str', default="latest"),
+                        sftp=dict(type='dict', options=sftp_sfw_spec),
                         sriov_adapter_update=dict(
                             type='list',
                             elements='dict',
@@ -1225,15 +1627,17 @@ def run_module():
                         update_type=dict(type='str', choices=['NoUpdate', 'Update']),
                         vios_name=dict(type='str'),
                         update_order=dict(type='int'),
-                        resource_type=dict(type='str', choices=['IBMWebsite'], default='IBMWebsite'),
+                        resource_type=dict(type='str', choices=['IBMWebsite', 'sftp'], default='IBMWebsite'),
                         vios_image_name=dict(type='str'),
+                        sftp=dict(type='dict', options=sftp_vios_spec),
                         io_adapter_update=dict(
                             type='list',
                             elements='dict',
                             options=dict(
                                 all=dict(type='bool'),
                                 device=dict(type='list', elements='str'),
-                                repository=dict(type='str', choices=['IBMWebsite'], default='IBMWebsite')
+                                repository=dict(type='str', choices=['IBMWebsite', 'sftp'], default='IBMWebsite'),
+                                sftp=dict(type='dict', options=sftp_io_spec),
                             )
                         )
                     )
@@ -1255,8 +1659,7 @@ def run_module():
         raise ParameterError("Unsupported Python version {0}, supported python version is 3 and above".format(py_ver))
 
     ok_count = 0
-    failed_count = 0
-    failed = 0
+    failed_messages = []
 
     if module.params.get('state'):
         changed, info, warning = facts(module)
@@ -1269,21 +1672,23 @@ def run_module():
                 if status == "COMPLETED_OK":
                     ok_count += 1
                 elif status == "COMPLETED_WITH_ERROR":
-                    failureMsg = data.get('FailureMessage')
+                    failureMsg = data.get('FailureMessage', '')
                     if failureMsg and "no updates" in failureMsg.lower():
                         ok_count += 1
                     else:
-                        failed_count += 1
+                        failed_messages.append(failureMsg or "Unknown error")
 
-            if failed_count > 0 and ok_count == 0:
-                failed = failed_count
+            if failed_messages and ok_count == 0:
+                result = {'changed': changed, 'command_output': info}
+                if warning:
+                    result['warning'] = warning
+                module.fail_json(msg='; '.join(failed_messages), **result)
 
         if compare_levels(before_update_level, after_update_level):
             changed = False
 
     result = {
         'changed': changed,
-        'failed': failed
     }
 
     if info:

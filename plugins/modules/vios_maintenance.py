@@ -15,7 +15,7 @@ DOCUMENTATION = '''
 ---
 module: vios_maintenance
 author:
-    - Sreenidhi S(@SreenidhiS1)
+    - Sreenidhi S (@SreenidhiS1)
 short_description: Manage the vios backup
 notes:
     - All Operations support passwordless authentication.
@@ -56,7 +56,7 @@ options:
             types:
                 description:
                     - The type of VIOS backup to create.
-                    - Valid values are C(viosioconfig)for a VIOS I/O configuration backup,
+                    - Valid values are C(viosioconfig) for a VIOS I/O configuration backup,
                       C(vios) for a full VIOS backup, C(ssp) for a Shared Storage Pool configuration backup.
                 type: str
                 required: true
@@ -88,7 +88,7 @@ options:
                 description:
                     - The list of the backup files that needs to be removed.
                       This option is for C(remove) state only.
-                      Add backup file name as comma seperated values.
+                      Add backup file name as comma-separated values.
                 type: list
                 elements: str
             nimol_resource:
@@ -136,7 +136,7 @@ options:
 
 EXAMPLES = '''
 - name: Create a viosioconfig backup file
-  vios_maintenance:
+  ibm.power_hmc.vios_maintenance:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -149,7 +149,7 @@ EXAMPLES = '''
     state: present
 
 - name: Restore a vios from test backup file
-  vios_maintenance:
+  ibm.power_hmc.vios_maintenance:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -162,7 +162,7 @@ EXAMPLES = '''
     state: restore
 
 - name: Remove a backup file
-  vios_maintenance:
+  ibm.power_hmc.vios_maintenance:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -175,7 +175,7 @@ EXAMPLES = '''
     state: absent
 
 - name: Rename the backup file
-  vios_maintenance:
+  ibm.power_hmc.vios_maintenance:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -190,14 +190,15 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-Command_output:
-    description: Respective user configuration
+command_output:
+    description: Respective user configuration.
     type: dict
     returned: on success of all states except C(absent)
 '''
 
 import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc.log"
+import os
+LOG_FILENAME = "/tmp/ansible_power_hmc_{0}.log".format(os.getpid())
 logger = logging.getLogger(__name__)
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
@@ -210,10 +211,14 @@ USER_AUTHORITY_ERR = "HSCL350B The user does not have the appropriate authority"
 
 
 def init_logger():
-    logging.basicConfig(
-        filename=LOG_FILENAME,
-        format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
-        level=logging.DEBUG)
+    old_umask = os.umask(0o177)
+    try:
+        logging.basicConfig(
+            filename=LOG_FILENAME,
+            format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
+            level=logging.DEBUG)
+    finally:
+        os.umask(old_umask)
 
 
 def validate_sub_params(params):

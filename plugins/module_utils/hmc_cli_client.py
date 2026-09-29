@@ -59,7 +59,6 @@ class HmcCliConnection:
         else:
             ssh_hmc_cmd = "ssh '{0}'@{1} {2} '{3}'".format(self.user, self.ip, host_key_ignore, cmd)
 
-        logger.debug(ssh_hmc_cmd)
         status_code, stdout, stderr = self.module.run_command(ssh_hmc_cmd, use_unsafe_shell=True)
 
         if status_code != 0:

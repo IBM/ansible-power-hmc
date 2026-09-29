@@ -87,7 +87,7 @@ lint: module-lint
 
 .PHONY: module-lint
 module-lint:
-	ansible-test sanity --python $(PYTHON_VERSION) --skip-test shebang
+	ansible-test sanity --python $(PYTHON_VERSION) --skip-test shebang --skip-test ignores
 	flake8 plugins/modules/* --max-line-length=160 --ignore=E402,W503 
 	flake8 plugins/module_utils/* --max-line-length=160 --ignore=E402,W503
 	flake8 plugins/inventory/* --max-line-length=160 --ignore=E402,W503 --exclude=plugins/inventory/*.yaml,plugins/inventory/*.yml

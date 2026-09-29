@@ -1,0 +1,49 @@
+---
+- name: HMC create and activate logical partition
+  hosts: hmcs
+  connection: local
+  vars:
+      curr_hmc_auth:
+          username: hscroot
+          password: !vault |
+              $ANSIBLE_VAULT;1.1;AES256
+              34656335616165343966323739633761653065346138623233633764353636373063313736373563
+              6130373162376464666634363734303164396364656535350a663661636663323434386466383634
+              63323432303833643864396130393133346666336661346432356433353035663038643833373332
+              3664333762656138640a306539363765343261383363346532643639383938656434333564323139
+              6365
+
+  tasks:
+      - name: Create a serviceable event for collection of VIOS logs
+        ibm.power_hmc.create_service_event:
+            hmc_host: "{{ inventory_hostname }}"
+            hmc_auth: "{{ curr_hmc_auth }}"
+            system_name: "{{ system_name }}"
+            description: VIOS problem detected on managed system
+            types: vios
+            attributes:
+                title: VIOS Service Event
+                severity: 2
+                contact_name: Admin User
+                contact_phone: 5550100
+                contact_email: admin@example.com
+                lpar_name: <vios_lpar_name>
+                service_file:
+                    - pedbgq4
+                    - vios
+            state: created
+
+      - name: List last 10 hardware events with selected display attributes
+        ibm.power_hmc.create_service_event:
+            hmc_host: "{{ inventory_hostname }}"
+            hmc_auth: "{{ curr_hmc_auth }}"
+            state: facts
+            event_type: hardware
+            system_name: "{{ system_name }}"
+            number_of_events: 10
+            display_attributes:
+                - problem_num
+                - status
+                - customer_description
+                - customer_email
+                - event_severity

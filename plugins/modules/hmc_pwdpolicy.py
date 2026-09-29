@@ -28,7 +28,7 @@ version_added: 1.0.0
 options:
     hmc_host:
         description:
-            - The IPaddress or hostname of the HMC.
+            - The IP address or hostname of the HMC.
         required: true
         type: str
     hmc_auth:
@@ -39,7 +39,7 @@ options:
         suboptions:
             username:
                 description:
-                    - Username of the HMC to login.
+                    - Username of the HMC to log in.
                 required: true
                 type: str
             password:
@@ -86,7 +86,7 @@ options:
                 type: str
             min_digits:
                 description:
-                    - The minimum number of digits that a password must contain
+                    - The minimum number of digits that a password must contain.
                 type: str
             min_uppercase_chars:
                 description:
@@ -104,12 +104,12 @@ options:
             new_name:
                 description:
                     - The new name of the password policy.
-                      This option valid only when I(state=modified).
+                      This option is valid only when I(state=modified).
                 type: str
     policy_type:
         description:
-            - C(policies) list all the password policies on the HMC.
-            - C(status) list password policy status information.
+            - C(policies) Lists all the password policies on the HMC.
+            - C(status) Lists password policy status information.
         type: str
         choices: ['policies', 'status']
     state:
@@ -128,7 +128,7 @@ options:
 
 EXAMPLES = '''
 - name: List the HMC password policy current status
-  hmc_pwdpolicy:
+  ibm.power_hmc.hmc_pwdpolicy:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -136,8 +136,8 @@ EXAMPLES = '''
     policy_type: status
     state: facts
 
-- name: create the password policy
-  hmc_pwdpolicy:
+- name: Create the password policy
+  ibm.power_hmc.hmc_pwdpolicy:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -146,8 +146,8 @@ EXAMPLES = '''
     state: present
     policy_config:
 
-- name: update the password policy with new settings
-  hmc_pwdpolicy:
+- name: Update the password policy with new settings
+  ibm.power_hmc.hmc_pwdpolicy:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -158,8 +158,8 @@ EXAMPLES = '''
       hist_size: 12
     state: modified
 
-- name: activate the password policy
-  hmc_pwdpolicy:
+- name: Activate the password policy
+  ibm.power_hmc.hmc_pwdpolicy:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -168,15 +168,15 @@ EXAMPLES = '''
     state: activated
 
 - name: De-activate any active policy on HMC
-  hmc_pwdpolicy:
+  ibm.power_hmc.hmc_pwdpolicy:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
       password: '{{ hmc_password }}'
     state: deactivated
 
-- name: remove the password policy
-  hmc_pwdpolicy:
+- name: Remove the password policy
+  ibm.power_hmc.hmc_pwdpolicy:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -193,7 +193,8 @@ policy_info:
 '''
 
 import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc.log"
+import os
+LOG_FILENAME = "/tmp/ansible_power_hmc_{0}.log".format(os.getpid())
 logger = logging.getLogger(__name__)
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import ParameterError
@@ -203,10 +204,14 @@ import sys
 
 
 def init_logger():
-    logging.basicConfig(
-        filename=LOG_FILENAME,
-        format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
-        level=logging.DEBUG)
+    old_umask = os.umask(0o177)
+    try:
+        logging.basicConfig(
+            filename=LOG_FILENAME,
+            format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
+            level=logging.DEBUG)
+    finally:
+        os.umask(old_umask)
 
 
 def facts(module, params):

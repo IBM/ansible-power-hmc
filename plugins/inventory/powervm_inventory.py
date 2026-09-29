@@ -148,134 +148,127 @@ options:
 '''
 
 EXAMPLES = '''
-# The most minimal example, targeting only a single HMC
----
-plugin: ibm.power_hmc.powervm_inventory
-hmc_hosts:
-  - hmc: <hmc_host_name>
-    user: <HMC_Username>
-    password: <HMC_Password>
 
-# Create an inventory consisting of only Virtual IO Servers.
-# This may be important if grouping by advanced_fields exclusive to VIOS.
----
-plugin: ibm.power_hmc.powervm_inventory
-hmc_hosts:
-  - hmc: <hmc_host_name>
-    user: <HMC_Username>
-    password: <HMC_Password>
-filters:
-  PartitionType: 'Virtual IO Server'
+-   # The most minimal example, targeting only a single HMC
+    plugin: ibm.power_hmc.powervm_inventory
+    hmc_hosts:
+        - hmc: <hmc_host_name>
+          user: <HMC_Username>
+          password: <HMC_Password>
 
-# Target multiple HMC hosts and only add running partitions to the inventory
----
-plugin: ibm.power_hmc.powervm_inventory
-hmc_hosts:
-  - hmc: <hmc_host_name>
-    user: <HMC1_Username>
-    password: <HMC1_Password>
-  - hmc: <hmc_host_name>
-    user: <HMC2_Username>
-    password: <HMC2_Password>
-filters:
-  PartitionState: 'running'
+-   # Create an inventory consisting of only Virtual IO Servers.
+    # This may be important if grouping by advanced_fields exclusive to VIOS.
+    plugin: ibm.power_hmc.powervm_inventory
+    hmc_hosts:
+        - hmc: <hmc_host_name>
+          user: <HMC_Username>
+          password: <HMC_Password>
+    filters:
+        PartitionType: 'Virtual IO Server'
 
-# Generate an inventory of all running partitions and create a separate group for AIX 7.2 and IBMi type of partitions
----
-plugin: ibm.power_hmc.powervm_inventory
-hmc_hosts:
-  - hmc: <hmc_host_name>
-    user: <HMC1_Username>
-    password: <HMC1_Password>
-  - hmc: <hmc_host_name>
-    user: <HMC2_Username>
-    password: <HMC2_Password>
-filters:
-  PartitionState: 'running'
-groups:
-  AIX_72: "'7.2' in OperatingSystemVersion"
-  IBMi: "'IBM' in OperatingSystemVersion"
+-   # Target multiple HMC hosts and only add running partitions to the inventory
+    plugin: ibm.power_hmc.powervm_inventory
+    hmc_hosts:
+        - hmc: <hmc_host_name>
+          user: <HMC1_Username>
+          password: <HMC1_Password>
+        - hmc: <hmc_host_name>
+          user: <HMC2_Username>
+          password: <HMC2_Password>
+    filters:
+        PartitionState: 'running'
 
-# Generate an inventory of running partitions and group them by PartitionType with a prefix of type_
-# Groups will be created will resemble "type_Virtual_IO_Server", "type_AIX_Linux", "type_OS400", etc.
-# Additionally, include the following variables as host_vars for a given target host: CurrentMemory, OperatingSystemVersion, PartitionName
----
-plugin: ibm.power_hmc.powervm_inventory
-hmc_hosts:
-  - hmc: <hmc_host_name>
-    user: <HMC1_Username>
-    password: <HMC1_Password>
-  - hmc: <hmc_host_name>
-    user: <HMC2_Username>
-    password: <HMC2_Password>
-filters:
-  PartitionState: 'running'
-keyed_groups:
-  - prefix: type
-    key: PartitionType
-compose:
-  current_memory: CurrentMemory
-  os: OperatingSystemVersion
-  name: PartitionName
-  HMCIP: AssociatedHMC
-  HMCUSERNAME: AssociatedHMCUserName
+-   # Generate an inventory of all running partitions and create a separate group for AIX 7.2 and IBMi type of partitions
+    plugin: ibm.power_hmc.powervm_inventory
+    hmc_hosts:
+        - hmc: <hmc_host_name>
+          user: <HMC1_Username>
+          password: <HMC1_Password>
+        - hmc: <hmc_host_name>
+          user: <HMC2_Username>
+          password: <HMC2_Password>
+    filters:
+        PartitionState: 'running'
+    groups:
+        AIX_72: "'7.2' in OperatingSystemVersion"
+        IBMi: "'IBM' in OperatingSystemVersion"
 
-## Generate an inventory that excludes partitions by ip, name, or the name of managed system on which they run
----
-plugin: ibm.power_hmc.powervm_inventory
-hmc_hosts:
-  - hmc: <hmc_host_name>
-    user: <HMC2_Username>
-    password: <HMC_Password>
-exclude_ip:
-  - 10.0.0.44
-  - 10.0.0.46
-exclude_lpar:
-  - aixlparnameX1
-  - aixlparnameX2
-  - vioslparnameX1
-  - vioslparnameX2
-exclude_system:
-  - Frame1-XXX-WWWWWW
-  - Frame2-XXX-WWWWWW
+-   # Generate an inventory of running partitions and group them by PartitionType with a prefix of type_
+    # Groups will be created will resemble "type_Virtual_IO_Server", "type_AIX_Linux", "type_OS400", etc.
+    # Additionally, include the following variables as host_vars for a given target host: CurrentMemory, OperatingSystemVersion, PartitionName
+    plugin: ibm.power_hmc.powervm_inventory
+    hmc_hosts:
+        - hmc: <hmc_host_name>
+          user: <HMC1_Username>
+          password: <HMC1_Password>
+        - hmc: <hmc_host_name>
+          user: <HMC2_Username>
+          password: <HMC2_Password>
+    filters:
+        PartitionState: 'running'
+    keyed_groups:
+        - prefix: type
+          key: PartitionType
+    compose:
+        current_memory: CurrentMemory
+        os: OperatingSystemVersion
+        name: PartitionName
+        HMCIP: AssociatedHMC
+        HMCUSERNAME: AssociatedHMCUserName
 
-# Generate an inventory of operating Power Servers and group them by SystemType with a prefix of type_
-# Groups will be created will resemble "type_fsp", "type_ebmc", etc.
-# Additionally, include the following variables as host_vars for a given target host: MaximumPartitions, SystemFirmware, SystemName
----
-plugin: ibm.power_hmc.powervm_inventory
-hmc_hosts:
-  - hmc: <hmc_host_name>
-    user: <HMC2_Username>
-    password: <HMC_Password>
-group_lpars_by_managed_system: false
-system_filters:
-  State: 'operating'
-system_keyed_groups:
-  - prefix: type
-    key: SystemType
-system_compose:
-  maximum_partitions: MaximumPartitions
-  system_firmware: SystemFirmware
-  HMCIP: AssociatedHMC
-  HMCUSERNAME: AssociatedHMCUserName
+-   ## Generate an inventory that excludes partitions by ip, name, or the name of managed system on which they run
+    plugin: ibm.power_hmc.powervm_inventory
+    hmc_hosts:
+        - hmc: <hmc_host_name>
+          user: <HMC2_Username>
+          password: <HMC_Password>
+    exclude_ip:
+        - 10.0.0.44
+        - 10.0.0.46
+    exclude_lpar:
+        - aixlparnameX1
+        - aixlparnameX2
+        - vioslparnameX1
+        - vioslparnameX2
+    exclude_system:
+        - Frame1-XXX-WWWWWW
+        - Frame2-XXX-WWWWWW
 
-# Generate an inventory of all running partitions and operating Power Servers
-# Create a seperate group for partitions tagged with associated group name 'production_lpars'
-# Create a seperate group for Power Servers tagged with associated group name 'Production_systems'
----
-plugin: ibm.power_hmc.powervm_inventory
-hmc_hosts:
-  - hmc: <hmc_host_name>
-    user: <HMC2_Username>
-    password: <HMC_Password>
-group_lpars_by_managed_system: false
-system_filters:
-  State: 'operating'
-groups:
-  ProductionLpars: "'production_lpars' in AssociatedGroups"
-system_groups:
-  ProductionSystems: "'Production_systems' in AssociatedGroups"
+-   # Generate an inventory of operating Power Servers and group them by SystemType with a prefix of type_
+    # Groups will be created will resemble "type_fsp", "type_ebmc", etc.
+    # Additionally, include the following variables as host_vars for a given target host: MaximumPartitions, SystemFirmware, SystemName
+    plugin: ibm.power_hmc.powervm_inventory
+    hmc_hosts:
+        - hmc: <hmc_host_name>
+          user: <HMC2_Username>
+          password: <HMC_Password>
+    group_lpars_by_managed_system: false
+    system_filters:
+        State: 'operating'
+    system_keyed_groups:
+        - prefix: type
+          key: SystemType
+    system_compose:
+        maximum_partitions: MaximumPartitions
+        system_firmware: SystemFirmware
+        HMCIP: AssociatedHMC
+        HMCUSERNAME: AssociatedHMCUserName
+
+-   # Generate an inventory of all running partitions and operating Power Servers
+    # Create a seperate group for partitions tagged with associated group name 'production_lpars'
+    # Create a seperate group for Power Servers tagged with associated group name 'Production_systems'
+    plugin: ibm.power_hmc.powervm_inventory
+    hmc_hosts:
+        - hmc: <hmc_host_name>
+          user: <HMC2_Username>
+          password: <HMC_Password>
+    group_lpars_by_managed_system: false
+    system_filters:
+        State: 'operating'
+    groups:
+        ProductionLpars: "'production_lpars' in AssociatedGroups"
+    system_groups:
+        ProductionSystems: "'Production_systems' in AssociatedGroups"
 '''
 
 import xml.etree.ElementTree as ET

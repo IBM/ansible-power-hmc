@@ -21,17 +21,17 @@ short_description: PowerOn, PowerOff, modify_syscfg, modify_hwres, facts of the 
 notes:
     - All operations except facts support passwordless authentication.
 description:
-    - "Poweron specified managed system"
-    - "Poweroff specified managed system"
-    - "Modify System configuration of the specified managed system with specified configuration details"
-    - "Modify hardware resource of the specified managed system with specified hardware resource details"
-    - "Get the facts of the specified managed system"
-    - "Enable and Disable PCM metrics"
+    - Poweron specified managed system.
+    - Poweroff specified managed system.
+    - Modify System configuration of the specified managed system with specified configuration details.
+    - Modify hardware resource of the specified managed system with specified hardware resource details.
+    - Get the facts of the specified managed system.
+    - Enable and Disable PCM metrics.
 version_added: 1.0.0
 options:
     hmc_host:
         description:
-            - The IPaddress or hostname of the HMC.
+            - The IP address or hostname of the HMC.
         required: true
         type: str
     hmc_auth:
@@ -42,7 +42,7 @@ options:
         suboptions:
             username:
                 description:
-                    - Username of the HMC to login.
+                    - Username of the HMC to log in.
                 required: true
                 type: str
             password:
@@ -51,7 +51,7 @@ options:
                 type: str
     system_name:
         description:
-            - The name or mtms (machine type model serial) of the managed system.
+            - The name or MTMS (machine type model serial) of the managed system.
         required: true
         type: str
     new_name:
@@ -61,14 +61,14 @@ options:
         type: str
     power_off_policy:
         description:
-            - power off policy to be configured on specified I(system_name).
+            - Power off policy to be configured on specified I(system_name).
             - This option works with C(modify_syscfg) I(action).
             - Configuring this option to '1' will power off the Managed System after all partitions are shutdown.
         type: int
         choices: [1, 0]
     power_on_lpar_start_policy:
         description:
-            - power on partition start policy to be configured on specified I(system_name) for the next system restart.
+            - Power on partition start policy to be configured on specified I(system_name) for the next system restart.
             - This option works with C(modify_syscfg) I(action).
         type: str
         choices: ['autostart', 'userinit', 'autorecovery']
@@ -121,8 +121,8 @@ options:
 '''
 
 EXAMPLES = '''
-- name: poweroff managed system
-  power_system:
+- name: Poweroff managed system
+  ibm.power_hmc.power_system:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -130,17 +130,17 @@ EXAMPLES = '''
     system_name: <managed_system_name/mtms>
     action: poweroff
 
-- name: poweron managed system
-  power_system:
+- name: Poweron managed system
+  ibm.power_hmc.power_system:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
       password: '{{ hmc_password }}'
-    system_name: <managed_sysystem_name/mtms>
+    system_name: <managed_system_name/mtms>
     action: poweron
 
-- name: modify managed system name, powerOn lpar start policy and powerOff policy
-  power_system:
+- name: Modify managed system name, powerOn lpar start policy and powerOff policy
+  ibm.power_hmc.power_system:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -151,8 +151,8 @@ EXAMPLES = '''
     power_on_lpar_start_policy: autostart
     action: modify_syscfg
 
-- name: modify managed system memory settings
-  power_system:
+- name: Modify managed system memory settings
+  ibm.power_hmc.power_system:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -163,8 +163,8 @@ EXAMPLES = '''
     pend_mem_region_size: auto
     action: modify_hwres
 
-- name: fetch the managed system details
-  power_system:
+- name: Fetch the managed system details
+  ibm.power_hmc.power_system:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -173,7 +173,7 @@ EXAMPLES = '''
     state: facts
 
 - name: Fetch facts about monitoring metrics
-  power_system:
+  ibm.power_hmc.power_system:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -181,8 +181,8 @@ EXAMPLES = '''
     system_name: <managed_system_name/mtms>
     state: pcm_facts
 
-- name: enable the long-term monitoring
-  power_system:
+- name: Enable the long-term monitoring
+  ibm.power_hmc.power_system:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -192,8 +192,8 @@ EXAMPLES = '''
       - LTM
     action: enable_pcm
 
-- name: disable the short-term monitoring
-  power_system:
+- name: Disable the short-term monitoring
+  ibm.power_hmc.power_system:
     hmc_host: "{{ inventory_hostname }}"
     hmc_auth:
       username: '{{ ansible_user }}'
@@ -201,7 +201,7 @@ EXAMPLES = '''
     system_name: <managed_system_name/mtms>
     metrics:
       - STM
-    action: disble_pcm
+    action: disable_pcm
 '''
 
 RETURN = '''
@@ -212,7 +212,8 @@ system_info:
 '''
 
 import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc.log"
+import os
+LOG_FILENAME = "/tmp/ansible_power_hmc_{0}.log".format(os.getpid())
 logger = logging.getLogger(__name__)
 import sys
 import json
@@ -228,10 +229,14 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_constants import
 
 
 def init_logger():
-    logging.basicConfig(
-        filename=LOG_FILENAME,
-        format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
-        level=logging.DEBUG)
+    old_umask = os.umask(0o177)
+    try:
+        logging.basicConfig(
+            filename=LOG_FILENAME,
+            format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
+            level=logging.DEBUG)
+    finally:
+        os.umask(old_umask)
 
 
 def build_dict(params):

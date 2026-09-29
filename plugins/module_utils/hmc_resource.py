@@ -849,6 +849,25 @@ class Hmc():
         parsed_res = dict((k.lower(), v) for k, v in res_dict.items())
         return parsed_res
 
+    def get_managed_system_gen(self, system_name):
+        lslic_cmd = self.CMD['LSLIC'] + \
+            self.OPT['LSLIC']['-T']['SYS'] + \
+            self.OPT['LSLIC']['-M'] + system_name + \
+            self.OPT['LSLIC']['-F']['SPNAMELEVEL']
+        raw_result = self.hmcconn.execute(lslic_cmd)
+        headers = "service_pack,level,ecnumber"
+        res_dict = self.cmdClass.parseAttributes(headers, raw_result)
+        service_pack = res_dict.get('service_pack', '').strip().lower()
+        match = re.match(r'^fw(\d+)', service_pack)
+        if not match:
+            return None
+        digits = match.group(1)
+        if digits.startswith('9'):
+            version = '9'
+        else:
+            version = digits[:2]
+        return f'power{version}'
+
     def get_io_sriov_level(self, system_name, lic_type):
 
         if lic_type == 'sriov':
@@ -1045,19 +1064,38 @@ class Hmc():
         )
         if params['system_name'] is not None:
             svc_ticket_cmd += self.OPT['MKSVCEVENT']['-M'] + str(params['system_name'])
-        if params['attributes']['service_file'] is not None:
-            csv_string = ",".join(params['attributes']['service_file'])
+
+        attributes = params['attributes']
+        if attributes is None:
+            return self.hmcconn.execute(svc_ticket_cmd)
+
+        if attributes['service_file'] is not None:
+            csv_string = ",".join(attributes['service_file'])
             csv_string += '\\"'
-            params['attributes']['service_file'] = csv_string
+            attributes['service_file'] = csv_string
         option_map = {'title': '-TITLE', 'severity': '-SEVERITY', 'contact_name': '-NAME', 'service_file': '-SERVICE_FILE',
                       'contact_phone': '-PHONE', 'contact_email': '-EMAIL', 'target_lpar_name': '-TARGET_LPAR_NAME', 'target_mtms': '-TARGET_MTMS',
-                      'lpar_name': '-LPAR_NAME'}
+                      'lpar_name': '-LPAR_NAME', 'hostname': '-HOSTNAME', 'user': '-USER', 'password': '-PASSWORD'}
         svc_ticket_cmd += self.OPT['MKSVCEVENT']['-A']
         for key in option_map:
-            if params['attributes'][key] is not None:
-                svc_ticket_cmd += self.OPT['MKSVCEVENT'][option_map[key]] + str(params['attributes'][key])
+            if attributes[key] is not None:
+                svc_ticket_cmd += self.OPT['MKSVCEVENT'][option_map[key]] + str(attributes[key])
         svc_ticket_cmd += ",is_callhome=1"
         return self.hmcconn.execute(svc_ticket_cmd)
+
+    def list_svc_events(self, params):
+        svc_events_cmd = self.CMD['LSSVCEVENTS'] + self.OPT['LSSVCEVENTS']['-T'] + str(params['event_type'])
+        if params['system_name'] is not None:
+            svc_events_cmd += self.OPT['LSSVCEVENTS']['-M'] + str(params['system_name'])
+        if params['days'] is not None:
+            svc_events_cmd += self.OPT['LSSVCEVENTS']['-D'] + str(params['days'])
+        if params['minutes'] is not None:
+            svc_events_cmd += self.OPT['LSSVCEVENTS']['-I'] + str(params['minutes'])
+        if params['number_of_events'] is not None:
+            svc_events_cmd += self.OPT['LSSVCEVENTS']['-N'] + str(params['number_of_events'])
+        if params['display_attributes'] is not None:
+            svc_events_cmd += self.OPT['LSSVCEVENTS']['-F'] + ','.join(params['display_attributes'])
+        return self.hmcconn.execute(svc_events_cmd)
 
     def create_viosecure_command(self, params, fields):
         option_map = {'port': '-PORT', 'interface': '-INTERFACE', 'remote': '-REMOTE', 'address': '-ADDRESS', 'timeout': '-TIMEOUT'}

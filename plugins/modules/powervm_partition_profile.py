@@ -21,44 +21,44 @@ author:
 short_description: Create, Copy and Update PowerVM Partition Profiles
 notes:
     - This module currently support only Processor and Memory configuration.
-    - Copy operation is supported for HMC version >= HMC V11R1
+    - Copy operation is supported for HMC version >= HMC V11R1.
 description:
-    - Create new partition profile
-    - Copy an existing partition profile
-    - Modify an existing partition profile
+    - Creates a new partition profile.
+    - Copies an existing partition profile.
+    - Modifies an existing partition profile.
 version_added: "1.2.0"
 requirements:
-- Python >= 3
+- Python >= 3.9
 - lxml
 options:
     hmc_host:
         description:
-            - IPaddress or hostname of the HMC.
+            - IP address or hostname of the HMC.
         required: true
         type: str
     hmc_auth:
         description:
-            - Username and Password credential of the HMC.
+            - Username and password credential of the HMC.
         required: true
         type: dict
         suboptions:
             username:
                 description:
-                    - HMC username.
+                    - Username of the HMC to log in.
                 required: true
                 type: str
             password:
                 description:
-                    - HMC password.
+                    - Password of the HMC.
                 type: str
     system_name:
         description:
-            - The name or mtms (machine type model serial) of the managed system.
+            - The name or MTMS (machine type model serial) of the managed system.
             - Required for I(state=present), I(action=copy) and I(state=updated).
         type: str
     vm_name:
         description:
-            - The name of the powervm partition.
+            - The name of the PowerVM partition.
         required: true
         type: str
     name:
@@ -123,7 +123,7 @@ options:
                 description:
                     - Weight value used for uncapped shared processor mode.
                     - Only valid if the C(processor_mode) is shared.
-                    - Default value is 0.0
+                    - Default value is 0.0.
                 type: int
             allow_processor_sharing:
                 description:
@@ -134,7 +134,7 @@ options:
                     - Use C(inactive) to share cycles only when the LPAR is inactive.
                     - Use C(always) for continuous sharing of idle processor cycles.
                     - Use C(never) to ensure processors are never shared (performance mode).
-                    - Default value is 'never'.
+                    - Default value is C(never).
                 type: str
             shared_processor_pool:
                 description:
@@ -144,7 +144,7 @@ options:
     memory_settings:
         description:
             - Memory configuration settings for the partition profile.
-            - Valid only for I(state=present) and I(state=updated)
+            - Valid only for I(state=present) and I(state=updated).
         type: dict
         suboptions:
             desired_memory:
@@ -180,7 +180,7 @@ options:
             active_memory_expansion:
                 description:
                     - Enable Active Memory Expansion.
-                    - Default value is 'false'.
+                    - Default value is C(False).
                 type: bool
             expansion_factor:
                 description:
@@ -200,11 +200,11 @@ options:
     duplicate_prof_name:
         description:
             - Name of the new profile to be created by copying an existing profile.
-            - Required when I(action=copy)
+            - Required when I(action=copy).
         type: str
     force:
         description:
-            - Forces update of the partition profile when set to C(true).
+            - Forces update of the partition profile when set to C(True).
             - Valid only for I(state=updated).
             - When the Sync Partition with Profile option is enabled, using this option forcefully updates the profile.
               These changes will take effect the next time the partition profile is activated.
@@ -214,19 +214,21 @@ options:
         description:
             - Desired state of the logical partition profile.
             - C(present) creates a new partition profile.
-            - C(updated) modify existing partition profile.
+            - C(updated) modifies an existing partition profile.
+            - Mutually exclusive with I(action). One of I(state) or I(action) must be provided.
         type: str
         choices: ['present', 'updated']
     action:
         description:
             - C(copy) copies an existing partition profile.
+            - Mutually exclusive with I(state). One of I(state) or I(action) must be provided.
         type: str
         choices: ['copy']
 '''
 
 EXAMPLES = '''
 - name: Create a new partition profile with dedicated processor
-  powervm_partition_profile:
+  ibm.power_hmc.powervm_partition_profile:
     hmc_host: '<hmc_host>'
     hmc_auth:
       username: '<hmc_username>'
@@ -250,7 +252,7 @@ EXAMPLES = '''
     state: present
 
 - name: Create a new partition profile with shared processor and uncapped sharing mode
-  powervm_partition_profile:
+  ibm.power_hmc.powervm_partition_profile:
     hmc_host: '<hmc_host>'
     hmc_auth:
       username: '<hmc_username>'
@@ -278,8 +280,8 @@ EXAMPLES = '''
       expansion_factor: 10
     state: present
 
-- name: Create a copy of already existing partition profile
-  powervm_partition_profile:
+- name: Create a copy of an existing partition profile
+  ibm.power_hmc.powervm_partition_profile:
     hmc_host: '<hmc_host>'
     hmc_auth:
       username: '<hmc_username>'
@@ -290,8 +292,8 @@ EXAMPLES = '''
     duplicate_prof_name: test
     action: copy
 
-- name: Modify the processor and memory settings of existing partition profile
-  powervm_partition_profile:
+- name: Modify the processor and memory settings of an existing partition profile
+  ibm.power_hmc.powervm_partition_profile:
     hmc_host: '<hmc_host>'
     hmc_auth:
       username: '<hmc_username>'
@@ -331,7 +333,7 @@ profile_info:
     description:
         - Information about the logical partition profile operation.
         - For C(state=present), contains a success message for the created profile.
-        - For C(state=copy), contains a success message for the copied profile.
+        - For C(action=copy), contains a success message for the copied profile.
     type: dict
     returned: on success
     sample:
@@ -357,7 +359,8 @@ try:
 except ImportError:
     pass  # Handled by hmc rest client module
 import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc.log"
+import os
+LOG_FILENAME = "/tmp/ansible_power_hmc_{0}.log".format(os.getpid())
 logger = logging.getLogger(__name__)
 
 allow_processor_sharing_MAP = {
@@ -369,10 +372,14 @@ allow_processor_sharing_MAP = {
 
 
 def init_logger():
-    logging.basicConfig(
-        filename=LOG_FILENAME,
-        format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
-        level=logging.DEBUG)
+    old_umask = os.umask(0o177)
+    try:
+        logging.basicConfig(
+            filename=LOG_FILENAME,
+            format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
+            level=logging.DEBUG)
+    finally:
+        os.umask(old_umask)
 
 
 def validate_sub_dict(sub_key, sub_params):
@@ -750,6 +757,8 @@ def update_partition_profile(module, params):
         'processor_settings': {k.split('.')[1]: None for k in PROFILE_FIELD_MAP if k.startswith('processor_settings.')},
         'memory_settings': {k.split('.')[1]: None for k in PROFILE_FIELD_MAP if k.startswith('memory_settings.')},
     }
+    profile_settings['processor_settings']['sharing_mode'] = None
+    profile_settings['processor_settings']['allow_processor_sharing'] = None
     user_input = {
         'processor_settings': params.get('processor_settings') or {},
         'memory_settings': params.get('memory_settings') or {}
@@ -794,6 +803,10 @@ def update_partition_profile(module, params):
         current_config = rest_conn.getCurrentPartitionProfiles(lpar_uuid, profile_uuid)
         root = etree.fromstring(current_config)
         ns = {'lpp': 'http://www.ibm.com/xmlns/systems/power/firmware/uom/mc/2012_10/'}
+        profile_elem = root.xpath(".//lpp:LogicalPartitionProfile", namespaces=ns)
+        if not profile_elem:
+            module.fail_json(msg="Could not locate LogicalPartitionProfile element in GET response")
+        profile_root = profile_elem[0]
         has_dedicated = root.xpath(".//lpp:ProcessorAttributes/lpp:HasDedicatedProcessors/text()", namespaces=ns)
         processor_mode = 'dedicated' if has_dedicated and has_dedicated[0].lower() == 'true' else 'shared'
         profile_settings['processor_settings']['processor_mode'] = processor_mode
@@ -897,7 +910,36 @@ def update_partition_profile(module, params):
             user_ame = user_input.get('memory_settings', {}).get('active_memory_expansion')
             user_exp_factor = user_input.get('memory_settings', {}).get('expansion_factor')
             apply_ame_config(config, user_ame, user_exp_factor)
-            code, result = rest_conn.updatePartitionProfile(lpar_uuid, profile_uuid, config, force=force)
+
+            lpp_ns = ns['lpp']
+            if config['processor_mode'].lower() == 'false':
+                new_proc_xml = rest_conn.sharedProcessorAttributesXML(config)
+            else:
+                new_proc_xml = rest_conn.dedicatedProcessorAttributesXML(config)
+            new_proc_xml = new_proc_xml.strip().replace(
+                '<ProcessorAttributes ', f'<ProcessorAttributes xmlns="{lpp_ns}" ', 1)
+            new_proc_elem = etree.fromstring(new_proc_xml)
+            old_proc = profile_root.xpath(".//lpp:ProcessorAttributes", namespaces=ns)
+            if old_proc:
+                parent = old_proc[0].getparent()
+                idx = list(parent).index(old_proc[0])
+                parent.remove(old_proc[0])
+                parent.insert(idx, new_proc_elem)
+
+            new_mem_xml = rest_conn.buildMemoryPayloadXML(config)
+            mem_fragment = new_mem_xml[:new_mem_xml.index('</ProfileMemory>') + len('</ProfileMemory>')]
+            mem_fragment = mem_fragment.strip().replace(
+                '<ProfileMemory ', f'<ProfileMemory xmlns="{lpp_ns}" ', 1)
+            new_mem_elem = etree.fromstring(mem_fragment)
+            old_mem = profile_root.xpath(".//lpp:ProfileMemory", namespaces=ns)
+            if old_mem:
+                parent = old_mem[0].getparent()
+                idx = list(parent).index(old_mem[0])
+                parent.remove(old_mem[0])
+                parent.insert(idx, new_mem_elem)
+
+            patched_xml = etree.tostring(profile_root, encoding='unicode')
+            code, result = rest_conn.updatePartitionProfile(lpar_uuid, profile_uuid, patched_xml, force=force)
         if code != 200:
             return False, result, None
         else:

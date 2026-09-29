@@ -15,7 +15,7 @@ DOCUMENTATION = '''
 ---
 module: vios_secure
 author:
-    - Sreenidhi S(@SreenidhiS1)
+    - Sreenidhi S (@SreenidhiS1)
 short_description: Configures firewall settings and applies security hardening rules.
 notes:
     - This module requires the HMC login user to have specific permissions.
@@ -78,7 +78,7 @@ options:
                 type: str
     system_name:
         description:
-            - The name or mtms (machine type model serial) of the managed system.
+            - The name or MTMS (machine type model serial) of the managed system.
         type: str
         required: true
     vios_name:
@@ -170,7 +170,7 @@ options:
 '''
 EXAMPLES = '''
 - name: Apply the security rule lls_maxage to VIOS
-  vios_secure:
+  ibm.power_hmc.vios_secure:
     hmc_host: '{{ hmc_ip }}'
     hmc_auth: '{{ hmc_auth }}'
     system_name: <sys>
@@ -180,16 +180,16 @@ EXAMPLES = '''
     state: setting_security
 
 - name: Get firewall information for ipv6 of VIOS
-  vios_secure:
+  ibm.power_hmc.vios_secure:
     hmc_host: '{{ hmc_ip }}'
     hmc_auth: '{{ curr_hmc_auth }}'
     system_name: <sys>
     vios_name: <vios>
     ip_version: IPV6
-  state: firewall_facts
+    state: firewall_facts
 
 - name: Configure firewall rule for port 2000 with interface en0 on VIOS
-  vios_secure:
+  ibm.power_hmc.vios_secure:
     hmc_host: '{{ hmc_ip }}'
     hmc_auth: '{{ curr_hmc_auth }}'
     system_name: <sys>
@@ -209,7 +209,8 @@ security_facts:
     returned: on success for setting vios security
 '''
 import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc.log"
+import os
+LOG_FILENAME = "/tmp/ansible_power_hmc_{0}.log".format(os.getpid())
 logger = logging.getLogger(__name__)
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_cli_client import HmcCliConnection
@@ -219,10 +220,14 @@ import sys
 
 
 def init_logger():
-    logging.basicConfig(
-        filename=LOG_FILENAME,
-        format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
-        level=logging.DEBUG)
+    old_umask = os.umask(0o177)
+    try:
+        logging.basicConfig(
+            filename=LOG_FILENAME,
+            format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
+            level=logging.DEBUG)
+    finally:
+        os.umask(old_umask)
 
 
 def validate_parameters(params):

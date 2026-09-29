@@ -40,12 +40,12 @@ description:
 
 version_added: "1.2.0"
 requirements:
-- Python >= 3
+- Python >= 3.9
 - lxml
 options:
     hmc_host:
         description:
-            - IPaddress or hostname of the HMC.
+            - IP address or hostname of the HMC.
         required: true
         type: str
     hmc_auth:
@@ -56,16 +56,16 @@ options:
         suboptions:
             username:
                 description:
-                    - HMC username.
+                    - Username of the HMC to log in.
                 required: true
                 type: str
             password:
                 description:
-                    - HMC password.
+                    - Password of the HMC.
                 type: str
     system_name:
         description:
-            - The name or mtms (machine type model serial) of the managed system..
+            - The name or MTMS (machine type model serial) of the managed system.
             - Optional for I(state=absent), I(state=facts), I(action=poweron), I(action=shutdown) and I(action=restart).
         type: str
     vm_name:
@@ -75,7 +75,7 @@ options:
         type: str
     force:
         description:
-            - This paramter is provided for force deletion of a partition.
+            - This parameter is provided for force deletion of a partition.
             - Delete a partition that is not in off state.
         type: bool
     vm_id:
@@ -140,7 +140,7 @@ options:
         choices: ['capped', 'uncapped']
     weight:
         description:
-            - The weight to be used for uncapped proc mode while create a partition with shared processor settings.
+            - The weight to be used for uncapped proc mode while creating a partition with shared processor settings.
             - Default value is '128'.
             - This value will be ignored if the C(proc_mode) is set to I(capped).
             - This parameter can be used only with C(proc_mode).
@@ -162,7 +162,7 @@ options:
         type: int
     min_mem:
         description:
-            - The maximum value of dedicated memory value in megabytes to create a partition.
+            - The minimum value of dedicated memory value in megabytes to create a partition.
             - Default value is '1024 MB'.
             - This parameter can only be used with C(mem).
         type: int
@@ -192,7 +192,7 @@ options:
         description:
             - The initial program load (IPL) source to be used while activating an IBMi partition.
             - If the user doesn't provide this option, current setting of this option in the partition will be considered.
-            - If this option provided for AIX/Linux type partition, operation gives a warning and then ignores this option and proceed with the operation.
+            - If this option is provided for AIX/Linux type partition, operation gives a warning and then ignores this option and proceed with the operation.
             - This option is valid only for C(poweron) I(action).
         type: str
         choices: ['a','b','c','d']
@@ -380,21 +380,21 @@ options:
             allowed_vlanids:
                 description:
                     - Setting controls whether the virtual NIC accepts packets with any VLAN ID.
-                    - Value can be C(All), C(None), C(comma-sepearted VLAN IDs).
+                    - Value can be C(All), C(None), C(comma-separated VLAN IDs).
                     - For comma-separated VLAN IDs values should be between 2 and 4094.
                     - Maximum number of VLAN IDs that can be provided is 20.
                     - Default value is C(All).
                     - The value of allowed_vlanids should match the setting if set to C(All), allowed_macaddr should also be C(All)
-                      and if set to C(None), allowed_macaddr should be either C(None) or C(comma-sepearted Mac-addresses).
+                      and if set to C(None), allowed_macaddr should be either C(None) or C(comma-separated Mac-addresses).
                 type: str
             allowed_macaddr:
                 description:
                     - Setting controls whether the virtual NIC accepts packets with any valid MAC Address.
-                    - Value can be C(All), C(None), C(comma-sepearted VLAN IDs).
+                    - Value can be C(All), C(None), C(comma-separated VLAN IDs).
                     - Maximum number of MAC Addresses that can be provided is 4.
                     - Default value is C(All).
                     - The value of allowed_macaddr should match the setting if set to C(All), allowed_vlanids should also be C(All)
-                      and if set to C(None), allowed_vlanids should be either C(None) or C(comma-sepearted VLAN IDs).
+                      and if set to C(None), allowed_vlanids should be either C(None) or C(comma-separated VLAN IDs).
                 type: str
             port_vlan_id:
                 description:
@@ -477,7 +477,7 @@ options:
 EXAMPLES = '''
 - name: Create an IBMi logical partition instance with shared proc, volume_config's vios_name and volume_name values, PhysicaIO and
         max_virtual_slots.
-  powervm_lpar_instance:
+  ibm.power_hmc.powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
           username: '{{ ansible_user }}'
@@ -502,7 +502,7 @@ EXAMPLES = '''
 
 - name: Create an AIX/Linux logical partition instance with default proc, mem, virt_network_config, volume_config's volumes_size and
         npiv_config, vnic_config.
-  powervm_lpar_instance:
+  ibm.power_hmc.powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
           username: '{{ ansible_user }}'
@@ -536,7 +536,7 @@ EXAMPLES = '''
       state: present
 
 - name: Delete a logical partition instance with retain_vios_cfg and delete_vdisk options.
-  powervm_lpar_instance:
+  ibm.power_hmc.powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
           username: '{{ ansible_user }}'
@@ -548,7 +548,7 @@ EXAMPLES = '''
       state: absent
 
 - name: Shutdown a logical partition.
-  powervm_lpar_instance:
+  ibm.power_hmc.powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
           username: '{{ ansible_user }}'
@@ -558,7 +558,7 @@ EXAMPLES = '''
       action: shutdown
 
 - name: Activate an AIX/Linux logical partition with user defined profile_name.
-  powervm_lpar_instance:
+  ibm.power_hmc.powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
           username: '{{ ansible_user }}'
@@ -569,7 +569,7 @@ EXAMPLES = '''
       action: poweron
 
 - name: Activate IBMi based on its current configuration with keylock and iIPLsource options.
-  powervm_lpar_instance:
+  ibm.power_hmc.powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
           username: '{{ ansible_user }}'
@@ -581,7 +581,7 @@ EXAMPLES = '''
       action: poweron
 
 - name: Create a partition with all resources.
-  powervm_lpar_instance:
+  ibm.power_hmc.powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
           username: '{{ ansible_user }}'
@@ -593,7 +593,7 @@ EXAMPLES = '''
       state: present
 
 - name: Install Aix OS on LPAR from NIM Server.
-  powervm_lpar_instance:
+  ibm.power_hmc.powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth: "{{ curr_hmc_auth }}"
       system_name: <system_name/mtms>
@@ -601,12 +601,12 @@ EXAMPLES = '''
       install_settings:
           vm_ip: <IP_address of the lpar>
           nim_ip: <IP_address of the NIM Server>
-          nim_gateway: <Gateway IP_Addres>
+          nim_gateway: <Gateway IP_Address>
           nim_subnetmask: <Subnetmask IP_Address>
       action: install_os
 
 - name: Install Linux OS on LPAR from NIM Server.
-  powervm_lpar_instance:
+  ibm.power_hmc.powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth: "{{ curr_hmc_auth }}"
       system_name: <system_name/mtms>
@@ -614,13 +614,13 @@ EXAMPLES = '''
       install_settings:
           vm_ip: <IP_address of the lpar>
           nim_ip: <IP_address of the NIM Server>
-          nim_gateway: <Gateway IP_Addres>
+          nim_gateway: <Gateway IP_Address>
           nim_subnetmask: <Subnetmask IP_Address>
           vm_mac: <mac address of lpar>
       action: install_os
 
 - name: Create an AIX/Linux logical partition instance with allowed_vlanids,port_vlan_priority
-  powervm_lpar_instance:
+  ibm.power_hmc.powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth: '{{ curr_hmc_auth }}'
       system_name: <system_name/mtms>
@@ -639,7 +639,7 @@ EXAMPLES = '''
       state: present
 
 - name: Change the name of logical partition
-  powervm_lpar_instance:
+  ibm.power_hmc.powervm_lpar_instance:
       hmc_host: '{{ inventory_hostname }}'
       hmc_auth:
           username: '{{ ansible_user }}'
@@ -661,7 +661,7 @@ partition_info:
             "MemoryMode": "Dedicated", "MigrationState": "Not_Migrating", "OperatingSystemVersion": "Unknown", \
             "PartitionID": 11, "PartitionName": "<partition-name>", "PartitionState": "not activated", \
             "PartitionType": "AIX/Linux", "PowerManagementMode": null, "ProgressState": null, "RMCState": "inactive", \
-            "ReferenceCode": "", "RemoteRestartState": "Invalid", "ResourceMonitoringIPAddress": null, "SharingMode": "sre idle proces"}
+            "ReferenceCode": "", "RemoteRestartState": "Invalid", "ResourceMonitoringIPAddress": null, "SharingMode": "share_idle_procs"}
     returned: on success for state C(present)
 '''
 
@@ -690,15 +690,20 @@ except ImportError:
 
 # Generic setting for log initializing and log rotation
 import logging
-LOG_FILENAME = "/tmp/ansible_power_hmc.log"
+import os
+LOG_FILENAME = "/tmp/ansible_power_hmc_{0}.log".format(os.getpid())
 logger = logging.getLogger(__name__)
 
 
 def init_logger():
-    logging.basicConfig(
-        filename=LOG_FILENAME,
-        format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
-        level=logging.DEBUG)
+    old_umask = os.umask(0o177)
+    try:
+        logging.basicConfig(
+            filename=LOG_FILENAME,
+            format='[%(asctime)s] %(levelname)s: [%(funcName)s] %(message)s',
+            level=logging.DEBUG)
+    finally:
+        os.umask(old_umask)
 
 
 def validate_proc_mem(system_dom, proc, mem, max_proc, min_proc, max_mem, min_mem, weight, min_proc_unit, max_proc_unit, proc_unit=None):

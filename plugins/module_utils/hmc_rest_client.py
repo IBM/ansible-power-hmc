@@ -30,6 +30,18 @@ systems/power/firmware/uom/mc/2012_10/" xmlns="http://www.ibm.com/xmlns/systems/
 VIOS_NS = 'VirtualIOServer xmlns:VirtualIOServer="http://www.ibm.com/xmlns/\
 systems/power/firmware/uom/mc/2012_10/" xmlns="http://www.ibm.com/xmlns/systems/power\
 /firmware/uom/mc/2012_10/" xmlns:ns2="http://www.w3.org/XML/1998/namespace/k2"'
+VSWITCH_NS = 'VirtualSwitch xmlns:VirtualSwitch="http://www.ibm.com/xmlns/\
+systems/power/firmware/uom/mc/2012_10/" xmlns="http://www.ibm.com/xmlns/systems/power\
+/firmware/uom/mc/2012_10/" xmlns:ns2="http://www.w3.org/XML/1998/namespace/k2"'
+VNETWORK_NS = 'VirtualNetwork xmlns:VirtualNetwork="http://www.ibm.com/xmlns/\
+systems/power/firmware/uom/mc/2012_10/" xmlns="http://www.ibm.com/xmlns/systems/power\
+/firmware/uom/mc/2012_10/" xmlns:ns2="http://www.w3.org/XML/1998/namespace/k2"'
+CNA_NS = 'ClientNetworkAdapter xmlns:ClientNetworkAdapter="http://www.ibm.com/xmlns/\
+systems/power/firmware/uom/mc/2012_10/" xmlns="http://www.ibm.com/xmlns/systems/power\
+/firmware/uom/mc/2012_10/" xmlns:ns2="http://www.w3.org/XML/1998/namespace/k2"'
+NBRIDGE_NS = 'NetworkBridge xmlns:NetworkBridge="http://www.ibm.com/xmlns/\
+systems/power/firmware/uom/mc/2012_10/" xmlns="http://www.ibm.com/xmlns/systems/power\
+/firmware/uom/mc/2012_10/" xmlns:ns2="http://www.w3.org/XML/1998/namespace/k2"'
 
 
 def xml_strip_namespace(xml_str):
@@ -57,8 +69,6 @@ def parse_error_response(error):
             error_msg_l = dom.xpath("//Message")
             if error_msg_l:
                 error_msg = error_msg_l[0].text
-                if "Failed to unmarshal input payload" in error_msg:
-                    error_msg = "Current HMC version might not support some of input settings or invalid input"
             else:
                 error_msg = "Unknown http error"
     else:
@@ -2547,7 +2557,8 @@ class HmcRestClient:
             logger.error("listViosUpdates request failed: %s", str(e))
             return None
 
-    def LICQueryRepository(self, system_uuid, system_name, source_file, type="io", level=None):
+    def LICQueryRepository(self, system_uuid, system_name, source_file, type="io", level=None,
+                           hostname=None, username=None, password=None, directory=None, keyfile=None):
         url = f"https://{self.hmc_ip}/rest/api/uom/ManagedSystem/{system_uuid}/do/LICQueryRepository"
         header = {
             "X-API-Session": self.session,
@@ -2591,6 +2602,21 @@ class HmcRestClient:
                 "ParameterName": "filter",
                 "ParameterValue": "os=vios"
             })
+
+        # Optional SFTP connection parameters
+        for param_name, param_value in [
+            ("hostname", hostname),
+            ("username", username),
+            ("password", password),
+            ("directory", directory),
+            ("keyfile", keyfile),
+        ]:
+            if param_value:
+                job_parameters.append({
+                    "Metadata": {"Atom": ""},
+                    "ParameterName": param_name,
+                    "ParameterValue": param_value
+                })
 
         payload = {
             "JobRequest": {
@@ -2738,7 +2764,7 @@ class HmcRestClient:
             raise HmcError(f"Unexpected job status: {status}")
         except Exception as e:
             logger.error("Failed to check job status: %s", e)
-            return "Error"
+            raise
 
     def getAllPartitionProfiles(self, lpar_uuid, profile_name=None):
         url = "https://{0}/rest/api/uom/LogicalPartition/{1}/LogicalPartitionProfile".format(self.hmc_ip, lpar_uuid)
@@ -3021,24 +3047,7 @@ class HmcRestClient:
             return 200, profile_name_elements[0].text
         return "Error: Profile creation failed with unknown error"
 
-    def updatePartitionProfile(self, lpar_uuid, partition_uuid, params, force=False):
-        partiton_profile_xmlstr = ''
-        template_partition_profile = '''<LogicalPartitionProfile:LogicalPartitionProfile
-                                    xmlns:LogicalPartitionProfile="http://www.ibm.com/xmlns/systems/power/firmware/uom/mc/2012_10/"
-                                    xmlns="http://www.ibm.com/xmlns/systems/power/firmware/uom/mc/2012_10/"
-                                    xmlns:ns2="http://www.w3.org/XML/1998/namespace/k2" schemaVersion="V1_0">'''
-        partiton_profile_xmlstr += template_partition_profile
-        if params['processor_mode'].lower() == 'false':
-            partiton_profile_xmlstr += self.sharedProcessorPayload(params)
-        else:
-            partiton_profile_xmlstr += self.dedicatedProcessorPayload(params)
-        partiton_profile_xmlstr += self.buildMemoryPayloadXML(params)
-        if 'sharing_mode' in params:
-            if params['sharing_mode'] == 'capped':
-                xml_tree = etree.fromstring(partiton_profile_xmlstr.encode())
-                for elem in xml_tree.xpath('.//*[local-name()="UncappedWeight"]'):
-                    elem.getparent().remove(elem)
-                    partiton_profile_xmlstr = etree.tostring(xml_tree, encoding='unicode')
+    def updatePartitionProfile(self, lpar_uuid, partition_uuid, patched_xml, force=False):
         url = "https://{0}/rest/api/uom/LogicalPartition/{1}/LogicalPartitionProfile/{2}".format(self.hmc_ip, lpar_uuid, partition_uuid)
         if force:
             url += "?force=true"
@@ -3048,7 +3057,7 @@ class HmcRestClient:
         try:
             resp = open_url(url,
                             headers=header,
-                            data=partiton_profile_xmlstr,
+                            data=patched_xml,
                             method='POST',
                             validate_certs=False,
                             force_basic_auth=True,
@@ -3067,4 +3076,1136 @@ class HmcRestClient:
         profile_name_elements = post_response.xpath("//ProfileName")
         if profile_name_elements:
             return 200, profile_name_elements[0].text
-        return "Error: Profile creation failed with unknown error"
+        return "Error: Profile Updation failed with unknown error"
+
+    def getVirtualSwitches(self, system_uuid):
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/VirtualSwitch".format(self.hmc_ip, system_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': 'application/vnd.ibm.powervm.uom+xml; type=VirtualSwitch'}
+
+        try:
+            resp = open_url(url,
+                            headers=header,
+                            method='GET',
+                            validate_certs=False,
+                            force_basic_auth=True,
+                            timeout=300)
+
+            if resp.code == 204:
+                return None
+
+            response = resp.read()
+            if not response:
+                return None
+
+            virtual_switches_root = xml_strip_namespace(response)
+            return virtual_switches_root
+        except Exception as error:
+            logger.debug("Get of Virtual Switches failed: %s", repr(error))
+            raise
+
+    def createVirtualSwitch(self, system_uuid, switch_name, switch_mode):
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/VirtualSwitch".format(self.hmc_ip, system_uuid)
+        header = {'X-API-Session': self.session,
+                  'Content-Type': 'application/vnd.ibm.powervm.uom+xml; type=VirtualSwitch',
+                  'Accept': 'application/atom+xml'}
+
+        payload = '''<VirtualSwitch schemaVersion="V1_0">
+            <SwitchMode kb="CUD" kxe="false">{0}</SwitchMode>
+            <SwitchName kxe="false" kb="CUD">{1}</SwitchName>
+            <VirtualNetworks kb="CUD" kxe="false"/>
+        </VirtualSwitch>'''.format(switch_mode, switch_name)
+        payload = payload.replace("VirtualSwitch", VSWITCH_NS, 1)
+        try:
+            resp = open_url(url,
+                            headers=header,
+                            data=payload,
+                            method='PUT',
+                            validate_certs=False,
+                            force_basic_auth=True,
+                            timeout=300)
+
+            response = resp.read()
+            if not response:
+                return None
+            virtual_switch_dom = xml_strip_namespace(response)
+            if virtual_switch_dom is None:
+                return None
+            return virtual_switch_dom
+        except Exception:
+            raise
+
+    def updateVirtualSwitch(self, system_uuid, switch_uuid, switch_name, switch_mode, switch_id):
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/VirtualSwitch/{2}".format(self.hmc_ip, system_uuid, switch_uuid)
+        header = {'X-API-Session': self.session,
+                  'Content-Type': 'application/vnd.ibm.powervm.uom+xml; type=VirtualSwitch',
+                  'Accept': 'application/atom+xml'}
+
+        payload = '''<VirtualSwitch schemaVersion="V1_0">
+            <SwitchMode kb="CUD" kxe="false">{0}</SwitchMode>
+            <SwitchName kxe="false" kb="CUD">{1}</SwitchName>
+            <VirtualNetworks kb="CUD" kxe="false"/>
+        </VirtualSwitch>'''.format(switch_mode, switch_name)
+        payload = payload.replace("VirtualSwitch", VSWITCH_NS, 1)
+        try:
+            resp = open_url(url,
+                            headers=header,
+                            data=payload,
+                            method='POST',
+                            validate_certs=False,
+                            force_basic_auth=True,
+                            timeout=300)
+            response = resp.read()
+            if not response:
+                return None
+            virtual_switch_dom = xml_strip_namespace(response)
+            return virtual_switch_dom
+        except Exception:
+            raise
+
+    def getVirtualSwitchByName(self, system_uuid, switch_name):
+        try:
+            virtual_switches_dom = self.getVirtualSwitches(system_uuid)
+            if not virtual_switches_dom:
+                return None, None, None
+
+            switches = virtual_switches_dom.xpath("//VirtualSwitch")
+            for switch in switches:
+                name_elem = switch.xpath(".//SwitchName")
+                if name_elem and name_elem[0].text == switch_name:
+                    uuid_elem = switch.xpath(".//Metadata/Atom/AtomID")
+                    switch_uuid = uuid_elem[0].text if uuid_elem else None
+                    id_elem = switch.xpath(".//SwitchID")
+                    switch_id = id_elem[0].text if id_elem else None
+                    mode_elem = switch.xpath(".//SwitchMode")
+                    switch_mode = mode_elem[0].text if mode_elem else None
+                    return switch_uuid, switch_id, switch_mode
+
+            return None, None, None
+        except Exception as error:
+            logger.debug("Get Virtual Switch by name failed: %s", repr(error))
+            raise
+
+    def deleteVirtualSwitch(self, system_uuid, switch_uuid):
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/VirtualSwitch/{2}".format(self.hmc_ip, system_uuid, switch_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': 'application/atom+xml'}
+        try:
+            open_url(url,
+                     headers=header,
+                     method='DELETE',
+                     validate_certs=False,
+                     force_basic_auth=True,
+                     timeout=300)
+
+            return True
+        except Exception:
+            raise
+
+    def getVirtualNetworks(self, system_uuid):
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/VirtualNetwork".format(self.hmc_ip, system_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': 'application/vnd.ibm.powervm.uom+xml; type=VirtualNetwork'}
+
+        try:
+            resp = open_url(url,
+                            headers=header,
+                            method='GET',
+                            validate_certs=False,
+                            force_basic_auth=True,
+                            timeout=300)
+
+            if resp.code == 204:
+                return None
+
+            response = resp.read()
+            if not response:
+                return None
+
+            virtual_networks_root = xml_strip_namespace(response)
+            return virtual_networks_root
+        except Exception as error:
+            logger.debug("Get of Virtual Networks failed: %s", repr(error))
+            raise
+
+    def createVirtualNetwork(self, system_uuid, network_name, network_vlan_id, switch_href, switch_id, switch_name, tagged_network):
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/VirtualNetwork".format(self.hmc_ip, system_uuid)
+        header = {'X-API-Session': self.session,
+                  'Content-Type': 'application/vnd.ibm.powervm.uom+xml; type=VirtualNetwork',
+                  'Accept': 'application/atom+xml'}
+
+        tagged_str = 'true' if tagged_network else 'false'
+        payload = '''<VirtualNetwork schemaVersion="V1_0">
+                <AssociatedSwitch kxe="false" kb="COD" href="{0}" rel="related"/>
+                <NetworkName kxe="false" kb="CUR">{1}</NetworkName>
+                <NetworkVLANID kxe="false" kb="COD">{2}</NetworkVLANID>
+                <VswitchID kb="ROR" kxe="false">{3}</VswitchID>
+                <VirtualSwitchName ksv="V1_12_0" kb="ROR" kxe="false">{4}</VirtualSwitchName>
+                <TaggedNetwork kxe="false" kb="COD">{5}</TaggedNetwork>
+            </VirtualNetwork>'''.format(switch_href, network_name, network_vlan_id, switch_id, switch_name, tagged_str)
+        payload = payload.replace("VirtualNetwork", VNETWORK_NS, 1)
+        try:
+            resp = open_url(url,
+                            headers=header,
+                            data=payload,
+                            method='PUT',
+                            validate_certs=False,
+                            force_basic_auth=True,
+                            timeout=300)
+
+            response = resp.read()
+            if not response:
+                return None
+            virtual_network_dom = xml_strip_namespace(response)
+            if virtual_network_dom is None:
+                return None
+            return virtual_network_dom
+        except Exception:
+            raise
+
+    def updateVirtualNetwork(self, system_uuid, network_uuid, new_network_name):
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/VirtualNetwork/{2}".format(self.hmc_ip, system_uuid, network_uuid)
+        header = {'X-API-Session': self.session,
+                  'Content-Type': 'application/vnd.ibm.powervm.uom+xml; type=VirtualNetwork',
+                  'Accept': 'application/atom+xml'}
+        payload = '''<VirtualNetwork schemaVersion="V1_0">
+            <NetworkName kxe="false" kb="CUR">{0}</NetworkName>
+        </VirtualNetwork>'''.format(new_network_name)
+        payload = payload.replace("VirtualNetwork", VNETWORK_NS, 1)
+        try:
+            resp = open_url(url,
+                            headers=header,
+                            data=payload,
+                            method='POST',
+                            validate_certs=False,
+                            force_basic_auth=True,
+                            timeout=300)
+
+            response = resp.read()
+            if not response:
+                return None
+            virtual_network_dom = xml_strip_namespace(response)
+            if virtual_network_dom is None:
+                return None
+            return virtual_network_dom
+        except Exception:
+            raise
+
+    def deleteVirtualNetwork(self, system_uuid, network_uuid):
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/VirtualNetwork/{2}".format(self.hmc_ip, system_uuid, network_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': 'application/atom+xml'}
+        try:
+            open_url(url,
+                     headers=header,
+                     method='DELETE',
+                     validate_certs=False,
+                     force_basic_auth=True,
+                     timeout=300)
+
+            return True
+        except Exception:
+            raise
+
+    def getViosClientNetworkAdapters(self, vios_uuid):
+        """Return a list of parsed CNA DOM elements for *vios_uuid* (VirtualIOServer), or an empty list."""
+        url = "https://{0}/rest/api/uom/VirtualIOServer/{1}/ClientNetworkAdapter".format(
+            self.hmc_ip, vios_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': 'application/vnd.ibm.powervm.uom+xml; type=ClientNetworkAdapter'}
+
+        try:
+            resp = open_url(url,
+                            headers=header,
+                            method='GET',
+                            validate_certs=False,
+                            force_basic_auth=True,
+                            timeout=300)
+
+            if resp.code == 204:
+                return []
+
+            response = resp.read()
+            if not response:
+                return []
+
+            root = xml_strip_namespace(response)
+            if root is None:
+                logger.debug("getViosClientNetworkAdapters: xml_strip_namespace returned None")
+                return []
+            return root.xpath("//ClientNetworkAdapter")
+        except Exception as error:
+            logger.debug("Get of VIOS Client Network Adapters failed: %s", repr(error))
+            raise
+
+    def getClientNetworkAdapters(self, lpar_uuid):
+        """Return a list of parsed CNA DOM elements for *lpar_uuid*, or an empty list."""
+        url = "https://{0}/rest/api/uom/LogicalPartition/{1}/ClientNetworkAdapter".format(
+            self.hmc_ip, lpar_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': 'application/vnd.ibm.powervm.uom+xml; type=ClientNetworkAdapter'}
+
+        try:
+            resp = open_url(url,
+                            headers=header,
+                            method='GET',
+                            validate_certs=False,
+                            force_basic_auth=True,
+                            timeout=300)
+
+            if resp.code == 204:
+                return []
+
+            response = resp.read()
+            if not response:
+                return []
+
+            root = xml_strip_namespace(response)
+            if root is None:
+                logger.debug("getClientNetworkAdapters: xml_strip_namespace returned None")
+                return []
+            return root.xpath("//ClientNetworkAdapter")
+        except Exception as error:
+            logger.debug("Get of Client Network Adapters failed: %s", repr(error))
+            raise
+
+    def createClientNetworkAdapter(self, lpar_uuid, system_uuid, network_uuid,
+                                   vlan_id, switch_href, virtual_ethernet_adapter_id=None,
+                                   mac_address=None, allowed_os_mac_addresses=None,
+                                   tagged_vlan_ids=None, partition_type='LogicalPartition'):
+        """Create a Client Network Adapter on *lpar_uuid* connected to *network_uuid*.
+
+        PUTs a minimal ClientNetworkAdapter XML to the sub-resource collection URL.
+        vlan_id and switch_href are sourced from the target VirtualNetwork.
+        allowed_os_mac_addresses: string value for AllowedOperatingSystemMACAddresses
+            (e.g. 'ALL', 'NONE', or space-separated MACs). Defaults to 'ALL'.
+        tagged_vlan_ids: space-separated VLAN IDs string for TaggedVLANIDs when the
+            new adapter should have tagged VLAN support enabled from creation.
+        partition_type: 'LogicalPartition' (default) or 'VirtualIOServer'.
+        """
+        url = "https://{0}/rest/api/uom/{1}/{2}/ClientNetworkAdapter".format(
+            self.hmc_ip, partition_type, lpar_uuid)
+
+        # Build the virtual network href exactly as the HMC returns it on GET.
+        vn_href = "https://{0}:443/rest/api/uom/ManagedSystem/{1}/VirtualNetwork/{2}".format(
+            self.hmc_ip, system_uuid, network_uuid)
+
+        vsn_payload = ''
+        if virtual_ethernet_adapter_id is not None:
+            vsn_payload = '\n    <VirtualSlotNumber kb="COD" kxe="false">{0}</VirtualSlotNumber>'.format(
+                virtual_ethernet_adapter_id)
+
+        mac_payload = ''
+        if mac_address is not None:
+            mac_payload = '\n    <MACAddress kxe="false" kb="CUR">{0}</MACAddress>'.format(
+                mac_address.replace(':', '').upper())
+
+        _allowed_os_mac = allowed_os_mac_addresses if allowed_os_mac_addresses is not None else 'ALL'
+        allowed_os_mac_payload = '\n    <AllowedOperatingSystemMACAddresses kb="CUD" kxe="false">{0}</AllowedOperatingSystemMACAddresses>'.format(
+            _allowed_os_mac)
+
+        if tagged_vlan_ids:
+            tvlan_payload = (
+                '\n    <TaggedVLANIDs kxe="false" kb="CUA">{0}</TaggedVLANIDs>'
+                '\n    <TaggedVLANSupported kb="CUA" kxe="false">true</TaggedVLANSupported>'
+            ).format(tagged_vlan_ids)
+        else:
+            tvlan_payload = '\n    <TaggedVLANSupported kb="CUA" kxe="false">false</TaggedVLANSupported>'
+
+        payload = '''<ClientNetworkAdapter schemaVersion="V1_0">
+    <Metadata><Atom/></Metadata>{0}{1}{2}
+    <PortVLANID kxe="false" kb="CUR">{3}</PortVLANID>
+    <QualityOfServicePriorityEnabled kxe="false" kb="CUD">false</QualityOfServicePriorityEnabled>{4}
+    <AssociatedVirtualSwitch kb="CUD" kxe="false">
+        <link href="{5}" rel="related"/>
+    </AssociatedVirtualSwitch>
+    <VirtualNetworks kb="CUR" kxe="false">
+        <link href="{6}" rel="related"/>
+    </VirtualNetworks>
+</ClientNetworkAdapter>'''.format(vsn_payload, mac_payload, allowed_os_mac_payload,
+                                  vlan_id, tvlan_payload, switch_href, vn_href)
+        payload = payload.replace("ClientNetworkAdapter", CNA_NS, 1)
+
+        header = {'X-API-Session': self.session,
+                  'Content-Type': 'application/vnd.ibm.powervm.uom+xml; type=ClientNetworkAdapter',
+                  'Accept': 'application/atom+xml'}
+
+        logger.debug("createClientNetworkAdapter URL: %s", url)
+        logger.debug("createClientNetworkAdapter PAYLOAD:\n%s", payload)
+
+        resp = open_url(url,
+                        headers=header,
+                        data=payload,
+                        method='POST' if mac_address is not None else 'PUT',
+                        validate_certs=False,
+                        force_basic_auth=True,
+                        timeout=300)
+
+        logger.debug("createClientNetworkAdapter response code: %s", resp.code)
+        response = resp.read()
+        if not response:
+            return True
+        try:
+            return xml_strip_namespace(response)
+        except Exception:
+            # A non-XML or empty body just means success (e.g. 201 Created with no body)
+            return True
+
+    def updateClientNetworkAdapter(self, lpar_uuid, adapter_uuid,
+                                   mac_address=None, allowed_os_mac_addresses=None,
+                                   qos_priority_enabled=None, qos_priority=None,
+                                   vsi_type_id=None, vsi_manager_id=None, vsi_type_version=None,
+                                   virtual_network_href=None, tagged_vlan_id=None,
+                                   detach_vn_href=None, detach_tagged_vlan_id=None,
+                                   partition_type='LogicalPartition'):
+        """Update a Client Network Adapter's settings (MAC, QoS, OS MAC restrictions, 802.1Qbg).
+
+        The HMC requires VirtualSlotNumber and PortVLANID in every POST, so both are
+        fetched via GET first. Only the fields the caller wants to change are included
+        beyond that. MAC addresses in mac_address and allowed_os_mac_addresses are
+        normalised to no-colon uppercase format as expected by the HMC API.
+        tagged_vlan_id: when adding a new VirtualNetwork to an existing slot, pass the
+        VLAN ID of the new network so it is merged into the TaggedVLANIDs field.
+        detach_vn_href: href of a VirtualNetwork link to *remove* from VirtualNetworks.
+        detach_tagged_vlan_id: VLAN ID string to *remove* from TaggedVLANIDs after detach.
+        partition_type: 'LogicalPartition' (default) or 'VirtualIOServer'.
+        """
+        url = "https://{0}/rest/api/uom/{1}/{2}/ClientNetworkAdapter/{3}".format(
+            self.hmc_ip, partition_type, lpar_uuid, adapter_uuid)
+
+        # HMC API expects MAC addresses without colons (e.g. B608907CA607)
+        def _strip_colons(mac):
+            return mac.replace(':', '').upper()
+
+        # Fetch the current CNA XML — needed to replay as POST with changes applied
+        get_header = {'X-API-Session': self.session, 'Accept': 'application/atom+xml'}
+        get_resp = open_url(url, headers=get_header, method='GET',
+                            validate_certs=False, force_basic_auth=True, timeout=300)
+        raw_get = get_resp.read()
+
+        # Parse preserving namespaces so we can re-serialise faithfully
+        from lxml import etree as _et
+        ns_parser = _et.XMLParser(recover=True, encoding='utf-8')
+        ns_root = _et.fromstring(raw_get if isinstance(raw_get, bytes) else raw_get.encode('utf-8'),
+                                 ns_parser)
+
+        # Locate the ClientNetworkAdapter element inside the Atom <content> wrapper
+        _UOM_NS = 'http://www.ibm.com/xmlns/systems/power/firmware/uom/mc/2012_10/'
+        _cna_tag = '{{{0}}}ClientNetworkAdapter'.format(_UOM_NS)
+        cna_el = ns_root.find('.//' + _cna_tag)
+        if cna_el is None:
+            # Fallback: root may already be the CNA
+            cna_el = ns_root
+
+        def _set_ns_field(el, local_name, value):
+            """Update or insert a UOM namespace child element by local name.
+
+            For existing elements the kb attribute is left exactly as the HMC
+            returned it on GET — the HMC schema dictates which value is valid
+            per field and changing it (e.g. CUR→CUD) causes REST0001.
+            Only newly inserted elements get kb="CUD".
+            """
+            qname = '{{{0}}}{1}'.format(_UOM_NS, local_name)
+            nodes = el.findall('.//' + qname)
+            if nodes:
+                nodes[0].text = value
+            else:
+                new_el = _et.SubElement(el, qname)
+                new_el.set('kb', 'CUD')
+                new_el.set('kxe', 'false')
+                new_el.text = value
+
+        if mac_address is not None:
+            _set_ns_field(cna_el, 'MACAddress', _strip_colons(mac_address))
+        if virtual_network_href is not None:
+            qname = '{{{0}}}VirtualNetworks'.format(_UOM_NS)
+            virtual_networks_el = cna_el.find('.//' + qname)
+            if virtual_networks_el is None:
+                virtual_networks_el = _et.SubElement(cna_el, qname)
+                virtual_networks_el.set('kb', 'CUR')
+                virtual_networks_el.set('kxe', 'false')
+            _LINK_TAG = '{{{0}}}link'.format(_UOM_NS)
+            existing_links = virtual_networks_el.findall('.//' + _LINK_TAG)
+            if not any(link.get('href') == virtual_network_href for link in existing_links):
+                new_link = _et.SubElement(virtual_networks_el, _LINK_TAG)
+                new_link.set('href', virtual_network_href)
+                new_link.set('rel', 'related')
+        _needs_tvlan_fixup = False
+        if tagged_vlan_id is not None:
+            # Merge the new VLAN ID into the space-separated TaggedVLANIDs list and
+            # ensure TaggedVLANSupported is true, as required by the HMC when multiple
+            # virtual networks share a slot.
+            _tvlan_qname = '{{{0}}}TaggedVLANIDs'.format(_UOM_NS)
+            _tvsup_qname = '{{{0}}}TaggedVLANSupported'.format(_UOM_NS)
+            tvlan_nodes = cna_el.findall('.//' + _tvlan_qname)
+            _vlan_str = str(tagged_vlan_id)
+            if tvlan_nodes:
+                existing_ids = tvlan_nodes[0].text.split() if tvlan_nodes[0].text else []
+                if _vlan_str not in existing_ids:
+                    existing_ids.append(_vlan_str)
+                tvlan_nodes[0].text = ' '.join(existing_ids)
+            else:
+                # lxml always serialises a new element with the registered prefix
+                # for the UOM namespace (ClientNetworkAdapter:) rather than the
+                # default namespace, which the HMC rejects. Work around this by
+                # inserting using makeelement (inherits nsmap) and fixing up the
+                # serialised string afterwards.
+                tvsup_nodes = cna_el.findall('.//' + _tvsup_qname)
+                if tvsup_nodes:
+                    new_tvlan = tvsup_nodes[0].makeelement(_tvlan_qname,
+                                                           {'kb': 'CUA', 'kxe': 'false'})
+                    new_tvlan.text = _vlan_str
+                    cna_el.insert(list(cna_el).index(tvsup_nodes[0]), new_tvlan)
+                else:
+                    new_tvlan = cna_el.makeelement(_tvlan_qname,
+                                                   {'kb': 'CUA', 'kxe': 'false'})
+                    new_tvlan.text = _vlan_str
+                    cna_el.append(new_tvlan)
+                _needs_tvlan_fixup = True
+            # Ensure TaggedVLANSupported is set to true
+            tvsup_nodes = cna_el.findall('.//' + _tvsup_qname)
+            if tvsup_nodes:
+                tvsup_nodes[0].text = 'true'
+            else:
+                _set_ns_field(cna_el, 'TaggedVLANSupported', 'true')
+                _needs_tvlan_fixup = True
+        if detach_vn_href is not None:
+            # Remove the specified VirtualNetwork link from the VirtualNetworks element
+            _vn_qname = '{{{0}}}VirtualNetworks'.format(_UOM_NS)
+            _LINK_TAG = '{{{0}}}link'.format(_UOM_NS)
+            vn_el = cna_el.find('.//' + _vn_qname)
+            if vn_el is not None:
+                for link in vn_el.findall('.//' + _LINK_TAG):
+                    if link.get('href') == detach_vn_href:
+                        vn_el.remove(link)
+                        break
+        if detach_tagged_vlan_id is not None:
+            # Remove the specified VLAN ID from the space-separated TaggedVLANIDs list.
+            # If the list becomes empty afterwards, set TaggedVLANSupported to false and
+            # clear the TaggedVLANIDs text rather than leaving an empty element.
+            _tvlan_qname = '{{{0}}}TaggedVLANIDs'.format(_UOM_NS)
+            _tvsup_qname = '{{{0}}}TaggedVLANSupported'.format(_UOM_NS)
+            tvlan_nodes = cna_el.findall('.//' + _tvlan_qname)
+            if tvlan_nodes:
+                existing_ids = tvlan_nodes[0].text.split() if tvlan_nodes[0].text else []
+                updated_ids = [v for v in existing_ids if v != str(detach_tagged_vlan_id)]
+                if updated_ids:
+                    tvlan_nodes[0].text = ' '.join(updated_ids)
+                else:
+                    tvlan_nodes[0].text = ''
+                    # No tagged VLANs remain — disable TaggedVLANSupported
+                    tvsup_nodes = cna_el.findall('.//' + _tvsup_qname)
+                    if tvsup_nodes:
+                        tvsup_nodes[0].text = 'false'
+        if allowed_os_mac_addresses is not None:
+            if allowed_os_mac_addresses in ('ALL', 'NONE'):
+                _oa = allowed_os_mac_addresses
+            else:
+                _oa = ' '.join(_strip_colons(m) for m in allowed_os_mac_addresses.split())
+            _set_ns_field(cna_el, 'AllowedOperatingSystemMACAddresses', _oa)
+        if qos_priority_enabled is not None:
+            _set_ns_field(cna_el, 'QualityOfServicePriorityEnabled',
+                          'true' if qos_priority_enabled else 'false')
+        _needs_qp_fixup = False
+        _qp_qname = '{{{0}}}QualityOfServicePriority'.format(_UOM_NS)
+        _qpe_qname = '{{{0}}}QualityOfServicePriorityEnabled'.format(_UOM_NS)
+        if qos_priority is not None:
+            _qp_nodes = cna_el.findall('.//' + _qp_qname)
+            if _qp_nodes:
+                _qp_nodes[0].text = str(qos_priority)
+            else:
+                # Insert immediately BEFORE QualityOfServicePriorityEnabled —
+                # the HMC schema places QualityOfServicePriority before the
+                # Enabled flag. Use makeelement so the new node inherits the
+                # nsmap and lxml doesn't serialise it with a prefixed tag name.
+                _qpe_nodes = cna_el.findall('.//' + _qpe_qname)
+                new_qp = (_qpe_nodes[0] if _qpe_nodes else cna_el).makeelement(
+                    _qp_qname, {'kb': 'CUD', 'kxe': 'false'})
+                new_qp.text = str(qos_priority)
+                if _qpe_nodes:
+                    cna_el.insert(list(cna_el).index(_qpe_nodes[0]), new_qp)
+                else:
+                    cna_el.append(new_qp)
+                _needs_qp_fixup = True
+        elif qos_priority_enabled:
+            # HMC REST0149: enabling QoS requires QualityOfServicePriority in the
+            # same payload. If the caller did not supply a value, read the current
+            # element value from the GET response and write it back unchanged.
+            # Fall back to '0' if the element was absent (adapter never had QoS).
+            _qp_nodes = cna_el.findall('.//' + _qp_qname)
+            if _qp_nodes:
+                # Element already in GET response — text is fine as-is, nothing to do.
+                pass
+            else:
+                # Element absent — insert BEFORE QualityOfServicePriorityEnabled.
+                _qpe_nodes = cna_el.findall('.//' + _qpe_qname)
+                new_qp = (_qpe_nodes[0] if _qpe_nodes else cna_el).makeelement(
+                    _qp_qname, {'kb': 'CUD', 'kxe': 'false'})
+                new_qp.text = '0'
+                if _qpe_nodes:
+                    cna_el.insert(list(cna_el).index(_qpe_nodes[0]), new_qp)
+                else:
+                    cna_el.append(new_qp)
+                _needs_qp_fixup = True
+        if vsi_type_id is not None:
+            _set_ns_field(cna_el, 'VirtualStationInterfaceTypeID', str(vsi_type_id))
+        if vsi_manager_id is not None:
+            _set_ns_field(cna_el, 'VirtualStationInterfaceManagerID', str(vsi_manager_id))
+        if vsi_type_version is not None:
+            _set_ns_field(cna_el, 'VirtualStationInterfaceTypeVersion', str(vsi_type_version))
+
+        # Re-serialise the modified CNA element preserving its original namespaces
+        payload = _et.tostring(cna_el, encoding='unicode')
+
+        # lxml serialises newly inserted UOM elements with the ClientNetworkAdapter:
+        # prefix instead of the default namespace. Strip that prefix from all
+        # affected leaf elements so the HMC receives well-formed XML.
+        if _needs_tvlan_fixup or _needs_qp_fixup:
+            _uom_prefix = next(
+                (p for p, ns in cna_el.nsmap.items() if ns == _UOM_NS and p is not None),
+                None)
+            if _uom_prefix:
+                _fixup_locals = []
+                if _needs_tvlan_fixup:
+                    _fixup_locals += ['TaggedVLANIDs', 'TaggedVLANSupported']
+                if _needs_qp_fixup:
+                    _fixup_locals += ['QualityOfServicePriority']
+                for _local in _fixup_locals:
+                    payload = payload.replace(
+                        '<%s:%s ' % (_uom_prefix, _local), '<%s ' % _local)
+                    payload = payload.replace(
+                        '</%s:%s>' % (_uom_prefix, _local), '</%s>' % _local)
+
+        logger.debug("updateClientNetworkAdapter POST payload:\n%s", payload)
+
+        post_header = {'X-API-Session': self.session,
+                       'Content-Type': 'application/vnd.ibm.powervm.uom+xml; type=ClientNetworkAdapter',
+                       'Accept': 'application/atom+xml'}
+
+        try:
+            resp = open_url(url,
+                            headers=post_header,
+                            data=payload,
+                            method='POST',
+                            validate_certs=False,
+                            force_basic_auth=True,
+                            timeout=300)
+
+            response = resp.read()
+            logger.debug(url)
+            logger.debug(response)
+            if not response:
+                return True
+
+            adapter_dom = xml_strip_namespace(response)
+            return adapter_dom
+        except Exception:
+            raise
+
+    def deleteClientNetworkAdapter(self, lpar_uuid, adapter_uuid,
+                                   partition_type='LogicalPartition'):
+        """Delete the Client Network Adapter identified by *adapter_uuid* from *lpar_uuid*.
+
+        partition_type: 'LogicalPartition' (default) or 'VirtualIOServer'.
+        """
+        url = "https://{0}/rest/api/uom/{1}/{2}/ClientNetworkAdapter/{3}".format(
+            self.hmc_ip, partition_type, lpar_uuid, adapter_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': 'application/atom+xml'}
+        try:
+            open_url(url,
+                     headers=header,
+                     method='DELETE',
+                     validate_certs=False,
+                     force_basic_auth=True,
+                     timeout=300)
+
+            return True
+        except Exception:
+            raise
+
+    def getNetworkBridges(self, system_uuid):
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/NetworkBridge".format(self.hmc_ip, system_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': 'application/vnd.ibm.powervm.uom+xml; type=NetworkBridge'}
+        try:
+            resp = open_url(url,
+                            headers=header,
+                            method='GET',
+                            validate_certs=False,
+                            force_basic_auth=True,
+                            timeout=300)
+            if resp.code == 204:
+                return None
+            response = resp.read()
+            if not response:
+                return None
+            return xml_strip_namespace(response)
+        except Exception as error:
+            logger.debug("Get of Network Bridges failed: %s", repr(error))
+            raise
+
+    @staticmethod
+    def _sea_xml(vios_href, is_primary, cfg, jumbo_frames=None, qos_mode=None, large_send=None):
+        """Return the XML fragment list for one SharedEthernetAdapter block.
+
+        Used in the bridge CREATE (PUT) payload and when appending a new secondary
+        SEA during a state=update load-balancing enable.
+
+        Element order matches the HMC GET response XSD sequence:
+          Metadata → AssignedVirtualIOServer → BackingDeviceChoice →
+          JumboFramesEnabled → LargeSend → QualityOfServiceMode →
+          TrunkAdapters (empty) → IsPrimary
+
+        DeviceName inside EthernetBackingDevice must use kb="ROR" per HMC schema.
+
+        cfg is a dict with optional key: backing_device.
+        large_send: when not None, emits a <LargeSend> element — pass the inherited
+          value from the primary SEA to prevent the HMC defaulting to true.
+        (ip_address, netmask, address_to_ping, and high_availability_mode are not
+        accepted by the HMC PUT schema at create time.)
+        """
+        primary_str = 'true' if is_primary else 'false'
+        parts = ['<SharedEthernetAdapter schemaVersion="V1_0">',
+                 '<Metadata><Atom/></Metadata>',
+                 '<AssignedVirtualIOServer kb="CUD" kxe="false"'
+                 ' href="{0}" rel="related"/>'.format(vios_href)]
+        # BackingDeviceChoice — immediately after AssignedVirtualIOServer.
+        # DeviceName uses kb="ROR" as required by the HMC XSD.
+        backing = cfg.get('backing_device') if cfg else None
+        if backing:
+            parts += ['<BackingDeviceChoice kb="CUD" kxe="false">',
+                      '<EthernetBackingDevice schemaVersion="V1_0">',
+                      '<Metadata><Atom/></Metadata>',
+                      '<DeviceName kb="ROR" kxe="false">{0}</DeviceName>'.format(backing),
+                      '</EthernetBackingDevice>',
+                      '</BackingDeviceChoice>']
+        # JumboFramesEnabled — must come after BackingDeviceChoice, before TrunkAdapters
+        if jumbo_frames is not None:
+            jf_str = 'true' if jumbo_frames else 'false'
+            parts.append('<JumboFramesEnabled kb="UOD" kxe="false">{0}</JumboFramesEnabled>'.format(jf_str))
+        # QualityOfServiceMode — must come after JumboFramesEnabled, before TrunkAdapters
+        if qos_mode is not None:
+            parts.append('<QualityOfServiceMode kb="CUD" kxe="false">{0}</QualityOfServiceMode>'.format(qos_mode))
+        # Empty TrunkAdapters — HMC auto-assigns the slot
+        parts += ['<TrunkAdapters kb="CUD" kxe="false" schemaVersion="V1_0">',
+                  '<Metadata><Atom/></Metadata>',
+                  '</TrunkAdapters>']
+        parts.append('<IsPrimary kxe="false" kb="CUD">{0}</IsPrimary>'.format(primary_str))
+        # LargeSend — must come after IsPrimary (HMC XSD sequence for POST update)
+        if large_send is not None:
+            ls_str = 'true' if large_send else 'false'
+            parts.append('<LargeSend kb="CUD" kxe="false">{0}</LargeSend>'.format(ls_str))
+        parts.append('</SharedEthernetAdapter>')
+        return parts
+
+    def createNetworkBridge(self, system_uuid, port_vlan_id, virtual_network_id,
+                            vios_id, vios2_id, failover_enabled, load_balancing_enabled,
+                            vios1_cfg=None, vios2_cfg=None, addition_pvid=None,
+                            jumbo_frames=None, qos_mode=None):
+        """Create a NetworkBridge.
+
+        vios2_id / vios2_cfg may be None for a single-VIOS bridge.
+        vios1_cfg / vios2_cfg are dicts with optional key: backing_device.
+        addition_pvid: when load_balancing_enabled is True the caller may supply
+          an integer PVID for the secondary LoadGroup.  When None the secondary
+          LoadGroup is omitted from the payload.
+        jumbo_frames / qos_mode: SEA-level settings embedded directly in the
+          CREATE payload at the correct XSD sequence positions.
+          (large_send cannot be set at create time — applied via follow-up POST.)
+        """
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/NetworkBridge".format(self.hmc_ip, system_uuid)
+        header = {'X-API-Session': self.session,
+                  'Content-Type': 'application/vnd.ibm.powervm.uom+xml; type=NetworkBridge',
+                  'Accept': 'application/atom+xml'}
+        failover_str = 'true' if failover_enabled else 'false'
+        lb_str = 'true' if load_balancing_enabled else 'false'
+        vn_href = "https://{0}/rest/api/uom/ManagedSystem/{1}/VirtualNetwork/{2}".format(
+            self.hmc_ip, system_uuid, virtual_network_id)
+        vios_href = "https://{0}/rest/api/uom/ManagedSystem/{1}/VirtualIOServer/{2}".format(
+            self.hmc_ip, system_uuid, vios_id)
+        vios1_cfg = vios1_cfg or {}
+        payload_parts = ['<NetworkBridge schemaVersion="V1_0">',
+                         '<FailoverEnabled kxe="false" kb="CUD">{0}</FailoverEnabled>'.format(failover_str),
+                         '<LoadBalancingEnabled kb="CUD" kxe="false">{0}</LoadBalancingEnabled>'.format(lb_str),
+                         '<LoadGroups kb="CUD" kxe="false" schemaVersion="V1_0">',
+                         '<Metadata><Atom/></Metadata>',
+                         '<LoadGroup schemaVersion="V1_0">',
+                         '<Metadata><Atom/></Metadata>',
+                         '<PortVLANID kxe="false" kb="CUR">{0}</PortVLANID>'.format(port_vlan_id),
+                         '<TrunkAdapters kb="CUD" kxe="false" schemaVersion="V1_0">',
+                         '<Metadata><Atom/></Metadata>',
+                         '</TrunkAdapters>',
+                         '<VirtualNetworks kb="CUD" kxe="false">',
+                         '<link href="{0}" rel="related"/>'.format(vn_href),
+                         '</VirtualNetworks>',
+                         '</LoadGroup>']
+        # Secondary LoadGroup — only emitted when load-balancing is on and an
+        # addition PVID has been supplied by the caller.
+        if load_balancing_enabled and addition_pvid is not None:
+            payload_parts += ['<LoadGroup schemaVersion="V1_0">',
+                              '<Metadata><Atom/></Metadata>',
+                              '<PortVLANID kxe="false" kb="CUR">{0}</PortVLANID>'.format(addition_pvid),
+                              '<TrunkAdapters kb="CUD" kxe="false" schemaVersion="V1_0">',
+                              '<Metadata><Atom/></Metadata>',
+                              '</TrunkAdapters>',
+                              '</LoadGroup>']
+        payload_parts += ['</LoadGroups>',
+                          '<PortVLANID kb="COR" kxe="false">{0}</PortVLANID>'.format(port_vlan_id),
+                          '<SharedEthernetAdapters kxe="false" kb="CUD" schemaVersion="V1_0">',
+                          '<Metadata><Atom/></Metadata>']
+        payload_parts += self._sea_xml(vios_href, is_primary=True, cfg=vios1_cfg,
+                                       jumbo_frames=jumbo_frames, qos_mode=qos_mode)
+        if vios2_id:
+            vios2_href = "https://{0}/rest/api/uom/ManagedSystem/{1}/VirtualIOServer/{2}".format(
+                self.hmc_ip, system_uuid, vios2_id)
+            payload_parts += self._sea_xml(vios2_href, is_primary=False, cfg=vios2_cfg or {},
+                                           jumbo_frames=jumbo_frames, qos_mode=qos_mode)
+        payload_parts += ['</SharedEthernetAdapters>',
+                          '</NetworkBridge>']
+        payload = ''.join(payload_parts)
+        payload = payload.replace("NetworkBridge", NBRIDGE_NS, 1)
+        try:
+            resp = open_url(url,
+                            headers=header,
+                            data=payload,
+                            method='PUT',
+                            validate_certs=False,
+                            force_basic_auth=True,
+                            timeout=300)
+            response = resp.read()
+            if not response:
+                return None
+            bridge_dom = xml_strip_namespace(response)
+            return bridge_dom
+        except Exception:
+            raise
+
+    def getNetworkBridge(self, system_uuid, bridge_uuid):
+        """Fetch a single NetworkBridge by UUID and return its namespace-stripped DOM."""
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/NetworkBridge/{2}".format(
+            self.hmc_ip, system_uuid, bridge_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': 'application/vnd.ibm.powervm.uom+xml; type=NetworkBridge'}
+        try:
+            resp = open_url(url,
+                            headers=header,
+                            method='GET',
+                            validate_certs=False,
+                            force_basic_auth=True,
+                            timeout=300)
+            response = resp.read()
+            if not response:
+                return None
+            return xml_strip_namespace(response)
+        except Exception:
+            raise
+
+    def updateNetworkBridgeSEAs(self, system_uuid, bridge_uuid, bridge_dom,
+                                large_send, vios1_ha_mode=None, vios2_ha_mode=None):
+        """POST a full NetworkBridge DOM back after patching per-SEA fields.
+
+        Called only from ensure_present (create). LargeSend and HighAvailabilityMode
+        cannot be set in the CREATE PUT payload:
+          - LargeSend requires IIDPService/ConfigurationState (HMC-generated, absent
+            at create time).
+          - HighAvailabilityMode is accepted by the HMC only on an already-created
+            bridge via a follow-up POST.
+        jumbo_frames and qos_mode are handled directly in the CREATE PUT.
+
+        vios1_ha_mode / vios2_ha_mode map to the primary (IsPrimary=true) and
+        secondary (IsPrimary=false) SEAs respectively.  The element is upserted —
+        created if absent, updated if already present.
+        """
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/NetworkBridge/{2}".format(
+            self.hmc_ip, system_uuid, bridge_uuid)
+        header = {'X-API-Session': self.session,
+                  'Content-Type': 'application/vnd.ibm.powervm.uom+xml; type=NetworkBridge',
+                  'Accept': 'application/atom+xml'}
+        NS = "http://www.ibm.com/xmlns/systems/power/firmware/uom/mc/2012_10/"
+        for sea in bridge_dom.xpath("//SharedEthernetAdapter"):
+            # --- LargeSend ---
+            if large_send is not None:
+                large_send_str = 'true' if large_send else 'false'
+                elem = sea.find("{%s}LargeSend" % NS)
+                if elem is None:
+                    elem = sea.xpath('LargeSend')
+                    if elem:
+                        elem[0].text = large_send_str
+                else:
+                    elem.text = large_send_str
+
+            # --- HighAvailabilityMode (upsert) ---
+            is_primary_elem = sea.xpath('IsPrimary')
+            is_primary = (is_primary_elem[0].text.lower() == 'true') if is_primary_elem else True
+            ha_mode = vios1_ha_mode if is_primary else vios2_ha_mode
+            if ha_mode is not None:
+                ha_elems = sea.xpath('HighAvailabilityMode')
+                if ha_elems:
+                    ha_elems[0].text = ha_mode
+                else:
+                    ha_el = etree.SubElement(sea, 'HighAvailabilityMode')
+                    ha_el.set('kb', 'CUD')
+                    ha_el.set('kxe', 'false')
+                    ha_el.text = ha_mode
+        nb_elem = bridge_dom.xpath("//NetworkBridge")
+        if not nb_elem:
+            return None
+        nb_xmlstr = etree.tostring(nb_elem[0]).decode("utf-8")
+        nb_xmlstr = nb_xmlstr.replace("NetworkBridge", NBRIDGE_NS, 1)
+        try:
+            resp = open_url(url,
+                            headers=header,
+                            data=nb_xmlstr,
+                            method='POST',
+                            validate_certs=False,
+                            force_basic_auth=True,
+                            timeout=300)
+            response = resp.read()
+            if not response:
+                return None
+            return xml_strip_namespace(response)
+        except Exception:
+            raise
+
+    @staticmethod
+    def _set_text(element, xpath, value):
+        """Set the text of the first matching child element; no-op if not found."""
+        nodes = element.xpath(xpath)
+        if nodes:
+            nodes[0].text = value
+
+    def updateNetworkBridge(self, system_uuid, bridge_uuid, bridge_dom,
+                            load_balancing=None, addition_pvid=None,
+                            failover_enabled=None,
+                            jumbo_frames=None, large_send=None, qos_mode=None,
+                            primary_vios_cfg=None, secondary_vios_cfg=None,
+                            secondary_vios_uuid=None,
+                            tagged_vn_ids_by_pvid=None):
+        """Patch a live NetworkBridge DOM and POST it back to apply a full update.
+
+        All parameters are optional.  Only non-None values are applied to the
+        live DOM; anything left as None keeps whatever the HMC already has.
+
+        primary_vios_cfg / secondary_vios_cfg are dicts with optional keys:
+          backing_device, high_availability_mode.
+        secondary_vios_uuid: when provided, a new secondary SharedEthernetAdapter
+          block is appended to the DOM for the new VIOS (failover/load-balancing).
+        addition_pvid is the Port VLAN ID for the secondary LoadGroup (only
+          relevant when load_balancing is being enabled).
+        tagged_vn_ids_by_pvid is a dict mapping LoadGroup PVID (int) to a list
+          of (vn_name, vn_uuid) tuples to add to that LoadGroup's VirtualNetworks
+          block.  Networks whose href is already present are silently skipped.
+        """
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/NetworkBridge/{2}".format(
+            self.hmc_ip, system_uuid, bridge_uuid)
+        header = {'X-API-Session': self.session,
+                  'Content-Type': 'application/vnd.ibm.powervm.uom+xml; type=NetworkBridge',
+                  'Accept': 'application/atom+xml'}
+        nb_elem_list = bridge_dom.xpath("//NetworkBridge")
+        if not nb_elem_list:
+            raise ValueError("NetworkBridge element not found in DOM")
+        nb = nb_elem_list[0]
+
+        # --- Bridge-level boolean flags ---
+        if load_balancing is not None:
+            self._set_text(nb, 'LoadBalancingEnabled', 'true' if load_balancing else 'false')
+        if failover_enabled is not None:
+            self._set_text(nb, 'FailoverEnabled', 'true' if failover_enabled else 'false')
+
+        # --- Secondary LoadGroup PVID ---
+        # When load-sharing is being enabled the caller supplies an addition_pvid.
+        # The HMC requires a new LoadGroup entry with that PVID to be present in the
+        # POST body.  If a LoadGroup with that PVID already exists we leave it alone;
+        # if it does not exist we append a minimal one.
+        if load_balancing and addition_pvid is not None:
+            existing_pvids = [
+                e.text for e in nb.xpath('.//LoadGroup/PortVLANID')
+            ]
+            if str(addition_pvid) not in existing_pvids:
+                lg_container = nb.xpath('LoadGroups')
+                if lg_container:
+                    new_lg_xml = (
+                        '<LoadGroup schemaVersion="V1_0">'
+                        '<Metadata><Atom/></Metadata>'
+                        '<PortVLANID kxe="false" kb="CUR">{0}</PortVLANID>'
+                        '<TrunkAdapters kb="CUD" kxe="false" schemaVersion="V1_0">'
+                        '<Metadata><Atom/></Metadata>'
+                        '</TrunkAdapters>'
+                        '</LoadGroup>'
+                    ).format(addition_pvid)
+                    new_lg_elem = etree.fromstring(new_lg_xml)
+                    lg_container[0].append(new_lg_elem)
+
+        # --- Tagged Virtual Networks → per-LoadGroup injection ---
+        # Same pattern as the original single-LoadGroup implementation that was
+        # already working: use nb.xpath('LoadGroups/LoadGroup') then relative
+        # child xpaths — no deep searches needed.  The only change is we match
+        # each LoadGroup by its PVID instead of always using load_groups[0].
+        newly_added_by_pvid = {}
+        if tagged_vn_ids_by_pvid:
+            load_groups = nb.xpath('LoadGroups/LoadGroup')
+            logger.debug("[updateNetworkBridge] LoadGroups/LoadGroup count=%d", len(load_groups))
+
+            for lg_pvid, vn_pairs in tagged_vn_ids_by_pvid.items():
+                logger.debug("[updateNetworkBridge] Looking for LoadGroup PVID=%s in %d groups",
+                             lg_pvid, len(load_groups))
+                # Find the LoadGroup whose direct PortVLANID child matches lg_pvid
+                target_lg = None
+                for lg in load_groups:
+                    pvid_el = lg.xpath('PortVLANID')
+                    if pvid_el and int(pvid_el[0].text) == lg_pvid:
+                        target_lg = lg
+                        break
+                if target_lg is None:
+                    raise ValueError(
+                        "LoadGroup with PVID {0} not found in bridge DOM".format(lg_pvid))
+
+                # Accept either element name the HMC may use
+                vn_container = (target_lg.xpath('VirtualNetworks')
+                                or target_lg.xpath('AssociatedInternalNetwork'))
+                if not vn_container:
+                    # LoadGroup has no VirtualNetworks block yet — create one
+                    logger.debug("[updateNetworkBridge] LoadGroup PVID=%s: creating VirtualNetworks block", lg_pvid)
+                    vn_el = etree.SubElement(target_lg, 'VirtualNetworks')
+                    vn_el.set('kb', 'CUD')
+                    vn_el.set('kxe', 'false')
+                    existing_hrefs = set()
+                else:
+                    vn_read_el = vn_container[0]
+                    existing_hrefs = {
+                        link.get('href', '') for link in vn_read_el.xpath('link')
+                    }
+                    existing_links = list(vn_read_el.xpath('link'))
+
+                    # Normalise tag name to <VirtualNetworks> if the HMC returned
+                    # <AssociatedInternalNetwork> — POST requires <VirtualNetworks>.
+                    if vn_read_el.tag != 'VirtualNetworks':
+                        new_vn_el = etree.Element('VirtualNetworks')
+                        new_vn_el.set('kb', 'CUD')
+                        new_vn_el.set('kxe', 'false')
+                        for lnk in existing_links:
+                            new_vn_el.append(lnk)
+                        vn_read_el.getparent().replace(vn_read_el, new_vn_el)
+                        vn_el = new_vn_el
+                    else:
+                        vn_el = vn_read_el
+
+                added_names = []
+                for vn_name, vn_uuid in vn_pairs:
+                    new_href = "https://{0}:443/rest/api/uom/ManagedSystem/{1}/VirtualNetwork/{2}".format(
+                        self.hmc_ip, system_uuid, vn_uuid)
+                    alt_href = "https://{0}/rest/api/uom/ManagedSystem/{1}/VirtualNetwork/{2}".format(
+                        self.hmc_ip, system_uuid, vn_uuid)
+                    if new_href not in existing_hrefs and alt_href not in existing_hrefs:
+                        link_elem = etree.SubElement(vn_el, 'link')
+                        link_elem.set('href', new_href)
+                        link_elem.set('rel', 'related')
+                        existing_hrefs.add(new_href)
+                        added_names.append(vn_name)
+                    else:
+                        logger.debug("[updateNetworkBridge] VN '%s' already linked to LoadGroup PVID=%s — skipping",
+                                     vn_name, lg_pvid)
+                if added_names:
+                    newly_added_by_pvid[str(lg_pvid)] = added_names
+
+        # --- Append new secondary SEA when adding a second VIOS ---
+        # Only append if the secondary VIOS is not already present in the DOM.
+        # If it is already there the SEA-level loop below handles attribute
+        # updates without duplicating the SEA block.
+        if secondary_vios_uuid and secondary_vios_cfg:
+            vios2_href = "https://{0}/rest/api/uom/ManagedSystem/{1}/VirtualIOServer/{2}".format(
+                self.hmc_ip, system_uuid, secondary_vios_uuid)
+            already_present = any(
+                vios2_href in (sea.xpath('AssignedVirtualIOServer/@href') or [])
+                for sea in nb.xpath('SharedEthernetAdapters/SharedEthernetAdapter')
+            )
+            if not already_present:
+                # Inherit the primary SEA's current LargeSend value so the HMC
+                # does not default the new SEA to LargeSend=true.
+                primary_large_send = None
+                for _sea in nb.xpath('SharedEthernetAdapters/SharedEthernetAdapter'):
+                    _is_p = _sea.xpath('IsPrimary')
+                    if _is_p and _is_p[0].text.lower() == 'true':
+                        _ls = _sea.xpath('LargeSend')
+                        if _ls:
+                            primary_large_send = _ls[0].text.lower() == 'true'
+                        break
+                sea_parts = self._sea_xml(vios2_href, is_primary=False, cfg=secondary_vios_cfg,
+                                          large_send=primary_large_send)
+                new_sea_elem = etree.fromstring(''.join(sea_parts))
+                sea_container = nb.xpath('SharedEthernetAdapters')
+                if sea_container:
+                    sea_container[0].append(new_sea_elem)
+            else:
+                pass
+
+        # --- SEA-level attributes (applied to every SharedEthernetAdapter) ---
+        for sea in nb.xpath('SharedEthernetAdapters/SharedEthernetAdapter'):
+            if jumbo_frames is not None:
+                self._set_text(sea, 'JumboFramesEnabled', 'true' if jumbo_frames else 'false')
+            if large_send is not None:
+                large_send_str = 'true' if large_send else 'false'
+                ls_elems = sea.xpath('LargeSend')
+                if ls_elems:
+                    ls_elems[0].text = large_send_str
+                else:
+                    ls_el = etree.SubElement(sea, 'LargeSend')
+                    ls_el.set('kb', 'CUD')
+                    ls_el.set('kxe', 'false')
+                    ls_el.text = large_send_str
+            if qos_mode is not None:
+                self._set_text(sea, 'QualityOfServiceMode', qos_mode)
+
+            # Determine whether this SEA is primary or secondary by its IsPrimary flag
+            is_primary_elem = sea.xpath('IsPrimary')
+            is_primary = (is_primary_elem[0].text.lower() == 'true') if is_primary_elem else True
+            vios_cfg = primary_vios_cfg if is_primary else secondary_vios_cfg
+            if not vios_cfg:
+                continue
+
+            # Update backing device if specified
+            backing_dev = vios_cfg.get('backing_device')
+            if backing_dev:
+                dev_elems = sea.xpath('BackingDeviceChoice/EthernetBackingDevice/DeviceName')
+                if dev_elems:
+                    dev_elems[0].text = backing_dev
+
+            # Per-VIOS mutable fields — high_availability_mode is blocked when
+            # load_balancing is being changed (caller must validate before here).
+            ha_mode = vios_cfg.get('high_availability_mode')
+            if ha_mode is not None and not load_balancing:
+                self._set_text(sea, 'HighAvailabilityMode', ha_mode)
+
+        nb_xmlstr = etree.tostring(nb).decode("utf-8")
+        nb_xmlstr = nb_xmlstr.replace("NetworkBridge", NBRIDGE_NS, 1)
+        try:
+            resp = open_url(url,
+                            headers=header,
+                            data=nb_xmlstr,
+                            method='POST',
+                            validate_certs=False,
+                            force_basic_auth=True,
+                            timeout=300)
+            response = resp.read()
+            if not response:
+                return None, newly_added_by_pvid
+            return xml_strip_namespace(response), newly_added_by_pvid
+        except Exception:
+            raise
+
+    def deleteNetworkBridge(self, system_uuid, bridge_uuid):
+        url = "https://{0}/rest/api/uom/ManagedSystem/{1}/NetworkBridge/{2}".format(
+            self.hmc_ip, system_uuid, bridge_uuid)
+        header = {'X-API-Session': self.session,
+                  'Accept': 'application/atom+xml'}
+        try:
+            open_url(url,
+                     headers=header,
+                     method='DELETE',
+                     validate_certs=False,
+                     force_basic_auth=True,
+                     timeout=300)
+            return True
+        except Exception:
+            raise
