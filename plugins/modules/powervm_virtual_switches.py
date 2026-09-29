@@ -23,6 +23,8 @@ notes:
 description:
     - Creates a virtual switch with specified configuration on the managed system.
     - Retrieves information about virtual switches on the managed system.
+    - Modifies an existing virtual switch (name and/or mode).
+    - Deletes an existing virtual switch.
 version_added: "1.0.0"
 requirements:
 - Python >= 3.9
