@@ -152,7 +152,7 @@ Notes
   * firmware_update: Update/Upgrade firmware level on Managed System
   * powervm_dlpar: Dynamically managing proc/mem resources of partition
   * hmc_user: LDAP configuration support
-  * powervm_lpar_instance: Managed Sytem made optional for removal of partition
+  * powervm_lpar_instance: Managed System made optional for removal of partition
   * powervm_inventory: Support for managed system group
   * powervm_inventory: Introduced new properties like `AssociatedGroups` (Tagged group name), `AssociatedHMC` (HMC IP/Hostname), `AssociatedHMCUserName` (HMC username), `SystemName`
   * powervm_inventory: Renamed parameter value from lpar_name to name for paramters like ansible_host_type and ansible_display_name
@@ -175,7 +175,7 @@ Notes
   * powervm_dlpar: Dlpar support for NPIV based physical volume
   * powervm_dlpar: Dlpar support for virtual optical drive
   * powervm_lpar_instance: Fix for issue #91
-  * powervm_lpar_instance: Enhanced with system_name made optional for states like facts, absentand actions like shutdown, poweron and restart 
+  * powervm_lpar_instance: Enhanced with system_name made optional for states like facts, absent and actions like shutdown, poweron and restart 
   * vios: Enhancement associated with issue #93
   * vios: Enhanced vios module with facts of free physical volumes and virtual media details 
 
@@ -244,7 +244,7 @@ Notes
    https://github.com/IBM/ansible-power-hmc/releases/download/v1.9.0/ibm-power_hmc-1.9.0.tar.gz
 
 Version 1.10.0
--------------
+--------------
 Notes
   * vios_maintenance: Support for VIOS backup and restore
   * powervm_lpar_migration: Support for shared proc pool ID (Issue: #115 )
@@ -266,7 +266,7 @@ Notes
    https://github.com/IBM/ansible-power-hmc/releases/download/v1.10.0/ibm-power_hmc-1.10.0.tar.gz
 
 Version 1.11.0
--------------
+--------------
 Notes
   * vios: Support for VIOS install through HMC local disk
   * vios: Support for VIOS image copy, delete and list from HMC
@@ -287,7 +287,7 @@ Notes
    https://github.com/IBM/ansible-power-hmc/releases/download/v1.11.0/ibm-power_hmc-1.11.0.tar.gz
 
 Version 1.12.0
--------------
+--------------
 Notes
   * hmc_update_upgrade: Support for HMC upgrade through ibmwebsite(IBM Fixcentral website) and listing available upgrade images (Issue: #103)
   * vios_alt_root_vg: Support for copying the root vg content to alternate disk and clean up existing alternate disk
@@ -307,7 +307,7 @@ Notes
 
 
 Version 1.13.0
--------------
+--------------
 Notes
   * create_service_event: P11: Support for Automated Log collection and upload
   * platform_update: P11: Automated Power Platform Update
@@ -328,7 +328,7 @@ Notes
 
 
 Version 1.14.0
--------------
+--------------
 Notes
   * powervm_lpar_instance: Support for vm name change
   * powervm_lpar_instance: Support for user preferred profile name during vm creation
@@ -350,7 +350,7 @@ Notes
 
 
 Version 1.15.0
--------------
+--------------
 Notes
   * powervm_partition_profile: Support for creating, copying, and updating profiles with processor and memory settings.
   * vios_mapping_facts: Added support for listing VIOS physical, logical, and virtual device mappings as facts.
@@ -368,7 +368,7 @@ Notes
 
 
 Version 1.15.1
--------------
+--------------
 Notes
   * powervm_partition_profile: Support for partition profile with force update.
   
@@ -384,7 +384,7 @@ Notes
 
 
 Version 1.16.0
--------------
+--------------
 Notes
   * powervm_lpar_instance: Reformat LPAR facts to show multi-VIOS SCSI disk connectivity.
   * powervm_lpar_instance, powervm_dlpar, power_system, vios, platform_update: Fix for session timeout issue.
@@ -403,14 +403,14 @@ Notes
 
 
 Version 1.17.0
--------------
+--------------
 Notes
-  * powervm_virtual_switches: Support for Virtual Switch list, create, modify and delete.
-  * powervm_client_network_adapter: Support for client Network Adapter list, create, modify and delete.
-  * powervm_virtual_network: Support for Virtual Network list, create, modify and delete.
-  * power_network_bridge: Support for Network Bridge list, create, modify and delete.
-  * create_service_event: Spport for hmc, test, hmctest, sys, vios, lpm, cloudconn, aix, novalink event types.
-  * platform_update: Support for SFTP based update and upgrade
+  * powervm_virtual_switches: Support for Virtual Switch list, create, modify, and delete.
+  * powervm_client_network_adapter: Support for client Network Adapter list, create, modify, and delete.
+  * powervm_virtual_network: Support for Virtual Network list, create, modify, and delete.
+  * power_network_bridge: Support for Network Bridge list, create, modify, and delete.
+  * create_service_event: Support for hmc, test, hmctest, sys, vios, lpm, cloudconn, aix, novalink event types.
+  * platform_update: Support for SFTP based update and upgrade.
   * powervm_partition_profile: Fix for profile configurations not preserved upon force update issue.
   
   Availability
