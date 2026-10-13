@@ -3431,7 +3431,7 @@ class HmcRestClient:
                   'Accept': 'application/atom+xml'}
 
         logger.debug("createClientNetworkAdapter URL: %s", url)
-        logger.debug("createClientNetworkAdapter PAYLOAD:\n%s", payload)
+        logger.debug("createClientNetworkAdapter payload prepared (content redacted)")
 
         resp = open_url(url,
                         headers=header,
