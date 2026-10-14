@@ -581,7 +581,8 @@ class Hmc():
             self.OPT['INSTALLIOS']['-r'] + prof_name
         if label is not None:
             installiosCmd += self.OPT['INSTALLIOS']['-R'] + label
-        logger.debug(installiosCmd)
+        sanitized_installios_cmd = re.sub(r'(-m\s+)(\S+)', r'\1***', installiosCmd)
+        logger.debug(sanitized_installios_cmd)
         self.hmcconn.execute(installiosCmd)
 
     def getconsolelog(self, module, lpar_hmc, userid, hmc_password, systemName, lparName):

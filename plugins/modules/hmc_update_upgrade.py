@@ -255,6 +255,7 @@ from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions impor
 from ansible_collections.ibm.power_hmc.plugins.module_utils.hmc_exceptions import VersionError
 import sys
 import logging
+import re
 import os
 LOG_FILENAME = "/tmp/ansible_power_hmc_{0}.log".format(os.getpid())
 logger = logging.getLogger(__name__)
@@ -356,7 +357,7 @@ def check_image_in_hmc(module, params):
 
     # Check file exist on HMC
     list_on_hmc = 'sshpass -p {0} ssh {1}@{2} ls {3}'.format(password, hmc_user, hmc_host, local_path)
-    logger.debug(list_on_hmc)
+    logger.debug("Executing command: %s", list_on_hmc.replace(password, "*****"))
     rc, out, err = module.run_command(list_on_hmc)
     logger.debug(rc)
     if rc == 0:
@@ -548,7 +549,8 @@ def upgrade_hmc(module, params):
             otherConfig['-D'] = params['build_config']['build_file']
             imageFilesUpg = ['base.img', 'disk1.img', 'hmcnetworkfiles.sum', 'img2a', 'img3a']
             list_cmd = "sshpass -p {0} ssh {1}@{2} ls {3}".format(password, hmc_user, hmc_host, params['build_config']['build_file'])
-            logger.debug(list_cmd)
+            safe_list_cmd = re.sub(r'(-p\s+)(\S+)', r'\1******', list_cmd, count=1)
+            logger.debug(safe_list_cmd)
             rc, out, err = module.run_command(list_cmd)
             if rc == 0:
                 logger.debug(out)
